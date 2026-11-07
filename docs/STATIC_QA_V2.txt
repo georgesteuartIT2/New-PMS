@@ -1,0 +1,6 @@
+PHP files inspected: 54
+Blade view files: 30
+Named browser routes: 75
+JS lint code: 0
+Errors/warnings: 0
+Note: Static syntax/reference checks are not runtime Laravel/MySQL integration tests.

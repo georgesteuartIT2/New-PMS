@@ -1,0 +1,14 @@
+@extends('layouts.app')
+@section('title','User details')
+@section('content')
+<div class="page-head"><div><a class="back-link" href="{{ route('users.index') }}">← Users</a><h1>{{ $user->name }}</h1><p class="muted">{{ $user->email }}</p></div><span class="pill {{ $user->account_status==='active'?'active':'archived' }}">{{ ucfirst($user->account_status) }}</span></div>
+<div class="split-grid"><div class="stack"><section class="card"><div class="card-head"><h2>Account information</h2></div><div class="detail-grid"><div><small>System role</small><strong>{{ $user->isPmo()?'PMO Admin':'User' }}</strong></div><div><small>Login methods</small><strong>{{ ($user->password?'Password':'') }}{{ $user->socialAccounts->count() ? ($user->password?' + Microsoft':'Microsoft') : '' }}</strong></div><div><small>First login</small><strong>{{ $user->must_change_password?'Password change required':'Ready' }}</strong></div><div><small>Created</small><strong>{{ $user->created_at->format('M d, Y') }}</strong></div></div></section>
+<section class="card"><div class="card-head"><h2>Project assignments</h2><span class="muted text-sm">{{ $user->memberships->count() }}</span></div>
+@forelse($user->memberships as $membership)<a href="{{ route('projects.show',$membership->project) }}" class="list-entry"><div><b>{{ $membership->project->name }}</b><small>{{ $membership->role->name }}</small></div><span class="pill {{ $membership->project->status }}">{{ ucwords(str_replace('_',' ',$membership->project->status)) }}</span></a>
+@empty<p class="muted">No project assignments yet.</p>@endforelse</section></div>
+<div class="stack"><section class="card"><h2>Edit user</h2>
+@if(!$user->isPmo())<form action="{{ route('users.update',$user) }}" method="post" class="stack mt-16">@csrf @method('PATCH')<label>Full name<input name="name" required value="{{ $user->name }}"></label><label>Account status<select name="account_status"><option value="active" @selected($user->account_status==='active')>Active</option><option value="inactive" @selected($user->account_status==='inactive')>Inactive</option></select></label><button class="btn btn-primary">Save changes</button></form>
+@if($user->password)<form action="{{ route('users.reset',$user) }}" method="post" class="mt-16" onsubmit="return confirm('Generate a new temporary password?')">@csrf<button class="btn btn-outline">Reset local password</button></form>@endif
+@else<p class="muted mt-16">PMO administrator accounts are protected from editing in this screen.</p>@endif</section>
+<section class="card"><h2>Microsoft connection</h2>@forelse($user->socialAccounts as $account)<p class="muted mt-16">Linked to Microsoft Entra ID (tenant ending {{ substr($account->tenant_id,-6) }}).</p>@empty<p class="muted mt-16">No Microsoft account linked.</p>@endforelse</section></div></div>
+@endsection

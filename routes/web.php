@@ -1,0 +1,131 @@
+<?php
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\{AuthController,MicrosoftAuthController,DashboardController,UserController,UserLinkController,ProjectController,RoleController,TemplateController,TaskController,GanttController,NotificationController,TaskImportController};
+Route::redirect('/','/dashboard');
+Route::middleware('guest')->group(function(){
+ Route::get('/login',[AuthController::class,'loginForm'])->name('login');
+ Route::post('/login',[AuthController::class,'login'])->name('login.submit');
+ Route::get('/auth/azure',[MicrosoftAuthController::class,'redirect'])->name('azure.redirect');
+ Route::get('/auth/azure/callback',[MicrosoftAuthController::class,'callback'])->name('azure.callback');
+ Route::get('/auth/microsoft',[MicrosoftAuthController::class,'redirect'])->name('microsoft.redirect');
+ Route::get('/auth/microsoft/callback',[MicrosoftAuthController::class,'callback'])->name('microsoft.callback');
+ Route::get('/api/auth/microsoft/callback',[MicrosoftAuthController::class,'callback'])->name('microsoft.callback.api');
+});
+Route::middleware(['auth','account.active'])->group(function(){
+ Route::post('/logout',[AuthController::class,'logout'])->name('logout');
+ Route::get('/change-password',[AuthController::class,'passwordForm'])->name('password.change');
+ Route::post('/change-password',[AuthController::class,'changePassword'])->name('password.update');
+ Route::middleware('password.changed')->group(function(){
+  Route::get('/dashboard',[DashboardController::class,'index'])->name('dashboard');
+  Route::get('/projects',[ProjectController::class,'index'])->name('projects.index');
+  Route::get('/projects/template-schedule',[ProjectController::class,'templateSchedule'])->name('projects.template.schedule');
+  Route::get('/reports',[\App\Http\Controllers\ReportsController::class,'index'])->name('reports.index');
+  Route::get('/projects/create',[ProjectController::class,'create'])->name('projects.create');
+  Route::post('/projects',[ProjectController::class,'store'])->name('projects.store');
+  Route::get('/users/azure/search',[UserController::class,'azure'])->name('users.azure');
+  Route::post('/users/azure/add',[UserController::class,'addAzure'])->name('users.azure.add');
+  Route::get('/templates',[TemplateController::class,'index'])->name('templates.index');
+  Route::get('/templates/{template}',[TemplateController::class,'show'])->whereNumber('template')->name('templates.show');
+  Route::get('/templates/{template}/tasks-json',[TemplateController::class,'tasksJson'])->whereNumber('template')->name('templates.tasksJson');
+  Route::get('/projects/{project}',[ProjectController::class,'show'])->name('projects.show');
+  Route::get('/projects/{project}/delay-analysis',[\App\Http\Controllers\ProjectDelayAnalysisController::class,'show'])->name('projects.delay-analysis');
+  Route::get('/projects/{project}/delay-investigation',[\App\Http\Controllers\ProjectDelayInvestigationController::class,'show'])->name('projects.delay-investigation');
+  Route::get('/projects/{project}/board',[\App\Http\Controllers\ProjectWorkspaceController::class,'board'])->name('projects.board');
+  Route::get('/projects/{project}/calendar',[\App\Http\Controllers\ProjectWorkspaceController::class,'calendar'])->name('projects.calendar');
+  Route::get('/projects/{project}/files',[\App\Http\Controllers\ProjectWorkspaceController::class,'files'])->name('projects.files');
+  Route::get('/projects/{project}/edit',[\App\Http\Controllers\ProjectWorkspaceController::class,'edit'])->name('projects.edit');
+  Route::get('/projects/{project}/closure',[\App\Http\Controllers\ProjectWorkspaceController::class,'closure'])->name('projects.closure');
+  Route::post('/projects/{project}/closure',[\App\Http\Controllers\ProjectWorkspaceController::class,'submitClosure'])->name('projects.closure.submit');
+  Route::get('/profile',[\App\Http\Controllers\SettingsController::class,'profile'])->name('profile.show');
+  Route::patch('/profile',[\App\Http\Controllers\SettingsController::class,'updateProfile'])->name('profile.update');
+  Route::patch('/profile/password',[\App\Http\Controllers\SettingsController::class,'updatePassword'])->name('profile.password');
+  Route::put('/projects/{project}',[ProjectController::class,'update'])->name('projects.update');
+  Route::post('/projects/{project}/respond',[ProjectController::class,'respond'])->name('projects.respond');
+  Route::post('/projects/{project}/baseline',[ProjectController::class,'captureBaseline'])->name('projects.baseline');
+  Route::post('/projects/{project}/members',[ProjectController::class,'addMember'])->name('projects.members.store');
+  Route::delete('/projects/{project}/members/{user}',[ProjectController::class,'removeMember'])->name('projects.members.delete');
+  Route::get('/projects/{project}/gantt',[GanttController::class,'project'])->name('gantt.project');
+  Route::post('/projects/{project}/tasks',[TaskController::class,'store'])->name('tasks.store');
+  Route::post('/projects/{project}/tasks/bulk-update',[\App\Http\Controllers\TaskBulkController::class,'update'])->name('tasks.bulk-update');
+  Route::get('/tasks/my',[TaskController::class,'mine'])->name('tasks.mine');
+  Route::get('/tasks/team-member/{user}/details',[TaskController::class,'teamMemberDetails'])->name('tasks.team-member.details');
+  Route::get('/tasks/{task}/panel',[TaskController::class,'panel'])->name('tasks.panel');
+  Route::get('/tasks/{task}',[TaskController::class,'show'])->name('tasks.show');
+  Route::patch('/tasks/{task}',[TaskController::class,'update'])->name('tasks.update');
+  Route::put('/tasks/{task}/details',[TaskController::class,'updateDetails'])->name('tasks.details');
+  Route::delete('/tasks/{task}',[TaskController::class,'destroy'])->name('tasks.destroy');
+  Route::post('/tasks/{task}/request-update',[TaskController::class,'requestUpdate'])->name('tasks.request-update');
+  Route::post('/tasks/{task}/reassign',[TaskController::class,'reassign'])->name('tasks.reassign');
+  Route::post('/tasks/{task}/delays',[\App\Http\Controllers\TaskDelayController::class,'store'])->name('tasks.delays.store');
+  Route::patch('/task-delays/{delay}/resolve',[\App\Http\Controllers\TaskDelayController::class,'resolve'])->name('tasks.delays.resolve');
+  Route::post('/tasks/{task}/assign',[TaskController::class,'assign'])->name('tasks.assign');
+  Route::post('/tasks/{task}/attachments',[TaskController::class,'upload'])->name('tasks.upload');
+  Route::delete('/attachments/{attachment}',[\App\Http\Controllers\TaskExtrasController::class,'removeFile'])->name('attachments.delete');
+  Route::post('/tasks/{task}/comments',[\App\Http\Controllers\TaskExtrasController::class,'comment'])->name('tasks.comments.store');
+  Route::delete('/comments/{comment}',[\App\Http\Controllers\TaskExtrasController::class,'removeComment'])->name('tasks.comments.delete');
+  Route::post('/tasks/{task}/dependencies',[\App\Http\Controllers\TaskExtrasController::class,'dependency'])->name('tasks.dependencies.store');
+  Route::delete('/tasks/{task}/dependencies/{dependency}',[\App\Http\Controllers\TaskExtrasController::class,'removeDependency'])->name('tasks.dependencies.delete');
+  Route::post('/tasks/{task}/unassign',[\App\Http\Controllers\TaskExtrasController::class,'unassign'])->name('tasks.unassign');
+  Route::get('/attachments/{attachment}',[TaskController::class,'download'])->name('attachments.download');
+  Route::get('/projects/{project}/tasks/export',[TaskImportController::class,'export'])->name('tasks.export');
+  Route::post('/projects/{project}/tasks/import/preview',[TaskImportController::class,'preview'])->name('tasks.import.preview');
+  Route::get('/projects/{project}/tasks/import/review',[TaskImportController::class,'review'])->name('tasks.import.review');
+  Route::post('/projects/{project}/tasks/import/confirm',[TaskImportController::class,'confirm'])->name('tasks.import.confirm');
+  Route::get('/notifications',[NotificationController::class,'index'])->name('notifications.index');
+  Route::post('/notifications/read-all',[NotificationController::class,'readAll'])->name('notifications.read-all');
+  Route::post('/notifications/{id}/read',[NotificationController::class,'read'])->name('notifications.read');
+
+  // PMO Task & Team Monitoring
+  Route::get('/pmo/task-monitor', [\App\Http\Controllers\TaskMonitorController::class, 'index'])->name('pmo.task-monitor');
+  Route::post('/pmo/task-monitor/request-update/{task}', [\App\Http\Controllers\TaskMonitorController::class, 'requestUpdate'])->name('pmo.task-monitor.request-update');
+  Route::get('/pmo/task-monitor/export', [\App\Http\Controllers\TaskMonitorController::class, 'export'])->name('pmo.task-monitor.export');
+
+  Route::get('/pmo/team-monitor', [\App\Http\Controllers\TeamMonitorController::class, 'index'])->name('pmo.team-monitor');
+  Route::get('/pmo/team-monitor/employee/{user}', [\App\Http\Controllers\TeamMonitorController::class, 'employeeDetails'])->name('pmo.team-monitor.employee');
+  Route::post('/pmo/team-monitor/reassign', [\App\Http\Controllers\TeamMonitorController::class, 'reassign'])->name('pmo.team-monitor.reassign');
+  Route::get('/team-monitor', function (\Illuminate\Http\Request $request) {
+      if ($request->user()->isPmo()) {
+          return redirect()->route('pmo.team-monitor');
+      }
+      return redirect()->route('tasks.mine', ['view' => 'managed', 'tab' => 'team']);
+  })->name('team-monitor');
+
+  Route::middleware('pmo')->group(function(){
+   Route::post('/projects/{project}/manager',[ProjectController::class,'assignPm'])->name('projects.manager');
+   Route::get('/projects/{project}/permissions',[RoleController::class,'index'])->name('roles.index');
+   Route::put('/projects/{project}/permissions',[RoleController::class,'update'])->name('roles.update');
+   Route::get('/users',[UserController::class,'index'])->name('users.index');
+   Route::get('/users/{user}',[\App\Http\Controllers\UserDetailsController::class,'show'])->whereNumber('user')->name('users.show');
+   Route::get('/settings',[\App\Http\Controllers\SettingsController::class,'system'])->name('settings.system');
+   Route::get('/roles',[\App\Http\Controllers\RoleDirectoryController::class,'index'])->name('role-directory.index');
+   Route::post('/roles',[\App\Http\Controllers\RoleDirectoryController::class,'store'])->name('role-directory.store');
+   Route::post('/roles/effective-preview',[\App\Http\Controllers\RoleDirectoryController::class,'previewEffective'])->name('role-directory.preview');
+   Route::put('/roles/{role}',[\App\Http\Controllers\RoleDirectoryController::class,'update'])->name('role-directory.update');
+   Route::delete('/roles/{role}',[\App\Http\Controllers\RoleDirectoryController::class,'destroy'])->name('role-directory.delete');
+   Route::get('/reports/export',[\App\Http\Controllers\ReportsController::class,'export'])->name('reports.export');
+   Route::get('/activity',[\App\Http\Controllers\ActivityController::class,'index'])->name('activity.index');
+   Route::post('/users',[UserController::class,'store'])->name('users.store');
+   Route::post('/users/quick',[UserController::class,'quick'])->name('users.quick');
+   Route::patch('/users/{user}',[UserController::class,'update'])->name('users.update');
+   Route::delete('/users/{user}',[UserController::class,'destroy'])->name('users.destroy');
+   Route::post('/users/{user}/temporary-password',[UserController::class,'resetPassword'])->name('users.reset');
+   Route::post('/users/azure/link',[UserLinkController::class,'link'])->name('users.azure.link');
+   Route::get('/templates/create',[TemplateController::class,'create'])->name('templates.create');
+   Route::post('/templates',[TemplateController::class,'store'])->name('templates.store');
+   Route::match(['get', 'post'], '/templates/download-blank-excel', [TemplateController::class, 'downloadBlank'])->name('templates.downloadBlank');
+   Route::post('/templates/import-preview',[TemplateController::class,'importPreview'])->name('templates.importPreview');
+   Route::get('/templates/{template}/edit',[TemplateController::class,'edit'])->name('templates.edit');
+   Route::put('/templates/{template}',[TemplateController::class,'update'])->name('templates.update');
+   Route::post('/templates/{template}/duplicate',[TemplateController::class,'duplicate'])->name('templates.duplicate');
+   Route::patch('/templates/{template}/archive',[TemplateController::class,'archive'])->name('templates.archive');
+   Route::get('/templates/{template}/export-excel',[TemplateController::class,'export'])->name('templates.export');
+   Route::delete('/templates/{template}',[TemplateController::class,'destroy'])->name('templates.destroy');
+   Route::get('/subsidiaries',[\App\Http\Controllers\SubsidiaryController::class,'index'])->name('subsidiaries.index');
+   Route::post('/subsidiaries',[\App\Http\Controllers\SubsidiaryController::class,'store'])->name('subsidiaries.store');
+   Route::put('/subsidiaries/{subsidiary}',[\App\Http\Controllers\SubsidiaryController::class,'update'])->name('subsidiaries.update');
+   Route::delete('/subsidiaries/{subsidiary}',[\App\Http\Controllers\SubsidiaryController::class,'destroy'])->name('subsidiaries.destroy');
+   Route::post('/subsidiaries/import-azure',[\App\Http\Controllers\SubsidiaryController::class,'importAzure'])->name('subsidiaries.import.azure');
+   Route::get('/gantt',[GanttController::class,'portfolio'])->name('gantt.portfolio');
+  });
+ });
+});

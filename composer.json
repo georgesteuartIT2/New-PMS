@@ -1,0 +1,53 @@
+{
+  "name": "gs/projectflow",
+  "type": "project",
+  "description": "GS ProjectFlow - minimal Laravel/MySQL project management",
+  "license": "proprietary",
+  "require": {
+    "php": "^8.3",
+    "laravel/framework": "^13.0",
+    "laravel/socialite": "^5.0",
+    "socialiteproviders/microsoft-azure": "^5.0",
+    "phpoffice/phpspreadsheet": "^5.3"
+  },
+  "require-dev": {
+    "fakerphp/faker": "^1.23",
+    "laravel/pint": "^1.24",
+    "mockery/mockery": "^1.6",
+    "nunomaduro/collision": "^8.0",
+    "phpunit/phpunit": "^12.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "app/",
+      "Database\\Factories\\": "database/factories/",
+      "Database\\Seeders\\": "database/seeders/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "post-autoload-dump": [
+      "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
+      "@php artisan package:discover --ansi"
+    ],
+    "post-create-project-cmd": [
+      "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
+      "@php artisan key:generate --ansi"
+    ],
+    "dev": [
+      "Composer\\Config::disableProcessTimeout",
+      "php artisan serve"
+    ]
+  },
+  "config": {
+    "optimize-autoloader": true,
+    "preferred-install": "dist",
+    "sort-packages": true
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}
