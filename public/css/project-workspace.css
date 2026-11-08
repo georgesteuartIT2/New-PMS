@@ -243,3 +243,17 @@
  #project-edit-dialog .project-editor-footer>span { display:none; }
  #project-edit-dialog .project-editor-footer>div { margin-left:auto; }
 }.project-editor-member{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) 40px;gap:10px;align-items:center;margin:10px 0}.project-editor-member label{min-width:0}.project-editor-member select{width:100%}.project-editor-context-card label{display:grid;gap:8px}.project-editor-footer [data-editor-feedback]{font-size:12px;max-width:55%;color:#59676c}.project-editor-people[hidden]{display:none!important}@media(max-width:650px){.project-editor-member{grid-template-columns:minmax(0,1fr) 40px}.project-editor-member label:first-child{grid-column:1/-1}.project-editor-footer [data-editor-feedback]{max-width:40%;font-size:11px}}
+
+/* Focused Task Row Highlight */
+tr.project-task-row.is-focused-task {
+  background-color: #FEF9C3 !important;
+  box-shadow: inset 4px 0 0 #315F58, 0 2px 8px rgba(49, 95, 88, 0.18) !important;
+  outline: 2px solid rgba(49, 95, 88, 0.35);
+  outline-offset: -2px;
+  animation: taskFocusPulse 2.5s ease-in-out infinite alternate;
+}
+@keyframes taskFocusPulse {
+  0% { background-color: #FEF9C3; }
+  100% { background-color: #FEF08A; }
+}
+

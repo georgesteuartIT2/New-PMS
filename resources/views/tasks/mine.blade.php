@@ -33,7 +33,7 @@
                 <h1 style="font-size: 24px; font-weight: 700; color: #22272B; margin: 0 0 4px;">Task Monitor</h1>
                 <p class="muted" style="margin: 0; font-size: 13.5px;">Monitor active tasks across projects you manage.</p>
             @else
-                <div class="task-heading-line"><h1 style="font-size: 24px; font-weight: 700; color: #22272B; margin: 0 0 4px;">{{ auth()->user()->isPmo() ? 'Tasks' : 'My Tasks' }}</h1>@if(auth()->user()->isPmo()) @include('layouts._task-scope') @endif</div>
+                <div class="task-heading-line"><h1 style="font-size: 24px; font-weight: 700; color: #22272B; margin: 0 0 4px;">My Tasks</h1></div>
                 <p class="muted" style="margin: 0; font-size: 13.5px;">Manage and update tasks assigned directly to you.</p>
             @endif
         </div>
@@ -138,12 +138,7 @@
                                 <!-- Task Name & Code -->
                                 <td>
                                     <div class="project-title-cell {{ $isSubtask ? 'pl-16' : '' }}">
-                                        <a href="{{ route('projects.show', $task->project) }}" 
-                                           style="text-decoration: none; font-size: 13.5px; font-weight: 650; color: #111827;"
-                                           onmouseover="this.style.color='#315F58'" 
-                                           onmouseout="this.style.color='#111827'">
-                                            {{ $task->title }}
-                                        </a>
+                                        <button type="button" class="monitor-task-title" data-task-panel="{{ route('tasks.panel',$task) }}">{{ $task->title }}</button>
                                         <span class="project-code-sub">
                                             {{ $task->code }}
                                             @if($isSubtask)
@@ -207,7 +202,7 @@
                                         </form>
                                     @else
                                         <span class="uwt-status-pill status-{{ $task->status }}">
-                                            {{ ucwords(str_replace('_', ' ', $task->status)) }}
+                                            {{ ['todo'=>'To do','in_progress'=>'In progress','on_hold'=>'On hold','completed'=>'Completed'][$task->status] ?? ucfirst($task->status) }}
                                         </span>
                                     @endif
                                 </td>
@@ -224,9 +219,7 @@
 
                                 <!-- Action Button (Redirects directly to project) -->
                                 <td class="right">
-                                    <a href="{{ route('projects.show', $task->project) }}" class="btn btn-outline btn-xs">
-                                        Details →
-                                    </a>
+                                    <button type="button" class="btn btn-outline btn-xs" data-task-panel="{{ route('tasks.panel',$task) }}" data-task-panel-section="update">Update task</button>
                                 </td>
                             </tr>
                         @empty
@@ -504,7 +497,7 @@
                                             </form>
                                         @else
                                             <span class="uwt-status-pill status-{{ $task->status }}">
-                                                {{ ucwords(str_replace('_', ' ', $task->status)) }}
+                                                {{ ['todo'=>'To do','in_progress'=>'In progress','on_hold'=>'On hold','completed'=>'Completed'][$task->status] ?? ucfirst($task->status) }}
                                             </span>
                                         @endif
                                     </td>
@@ -1200,4 +1193,6 @@
 </script>
 @endpush
 
+@include('tasks._drawer')
+<script defer src="{{ asset('js/project-workspace.js') }}?v={{ filemtime(public_path('js/project-workspace.js')) }}"></script>
 @endsection

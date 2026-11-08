@@ -2,7 +2,7 @@
     <span class="muted">Task {{ $task->code }} @if($task->parent) · Subtask @else · Main task @endif</span>
     <h3>{{ $task->title }}</h3>
     <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
-        <span class="pill {{ $task->status }}">{{ ucwords(str_replace('_',' ',$task->status)) }}</span>
+        <span class="pill {{ $task->status }}">{{ ['todo'=>'To do','in_progress'=>'In progress','on_hold'=>'On hold','completed'=>'Completed'][$task->status] ?? ucfirst($task->status) }}</span>
         @if($task->isOverdue())
             <span class="pill" style="background: #FEE2E2; color: #DC2626; border: 1px solid #FECACA; font-weight: 700;">Overdue</span>
         @endif
@@ -17,6 +17,34 @@
     <div><small>End date</small><b style="{{ $task->isOverdue() ? 'color: #DC2626; font-weight: 700;' : '' }}">{{ $task->ends_at->format('d M Y') }} @if($task->isOverdue()) <span style="color: #DC2626; font-size: 11px; font-weight: 700;">(Overdue)</span> @endif</b></div>
     <div><small>End time</small><b style="{{ $task->isOverdue() ? 'color: #DC2626; font-weight: 700;' : '' }}">{{ $task->ends_at->format('h:i A') }}</b></div>
 </div>
+
+@if($canUpdate)
+    <form method="post" action="{{ route('tasks.update', $task) }}" class="panel-section panel-update" data-panel-section="update">
+        @csrf
+        @method('PATCH')
+        <b>Quick update</b>
+        <div class="two-fields">
+            <label>Status
+                <select name="status" required>
+                    @foreach(['todo'=>'To do','in_progress'=>'In progress','on_hold'=>'On hold','completed'=>'Completed'] as $val=>$label)
+                        <option value="{{ $val }}" @selected($task->status===$val)>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </label>
+            <label>Progress (%)
+                <input type="number" name="progress" min="0" max="100" value="{{ $task->progress }}" required>
+            </label>
+        </div>
+        <button class="btn btn-primary btn-sm">Save update</button>
+    </form>
+@else
+    <div class="panel-section">
+        <b>Progress</b>
+        <div class="progress-line"><div style="width:{{ $task->progress }}%"></div></div>
+        <span class="muted">{{ $task->progress }}% completed</span>
+    </div>
+@endif
+
 
 @if($canManage)
 <details class="panel-inner-details"><summary>Edit task details and schedule</summary>
@@ -71,7 +99,7 @@
     </form>
 </details>
 
-<details class="panel-inner-details"><summary>Change assignment</summary>
+<details class="panel-inner-details" data-panel-section="assignment"><summary>Change assignment</summary>
     <form method="post" action="{{ route('tasks.assign', $task) }}" class="stack">
         @csrf
         <label>Assign another person
@@ -106,32 +134,6 @@
     </div>
 @endif
 
-@if($canUpdate)
-    <form method="post" action="{{ route('tasks.update', $task) }}" class="panel-section panel-update">
-        @csrf
-        @method('PATCH')
-        <b>Quick update</b>
-        <div class="two-fields">
-            <label>Status
-                <select name="status" required>
-                    @foreach(['todo'=>'To do','in_progress'=>'In progress','on_hold'=>'On hold','completed'=>'Completed'] as $val=>$label)
-                        <option value="{{ $val }}" @selected($task->status===$val)>{{ $label }}</option>
-                    @endforeach
-                </select>
-            </label>
-            <label>Progress (%)
-                <input type="number" name="progress" min="0" max="100" value="{{ $task->progress }}" required>
-            </label>
-        </div>
-        <button class="btn btn-primary btn-sm">Save update</button>
-    </form>
-@else
-    <div class="panel-section">
-        <b>Progress</b>
-        <div class="progress-line"><div style="width:{{ $task->progress }}%"></div></div>
-        <span class="muted">{{ $task->progress }}% completed</span>
-    </div>
-@endif
 
 <!-- Predecessor Dependencies Management -->
 <div class="panel-section">

@@ -2,10 +2,15 @@
 @section('title', 'Create Template')
 
 @section('content')
+@php
+    $projectReturnContext=array_filter(request()->only('project_flow','draft'),fn($value)=>$value!==null && $value!=='');
+    $templateSelectionContext=($selectForProject ?? request()->boolean('select_for_project')) ? array_merge($projectReturnContext,['select_for_project'=>1]) : [];
+@endphp
+@include('templates._selection-context')
 <div class="form-width" style="max-width: 880px; margin: 0 auto; padding-bottom: 60px;">
     <!-- Breadcrumb Trail -->
     <div class="breadcrumb-trail" style="margin-bottom: 14px;">
-        <a href="{{ route('templates.index') }}">Templates</a>
+        <a href="{{ route('templates.index',$templateSelectionContext) }}">Templates</a>
         <span class="crumb-sep">›</span>
         <span>Create Template</span>
     </div>
@@ -17,7 +22,7 @@
             <p class="muted" style="margin: 0; font-size: 13.5px;">Create a reusable schedule for your projects.</p>
         </div>
         <div>
-            <a href="{{ route('templates.index') }}" class="btn btn-outline btn-sm" style="height: 36px; line-height: 34px; font-size: 13px;">
+            <a href="{{ route('templates.index',$templateSelectionContext) }}" class="btn btn-outline btn-sm" style="height: 36px; line-height: 34px; font-size: 13px;">
                 ← Back to Templates
             </a>
         </div>
@@ -177,7 +182,7 @@
 
             <!-- Action Buttons -->
             <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #E5E7EB; padding-top: 20px; margin-top: 24px;">
-                <a href="{{ route('templates.index') }}" class="btn btn-outline" style="height: 40px; font-size: 13px; padding: 0 16px;">
+                <a href="{{ route('templates.index',$templateSelectionContext) }}" class="btn btn-outline" style="height: 40px; font-size: 13px; padding: 0 16px;">
                     Cancel
                 </a>
                 <div style="display: flex; gap: 10px; align-items: center;">

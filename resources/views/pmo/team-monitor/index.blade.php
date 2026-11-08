@@ -1,8 +1,11 @@
 @extends('layouts.app')
-@section('title', 'People workload')
+@section('title', 'Team Monitor')
 
 @section('content')
-<div style="padding-bottom: 60px;">
+<div class="monitoring-team-workspace">
+    @if(request()->routeIs('monitoring.index'))
+        @include('monitoring._header')
+    @else
     <!-- Breadcrumb Trail -->
     <div class="breadcrumb-trail" style="margin-bottom: 14px;">
         <a href="{{ route('dashboard') }}">Dashboard</a>
@@ -15,7 +18,7 @@
     <!-- Page Header -->
     <div class="page-head" style="margin-bottom: 22px;">
         <div>
-            <h1 style="font-size: 24px; font-weight: 700; color: #22272B; margin: 0 0 4px;">People workload</h1>
+            <h1 style="font-size: 24px; font-weight: 700; color: #22272B; margin: 0 0 4px;">Team Monitor</h1>
             <p class="muted" style="margin: 0; font-size: 13.5px;">Review employee assignments and workload across projects.</p>
         </div>
         <div style="display: flex; gap: 10px; align-items: center;">
@@ -25,118 +28,30 @@
         </div>
     </div>
 
-    <!-- Compact Summary (4 Real Aggregate Metric Cards) -->
-    <div class="kpi-row" style="grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 22px;">
-        <!-- Active Employees -->
-        <div class="kpi-card" style="background: #FFFFFF; border-color: #E5E7EB;">
-            <span class="kpi-label">Active Employees</span>
-            <div class="kpi-value" style="color: #22272B;">{{ $summary['active_employees'] ?? 0 }}</div>
-            <span class="kpi-sub">Total active users</span>
-        </div>
+    @endif
 
-        <!-- Employees with Open Tasks -->
-        <div class="kpi-card" style="background: #FFFFFF; border-color: #E5E7EB;">
-            <span class="kpi-label">Employees with Open Tasks</span>
-            <div class="kpi-value" style="color: #315F58;">{{ $summary['employees_with_open_tasks'] ?? 0 }}</div>
-            <span class="kpi-sub">Currently carrying workload</span>
-        </div>
-
-        <!-- Open Task Assignments -->
-        <div class="kpi-card" style="background: #FFFFFF; border-color: #E5E7EB;">
-            <span class="kpi-label">Open Task Assignments</span>
-            <div class="kpi-value" style="color: #22272B;">{{ $summary['open_assignments'] ?? 0 }}</div>
-            <span class="kpi-sub">Total active assignment links</span>
-        </div>
-
-        <!-- Overdue Task Assignments -->
-        <div class="kpi-card {{ ($summary['overdue_assignments'] ?? 0) > 0 ? 'kpi-card-danger' : '' }}" style="border-color: {{ ($summary['overdue_assignments'] ?? 0) > 0 ? '#DC2626' : '#E5E7EB' }};">
-            <span class="kpi-label">Overdue Assignments</span>
-            <div class="kpi-value {{ ($summary['overdue_assignments'] ?? 0) > 0 ? 'text-danger' : '' }}">{{ $summary['overdue_assignments'] ?? 0 }}</div>
-            <span class="kpi-sub">Passed scheduled deadlines</span>
-        </div>
+    <div class="monitoring-team-summary" aria-label="Team summary">
+        @foreach(['active_employees'=>'Active Employees','employees_with_open_tasks'=>'Employees with Open Tasks','open_assignments'=>'Open Task Assignments','overdue_assignments'=>'Overdue Assignments'] as $key=>$label)
+            <div><span>{{ $label }}</span><strong class="{{ $key==='overdue_assignments' && ($summary[$key]??0)>0 ? 'text-danger' : '' }}">{{ $summary[$key]??0 }}</strong></div>
+        @endforeach
     </div>
-
-    <!-- Employee Filters Section -->
-    <div class="card" style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; padding: 18px 20px; margin-bottom: 20px;">
-        <form method="get" action="{{ route('pmo.team-monitor') }}" id="team-filter-form">
-            <div style="display: grid; grid-template-columns: 2fr 1.3fr 1.3fr 1.3fr auto; gap: 12px; align-items: end; margin-bottom: 12px;">
-                <!-- Search Input -->
-                <div>
-                    <label style="display: block; font-size: 12px; font-weight: 650; color: #475569; margin-bottom: 4px;">Search Employee</label>
-                    <input 
-                        type="text" 
-                        name="q" 
-                        value="{{ $filters['q'] ?? '' }}" 
-                        placeholder="Search employee name, title, or email..." 
-                        style="width: 100%; height: 38px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 12px; font-size: 13px; background: #FFFFFF; color: #22272B;"
-                    >
-                </div>
-
-                <!-- Subsidiary Filter -->
-                <div>
-                    <label style="display: block; font-size: 12px; font-weight: 650; color: #475569; margin-bottom: 4px;">Subsidiary</label>
-                    <select name="subsidiary_id" style="width: 100%; height: 38px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 10px; font-size: 12.5px; background: #FFFFFF; color: #22272B;">
-                        <option value="">All Subsidiaries</option>
-                        @foreach($subsidiaries as $s)
-                            <option value="{{ $s->id }}" @selected(($filters['subsidiary_id'] ?? '') == $s->id)>{{ $s->code }} · {{ $s->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <!-- Project Filter -->
-                <div>
-                    <label style="display: block; font-size: 12px; font-weight: 650; color: #475569; margin-bottom: 4px;">Project</label>
-                    <select name="project_id" style="width: 100%; height: 38px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 10px; font-size: 12.5px; background: #FFFFFF; color: #22272B;">
-                        <option value="">All Projects</option>
-                        @foreach($projects as $p)
-                            <option value="{{ $p->id }}" @selected(($filters['project_id'] ?? '') == $p->id)>{{ $p->code }} · {{ $p->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <!-- Workload Condition -->
-                <div>
-                    <label style="display: block; font-size: 12px; font-weight: 650; color: #475569; margin-bottom: 4px;">Workload Condition</label>
-                    <select name="workload" style="width: 100%; height: 38px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 10px; font-size: 12.5px; background: #FFFFFF; color: #22272B;">
-                        <option value="">All Workload Levels</option>
-                        <option value="over_capacity" @selected(($filters['workload'] ?? '') === 'over_capacity')>Over Capacity (>100%)</option>
-                        <option value="near_capacity" @selected(($filters['workload'] ?? '') === 'near_capacity')>Near Capacity (80-100%)</option>
-                        <option value="within_capacity" @selected(($filters['workload'] ?? '') === 'within_capacity')>Within Capacity (<80%)</option>
-                        <option value="not_configured" @selected(($filters['workload'] ?? '') === 'not_configured')>Capacity not configured</option>
-                    </select>
-                </div>
-
-                <!-- Submit & Clear Buttons -->
-                <div style="display: flex; gap: 8px;">
-                    <button type="submit" class="btn btn-primary btn-sm" style="height: 38px; padding: 0 16px; font-size: 13px; font-weight: 600;">
-                        Filter
-                    </button>
-                    @if(request()->hasAny(['q', 'subsidiary_id', 'project_id', 'workload', 'has_overdue', 'has_critical']))
-                        <a href="{{ route('pmo.team-monitor') }}" class="btn btn-outline btn-sm" style="height: 38px; line-height: 36px; padding: 0 12px; font-size: 12.5px; color: #64748B;">
-                            Clear
-                        </a>
-                    @endif
-                </div>
-            </div>
-
-            <!-- Checkbox Conditions -->
-            <div style="display: flex; gap: 18px; align-items: center; border-top: 1px solid #F1F5F9; padding-top: 12px;">
-                <label style="display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: #334155; cursor: pointer;">
-                    <input type="checkbox" name="has_overdue" value="1" @checked(!empty($filters['has_overdue'])) style="accent-color: #315F58;">
-                    <span>Has Overdue Tasks</span>
-                </label>
-                <label style="display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: #334155; cursor: pointer;">
-                    <input type="checkbox" name="has_critical" value="1" @checked(!empty($filters['has_critical'])) style="accent-color: #315F58;">
-                    <span>Has Critical Path Tasks</span>
-                </label>
-            </div>
-        </form>
-    </div>
+    @php $teamExtra=!empty($filters['subsidiary_id']) || !empty($filters['has_overdue']) || !empty($filters['has_critical']); @endphp
+    <form method="get" action="{{ route(auth()->user()->isPmo() ? 'monitoring.index' : 'pmo.team-monitor') }}" id="team-filter-form" class="monitoring-team-filters">
+        @if(request()->routeIs('monitoring.index'))<input type="hidden" name="tab" value="team">@endif
+        <div class="monitoring-team-primary">
+            <label class="monitoring-team-search"><span class="workspace-sr-only">Search people</span><input type="search" name="q" value="{{ $filters['q']??'' }}" placeholder="Search people by name, title or email..."></label>
+            <label><span class="workspace-sr-only">Project</span><select name="project_id" onchange="this.form.requestSubmit()"><option value="">All projects</option>@foreach($projects as $project)<option value="{{ $project->id }}" @selected(($filters['project_id']??'')==$project->id)>{{ $project->name }}</option>@endforeach</select></label>
+            <label><span class="workspace-sr-only">Workload</span><select name="workload" onchange="this.form.requestSubmit()"><option value="">All workload levels</option>@foreach(['over_capacity'=>'Over capacity (>100%)','near_capacity'=>'Near capacity (80-100%)','within_capacity'=>'Within capacity (<80%)','not_configured'=>'Capacity not configured'] as $key=>$label)<option value="{{ $key }}" @selected(($filters['workload']??'')===$key)>{{ $label }}</option>@endforeach</select></label>
+            <button type="submit" class="btn btn-outline btn-sm">Search</button>
+            @if(request()->hasAny(['q','project_id','subsidiary_id','workload','has_overdue','has_critical']))<a class="task-filter-clear" href="{{ route(auth()->user()->isPmo() ? 'monitoring.index' : 'pmo.team-monitor',['tab'=>'team']) }}">Clear</a>@endif
+        </div>
+        <div class="monitoring-team-secondary"><details @if($teamExtra) open @endif><summary>More filters</summary><div class="monitoring-team-extra"><label>Subsidiary<select name="subsidiary_id" onchange="this.form.requestSubmit()"><option value="">All subsidiaries</option>@foreach($subsidiaries as $subsidiary)<option value="{{ $subsidiary->id }}" @selected(($filters['subsidiary_id']??'')==$subsidiary->id)>{{ $subsidiary->name }}</option>@endforeach</select></label><label class="monitoring-check"><input type="checkbox" name="has_overdue" value="1" @checked($filters['has_overdue']??false) onchange="this.form.requestSubmit()">Has overdue tasks</label><label class="monitoring-check"><input type="checkbox" name="has_critical" value="1" @checked($filters['has_critical']??false) onchange="this.form.requestSubmit()">Has critical tasks</label></div></details><span>{{ $employees->total() }} people</span></div>
+    </form>
 
     <!-- Team Monitor Table -->
     <div class="card" style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
         <div class="table-wrap">
-            <table class="clean-table" style="width: 100%; border-collapse: collapse;">
+            <table id="monitoring-team-records" class="clean-table" style="width: 100%; border-collapse: collapse;">
                 <thead>
                     <tr style="background: #F5F6F7; border-bottom: 1px solid #E5E7EB;">
                         <th style="padding: 12px 16px; font-size: 12px; font-weight: 700; color: #22272B; text-align: left;">Employee</th>
@@ -147,7 +62,6 @@
                         <th style="padding: 12px 14px; font-size: 12px; font-weight: 700; color: #22272B; text-align: center;">Critical Tasks</th>
                         <th style="padding: 12px 14px; font-size: 12px; font-weight: 700; color: #22272B; text-align: left;">Remaining Effort</th>
                         <th style="padding: 12px 14px; font-size: 12px; font-weight: 700; color: #22272B; text-align: left;">Workload Utilization</th>
-                        <th style="padding: 12px 16px; font-size: 12px; font-weight: 700; color: #22272B; text-align: right;">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -235,16 +149,11 @@
                                 @endif
                             </td>
 
-                            <!-- Action -->
-                            <td style="padding: 12px 16px; text-align: right; white-space: nowrap;">
-                                <button type="button" title="View employee workload" onclick="openEmployeeWorkloadModal({{ $emp->id }})" class="btn btn-outline btn-xs" style="height: 30px; font-size: 12px; padding: 0 12px;">
-                                    View
-                                </button>
-                            </td>
+
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" style="text-align: center; padding: 48px 20px; color: #64748B;">
+                            <td colspan="8" style="text-align: center; padding: 48px 20px; color: #64748B;">
                                 <div style="font-size: 15px; font-weight: 650; color: #22272B; margin-bottom: 6px;">No employees match your search criteria</div>
                                 <div style="font-size: 13px;">Try adjusting filters or clear search term.</div>
                             </td>
@@ -256,7 +165,7 @@
 
         @if($employees->hasPages())
             <div style="padding: 14px 20px; border-top: 1px solid #E5E7EB; background: #F8FAFC;">
-                {{ $employees->links() }}
+                {{ $employees->withQueryString()->links() }}
             </div>
         @endif
     </div>

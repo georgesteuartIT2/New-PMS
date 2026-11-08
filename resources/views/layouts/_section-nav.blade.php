@@ -1,17 +1,7 @@
 @php
     $sectionItems = [];
     if (auth()->user()->isPmo()) {
-        if (request()->routeIs('templates.*')) {
-            $sectionItems = [
-                ['label' => 'Projects', 'url' => route('projects.index'), 'active' => request()->routeIs('projects.index')],
-                ['label' => 'Templates', 'url' => route('templates.index'), 'active' => request()->routeIs('templates.*')],
-            ];
-        } elseif (request()->routeIs('users.*', 'pmo.team-monitor*')) {
-            $sectionItems = [
-                ['label' => 'People', 'url' => route('users.index'), 'active' => request()->routeIs('users.*')],
-                ['label' => 'Workload', 'url' => route('pmo.team-monitor'), 'active' => request()->routeIs('pmo.team-monitor*')],
-            ];
-        } elseif (request()->routeIs('administration.*', 'role-directory.*', 'subsidiaries.*', 'activity.*', 'settings.system')) {
+        if (request()->routeIs('administration.*', 'role-directory.*', 'subsidiaries.*', 'activity.*', 'settings.system')) {
             $sectionItems = [
                 ['label' => 'Overview', 'url' => route('administration.index'), 'active' => request()->routeIs('administration.*')],
                 ['label' => 'Roles & access', 'url' => route('role-directory.index'), 'active' => request()->routeIs('role-directory.*')],

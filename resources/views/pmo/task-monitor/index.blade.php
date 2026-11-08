@@ -1,39 +1,68 @@
 @extends('layouts.app')
-@section('title', 'Tasks')
+@section('title', 'Task Monitor')
 @section('content')
 <div class="task-monitor-workspace">
+    @if(request()->routeIs('monitoring.index'))
+        @include('monitoring._header')
+    @else
     <header class="task-monitor-header">
         <div>
             <div class="task-heading-line">
-                <h1>Tasks</h1>
+                <h1>Task Monitor</h1>
                 @include('layouts._task-scope')
             </div>
-            <p>Track progress and follow up on work that needs attention.</p>
+            <p class="muted">Monitor tasks across all company projects.</p>
         </div>
-        <a href="{{ route('pmo.task-monitor.export', request()->query()) }}" class="btn btn-outline btn-sm">Export CSV</a>
+        <div style="display: flex; gap: 8px;">
+            <a href="{{ route('pmo.task-monitor.export', request()->query()) }}" class="btn btn-outline btn-sm">Export CSV</a>
+            <a href="{{ route('pmo.team-monitor') }}" class="btn btn-outline btn-sm">Team Monitor →</a>
+        </div>
     </header>
+    @endif
 
     @php
         $currentFilter = $filters['filter'] ?? 'all';
         $summaryLinks = [
-            'all' => ['label'=>'All tasks', 'count'=>$summary['total_tasks'] ?? 0],
-            'open' => ['label'=>'Open', 'count'=>$summary['open_tasks'] ?? 0],
-            'overdue' => ['label'=>'Overdue', 'count'=>$summary['overdue_tasks'] ?? 0],
-            'unassigned' => ['label'=>'Unassigned', 'count'=>$summary['unassigned_tasks'] ?? 0],
-            'completed' => ['label'=>'Completed', 'count'=>$summary['completed_tasks'] ?? 0],
+            'all' => ['label'=>'Total Tasks', 'count'=>$summary['total_tasks'] ?? 0],
+            'open' => ['label'=>'Open Tasks', 'count'=>$summary['open_tasks'] ?? 0],
+            'overdue' => ['label'=>'Overdue Tasks', 'count'=>$summary['overdue_tasks'] ?? 0],
+            'unassigned' => ['label'=>'Unassigned Tasks', 'count'=>$summary['unassigned_tasks'] ?? 0],
+            'completed' => ['label'=>'Completed Tasks', 'count'=>$summary['completed_tasks'] ?? 0],
+        ];
+        $filterTabs = [
+            'all' => ['label' => 'All Tasks', 'count' => $summary['total_tasks'] ?? 0],
+            'overdue' => ['label' => 'Overdue', 'count' => $summary['overdue_tasks'] ?? 0, 'badge' => 'danger'],
+            'critical' => ['label' => 'Critical Path', 'count' => $summary['critical_tasks'] ?? 0, 'badge' => 'warning'],
+            'blocked' => ['label' => 'Blocked', 'count' => $summary['blocked_tasks'] ?? 0, 'badge' => 'danger'],
+            'unassigned' => ['label' => 'Unassigned', 'count' => $summary['unassigned_tasks'] ?? 0, 'badge' => 'neutral'],
+            'due_soon' => ['label' => 'Due Soon (7d)', 'count' => $summary['due_soon_tasks'] ?? 0, 'badge' => 'warning'],
+            'needs_update' => ['label' => 'Needs Update', 'count' => $summary['needs_update_tasks'] ?? 0, 'badge' => 'neutral'],
         ];
         $extraFiltersActive = !empty($filters['subsidiary_id']) || !empty($filters['status']) || !array_key_exists($currentFilter, $summaryLinks);
         $hasFilters = !empty($filters['q']) || !empty($filters['project_id']) || !empty($filters['user_id']) || $extraFiltersActive || $currentFilter !== 'all';
     @endphp
     <nav class="task-summary-links" aria-label="Task summaries">
         @foreach($summaryLinks as $key => $item)
-            <a href="{{ route('pmo.task-monitor', array_merge(request()->except('page'), ['filter'=>$key])) }}" class="{{ $currentFilter === $key ? 'active' : '' }} {{ $key === 'overdue' && $item['count'] ? 'has-overdue' : '' }}" @if($currentFilter === $key) aria-current="true" @endif>
+            <a href="{{ route(auth()->user()->isPmo() ? 'pmo.task-monitor' : 'pmo.task-monitor', array_merge(request()->except('page'), ['filter'=>$key])) }}" class="{{ $currentFilter === $key ? 'active' : '' }} {{ $key === 'overdue' && $item['count'] ? 'has-overdue' : '' }}" @if($currentFilter === $key) aria-current="true" @endif>
                 <span>{{ $item['label'] }}</span><strong>{{ $item['count'] }}</strong>
             </a>
         @endforeach
     </nav>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">
+        @foreach($filterTabs as $fKey => $fTab)
+            <a href="{{ route('pmo.task-monitor', array_merge(request()->except('page'), ['filter' => $fKey])) }}" class="btn btn-sm" style="height: 30px; font-size: 12px; border-radius: 16px; border: 1px solid {{ $currentFilter === $fKey ? '#315F58' : '#CBD5E1' }}; background: {{ $currentFilter === $fKey ? '#315F58' : '#FFFFFF' }}; color: {{ $currentFilter === $fKey ? '#FFFFFF' : '#22272B' }}; font-weight: {{ $currentFilter === $fKey ? '650' : '500' }}; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                <span>{{ $fTab['label'] }}</span>
+                @if(($fTab['count'] ?? 0) > 0)
+                    <span style="font-size: 11px; padding: 1px 6px; border-radius: 10px; background: {{ $currentFilter === $fKey ? 'rgba(255,255,255,0.25)' : '#F1F5F9' }}; color: {{ $currentFilter === $fKey ? '#FFFFFF' : '#475569' }};">
+                        {{ $fTab['count'] }}
+                    </span>
+                @endif
+            </a>
+        @endforeach
+    </div>
 
     <form method="get" action="{{ route('pmo.task-monitor') }}" id="task-filter-form" class="task-monitor-filters">
+        @if(request()->routeIs('monitoring.index'))<input type="hidden" name="tab" value="tasks">@endif
         <div class="task-filter-primary">
             <label class="task-monitor-search">
                 <span class="task-monitor-sr-only">Search tasks, projects or people</span>
@@ -60,7 +89,7 @@
             </label>
 
             <button type="submit" class="btn btn-outline btn-sm">Search</button>
-            @if($hasFilters)<a href="{{ route('pmo.task-monitor') }}" class="task-filter-clear">Clear</a>@endif
+            @if($hasFilters)<a href="{{ route(auth()->user()->isPmo() ? 'monitoring.index' : 'pmo.task-monitor') }}" class="task-filter-clear">Clear</a>@endif
         </div>
         <div class="task-filter-secondary">
             <details class="task-more-filters" @if($extraFiltersActive) open @endif>
@@ -98,16 +127,14 @@
     <!-- Task Monitor Table -->
     <div class="card" style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
         <div class="table-wrap">
-            <table class="clean-table" style="width: 100%; border-collapse: collapse;">
+            <table class="clean-table monitor-task-records" style="width: 100%; border-collapse: collapse;">
                 <thead>
                     <tr style="background: #F5F6F7; border-bottom: 1px solid #E5E7EB;">
                         <th style="padding: 12px 16px; font-size: 12px; font-weight: 700; color: #22272B; text-align: left;">Project / Task</th>
                         <th style="padding: 12px 14px; font-size: 12px; font-weight: 700; color: #22272B; text-align: left;">Assigned To</th>
-                        <th style="padding: 12px 14px;">Starts</th>
                         <th style="padding: 12px 14px;">Due</th>
                         <th style="padding: 12px 14px; font-size: 12px; font-weight: 700; color: #22272B; text-align: left; width: 130px;">Progress</th>
                         <th style="padding: 12px 14px; font-size: 12px; font-weight: 700; color: #22272B; text-align: left;">Status</th>
-                        <th style="padding: 12px 14px; font-size: 12px; font-weight: 700; color: #22272B; text-align: left;">Schedule Health</th>
                         <th style="padding: 12px 16px; font-size: 12px; font-weight: 700; color: #22272B; text-align: right;">Actions</th>
                     </tr>
                 </thead>
@@ -122,7 +149,7 @@
                                     </a>
                                 </div>
                                 <div style="font-size: 13.5px; font-weight: 650; color: #22272B;">
-                                    <a href="javascript:void(0)" onclick="openTaskDetailsModal({{ $task->id }})" style="color: #22272B; text-decoration: none;" onmouseover="this.style.color='#315F58'" onmouseout="this.style.color='#22272B'">
+                                    <a href="{{ route('projects.show', [$task->project_id, 'focus_task' => $task->id]) }}#task-row-{{ $task->id }}" style="color: #22272B; text-decoration: none; font-weight: 650;" title="View task in project workplan">
                                         <span style="color: #64748B; font-weight: 600; margin-right: 4px;">{{ $task->code }}</span>
                                         <span>{{ $task->title }}</span>
                                     </a>
@@ -154,11 +181,7 @@
                                 @endif
                             </td>
 
-                            <!-- Start Date & Time -->
-                            <td style="padding: 12px 14px; font-size: 12.5px; color: #334155;">
-                                <div>{{ $task->starts_at ? $task->starts_at->format('d M Y') : '—' }}</div>
-                                <div style="font-size: 11px; color: #94A3B8;">{{ $task->starts_at ? $task->starts_at->format('h:i A') : '' }}</div>
-                            </td>
+
 
                             <!-- End Date & Time -->
                             <td style="padding: 12px 14px; font-size: 12.5px; color: #334155;">
@@ -184,12 +207,9 @@
                             <!-- Status -->
                             <td style="padding: 12px 14px;">
                                 <span class="status-pill status-{{ $task->status }}" style="font-size: 11.5px; padding: 2px 8px;">
-                                    {{ ucwords(str_replace('_', ' ', $task->status)) }}
+                                    {{ ['todo'=>'To do','in_progress'=>'In progress','on_hold'=>'On hold','completed'=>'Completed'][$task->status] ?? ucfirst($task->status) }}
                                 </span>
-                            </td>
-
-                            <!-- Schedule Health -->
-                            <td style="padding: 12px 14px;">
+                                @if($task->schedule_health !== 'Completed')<div class="monitor-health">
                                 @if($task->schedule_health === 'Blocked')
                                     <span class="status-pill pill-danger" style="font-size: 11.5px; padding: 2px 8px; font-weight: 650;">
                                         Blocked
@@ -211,17 +231,17 @@
                                         On Track
                                     </span>
                                 @endif
+                                </div>@endif
                             </td>
 
                             <!-- Actions -->
                             <td style="padding: 12px 16px; text-align: right; white-space: nowrap;">
                                 <div style="display: inline-flex; gap: 6px; align-items: center;">
-                                    <button type="button" onclick="openTaskDetailsModal({{ $task->id }})" class="btn btn-outline btn-xs" style="height: 30px; font-size: 12px; padding: 0 10px;">
-                                        View
-                                    </button>
-                                    @if($task->progress < 100)
+                                    @if($task->progress < 100 && $task->assignees->isEmpty())
+                                        <a href="{{ route('projects.show', [$task->project_id, 'focus_task' => $task->id]) }}#task-row-{{ $task->id }}" class="btn btn-outline btn-xs" style="height: 30px; font-size: 12px; padding: 0 10px; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; font-weight: 600; color: #315F58; border-color: #315F58;" title="Open task in project workplan to assign person">Assign person</a>
+                                    @elseif($task->progress < 100)
                                         <button type="button" onclick="openRequestUpdateDialog({{ $task->id }}, '{{ addslashes($task->title) }}', {{ json_encode($task->assignees->map(fn($a) => ['id' => $a->id, 'name' => $a->name])) }})" class="btn btn-outline btn-xs" style="height: 30px; font-size: 12px; padding: 0 8px;" title="Request Progress Update">
-                                            Update Req
+                                            Request update
                                         </button>
                                     @endif
                                 </div>
@@ -229,7 +249,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" style="text-align: center; padding: 48px 20px; color: #64748B;">
+                            <td colspan="6" style="text-align: center; padding: 48px 20px; color: #64748B;">
                                 <div style="font-size: 15px; font-weight: 650; color: #22272B; margin-bottom: 6px;">No tasks match your selected criteria</div>
                                 <div style="font-size: 13px;">Try adjusting your search query, filter tabs, or clear active filters.</div>
                             </td>
@@ -241,7 +261,7 @@
 
         @if($tasks->hasPages())
             <div style="padding: 14px 20px; border-top: 1px solid #E5E7EB; background: #F8FAFC;">
-                {{ $tasks->links() }}
+                {{ $tasks->withQueryString()->links() }}
             </div>
         @endif
     </div>
@@ -273,7 +293,7 @@
 <!-- =========================================================================
      MODAL 2: REQUEST UPDATE DIALOG
      ========================================================================= -->
-<div id="pmo-request-update-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(2px); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
+<div id="pmo-request-update-modal" role="dialog" aria-modal="true" aria-label="Request task update" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(2px); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
     <div style="background: #FFFFFF; border-radius: 8px; width: 100%; max-width: 520px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); border: 1px solid #CBD5E1; padding: 24px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
             <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #22272B;">Request Progress Update</h3>
@@ -358,6 +378,7 @@
     function openRequestUpdateDialog(taskId, taskTitle, assignees) {
         document.getElementById('req-task-id').value = taskId;
         document.getElementById('req-task-title-display').textContent = taskTitle;
+        document.getElementById('request-update-feedback')?.remove();
         const targetSelect = document.getElementById('req-target-user');
         targetSelect.innerHTML = '';
 
@@ -383,6 +404,12 @@
         document.getElementById('req-message').value = '';
     }
 
+    function showRequestFeedback(message, success=false) {
+        document.getElementById('request-update-feedback')?.remove();
+        const notice=document.createElement('p');notice.id='request-update-feedback';notice.className='alert '+(success?'success':'danger');notice.setAttribute('role',success?'status':'alert');notice.textContent=message;
+        if(success)document.querySelector('.task-monitor-workspace').prepend(notice);
+        else document.getElementById('req-target-user').closest('div').after(notice);
+    }
     function submitRequestUpdate() {
         const taskId = document.getElementById('req-task-id').value;
         const targetUser = document.getElementById('req-target-user').value;
@@ -390,7 +417,7 @@
         const submitBtn = document.getElementById('btn-submit-req');
 
         if (!targetUser) {
-            alert('Please select a recipient for this update request.');
+            showRequestFeedback('Choose an assigned person to receive this request.');
             return;
         }
 
@@ -414,17 +441,17 @@
             submitBtn.disabled = false;
             submitBtn.textContent = 'Send Update Request';
             if (data.success) {
-                alert(data.message);
                 closeRequestUpdateDialog();
+                showRequestFeedback(data.message || 'Update request sent.', true);
             } else {
-                alert(data.message || 'Failed to submit request.');
+                showRequestFeedback(data.message || 'Could not send the request. Please try again.');
             }
         })
         .catch(err => {
             console.error(err);
             submitBtn.disabled = false;
             submitBtn.textContent = 'Send Update Request';
-            alert('A network or server error occurred. Please try again.');
+            showRequestFeedback('Could not connect. Please try again.');
         });
     }
 
@@ -552,5 +579,7 @@
         }
     });
 </script>
+@include('tasks._drawer')
+<script defer src="{{ asset('js/project-workspace.js') }}?v={{ filemtime(public_path('js/project-workspace.js')) }}"></script>
 @endsection
 

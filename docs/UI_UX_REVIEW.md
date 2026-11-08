@@ -1,77 +1,81 @@
-# GS ProjectFlow UI / UX review
+# GS ProjectFlow ? system UI and UX review
 
-## Current experience
-A shared minimal visual system covers authenticated and guest screens. The approved palette is white #FFFFFF, light gray #F5F6F7, dark green #315F58 and charcoal #22272B. Semantic warning/error colours remain for deadlines and status.
+## Design direction
+White background (#FFFFFF), light gray surfaces (#F5F6F7), dark green actions (#315F58), charcoal text (#22272B). The interface prioritizes the next action, readable records and consistent controls. Daily workflows use direct links and side panels; optional configuration is progressively revealed.
 
-Typography uses local Segoe UI fonts, consistent heading sizes, readable body text and tabular numbers. Thin borders, quiet surfaces, modest radii and limited shadows keep the pages clear. Focus states, visible field labels and reduced-motion support are included.
+## Navigation and roles
+- PMO Admin: Dashboard, Projects, My Tasks, Calendar, Monitoring, People, Administration.
+- User: My Workspace, My Projects, My Tasks, Calendar. Project responsibilities remain separate from these two system roles.
+- Reports and portfolio timelines remain contextual secondary actions, absent from the sidebar.
+- Administration uses contextual section navigation. Company-wide task/team review is grouped under Monitoring; People remains the account directory.
 
-## Navigation
-- PMO: Dashboard, Projects, Tasks, Calendar, People, Administration.
-- User: My Workspace, My Projects, My Tasks, Calendar.
-- Templates belong to Projects; Workload belongs to People.
-- Roles, Subsidiaries, Activity and Integrations belong to Administration.
-- Project-level responsibilities are separate from the PMO Admin / User system identity.
-- Reports and Portfolio Gantt are absent from the sidebar.
-
-## Page coverage
-| Area | Result |
+## Delivered screen changes
+| Area | Current behaviour |
 | --- | --- |
-| Login / password | Clean brand panel, visible sign-in labels, password visibility control, inline help, responsive mobile branding. Shared password screen styling. |
-| Dashboard | Compact summaries, consistent table cards and task links; attention items precede secondary information. |
-| Projects | Compact linked counts, consistent list/filter controls and direct creation action. |
-| Project creation | One form for essentials, dates, manager and optional team; sticky save/draft actions; explicit PM approval wording. |
-| Project workspace | Inline summary, compact task toolbar, direct Add task/Subtask, task search/status filters, task drawer and readable mobile task rows. |
-| Tasks | Scope selector beside title, linked summary counts, primary search/project/assignee filters, optional advanced filters and mobile task layout. |
-| Calendar | Consistent month controls, aligned columns, working More button, direct task drawer and mobile agenda. |
-| People / workload | Named actions, consistent cards/controls, compact metrics and refined workload table. |
-| Templates / task plan | Consistent configuration, creation forms, reusable-plan dialog surfaces and direct Use action. |
-| Roles / permissions | Quiet selected states and descriptive names; technical permission keys hidden from the primary presentation. Permission values unchanged. |
-| Administration | Four clear configuration destinations with contextual section navigation. |
-| Profile | Inline profile editing with separate password section. |
-| Notifications / activity / reports / timelines | Shared tables, statuses, pagination, headings and empty states. Existing behaviours retained. |
+| Dashboard / My Workspace | Role-specific linked summaries, actionable priorities, upcoming work and project preview. PMO has team follow-up links; managers have direct team-work shortcuts. Decorative charts and repeated summaries removed from the daily workspace. |
+| Projects library | Compact linked counts, readable project/manager columns, combined completion/progress, direct project names, list/grid choices and menus that remain inside the viewport. |
+| Project workspace | Five primary sections: Tasks, Timeline, Team, Issues & changes, Overview. Changes live with issues; milestones live in Overview. Legacy changes/milestones hashes select their corresponding section. Calendar/Files remain absent from primary tabs as requested. |
+| PM acceptance | Compact assignment callout explains the decision and offers Accept/Decline. Activation remains the assigned manager's decision. Decline collects its reason through the existing dialog. |
+| Project create | One-page creation, inline template selection and preview without a forced trip to Templates, clear manager approval wording, optional team, date constraints and persistent action footer. |
+| Project edit | Overview and table use the same authorized dialog. Details, linked template/Blank, team membership and roles save together. Existing tasks/progress are preserved when changing the linked template. Removing people clears their task assignments. Manager reassignment follows the existing invitation workflow. |
+| PMO tasks | Six purposeful columns: task/project, assignee, due date, progress, status/health, next action. Task names open the shared panel. Unassigned work offers Assign person directly; assigned work offers Request update. Feedback stays in context. |
+| My tasks | Task name and Update task open the shared panel rather than detouring through the project. Existing inline updates and managed-project views remain available. |
+| Task panel | Quick update precedes management settings. Assignment and update shortcuts focus the appropriate controls. Details, schedule, dependencies, files, comments and reported delays remain within the same task context. |
+| Calendar | Month controls, filters, project tasks and meetings. Desktop month grid; mobile agenda. More/fewer event controls and direct task panels remain functional. |
+| People / workload | Consistent directory, employee/workload actions, restrained summaries, readable tables and contextual navigation. Microsoft/manual user workflows preserved. |
+| Templates | Shared form, table and dialog styling; project creation can choose templates inline. Existing schedule builder/import/preview workflows retained. |
+| Administration / roles | Consistent configuration destinations, role lists, permission selections and save controls. Existing permission values and enforcement retained. |
+| Notifications | Restrained unread markers, All/Unread filters, clear timestamps, direct open actions and useful empty states. |
+| Profile / activity / reports / integrations | Shared headings, record surfaces, forms, pagination and responsive layouts. Existing account, audit and reporting actions retained. |
+| Sign-in / password | Existing branded sign-in treatment, visible labels, password visibility and inline help preserved. |
 
-## Visual implementation
-- public/css/workspace.css: shared responsive structure and navigation.
-- public/css/premium.css: brand tokens, typography and common component presentation.
-- public/css/project-workspace.css: compact project workspace and mobile task layout.
-- public/css/task-monitor.css: task monitoring and assigned-task presentation.
+## Accessibility and responsive behaviour
+- Project sections support arrow keys, Home/End, selected state and labelled tab panels.
+- Simple tables gain labelled mobile records; timelines, bulk-edit tables and specialist task grids retain their own layouts.
+- Scrollable tables are keyboard accessible; pagination links have readable labels.
+- Invalid fields inside optional settings expand their containing section.
+- Visible focus, reduced-motion support, larger touch targets, responsive dialogs and task-panel focus restoration.
 
-The shared premium stylesheet loads before the two specialist page styles. File version query strings are used for the new visual layers.
+## Source organization
+- public/css/workspace.css: established shell and responsive behaviour.
+- public/css/premium.css: established shared components and sign-in treatment.
+- public/css/system.css: final system-wide visual rules, dashboard, notifications, record layouts and task-table refinements.
+- public/css/project-library.css, project-workspace.css, task-monitor.css: specialist views.
+- public/js/system.js: responsive record labels, keyboard project tabs and form accessibility.
+- public/js/project-workspace.js: shared task panel, project sections, timelines and existing project interactions.
+- public/js/project-editor.js + resources/views/projects/_edit-dialog.blade.php: shared project editor.
 
-## Verification
-- 43 Blade templates compiled and passed PHP parsing.
-- 8 smoke checks passed.
-- Rendered inline JavaScript passed syntax checks.
-- 39 rendered page variants checked at 1440px and 390px: 78 browser checks with zero failures; workload action refinement also rechecked separately.
-- Checks cover page overflow, six/four primary destinations, active navigation, mobile menu/Escape, profile state/Escape, task search/reset, direct Add task, bulk edit and project tabs.
-- Additional checks cover calendar More/mobile agenda, filter submission with search/focus preservation, login password visibility/help, People/Subsidiary create dialogs.
-- PMO Administration access renders; an ordinary User receives HTTP 403.
-- Screenshots and JSON evidence are ignored local review artifacts in storage/app/ui-review/.
+## Validation
+- All 44 Blade view sources compile and pass PHP parsing; view cache compiles.
+- Eight existing scheduling/critical-path/Blade smoke checks pass.
+- Rendered inline scripts and changed JavaScript files pass syntax checks.
+- Full review: 40 rendered page variants at 1440px and 390px (80 combinations), zero failures. Affected task/project variants rechecked after final refinements.
+- Ten additional shared-interaction checks pass at desktop/mobile: PMO/User dashboards, PMO tasks, My tasks and projects-table editor. Panel responses are intercepted with real rendered panel HTML for these browser interaction checks; no forms are submitted there.
+- Browser assertions cover page overflow, primary destinations, selected navigation, mobile menu/profile Escape behaviour, project sections and keyboard switching, task search/reset, dialogs, date constraints, inline template selection, calendar event expansion, filters, list/grid state and project menus.
+- Controller/database transaction checks verify template/Blank updates, membership save/removal, existing task preservation, rejection of duplicate users/PM membership-role changes, and the shared editor endpoint.
+- Transaction checks verify that PMO cannot accept for a manager, manager acceptance activates and captures the baseline, and decline records the decision. All test-created records/updates rolled back.
+- Ordinary User requests to administration, templates and reports remain HTTP 403; PMO pages render successfully.
 
-## Limits
-The browser uses locally rendered HTML from the real Laravel app in an isolated Chrome session, not the user's browser login session. These results do not establish authenticated CRUD, actual PM approval/decline transitions, uploads, SMTP or Microsoft/Outlook integration end to end. Representative-user usability testing has not been performed.
+## Verification limits
+Browser layout tests use isolated Chrome and HTML rendered by Laravel, not the user's browser login session. Transaction checks exercise controllers and the database but do not establish a complete live authenticated browser submission path. External Microsoft/Outlook, mail delivery and uploads were not exercised end to end. Representative-user usability testing remains the way to validate learnability with the intended audience.
 
-Existing local calendar/meeting work is retained. No account/password change, real update request, approval, deletion, external message, GitHub push or deployment was performed.
-## Projects library and workspace refinement
-The Projects list uses one compact title/action row, linked status counts instead of large cards, and a slim search/filter/view toolbar. Templates and Portfolio timeline remain direct secondary actions. Completed-task count and percentage share a Progress column, leaving adequate width for project names and people. Project names are visible green links; duplicate Open/View buttons are removed, with contextual approval/assignment/review actions retained.
-Project rows use fixed, deliberate column proportions and readable mobile layouts. Action menus escape table clipping, remain inside the viewport and close with Escape, scroll or resize. List/grid buttons expose their selected state.
-Project workspace uses a restrained identity icon, consistent title/meta layout, inline summary and aligned task-number/tree/title columns. Long task names wrap inside their column. Names no longer collide with assignees, and dates retain their own columns.
-Styles: public/css/project-library.css for the list; public/css/project-workspace.css for the workspace.
-Verification: 5 affected PMO/User page variants at 1440px, 1280px and 390px, 15 browser checks passed. Checks cover desktop name-column width, table/title overflow, list/grid switching and selected state, action-menu bounds/Escape, plus the existing task filters, tabs and dialogs. All 43 Blade templates passed PHP parsing, inline JS passed syntax checks and 8 smoke checks passed. Real approvals/writes were not exercised.
-## Project overview / ownership refinement
-The workspace header is composed as a single restrained overview panel. Project name, code, subsidiary and status form the identity row. The details row uses labelled Project manager, Schedule and Progress groups, with the actual manager name from the existing manager relation and a Not assigned fallback. Task completion is grouped with progress instead of occupying a separate scattered item.
-Mobile places manager and progress together and the schedule on a full-width row. No new interaction is required to see the manager.
-Validation: PMO/User project variants passed at 1440px, 1280px and 390px (6 checks). All 43 Blade templates pass PHP parsing. No business data changed.
-## Complete project edit dialog
-The project editor now includes editable name, description, start/due dates and status using the existing PUT endpoint. Existing code, subsidiary, template/blank origin, selected template name/category/working hours, project manager, creator and creation date are displayed as context. Original baseline dates are available when recorded.
-Assigned project members and task assignees are combined without duplicate people; roles are displayed. Visibility and the Manage team handoff follow existing permissions. Template origin is informational and saving details does not replace the task plan. Team changes remain in the existing team workflow.
-The dialog uses a two-column desktop composition, stacked mobile sections, a scrollable body and visible Save/Cancel footer. Date constraints update when start changes. Failed project-detail validation preserves old fields and reopens the editor using a dedicated old-input marker.
-Files: resources/views/projects/_edit-dialog.blade.php, public/js/project-editor.js, public/css/project-workspace.css.
-Verification: template-based PMO and blank User project variants passed at 1440px, 1280px and 390px (6 checks). Assertions cover native dialog size/footer, valid initial fields, external save-button form association, submitted field names, date constraints, setup type, roster count/deduplication and Manage team handoff. Popup screenshots are in storage/app/ui-review/*-edit-dialog.png. All 44 Blade templates pass PHP parsing. Real project saves and validation redirects were not exercised end to end.
-### Shared editable project popup
-- Project overview and project-table Edit now use the same dialog partial. The table loads the authorized editor on demand; legacy edit URLs open the overview dialog.
-- Template can be changed to another active template or Blank; existing tasks, schedules and progress are retained, as explained beside the selector.
-- Users with manage_team can add/remove people and change project roles in the popup. Removal clears task assignments in the same transaction. PM roles, duplicates and unauthorized team edits are rejected.
-- Manager reassignment remains limited to the existing pre-activation/on-hold workflow and requests acceptance again.
-- Validation errors stay in the dialog; successful saves refresh the current page.
-- Checked template/blank saves, membership saves/removal, task preservation and invalid roles/duplicates using a rolled-back database transaction. Shared editor endpoint rendered successfully. Four PMO/User desktop/mobile browser combinations passed including template form association and add/remove controls. No test database changes retained.
+Local screenshots, test helpers and browser reports are ignored review artifacts in storage/app/ui-review/. Existing calendar/meeting and integration work was preserved. No deployment or GitHub push was performed.
+
+## Create Project: focused minimal form
+The create page now uses one restrained form with three sections: Project details, Plan & dates, People. Project name/subsidiary share a row, the generated code is quiet inline context, and description sits with the project identity. Blank/Template choices are compact; the template selector remains visible after selection and the task preview is optional. Save draft and Send for PM approval stay in the action footer.
+
+Project manager and Team members remain directly available. Sponsor, Owner and Steering committee remain under Additional project roles. Manual-user creation was removed from this page, including its popup and script branch. All three people pickers retain local search and Azure Add & select. Directory requests are debounced independently, stale searches are cancelled, keyboard selection is supported and feedback is inline. Azure imports save the user before selecting them; repeated imports return the existing saved account instead of a redirect. Old PM, team and governance selections restore after validation.
+
+Scoped sources: resources/views/projects/create.blade.php, public/css/project-create.css, public/js/project-create-accessibility.js. Only eligible active project users are supplied to the local picker. Existing server-side create/approval workflows remain in place.
+
+Validation: 44 Blade templates parse; eight smoke checks pass. Six create workflow combinations (fresh/restored x 1440/1280/390) pass, covering keyboard/local selection, inline template changes/deadlines, Azure PM/team/additional-role selection with intercepted responses and submitted people fields. Real controller/database transaction checks with a mocked directory response verify user persistence, Microsoft account link, repeated import reuse, project invitation/team membership and rollback. No live Microsoft call, email or retained test records were produced.
+
+
+## Monitoring hub
+- New PMO-only /monitoring page, with Task monitoring and Team monitoring tabs. One shared title/navigation; only the selected tab loads its data.
+- Sidebar has a dedicated Monitoring destination. My Tasks points to personal assignments; People points to account management. Monitoring is the sole active primary destination on either monitoring tab.
+- Task monitoring preserves summaries, filters, export, shared task panel and update requests. Team monitoring uses compact summary counts, primary search/project/workload filters, optional subsidiary/overdue/critical controls and a readable eight-column table. Person names open workload details; the duplicate View column is removed.
+- Tab searches/filters are remembered separately within the signed-in user's browser session. Filter forms and pagination retain the active tab. Tab links and popup focus work with the keyboard.
+- Legacy PMO monitoring HTML URLs redirect with their query filters to the corresponding new tab. Existing JSON, employee-details, export, request-update and reassignment endpoints remain available with their existing authorization.
+- Sources: MonitoringController.php, monitoring/_header.blade.php, public/css/monitoring.css, public/js/monitoring.js and the two existing monitoring views.
+- Validation: 14 read-only route/access/JSON/redirect checks pass; 45 Blade templates parse; eight smoke checks pass. 24 affected-page viewport checks passed, with team variants rechecked after table refinement. Six additional monitoring interaction checks (two tabs x desktop/laptop/mobile) pass for filter memory, form tab/search preservation, table alignment, keyboard navigation, task panel and employee workload popup/focus. Popup data responses are intercepted with real rendered/read-only server data. No update request, reassignment, external message or database mutation was submitted during this review.

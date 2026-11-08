@@ -21,3 +21,8 @@
 /.env.*
 
 !/.env.example
+
+/storage/app/ui-review/chrome-cdp/
+/storage/app/ui-review/*.png
+/storage/app/ui-review/*.html
+/storage/framework/testing/

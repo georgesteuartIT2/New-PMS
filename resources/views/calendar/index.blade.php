@@ -10,7 +10,7 @@
             <span>Calendar</span>
         </div>
         <div class="title-row" style="margin-top: 6px;">
-            <h1 style="font-size: 24px; font-weight: 700; color: #22272B; margin: 0;">Work Calendar</h1>
+            <h1 style="font-size: 24px; font-weight: 700; color: #22272B; margin: 0;">Organization &amp; Work Calendar</h1>
         </div>
         <p class="muted" style="margin-top: 4px; font-size: 13.5px;">
             See task deadlines and project meetings in one place. Open an item to view its details.

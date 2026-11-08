@@ -104,8 +104,21 @@ class ProjectController {
  }
  public function create(Request $request, Access $access){
   abort_unless($request->user()->isPmo() || $access->hasCompanyPermission($request->user(), 'projects.create'), 403, 'Permission denied: cannot create projects.');
+  $draftProject=null;
+  $projectDefaults=[];
+  if($request->filled('draft')){
+   $request->validate(['draft'=>'required|integer|exists:projects,id']);
+   $draftProject=Project::with('memberships')->findOrFail($request->integer('draft'));
+   $this->authorizeDraft($request,$draftProject,$access);
+   $projectDefaults=[
+    'name'=>$draftProject->name,'description'=>$draftProject->description,'subsidiary_id'=>$draftProject->subsidiary_id,
+    'starts_on'=>$draftProject->starts_on->format('Y-m-d'),'ends_on'=>$draftProject->ends_on->format('Y-m-d'),
+    'pm_user_id'=>$draftProject->pm_user_id,'mode'=>$draftProject->project_template_id?'template':'blank','project_template_id'=>$draftProject->project_template_id,
+    'members'=>$draftProject->memberships->where('user_id','!=',$draftProject->pm_user_id)->map(fn($member)=>['user_id'=>$member->user_id,'project_role_id'=>$member->project_role_id])->values()->all(),
+   ];
+  }
   $subsidiaries = Subsidiary::where('status','active')->withCount('projects')->orderBy('name')->get();
-  $templates = ProjectTemplate::active()->with(['tasks.suggestedRole'])->orderBy('name')->get();
+  $templates = ProjectTemplate::where(fn($q)=>$q->where('status','active')->when($draftProject?->project_template_id,fn($q)=>$q->orWhere('id',$draftProject->project_template_id)))->with(['tasks.suggestedRole'])->orderBy('name')->get();
 
   $templatesCache = $templates->mapWithKeys(function($t) {
       return [
@@ -145,9 +158,11 @@ class ProjectController {
   })->toArray();
 
   return view('projects.create',[
-    'users'=>User::where('account_status','active')->with('subsidiary')->orderBy('name')->get(),
+    'users'=>User::where('account_status','active')->where('system_role','user')->with('subsidiary')->orderBy('name')->get(),
     'templates'=>$templates,
     'templatesCache'=>$templatesCache,
+    'draftProject'=>$draftProject,
+    'projectDefaults'=>$projectDefaults,
     'roles'=>ProjectRole::where('slug','!=','pm')->orderBy('name')->get(),
     'subsidiaries'=>$subsidiaries,
     'defaultSubsidiary'=>$subsidiaries->first(),
@@ -165,6 +180,31 @@ class ProjectController {
   abort_unless($request->user()->isPmo() || $access->hasCompanyPermission($request->user(), 'projects.create'), 403, 'Permission denied: cannot create projects.');
   $isDraft = $request->input('action') === 'draft';
 
+  $data=$this->projectCreationInput($request);
+
+  $data['status_override'] = $isDraft ? 'draft' : null;
+  $project=$service->create($data,$request->user());
+
+  if ($project->status === 'pending' && $project->manager) {
+    return redirect()->route('projects.show',$project)->with('success',"Project created with code {$project->code}. PM invitation sent to {$project->manager->name}.");
+  }
+
+  return redirect()->route('projects.show',$project)->with('success',"Project saved as Draft with code {$project->code}.");
+ }
+ public function saveDraft(Request $request,Project $project,ProjectService $service,Access $access){
+  $this->authorizeDraft($request,$project,$access);
+  $data=$this->projectCreationInput($request);
+  $data['status_override']=$request->input('action')==='draft'?'draft':null;
+  $data['replace_draft_plan']=$request->boolean('replace_draft_plan');
+  $saved=$service->resumeDraft($project,$data,$request->user());
+  return redirect()->route('projects.show',$saved)->with('success',$saved->status==='pending'?'Project created. The manager has been invited to review and accept it.':'Draft changes saved.');
+ }
+ private function authorizeDraft(Request $request,Project $project,Access $access):void {
+  abort_unless($request->user()->isPmo() || ($project->created_by===$request->user()->id && $access->hasCompanyPermission($request->user(),'projects.create')),403);
+  abort_unless($project->status==='draft',409,'This draft has already been submitted. Open the project to see its current status.');
+ }
+ private function projectCreationInput(Request $request):array {
+  $isDraft=$request->input('action')==='draft';
   $data=$request->validate([
     'name'=>'required|string|max:160',
     'subsidiary_id'=>'required|exists:subsidiaries,id',
@@ -183,19 +223,12 @@ class ProjectController {
     'ends_on.after_or_equal' => 'The project deadline cannot be earlier than the start date.',
   ]);
 
-  if($data['mode']==='blank') unset($data['project_template_id']);
+  if($data['mode']==='blank')$data['project_template_id']=null;
   if(!empty($data['pm_user_id'])) {
-    abort_unless(User::whereKey($data['pm_user_id'])->where('account_status','active')->exists(), 422, 'Selected user must be active.');
+    abort_unless(User::whereKey($data['pm_user_id'])->where('account_status','active')->where('system_role','user')->exists(), 422, 'Selected user must be active.');
   }
 
-  $data['status_override'] = $isDraft ? 'draft' : null;
-  $project=$service->create($data,$request->user());
-
-  if ($project->status === 'pending' && $project->manager) {
-    return redirect()->route('projects.show',$project)->with('success',"Project created with code {$project->code}. PM invitation sent to {$project->manager->name}.");
-  }
-
-  return redirect()->route('projects.show',$project)->with('success',"Project saved as Draft with code {$project->code}.");
+  return $data;
  }
  public function show(Project $project,Request $request,Access $access,ProjectHealthService $healthService){
   abort_unless($access->project($request->user(),$project),403);

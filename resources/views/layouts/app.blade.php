@@ -14,9 +14,19 @@
     @if(request()->routeIs('projects.show'))
         <link rel="stylesheet" href="{{ asset('css/project-workspace.css') }}?v={{ filemtime(public_path('css/project-workspace.css')) }}">
     @endif
-    @if(request()->routeIs('pmo.task-monitor', 'tasks.mine'))
+    @if(request()->routeIs('pmo.task-monitor', 'tasks.mine', 'monitoring.index'))
         <link rel="stylesheet" href="{{ asset('css/task-monitor.css') }}?v={{ filemtime(public_path('css/task-monitor.css')) }}">
     @endif
+    <link rel="stylesheet" href="{{ asset('css/system.css') }}?v={{ filemtime(public_path('css/system.css')) }}">
+    @if(request()->routeIs('projects.create'))
+    <link rel="stylesheet" href="{{ asset('css/project-create.css') }}?v={{ filemtime(public_path('css/project-create.css')) }}">
+    <script defer src="{{ asset('js/project-create-accessibility.js') }}?v={{ filemtime(public_path('js/project-create-accessibility.js')) }}"></script>
+    @endif
+    @if(request()->routeIs('monitoring.index','pmo.team-monitor'))
+    <link rel="stylesheet" href="{{ asset('css/monitoring.css') }}?v={{ filemtime(public_path('css/monitoring.css')) }}">
+    <script defer src="{{ asset('js/monitoring.js') }}?v={{ filemtime(public_path('js/monitoring.js')) }}"></script>
+    @endif
+    <script defer src="{{ asset('js/system.js') }}?v={{ filemtime(public_path('js/system.js')) }}"></script>
     <script defer src="{{ asset('js/app.js') }}"></script>
     <script defer src="{{ asset('js/usability.js') }}"></script>
 </head>
@@ -29,21 +39,31 @@
                 <span class="brand-mark">GS</span>
                 <div>
                     <b>GS ProjectFlow</b>
-                    <small>Project Management, Simplified.</small>
+                    <small>Project workspace</small>
                 </div>
             </a>
 
             @php
                 $navigationIsPmo = auth()->user()->isPmo();
-                $navigationItems = [
-                    ['label' => $navigationIsPmo ? 'Dashboard' : 'My Workspace', 'url' => route('dashboard'), 'active' => request()->routeIs('dashboard'), 'icon' => 'M3 10.5 12 3l9 7.5V21h-6v-7H9v7H3z'],
-                    ['label' => $navigationIsPmo ? 'Projects' : 'My Projects', 'url' => route('projects.index'), 'active' => request()->routeIs('projects.*', 'gantt.project', 'roles.*', 'templates.*'), 'icon' => 'M3 7V5a1 1 0 0 1 1-1h6l2 3h8a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7z'],
-                    ['label' => $navigationIsPmo ? 'Tasks' : 'My Tasks', 'url' => $navigationIsPmo ? route('pmo.task-monitor') : route('tasks.mine'), 'active' => request()->routeIs('tasks.*', 'pmo.task-monitor*', 'team-monitor'), 'icon' => 'M9 6h12M9 12h12M9 18h12M3 6l1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2'],
-                    ['label' => 'Calendar', 'url' => route('calendar.index'), 'active' => request()->routeIs('calendar.*'), 'icon' => 'M8 3v4M16 3v4M3 10h18M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z'],
-                ];
                 if ($navigationIsPmo) {
-                    $navigationItems[] = ['label' => 'People', 'url' => route('users.index'), 'active' => request()->routeIs('users.*', 'pmo.team-monitor*'), 'icon' => 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8'];
-                    $navigationItems[] = ['label' => 'Administration', 'url' => route('administration.index'), 'active' => request()->routeIs('administration.*', 'role-directory.*', 'subsidiaries.*', 'activity.*', 'settings.system'), 'icon' => 'M4 7h16M4 17h16M8 4v6M16 14v6', 'administration' => true];
+                    $navigationItems = [
+                        ['label' => 'Dashboard', 'url' => route('dashboard'), 'active' => request()->routeIs('dashboard'), 'icon' => 'M3 10.5 12 3l9 7.5V21h-6v-7H9v7H3z'],
+                        ['label' => 'Projects', 'url' => route('projects.index'), 'active' => request()->routeIs('projects.*', 'gantt.project', 'roles.*'), 'icon' => 'M3 7V5a1 1 0 0 1 1-1h6l2 3h8a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7z'],
+                        ['label' => 'Project templates', 'url' => route('templates.index'), 'active' => request()->routeIs('templates.*'), 'icon' => 'M4 3h12l4 4v14H4zM14 3v6h6M8 13h8M8 17h6'],
+                        ['label' => 'Task Monitor', 'url' => route('pmo.task-monitor'), 'active' => request()->routeIs('pmo.task-monitor*'), 'icon' => 'M9 6h12M9 12h12M9 18h12M3 6l1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2'],
+                        ['label' => 'Team Monitor', 'url' => route('pmo.team-monitor'), 'active' => request()->routeIs('pmo.team-monitor*', 'team-monitor*'), 'icon' => 'M4 19V9M10 19V5M16 19v-7M22 21H2'],
+                        ['label' => 'Calendar', 'url' => route('calendar.index'), 'active' => request()->routeIs('calendar.*'), 'icon' => 'M8 3v4M16 3v4M3 10h18M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z'],
+                        ['label' => 'People', 'url' => route('users.index'), 'active' => request()->routeIs('users.*'), 'icon' => 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8'],
+                        ['label' => 'Administration', 'url' => route('administration.index'), 'active' => request()->routeIs('administration.*', 'role-directory.*', 'subsidiaries.*', 'activity.*', 'settings.system'), 'icon' => 'M4 7h16M4 17h16M8 4v6M16 14v6', 'administration' => true],
+                    ];
+                } else {
+                    $navigationItems = [
+                        ['label' => 'My Workspace', 'url' => route('dashboard'), 'active' => request()->routeIs('dashboard'), 'icon' => 'M3 10.5 12 3l9 7.5V21h-6v-7H9v7H3z'],
+                        ['label' => 'My Projects', 'url' => route('projects.index'), 'active' => request()->routeIs('projects.*', 'gantt.project', 'roles.*'), 'icon' => 'M3 7V5a1 1 0 0 1 1-1h6l2 3h8a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7z'],
+                        ['label' => 'My Tasks', 'url' => route('tasks.mine'), 'active' => request()->routeIs('tasks.*'), 'icon' => 'M9 6h12M9 12h12M9 18h12M3 6l1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2'],
+                        ['label' => 'Team Monitor', 'url' => route('team-monitor'), 'active' => request()->routeIs('team-monitor*'), 'icon' => 'M4 19V9M10 19V5M16 19v-7M22 21H2'],
+                        ['label' => 'Calendar', 'url' => route('calendar.index'), 'active' => request()->routeIs('calendar.*'), 'icon' => 'M8 3v4M16 3v4M3 10h18M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z'],
+                    ];
                 }
             @endphp
             <nav class="nav nav-primary" aria-label="Main navigation">

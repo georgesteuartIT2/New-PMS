@@ -604,10 +604,10 @@
                     this.dom.btnUse.style.display = 'inline-block';
                     this.dom.btnUse.textContent = this.unsavedChanges ? 'Save & Continue with Template →' : 'Continue with Template →';
                     this.dom.btnUse.href = '#';
-                } else if (isView && this.canCreateProject && this.template.id) {
+                } else if (isView && this.canCreateProject && this.template.id && this.template.status!=='archived') {
                     this.dom.btnUse.style.display = 'inline-block';
                     this.dom.btnUse.textContent = isProjectSelection ? 'Continue with Template →' : 'Use Template';
-                    this.dom.btnUse.href = `/projects/create?template_id=${this.template.id}&mode=template`;
+                    this.dom.btnUse.href = this.projectCreateUrl(this.template.id);
                 } else {
                     this.dom.btnUse.style.display = 'none';
                 }
@@ -1806,13 +1806,20 @@
             }
         },
 
+        projectCreateUrl(templateId=null) {
+            const url=new URL('/projects/create',window.location.href);
+            const context=window.PROJECT_TEMPLATE_CONTEXT||{};
+            for(const key of ['project_flow','draft'])if(context[key])url.searchParams.set(key,context[key]);
+            if(templateId)url.searchParams.set('template_id',templateId);
+            url.searchParams.set('mode','template');return url.pathname+url.search;
+        },
         /* Save and Continue to Create Project flow */
         saveAndContinueToProject() {
             if (!this.template || !this.template.id) {
-                this.saveTemplate('/projects/create?mode=template');
+                this.saveTemplate();
                 return;
             }
-            const targetUrl = `/projects/create?template_id=${this.template.id}&mode=template`;
+            const targetUrl = this.projectCreateUrl(this.template.id);
             if (this.unsavedChanges) {
                 this.saveTemplate(targetUrl);
             } else {
@@ -1830,6 +1837,7 @@
             }
 
             const payload = {
+                ...(window.PROJECT_TEMPLATE_CONTEXT || {}),
                 name: this.template.name.trim(),
                 description: this.template.description || null,
                 category: this.template.category || 'General',
@@ -1880,7 +1888,8 @@
             .then(data => {
                 if (data.success) {
                     this.unsavedChanges = false;
-                    window.location.href = customRedirect || data.redirect || '/templates';
+                    const continuation=(window.PROJECT_TEMPLATE_CONTEXT?.select_for_project && data.template_id) ? this.projectCreateUrl(data.template_id) : null;
+                    window.location.href = continuation || customRedirect || data.redirect || '/templates';
                 } else {
                     if (this.dom.btnSave) {
                         this.dom.btnSave.disabled = false;

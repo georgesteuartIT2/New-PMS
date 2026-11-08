@@ -10,7 +10,7 @@
     </div>
     <div class="inline-actions">
         @if(auth()->user()->isPmo())
-            <a class="btn btn-ghost" href="{{ route('templates.index') }}">Templates</a>
+
             <a class="btn btn-ghost" href="{{ route('gantt.portfolio') }}">Portfolio timeline</a>
             <a class="btn btn-primary" href="{{ route('projects.create') }}">+ New Project</a>
         @endif
@@ -206,7 +206,9 @@
                                     </button>
                                 @endif
 
-                                @if(auth()->user()->isPmo() && $project->status === 'declined')
+                                @if($project->status==='draft' && (auth()->user()->isPmo() || ($project->created_by===auth()->id() && app(\App\Services\Access::class)->hasCompanyPermission(auth()->user(),'projects.create'))))
+                                    <a href="{{ route('projects.create',['draft'=>$project->id]) }}" class="btn btn-primary btn-xs project-draft-create">Create project</a>
+                                @elseif(auth()->user()->isPmo() && $project->status === 'declined')
                                     <a href="{{ route('projects.show', [$project, 'reassign' => 1]) }}" class="btn btn-primary btn-xs" style="background: #DC2626; border-color: #DC2626; font-weight: 600;">Reassign PM</a>
                                 @elseif(auth()->user()->isPmo() && $project->status === 'draft' && !$project->pm_user_id)
                                     <a href="{{ route('projects.show', [$project, 'reassign' => 1]) }}" class="btn btn-outline btn-xs">Assign PM</a>
@@ -316,6 +318,7 @@
             </div>
 
             <div class="grid-card-foot">
+                @if($project->status==='draft' && (auth()->user()->isPmo() || ($project->created_by===auth()->id() && app(\App\Services\Access::class)->hasCompanyPermission(auth()->user(),'projects.create'))))<a href="{{ route('projects.create',['draft'=>$project->id]) }}" class="btn btn-primary btn-xs project-draft-create">Create project</a>@endif
                 @if($isDelayed || $isAtRisk || $overdueCount > 0)
                     <button type="button" class="btn btn-outline btn-xs btn-review-delay" onclick="openDelayAnalysis({{ $project->id }})">Review Delay</button>
                 @endif

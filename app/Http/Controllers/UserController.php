@@ -257,6 +257,7 @@ class UserController {
             $remote = $graph->get($data['azure_id']);
         } catch (Throwable $e) {
             report($e);
+            if ($request->expectsJson()) return response()->json(['message'=>'Could not verify this Microsoft user. Please try again.'],422);
             return back()->withErrors(['azure_id' => 'Could not verify this Azure user: ' . $e->getMessage()]);
         }
 
@@ -266,10 +267,13 @@ class UserController {
         $email = strtolower(trim($remote['mail'] ?: ($remote['userPrincipalName'] ?? '')));
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            if ($request->expectsJson()) return response()->json(['message'=>'Microsoft did not return a usable email address for this person.'],422);
             return back()->withErrors(['azure_id' => 'No usable email address was returned by Microsoft.']);
         }
 
-        if (SocialAccount::where('provider', 'azure')->where('tenant_id', $tenant)->where('provider_user_id', $remote['id'])->exists()) {
+        $linkedAccount = SocialAccount::with('user')->where('provider', 'azure')->where('tenant_id', $tenant)->where('provider_user_id', $remote['id'])->first();
+        if ($linkedAccount && $linkedAccount->user) {
+            if ($request->expectsJson()) return response()->json(['success'=>true,'message'=>'Person already saved in the system.','user'=>$linkedAccount->user,'action'=>'existing']);
             return back()->with('success', 'User already added and linked to Microsoft.');
         }
 

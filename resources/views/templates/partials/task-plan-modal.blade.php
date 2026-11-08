@@ -233,7 +233,7 @@
     </div>
 </div>
 
-<script src="{{ asset('js/template-builder.js') }}"></script>
+<script src="{{ asset('js/template-builder.js') }}?v={{ filemtime(public_path('js/template-builder.js')) }}"></script>
 <script>
     function initSmartTaskPlan() {
         if (window.SmartTaskPlan) {

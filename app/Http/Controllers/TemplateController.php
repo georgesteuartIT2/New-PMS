@@ -199,16 +199,19 @@ class TemplateController {
             return $tpl;
         });
 
+        $returnUrl=$request->boolean('select_for_project')
+            ? route('projects.create',array_merge($request->only('project_flow','draft'),['template_id'=>$template->id,'mode'=>'template']))
+            : route('templates.index');
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
                 'message' => "Template '{$template->name}' created successfully.",
                 'template_id' => $template->id,
-                'redirect' => route('templates.index')
+                'redirect' => $returnUrl
             ]);
         }
 
-        return redirect()->route('templates.index')->with('success', "Template '{$template->name}' created successfully.");
+        return redirect($returnUrl)->with('success', "Template '{$template->name}' created successfully.");
     }
 
     /**

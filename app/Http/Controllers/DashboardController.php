@@ -346,7 +346,7 @@ class DashboardController
         }
 
         // 4. Tasks due soon (within 3 days)
-        foreach ($userTasks->filter(fn($t) => !$t->ends_at->isPast() && $t->ends_at->diffInDays(now()) <= 3) as $task) {
+        foreach ($userTasks->filter(fn($t) => !$t->ends_at->isPast() && now()->diffInDays($t->ends_at, false) <= 3) as $task) {
             $attentionItems->push([
                 'type' => 'due_soon',
                 'title' => $task->title,

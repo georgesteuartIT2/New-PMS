@@ -5308,4 +5308,18 @@ input[type=radio] {
   margin-bottom: 8px;
 }
 
+/* Focused Task Row Highlight */
+tr.project-task-row.is-focused-task {
+  background-color: #FEF9C3 !important;
+  box-shadow: inset 4px 0 0 #315F58, 0 2px 8px rgba(49, 95, 88, 0.18) !important;
+  outline: 2px solid rgba(49, 95, 88, 0.35);
+  outline-offset: -2px;
+  animation: taskFocusPulse 2.5s ease-in-out infinite alternate;
+}
+@keyframes taskFocusPulse {
+  0% { background-color: #FEF9C3; }
+  100% { background-color: #FEF08A; }
+}
+
+
 

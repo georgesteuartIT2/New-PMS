@@ -2,6 +2,11 @@
 @section('title', 'Templates')
 
 @section('content')
+@php
+    $projectReturnContext=array_filter(request()->only('project_flow','draft'),fn($value)=>$value!==null && $value!=='');
+    $templateSelectionContext=($selectForProject ?? request()->boolean('select_for_project')) ? array_merge($projectReturnContext,['select_for_project'=>1]) : [];
+@endphp
+@include('templates._selection-context')
 <div class="page-head" style="margin-bottom: 20px;">
     <div>
         <h1 style="font-size: 24px; font-weight: 700; color: #22272B; margin: 0 0 4px;">Templates</h1>
@@ -12,7 +17,7 @@
             Excel Sample
         </a>
         @if($canManage)
-            <a class="btn btn-primary" href="{{ route('templates.create') }}" style="background: #315F58; color: #FFFFFF; font-size: 13px; height: 38px; font-weight: 650;">
+            <a class="btn btn-primary" href="{{ route('templates.create',$templateSelectionContext) }}" style="background: #315F58; color: #FFFFFF; font-size: 13px; height: 38px; font-weight: 650;">
                 + Create Template
             </a>
         @endif
@@ -20,25 +25,13 @@
 </div>
 
 @if($selectForProject ?? false)
-    <div style="background: #EBF3F1; border: 1.5px solid #315F58; border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; box-shadow: 0 2px 6px rgba(49,95,88,0.06);">
-        <div style="display: flex; align-items: center; gap: 14px;">
-            <div style="width: 40px; height: 40px; border-radius: 50%; background: #315F58; color: #FFFFFF; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; flex-shrink: 0;">
-                ✓
-            </div>
-            <div>
-                <b style="font-size: 15px; color: #22272B; display: block; margin-bottom: 2px;">Select a Template for Your New Project</b>
-                <span style="font-size: 13px; color: #475569;">Click any template row below to inspect its tasks and schedule. Then click <strong>Continue with Template</strong> to apply it to your project.</span>
-            </div>
-        </div>
-        <a href="{{ route('projects.create') }}" class="btn btn-outline" style="height: 36px; line-height: 34px; font-size: 13px; font-weight: 600;">
-            ← Return to Create Project
-        </a>
-    </div>
+    <section class="template-selection-banner"><div><b>Choose a project template</b><p>Select a saved plan or create a new one. Your project details and people will be kept.</p></div><a href="{{ route('projects.create',$projectReturnContext) }}" class="btn btn-outline btn-sm">Back to project</a></section>
 @endif
 
 <!-- Search & Filter Toolbar -->
 <div class="card" style="padding: 12px 16px; margin-bottom: 16px; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px;">
-    <form method="GET" action="{{ route('templates.index') }}" id="template-filter-form" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+    <form method="GET" action="{{ route('templates.index',$templateSelectionContext) }}" id="template-filter-form" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+        @foreach($templateSelectionContext as $contextKey=>$contextValue)<input type="hidden" name="{{ $contextKey }}" value="{{ $contextValue }}">@endforeach
         <!-- Search Input -->
         <div style="position: relative; flex: 1; min-width: 240px;">
             <input 
@@ -71,7 +64,7 @@
 
         <button type="submit" class="btn btn-outline btn-sm" style="height: 36px; padding: 0 14px; font-size: 13px;">Filter</button>
         @if($search !== '' || ($category !== '' && $category !== 'all') || $status !== 'active')
-            <a href="{{ route('templates.index') }}" class="btn btn-ghost btn-sm" style="height: 36px; line-height: 34px; font-size: 13px; color: #64748B;">Reset</a>
+            <a href="{{ route('templates.index',$templateSelectionContext) }}" class="btn btn-ghost btn-sm" style="height: 36px; line-height: 34px; font-size: 13px; color: #64748B;">Reset</a>
         @endif
     </form>
 </div>
@@ -99,7 +92,7 @@
                         class="template-table-row"
                         style="border-bottom: 1px solid #F1F5F9; transition: background 0.12s ease; cursor: pointer;" 
                         data-template-id="{{ $template->id }}"
-                        onclick="openTemplatePlan({{ $template->id }}, '{{ ($selectForProject ?? false) ? 'select' : 'view' }}')"
+                        onclick="openTemplatePlan({{ $template->id }}, 'view')"
                         onmouseover="this.style.background='#F8FAFC'" 
                         onmouseout="this.style.background='transparent'"
                     >
@@ -152,19 +145,10 @@
                         <td style="padding: 14px 18px; text-align: right;" onclick="event.stopPropagation()">
                             <div style="display: inline-flex; align-items: center; gap: 6px; justify-content: flex-end;">
                                 @if($selectForProject ?? false)
-                                    <button 
-                                        type="button" 
-                                        class="btn btn-primary btn-sm btn-select-template" 
-                                        onclick="event.stopPropagation(); openTemplatePlan({{ $template->id }}, 'select')"
-                                        data-create-url="{{ route('projects.create', ['template_id' => $template->id, 'mode' => 'template']) }}"
-                                        style="background: #315F58; color: #FFFFFF; font-size: 12px; height: 32px; font-weight: 650; padding: 0 14px; display: inline-flex; align-items: center; gap: 4px; border: none; border-radius: 6px; cursor: pointer;"
-                                        title="Preview, customize and continue with this template"
-                                    >
-                                        Continue with Template →
-                                    </button>
+                                    @if(!$template->isArchived())<a href="{{ route('projects.create',array_merge($projectReturnContext,['template_id'=>$template->id,'mode'=>'template'])) }}" class="btn btn-primary btn-sm btn-select-template" onclick="event.stopPropagation()">Select template &rarr;</a>@else<span class="muted text-sm">Archived</span>@endif
                                 @elseif(!$template->isArchived() && $canCreateProject)
                                     <a 
-                                        href="{{ route('projects.create', ['template_id' => $template->id, 'mode' => 'template']) }}" 
+                                        href="{{ route('projects.create', array_merge($projectReturnContext,['template_id'=>$template->id,'mode'=>'template'])) }}" 
                                         class="btn btn-primary btn-sm" 
                                         style="background: #315F58; color: #FFFFFF; font-size: 12px; height: 30px; font-weight: 600; padding: 0 10px;"
                                         title="Create a new project using this template"
@@ -233,7 +217,7 @@
                             <div style="font-size: 14px; font-weight: 600; margin-bottom: 6px; color: #22272B;">No templates found</div>
                             <div style="font-size: 12.5px; margin-bottom: 14px;">Try adjusting your search criteria or create a new template.</div>
                             @if($canManage)
-                                <a class="btn btn-primary btn-sm" href="{{ route('templates.create') }}" style="background: #315F58; color: #FFFFFF;">
+                                <a class="btn btn-primary btn-sm" href="{{ route('templates.create',$templateSelectionContext) }}" style="background: #315F58; color: #FFFFFF;">
                                     + Create First Template
                                 </a>
                             @endif

@@ -22,6 +22,7 @@ Route::middleware(['auth','account.active'])->group(function(){
   Route::get('/reports',[\App\Http\Controllers\ReportsController::class,'index'])->name('reports.index');
   Route::get('/projects/create',[ProjectController::class,'create'])->name('projects.create');
   Route::post('/projects',[ProjectController::class,'store'])->name('projects.store');
+  Route::post('/projects/{project}/draft',[ProjectController::class,'saveDraft'])->name('projects.draft.save');
   Route::get('/users/azure/search',[UserController::class,'azure'])->name('users.azure');
   Route::post('/users/azure/add',[UserController::class,'addAzure'])->name('users.azure.add');
   Route::get('/templates',[TemplateController::class,'index'])->name('templates.index');
@@ -80,6 +81,8 @@ Route::middleware(['auth','account.active'])->group(function(){
   Route::get('/notifications',[NotificationController::class,'index'])->name('notifications.index');
   Route::post('/notifications/read-all',[NotificationController::class,'readAll'])->name('notifications.read-all');
   Route::post('/notifications/{id}/read',[NotificationController::class,'read'])->name('notifications.read');
+
+  Route::get('/monitoring', [\App\Http\Controllers\MonitoringController::class, 'index'])->middleware('pmo')->name('monitoring.index');
 
   // PMO Task & Team Monitoring
   Route::get('/pmo/task-monitor', [\App\Http\Controllers\TaskMonitorController::class, 'index'])->name('pmo.task-monitor');

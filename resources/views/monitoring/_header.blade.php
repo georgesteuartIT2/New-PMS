@@ -1,0 +1,9 @@
+@php
+    $monitoringTab=request()->query('tab','tasks');
+    $monitoringCommon=request()->only('project_id','subsidiary_id');
+@endphp
+<header class="page-head monitoring-heading"><div><h1>Monitoring</h1><p class="muted">Track project delivery and team workload in one place.</p></div><div class="inline-actions">@if($monitoringTab==='tasks')<a href="{{ route('pmo.task-monitor.export',request()->except('tab','page')) }}" class="btn btn-outline btn-sm">Export CSV</a>@else<a href="{{ route('users.index') }}" class="btn btn-ghost btn-sm">People directory &rarr;</a>@endif</div></header>
+<nav class="monitoring-tabs" aria-label="Monitoring views" data-monitoring-tabs data-monitoring-user="{{ auth()->id() }}" data-current-monitoring-tab="{{ $monitoringTab }}">
+    <a href="{{ route('monitoring.index',array_merge($monitoringCommon,['tab'=>'tasks'])) }}" data-monitoring-tab="tasks" class="{{ $monitoringTab==='tasks'?'active':'' }}" @if($monitoringTab==='tasks') aria-current="page" @endif><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h12M9 12h12M9 18h12M3 6l1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2"/></svg>Task monitoring</a>
+    <a href="{{ route('monitoring.index',array_merge($monitoringCommon,['tab'=>'team'])) }}" data-monitoring-tab="team" class="{{ $monitoringTab==='team'?'active':'' }}" @if($monitoringTab==='team') aria-current="page" @endif><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="7" r="4"/><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M16 3a4 4 0 0 1 0 8M22 21v-2a4 4 0 0 0-3-3.9"/></svg>Team monitoring</a>
+</nav>

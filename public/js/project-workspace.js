@@ -45,6 +45,15 @@
         throw new Error(response.status === 403 ? 'You do not have permission to view this task.' : 'Task details could not be loaded.');
       }
       panelContent.innerHTML = await response.text();
+      const requestedSection=opener?.dataset.taskPanelSection;
+      if(['assignment','update'].includes(requestedSection)) {
+        const section=panelContent.querySelector('[data-panel-section="'+requestedSection+'"]');
+        if(section){
+          if(section.tagName==='DETAILS')section.open=true;
+          section.scrollIntoView({block:'nearest'});
+          section.querySelector('select,input,button')?.focus();
+        }
+      }
     } catch (error) {
       if (error.name !== 'AbortError') {
         panelContent.innerHTML = `
@@ -109,7 +118,9 @@
 
   function switchTab(targetId) {
     if (!targetId) return;
-    const cleanId = targetId.replace('#', '');
+    const requestedId = targetId.replace('#', '');
+    const cleanId = ({milestones:'info',changes:'risks'})[requestedId] || requestedId;
+    if (!document.getElementById('tab-' + cleanId)) return;
     tabButtons.forEach(btn => {
       btn.classList.toggle('active', btn.dataset.tabTarget === cleanId);
     });
@@ -130,7 +141,7 @@
 
   if (window.location.hash) {
     const initialTab = window.location.hash.replace('#', '');
-    if (document.getElementById('tab-' + initialTab)) {
+    if (document.getElementById('tab-' + initialTab) || ['milestones','changes'].includes(initialTab)) {
       switchTab(initialTab);
     }
   }
@@ -625,4 +636,47 @@
       if (submitBtn) submitBtn.disabled = false;
     }
   });
+
+  // 9. Focus Task Auto-Scroll & Highlight (from PMO Task Monitor / deep links)
+  function handleTaskFocus() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const focusTaskId = urlParams.get('focus_task');
+    let targetRow = null;
+
+    if (focusTaskId) {
+      targetRow = document.getElementById('task-row-' + focusTaskId) || document.querySelector(`[data-task-id="${focusTaskId}"]`);
+    } else if (window.location.hash && window.location.hash.startsWith('#task-row-')) {
+      targetRow = document.querySelector(window.location.hash);
+    }
+
+    if (targetRow) {
+      // Ensure 'tasks' tab is active
+      switchTab('tasks');
+
+      // Expand any parent tasks if targetRow is a nested subtask
+      let parentId = targetRow.dataset.parent;
+      while (parentId) {
+        const parentToggle = document.querySelector(`.uwt-toggle-btn[data-parent-task="${parentId}"]`);
+        if (parentToggle && parentToggle.getAttribute('aria-expanded') === 'false') {
+          parentToggle.click();
+        }
+        const parentRow = document.querySelector(`[data-task-id="${parentId}"]`);
+        parentId = parentRow ? parentRow.dataset.parent : null;
+      }
+
+      // Add focused highlight class
+      targetRow.classList.add('is-focused-task');
+
+      // Smoothly scroll into view
+      setTimeout(() => {
+        targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 180);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', handleTaskFocus);
+  } else {
+    handleTaskFocus();
+  }
 })();
