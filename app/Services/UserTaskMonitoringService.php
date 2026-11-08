@@ -29,12 +29,12 @@ class UserTaskMonitoringService
 
         // 1. Projects where user is the assigned PM
         $pmProjects = Project::where('pm_user_id', $user->id)
-            ->whereIn('status', ['active', 'on_hold', 'draft'])
+            ->whereIn('status', ['active', 'on_hold'])
             ->get();
 
         // 2. Projects where user has project membership with monitoring permissions
         $memberProjects = Project::whereHas('memberships', fn($m) => $m->where('user_id', $user->id))
-            ->whereIn('status', ['active', 'on_hold', 'draft'])
+            ->whereIn('status', ['active', 'on_hold'])
             ->get()
             ->filter(function ($project) use ($user) {
                 return $this->access->project($user, $project, 'tasks.view_all')

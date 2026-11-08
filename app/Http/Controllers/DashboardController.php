@@ -32,7 +32,8 @@ class DashboardController
             $pendingProjects = Project::where('status', 'pending')->with('manager')->latest()->take(6)->get();
             $pendingCount = Project::where('status', 'pending')->count();
 
-            $unmanaged = Project::where('status', 'draft')->whereNull('pm_user_id')->latest()->take(6)->get();
+            $draftProjects = Project::where('status', 'draft')->with('manager')->latest()->take(6)->get();
+            $unmanaged = $draftProjects;
             $declinedProjects = Project::where('status', 'declined')->with('manager', 'invitations.user')->latest()->take(6)->get();
 
             $overdueQuery = Task::with('project', 'assignees')
@@ -93,16 +94,17 @@ class DashboardController
             // Attention items aggregation
             $attentionItems = collect();
 
-            foreach ($unmanaged as $project) {
+            foreach ($draftProjects as $project) {
+                $hasPm = (bool)$project->pm_user_id;
                 $attentionItems->push([
                     'type' => 'unmanaged',
                     'project' => $project,
                     'code' => $project->code,
                     'name' => $project->name,
-                    'issue' => 'No PM assigned',
-                    'owner' => '—',
-                    'action_label' => 'Assign PM',
-                    'action_url' => route('projects.show', [$project, 'reassign' => 1]),
+                    'issue' => $hasPm ? 'Draft (Ready to create & send to PM)' : 'Draft (No PM assigned)',
+                    'owner' => $project->manager?->name ?? '—',
+                    'action_label' => $hasPm ? 'Create Project' : 'Assign PM',
+                    'action_url' => $hasPm ? route('projects.create', ['draft' => $project->id]) : route('projects.show', [$project, 'reassign' => 1]),
                 ]);
             }
 
@@ -265,6 +267,7 @@ class DashboardController
                 'tasks',
                 'tasks as completed_tasks_count' => fn($q) => $q->where('status', 'completed'),
             ])
+            ->where('status', '!=', 'draft')
             ->where(function ($query) use ($user) {
                 $query->where('pm_user_id', $user->id)
                     ->orWhereHas('memberships', fn($m) => $m->where('user_id', $user->id))
@@ -272,7 +275,7 @@ class DashboardController
             })
             ->where(function ($q) use ($user) {
                 $q->whereIn('status', ['active', 'on_hold', 'completed', 'archived'])
-                    ->orWhere('pm_user_id', $user->id);
+                    ->orWhere(fn($sub) => $sub->where('pm_user_id', $user->id)->whereIn('status', ['pending', 'declined']));
             })
             ->latest()
             ->get()
@@ -287,7 +290,11 @@ class DashboardController
             ->orderBy('ends_at')
             ->get();
 
-        $pendingInvitations = ProjectInvitation::with('project')->where('user_id', $user->id)->where('status', 'pending')->get();
+        $pendingInvitations = ProjectInvitation::with('project')
+            ->where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->whereHas('project', fn($q) => $q->where('status', '!=', 'draft'))
+            ->get();
 
         // Needs My Attention items aggregation
         $attentionItems = collect();

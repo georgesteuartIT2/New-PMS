@@ -14,6 +14,11 @@ class ProjectController {
       'tasks as open_delays_count'=>fn($q)=>$q->whereHas('openDelay'),
   ]);
 
+  // Draft projects are strictly visible ONLY to PMO admin
+  if(!$user->isPmo()){
+    $query->where('status', '!=', 'draft');
+  }
+
   if(!$user->isPmo() && !$access->hasCompanyPermission($user, 'projects.view_all')){
     $query->where(function($q) use ($user) {
         $q->where('pm_user_id', $user->id)
@@ -21,7 +26,7 @@ class ProjectController {
           ->orWhereHas('tasks.assignees', fn($a) => $a->where('users.id', $user->id));
     })->where(function($q) use ($user) {
         $q->whereIn('status', ['active', 'on_hold', 'completed', 'archived'])
-          ->orWhere('pm_user_id', $user->id);
+          ->orWhere(fn($sub) => $sub->where('pm_user_id', $user->id)->whereIn('status', ['pending', 'declined']));
     });
 
     // Role scope filtering (Managed by Me, Assigned Tasks, View-Only)
@@ -44,13 +49,26 @@ class ProjectController {
   $completedCount = (clone $baseQuery)->where('status','completed')->count();
   $pendingCount = (clone $baseQuery)->where('status','pending')->count();
   $declinedCount = (clone $baseQuery)->where('status','declined')->count();
-  $attentionCount = (clone $baseQuery)->where(function($q){$q->where('status','pending')->orWhere('status','declined')->orWhere(fn($inner)=>$inner->where('status','draft')->whereNull('pm_user_id'))->orWhere(fn($inner)=>$inner->whereIn('status',['active','on_hold'])->whereHas('tasks',fn($t)=>$t->where('progress','<',100)->where('ends_at','<',now())));})->count();
+  $draftCount = $user->isPmo() ? (clone $baseQuery)->where('status','draft')->count() : 0;
+  $attentionCount = (clone $baseQuery)->where(function($q) use ($user) {
+      if ($user->isPmo()) {
+          $q->whereIn('status',['pending','declined','draft'])
+            ->orWhere(fn($inner)=>$inner->whereIn('status',['active','on_hold'])->whereHas('tasks',fn($t)=>$t->where('progress','<',100)->where('ends_at','<',now())));
+      } else {
+          $q->whereIn('status',['pending','declined'])
+            ->orWhere(fn($inner)=>$inner->whereIn('status',['active','on_hold'])->whereHas('tasks',fn($t)=>$t->where('progress','<',100)->where('ends_at','<',now())));
+      }
+  })->count();
 
   if($request->boolean('attention')){
-   $query->where(function($q){
-    $q->whereIn('status',['pending','declined'])
-      ->orWhere(fn($draft)=>$draft->where('status','draft')->whereNull('pm_user_id'))
-      ->orWhere(fn($active)=>$active->whereIn('status',['active','on_hold'])->whereHas('tasks',fn($task)=>$task->where('progress','<',100)->where('ends_at','<',now())));
+   $query->where(function($q) use ($user) {
+    if ($user->isPmo()) {
+        $q->whereIn('status',['pending','declined','draft'])
+          ->orWhere(fn($active)=>$active->whereIn('status',['active','on_hold'])->whereHas('tasks',fn($task)=>$task->where('progress','<',100)->where('ends_at','<',now())));
+    } else {
+        $q->whereIn('status',['pending','declined'])
+          ->orWhere(fn($active)=>$active->whereIn('status',['active','on_hold'])->whereHas('tasks',fn($task)=>$task->where('progress','<',100)->where('ends_at','<',now())));
+    }
    });
   }
   if($request->filled('q')){ 
@@ -98,6 +116,7 @@ class ProjectController {
     'completedCount'=>$completedCount,
     'pendingCount'=>$pendingCount,
     'declinedCount'=>$declinedCount,
+    'draftCount'=>$draftCount,
     'attentionCount'=>$attentionCount,
     'access'=>$access,
   ]);

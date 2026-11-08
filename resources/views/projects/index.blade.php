@@ -24,6 +24,9 @@
         ['label'=>auth()->user()->isPmo() ? 'Awaiting PM approval' : 'Pending action', 'count'=>$pendingCount, 'query'=>array_merge(request()->except('page','attention'), ['status'=>'pending']), 'active'=>request('status')==='pending' && !request()->boolean('attention')],
         ['label'=>'Needs attention', 'count'=>$attentionCount, 'query'=>array_merge(request()->except('page','status'), ['attention'=>1]), 'active'=>request()->boolean('attention')],
     ];
+    if(auth()->user()->isPmo()) {
+        $projectSummary[] = ['label'=>'Drafts', 'count'=>$draftCount ?? 0, 'query'=>array_merge(request()->except('page','attention'), ['status'=>'draft']), 'active'=>request('status')==='draft' && !request()->boolean('attention')];
+    }
 @endphp
 <nav class="project-library-summary" aria-label="Filter projects">
     @foreach($projectSummary as $summaryItem)
@@ -58,6 +61,7 @@
     <select name="status" class="projects-filter-select" onchange="this.form.submit()">
         <option value="">All Statuses</option>
         @foreach(['active'=>'Active', 'pending'=>'Awaiting PM approval', 'draft'=>'Draft', 'on_hold'=>'On Hold', 'completed'=>'Completed', 'declined'=>'Declined', 'archived'=>'Archived'] as $val => $label)
+            @if(!auth()->user()->isPmo() && $val === 'draft') @continue @endif
             <option value="{{ $val }}" @selected(request('status') === $val)>{{ $label }}</option>
         @endforeach
     </select>
@@ -172,6 +176,8 @@
                                     <span class="status-pill status-declined" style="background: #FEE2E2; color: #991B1B; font-weight: 600;">PM Declined</span>
                                 @elseif($project->status === 'pending')
                                     <span class="status-pill status-pending" style="background: #FEF3C7; color: #92400E; font-weight: 600;">Awaiting PM approval</span>
+                                @elseif($project->status === 'draft')
+                                    <span class="status-pill status-draft" style="background: #F1F5F9; color: #475569; font-weight: 600;">Draft</span>
                                 @else
                                     <span class="status-pill status-{{ $project->status }}">{{ ucwords(str_replace('_', ' ', $project->status)) }}</span>
                                 @endif

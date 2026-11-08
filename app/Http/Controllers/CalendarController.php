@@ -35,10 +35,10 @@ class CalendarController
             $schedulableProjects = Project::where('status', '!=', 'archived')->orderBy('name')->get();
             $accessibleProjectIds = $schedulableProjects->pluck('id');
         } else {
-            $pmProjectIds = $user->pmProjects()->where('status', '!=', 'archived')->pluck('id');
-            $memberProjectIds = $user->memberships()->pluck('project_id');
+            $pmProjectIds = $user->pmProjects()->whereNotIn('status', ['archived', 'draft'])->pluck('id');
+            $memberProjectIds = $user->memberships()->whereHas('project', fn($q) => $q->whereNotIn('status', ['archived', 'draft']))->pluck('project_id');
             $accessibleProjectIds = $pmProjectIds->merge($memberProjectIds)->unique();
-            $schedulableProjects = Project::whereIn('id', $pmProjectIds)->where('status', '!=', 'archived')->orderBy('name')->get();
+            $schedulableProjects = Project::whereIn('id', $pmProjectIds)->whereNotIn('status', ['archived', 'draft'])->orderBy('name')->get();
         }
 
         if ($selectedProjectId && in_array((int)$selectedProjectId, $accessibleProjectIds->all(), true)) {

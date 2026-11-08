@@ -49,12 +49,15 @@ class TaskMonitorController
             ]);
         }
 
-        $projectsQuery = Project::whereIn('status', ['active', 'on_hold', 'draft'])->orderBy('name');
-        if (!$user->isPmo()) {
-            $projectsQuery->where(function ($q) use ($user) {
-                $q->whereHas('memberships', fn($m) => $m->where('user_id', $user->id))
-                  ->orWhere('pm_user_id', $user->id);
-            });
+        $projectsQuery = Project::query()->orderBy('name');
+        if ($user->isPmo()) {
+            $projectsQuery->whereIn('status', ['active', 'on_hold', 'draft']);
+        } else {
+            $projectsQuery->whereIn('status', ['active', 'on_hold'])
+                ->where(function ($q) use ($user) {
+                    $q->whereHas('memberships', fn($m) => $m->where('user_id', $user->id))
+                      ->orWhere('pm_user_id', $user->id);
+                });
         }
         $projects = $projectsQuery->get(['id', 'code', 'name']);
 

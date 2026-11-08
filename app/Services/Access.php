@@ -242,6 +242,11 @@ class Access {
         if (!$user->isActive()) return false;
         if ($user->isPmo()) return true;
 
+        // Draft projects are strictly visible ONLY to PMO Admin
+        if ($project->status === 'draft') {
+            return false;
+        }
+
         $canonical = $this->normalize($permission);
         $matching = $this->matchingKeys($permission);
 
@@ -249,7 +254,7 @@ class Access {
         $isPm = ($project->pm_user_id === $user->id);
 
         if ($isPm) {
-            if (in_array($project->status, ['pending', 'declined', 'draft'], true)) {
+            if (in_array($project->status, ['pending', 'declined'], true)) {
                 // Invited PM can review plan, tasks, and Gantt before responding
                 return in_array($canonical, ['project.view', 'tasks.view_all', 'project.gantt_view', 'project.reports_view'], true);
             }
@@ -350,10 +355,15 @@ class Access {
             return $project->status !== 'archived' || in_array($permission, ['view', 'download'], true);
         }
 
+        // Draft projects are strictly visible ONLY to PMO Admin
+        if ($project->status === 'draft') {
+            return false;
+        }
+
         // Project Manager of this project
         if ($project->pm_user_id === $user->id) {
             if (!in_array($project->status, ['active', 'on_hold', 'completed', 'archived'], true)) {
-                return in_array($permission, ['view', 'download'], true) && in_array($project->status, ['pending', 'draft', 'declined'], true);
+                return in_array($permission, ['view', 'download'], true) && in_array($project->status, ['pending', 'declined'], true);
             }
             return $project->status !== 'archived' || in_array($permission, ['view', 'download'], true);
         }
