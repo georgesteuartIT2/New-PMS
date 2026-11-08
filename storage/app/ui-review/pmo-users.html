@@ -1,0 +1,1007 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="ypcyCFwqZdA7AweYPIqGquHmrd7oMR8jNO8rp5qE">
+    <title>People · GS ProjectFlow</title>
+    <link rel="stylesheet" href="file:///C:/Users/nadumi/Desktop/GS_ProjectFlow_V3_Full_Project/GS_ProjectFlow_Complete_V2/public/css/app.css">
+    <link rel="stylesheet" href="file:///C:/Users/nadumi/Desktop/GS_ProjectFlow_V3_Full_Project/GS_ProjectFlow_Complete_V2/public/css/workspace.css">
+    <link rel="stylesheet" href="file:///C:/Users/nadumi/Desktop/GS_ProjectFlow_V3_Full_Project/GS_ProjectFlow_Complete_V2/public/css/premium.css?v=1794137180">
+                <script defer src="file:///C:/Users/nadumi/Desktop/GS_ProjectFlow_V3_Full_Project/GS_ProjectFlow_Complete_V2/public/js/app.js"></script>
+    <script defer src="file:///C:/Users/nadumi/Desktop/GS_ProjectFlow_V3_Full_Project/GS_ProjectFlow_Complete_V2/public/js/usability.js"></script>
+</head>
+<body data-page="users.index">
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <div class="app-shell">
+        <!-- Sidebar Navigation (Clean Typography, No Icons) -->
+        <aside class="sidebar" id="sidebar">
+            <a class="brand" href="http://127.0.0.1:8000/dashboard">
+                <span class="brand-mark">GS</span>
+                <div>
+                    <b>GS ProjectFlow</b>
+                    <small>Project Management, Simplified.</small>
+                </div>
+            </a>
+
+                        <nav class="nav nav-primary" aria-label="Main navigation">
+                                    <a href="http://127.0.0.1:8000/dashboard" class=" " >
+                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21h-6v-7H9v7H3z"/></svg>
+                        <span>Dashboard</span>
+                    </a>
+                                    <a href="http://127.0.0.1:8000/projects" class=" " >
+                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a1 1 0 0 1 1-1h6l2 3h8a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7z"/></svg>
+                        <span>Projects</span>
+                    </a>
+                                    <a href="http://127.0.0.1:8000/pmo/task-monitor" class=" " >
+                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h12M9 12h12M9 18h12M3 6l1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2"/></svg>
+                        <span>Tasks</span>
+                    </a>
+                                    <a href="http://127.0.0.1:8000/calendar" class=" " >
+                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3v4M16 3v4M3 10h18M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>
+                        <span>Calendar</span>
+                    </a>
+                                    <a href="http://127.0.0.1:8000/users" class="active "  aria-current="page" >
+                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg>
+                        <span>People</span>
+                    </a>
+                                    <a href="http://127.0.0.1:8000/administration" class=" nav-admin" >
+                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 17h16M8 4v6M16 14v6"/></svg>
+                        <span>Administration</span>
+                    </a>
+                            </nav>
+
+            <div class="sidebar-foot">
+                <a href="http://127.0.0.1:8000/profile" style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                    <span class="avatar">P</span>
+                    <div class="user-mini">
+                        <b>PMO Admin</b>
+                        <small>PMO Admin</small>
+                    </div>
+                </a>
+            </div>
+        </aside>
+
+        <div class="mobile-shade" data-close-menu></div>
+
+        <!-- Main Content Area -->
+        <main class="main-area">
+            <!-- Topbar (Clean Professional SaaS Header) -->
+            <header class="topbar">
+                <button class="mobile-menu-btn" type="button" data-open-menu aria-label="Open menu" aria-controls="sidebar" aria-expanded="false">
+                    <span class="menu-bar"></span>
+                    <span class="menu-bar"></span>
+                    <span class="menu-bar"></span>
+                </button>
+
+                <!-- Search Bar -->
+                <form method="get" action="http://127.0.0.1:8000/projects" class="global-search-wrap">
+                    <input type="text" name="q" class="global-search-input" aria-label="Search projects" placeholder="Search projects by name or code..." value="">
+                </form>
+
+                <!-- Actions & Profile Chip -->
+                <div class="top-actions">
+                    <a class="nav-alerts-pill" aria-label="Notifications" title="Notifications" href="http://127.0.0.1:8000/notifications">
+                        <span>Notifications</span>
+                                            </a>
+
+                    <!-- User Profile Dropdown -->
+                    <div class="user-profile-menu">
+                        <button type="button" class="user-chip-btn" id="user-profile-btn" aria-haspopup="true" aria-expanded="false" aria-controls="user-profile-panel">
+                            <span class="avatar">P</span>
+                            <div class="user-chip-info">
+                                <b>PMO Admin</b>
+                                <small>PMO Admin</small>
+                            </div>
+                            <span class="dropdown-caret"></span>
+                        </button>
+
+                        <div class="dropdown-panel" id="user-profile-panel">
+                            <a href="http://127.0.0.1:8000/profile" class="dropdown-item">My Account</a>
+                            <a href="http://127.0.0.1:8000/notifications" class="dropdown-item">Notifications</a>
+                                                            <a href="http://127.0.0.1:8000/activity" class="dropdown-item">Activity Log</a>
+                                <a href="http://127.0.0.1:8000/reports" class="dropdown-item">Reports</a>
+                                <a href="http://127.0.0.1:8000/settings" class="dropdown-item">Settings</a>
+                                                        <div class="dropdown-divider"></div>
+                            <form method="post" action="http://127.0.0.1:8000/logout">
+                                <input type="hidden" name="_token" value="ypcyCFwqZdA7AweYPIqGquHmrd7oMR8jNO8rp5qE" autocomplete="off">                                <button type="submit" class="dropdown-item dropdown-logout" style="width: 100%; text-align: left;">Sign out</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content" id="main-content" tabindex="-1">
+                                
+                <nav class="section-nav" aria-label="Section navigation">
+                    <a href="http://127.0.0.1:8000/users" class="active"  aria-current="page" >People</a>
+                    <a href="http://127.0.0.1:8000/pmo/team-monitor" class="" >Workload</a>
+            </nav>
+                <!-- Screen 9: Users Management (Clean, Low-Click, Subsidiary Column & Delete) -->
+<div class="page-head">
+    <div>
+        <h1>People</h1>
+        <p class="muted">Add people, update their details, and manage access to the system.</p>
+    </div>
+    <div class="inline-actions">
+        <a class="btn btn-outline" href="http://127.0.0.1:8000/users/azure/search">Add from Microsoft</a>
+        <button class="btn btn-primary" data-show-dialog="user-dialog" style="display: inline-flex; align-items: center; gap: 8px;">
+            <span style="font-size: 16px; line-height: 1;">+</span> Add User
+        </button>
+    </div>
+</div>
+
+<!-- Alert Box for AJAX Actions / Notifications -->
+<div id="users-alert-box" style="display: none; margin-bottom: 20px;"></div>
+
+<!-- Flash Temporary Password Alert (if generated) -->
+
+<!-- Users Filter & Table Card -->
+<div class="card" style="padding: 0; overflow: hidden;">
+    <!-- Filter Bar: Search + Subsidiary Chips -->
+    <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); background: var(--surface);">
+        <!-- Quick Subsidiary Filter Chips -->
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; align-items: center;">
+                <span class="muted text-sm" style="font-weight: 600; margin-right: 4px;">Filter:</span>
+                <button type="button" class="sub-filter-chip active" data-sub-id="" style="border: 1px solid var(--border); background: var(--primary); color: #FFFFFF; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer;">
+                    All Users (<span id="total-users-counter">4</span>)
+                </button>
+                                    <button type="button" class="sub-filter-chip " data-sub-id="3" style="border: 1px solid var(--border); background: #FFFFFF; color: var(--text); padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer;">
+                        GSC (0)
+                    </button>
+                                    <button type="button" class="sub-filter-chip " data-sub-id="2" style="border: 1px solid var(--border); background: #FFFFFF; color: var(--text); padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer;">
+                        GSL (0)
+                    </button>
+                                    <button type="button" class="sub-filter-chip " data-sub-id="4" style="border: 1px solid var(--border); background: #FFFFFF; color: var(--text); padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer;">
+                        GSO (0)
+                    </button>
+                                    <button type="button" class="sub-filter-chip " data-sub-id="1" style="border: 1px solid var(--border); background: #FFFFFF; color: var(--text); padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer;">
+                        GST (0)
+                    </button>
+                            </div>
+        
+        <!-- Live Instant Search Bar (Zero-Click Filter) -->
+        <div style="position: relative; display: flex; align-items: center;">
+            <input 
+                type="text" 
+                id="user-table-search" 
+                placeholder="Search users instantly by name or email..." 
+                value="" 
+                autocomplete="off"
+                style="width: 100%; padding-left: 14px; height: 38px; font-size: 13.5px; border-radius: var(--radius); border: 1px solid var(--border); background: #FFFFFF;"
+            >
+            <span id="user-search-count" style="position: absolute; right: 14px; font-size: 12px; color: var(--muted);"></span>
+        </div>
+    </div>
+
+    <!-- Users Table (With SUBSIDIARY column & DELETE action) -->
+    <div class="table-wrap">
+        <table id="users-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>System Role</th>
+                    <th>Subsidiary</th>
+                    <th class="right">Action</th>
+                </tr>
+            </thead>
+            <tbody id="users-tbody">
+                                    <tr id="user-row-6" class="user-row" data-name="nadumi jayawardhana" data-email="nadumi@gsoptimize.lk" data-sub-id="">
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span class="avatar avatar-sm">N</span>
+                                <div>
+                                    <a class="strong-link" href="http://127.0.0.1:8000/users/6" style="font-weight: 650; font-size: 13.5px;">
+                                        Nadumi Jayawardhana
+                                    </a>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span style="font-size: 13px; color: var(--muted);">nadumi@gsoptimize.lk</span>
+                        </td>
+                        <td>
+                                                            <span class="pill" style="background: var(--surface); color: var(--text); border: 1px solid var(--border);">User</span>
+                                                    </td>
+                        <td>
+                                                            <span class="pill todo" style="font-weight: 600;">
+                                    🏢 GEORGE STEUART OPTIMIZE (PVT) LTD
+                                </span>
+                                                    </td>
+                        <td class="right">
+                            <div class="inline-actions" style="justify-content: flex-end; gap: 8px;">
+                                <button class="btn btn-outline btn-xs" type="button" title="Edit User" data-show-dialog="edit-user-6">Edit</button>
+                                
+                                
+                                                                    <button class="btn btn-ghost btn-xs btn-delete-user" type="button" title="Delete User" data-user-id="6" data-user-name="Nadumi Jayawardhana" style="color:var(--danger);">Delete</button>
+                                                            </div>
+
+                            <!-- Edit User Dialog -->
+                            <dialog id="edit-user-6" class="modal">
+                                <div class="modal-head">
+                                    <h2>Edit User: Nadumi Jayawardhana</h2>
+                                    <button type="button" class="icon-btn" data-close-dialog>×</button>
+                                </div>
+                                <form method="post" action="http://127.0.0.1:8000/users/6" class="stack mt-16 edit-user-form" data-user-id="6">
+                                    <input type="hidden" name="_token" value="ypcyCFwqZdA7AweYPIqGquHmrd7oMR8jNO8rp5qE" autocomplete="off">                                    <input type="hidden" name="_method" value="PATCH">                                    
+                                    <label>Full Name <span class="required">*</span>
+                                        <input name="name" value="Nadumi Jayawardhana" required maxlength="120">
+                                    </label>
+                                    
+                                    <label>Email Address
+                                        <input value="nadumi@gsoptimize.lk" disabled style="background: var(--surface);">
+                                    </label>
+
+                                    <!-- Role Selection (User or PMO) -->
+                                    <label>System Role <span class="required">*</span>
+                                        <select name="system_role" >
+                                            <option value="user" selected>User (Project Manager / Team Member)</option>
+                                            <option value="pmo" >PMO Admin (System Administrator)</option>
+                                        </select>
+                                    </label>
+
+                                    <!-- Subsidiary Selection -->
+                                                                            <label>Subsidiary / Company
+                                            <select name="subsidiary_id">
+                                                <option value="">-- None / General Group --</option>
+                                                                                                    <option value="3" >
+                                                        GS Consumer Goods [GSC]
+                                                    </option>
+                                                                                                    <option value="2" >
+                                                        GS Logistics [GSL]
+                                                    </option>
+                                                                                                    <option value="4" >
+                                                        GS Optimize [GSO]
+                                                    </option>
+                                                                                                    <option value="1" >
+                                                        GS Technologies [GST]
+                                                    </option>
+                                                                                            </select>
+                                        </label>
+                                    
+                                    <label>Account Status
+                                        <select name="account_status" >
+                                            <option value="active" selected>Enabled (Active)</option>
+                                            <option value="inactive" >Disabled (Inactive)</option>
+                                        </select>
+                                    </label>
+
+                                    <div class="form-actions mt-16">
+                                        <button type="button" class="btn btn-ghost" data-close-dialog>Cancel</button>
+                                        <button class="btn btn-primary" type="submit">Save Changes</button>
+                                    </div>
+                                </form>
+                            </dialog>
+                        </td>
+                    </tr>
+                                    <tr id="user-row-2" class="user-row" data-name="pm" data-email="pm@gmail.com" data-sub-id="">
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span class="avatar avatar-sm">P</span>
+                                <div>
+                                    <a class="strong-link" href="http://127.0.0.1:8000/users/2" style="font-weight: 650; font-size: 13.5px;">
+                                        PM
+                                    </a>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span style="font-size: 13px; color: var(--muted);">pm@gmail.com</span>
+                        </td>
+                        <td>
+                                                            <span class="pill" style="background: var(--surface); color: var(--text); border: 1px solid var(--border);">User</span>
+                                                    </td>
+                        <td>
+                                                            <span class="muted text-sm">—</span>
+                                                    </td>
+                        <td class="right">
+                            <div class="inline-actions" style="justify-content: flex-end; gap: 8px;">
+                                <button class="btn btn-outline btn-xs" type="button" title="Edit User" data-show-dialog="edit-user-2">Edit</button>
+                                
+                                                                    <button class="btn btn-outline btn-xs btn-reset-password" type="button" title="Reset Password" data-user-id="2" data-user-name="PM" style="color:var(--warning);">Reset password</button>
+                                
+                                                                    <button class="btn btn-ghost btn-xs btn-delete-user" type="button" title="Delete User" data-user-id="2" data-user-name="PM" style="color:var(--danger);">Delete</button>
+                                                            </div>
+
+                            <!-- Edit User Dialog -->
+                            <dialog id="edit-user-2" class="modal">
+                                <div class="modal-head">
+                                    <h2>Edit User: PM</h2>
+                                    <button type="button" class="icon-btn" data-close-dialog>×</button>
+                                </div>
+                                <form method="post" action="http://127.0.0.1:8000/users/2" class="stack mt-16 edit-user-form" data-user-id="2">
+                                    <input type="hidden" name="_token" value="ypcyCFwqZdA7AweYPIqGquHmrd7oMR8jNO8rp5qE" autocomplete="off">                                    <input type="hidden" name="_method" value="PATCH">                                    
+                                    <label>Full Name <span class="required">*</span>
+                                        <input name="name" value="PM" required maxlength="120">
+                                    </label>
+                                    
+                                    <label>Email Address
+                                        <input value="pm@gmail.com" disabled style="background: var(--surface);">
+                                    </label>
+
+                                    <!-- Role Selection (User or PMO) -->
+                                    <label>System Role <span class="required">*</span>
+                                        <select name="system_role" >
+                                            <option value="user" selected>User (Project Manager / Team Member)</option>
+                                            <option value="pmo" >PMO Admin (System Administrator)</option>
+                                        </select>
+                                    </label>
+
+                                    <!-- Subsidiary Selection -->
+                                                                            <label>Subsidiary / Company
+                                            <select name="subsidiary_id">
+                                                <option value="">-- None / General Group --</option>
+                                                                                                    <option value="3" >
+                                                        GS Consumer Goods [GSC]
+                                                    </option>
+                                                                                                    <option value="2" >
+                                                        GS Logistics [GSL]
+                                                    </option>
+                                                                                                    <option value="4" >
+                                                        GS Optimize [GSO]
+                                                    </option>
+                                                                                                    <option value="1" >
+                                                        GS Technologies [GST]
+                                                    </option>
+                                                                                            </select>
+                                        </label>
+                                    
+                                    <label>Account Status
+                                        <select name="account_status" >
+                                            <option value="active" selected>Enabled (Active)</option>
+                                            <option value="inactive" >Disabled (Inactive)</option>
+                                        </select>
+                                    </label>
+
+                                    <div class="form-actions mt-16">
+                                        <button type="button" class="btn btn-ghost" data-close-dialog>Cancel</button>
+                                        <button class="btn btn-primary" type="submit">Save Changes</button>
+                                    </div>
+                                </form>
+                            </dialog>
+                        </td>
+                    </tr>
+                                    <tr id="user-row-1" class="user-row" data-name="pmo admin" data-email="admin@gmail.com" data-sub-id="">
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span class="avatar avatar-sm">P</span>
+                                <div>
+                                    <a class="strong-link" href="http://127.0.0.1:8000/users/1" style="font-weight: 650; font-size: 13.5px;">
+                                        PMO Admin
+                                    </a>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span style="font-size: 13px; color: var(--muted);">admin@gmail.com</span>
+                        </td>
+                        <td>
+                                                            <span class="pill" style="background: #E8F0EE; color: var(--primary); font-weight: 700;">PMO Admin</span>
+                                                    </td>
+                        <td>
+                                                            <span class="muted text-sm">—</span>
+                                                    </td>
+                        <td class="right">
+                            <div class="inline-actions" style="justify-content: flex-end; gap: 8px;">
+                                <button class="btn btn-outline btn-xs" type="button" title="Edit User" data-show-dialog="edit-user-1">Edit</button>
+                                
+                                
+                                                            </div>
+
+                            <!-- Edit User Dialog -->
+                            <dialog id="edit-user-1" class="modal">
+                                <div class="modal-head">
+                                    <h2>Edit User: PMO Admin</h2>
+                                    <button type="button" class="icon-btn" data-close-dialog>×</button>
+                                </div>
+                                <form method="post" action="http://127.0.0.1:8000/users/1" class="stack mt-16 edit-user-form" data-user-id="1">
+                                    <input type="hidden" name="_token" value="ypcyCFwqZdA7AweYPIqGquHmrd7oMR8jNO8rp5qE" autocomplete="off">                                    <input type="hidden" name="_method" value="PATCH">                                    
+                                    <label>Full Name <span class="required">*</span>
+                                        <input name="name" value="PMO Admin" required maxlength="120">
+                                    </label>
+                                    
+                                    <label>Email Address
+                                        <input value="admin@gmail.com" disabled style="background: var(--surface);">
+                                    </label>
+
+                                    <!-- Role Selection (User or PMO) -->
+                                    <label>System Role <span class="required">*</span>
+                                        <select name="system_role" disabled>
+                                            <option value="user" >User (Project Manager / Team Member)</option>
+                                            <option value="pmo" selected>PMO Admin (System Administrator)</option>
+                                        </select>
+                                    </label>
+
+                                    <!-- Subsidiary Selection -->
+                                                                            <label>Subsidiary / Company
+                                            <select name="subsidiary_id">
+                                                <option value="">-- None / General Group --</option>
+                                                                                                    <option value="3" >
+                                                        GS Consumer Goods [GSC]
+                                                    </option>
+                                                                                                    <option value="2" >
+                                                        GS Logistics [GSL]
+                                                    </option>
+                                                                                                    <option value="4" >
+                                                        GS Optimize [GSO]
+                                                    </option>
+                                                                                                    <option value="1" >
+                                                        GS Technologies [GST]
+                                                    </option>
+                                                                                            </select>
+                                        </label>
+                                    
+                                    <label>Account Status
+                                        <select name="account_status" disabled>
+                                            <option value="active" selected>Enabled (Active)</option>
+                                            <option value="inactive" >Disabled (Inactive)</option>
+                                        </select>
+                                    </label>
+
+                                    <div class="form-actions mt-16">
+                                        <button type="button" class="btn btn-ghost" data-close-dialog>Cancel</button>
+                                        <button class="btn btn-primary" type="submit">Save Changes</button>
+                                    </div>
+                                </form>
+                            </dialog>
+                        </td>
+                    </tr>
+                                    <tr id="user-row-7" class="user-row" data-name="samadhi pathirathna" data-email="samadhi@gsoptimize.lk" data-sub-id="">
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span class="avatar avatar-sm">S</span>
+                                <div>
+                                    <a class="strong-link" href="http://127.0.0.1:8000/users/7" style="font-weight: 650; font-size: 13.5px;">
+                                        Samadhi Pathirathna
+                                    </a>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span style="font-size: 13px; color: var(--muted);">samadhi@gsoptimize.lk</span>
+                        </td>
+                        <td>
+                                                            <span class="pill" style="background: var(--surface); color: var(--text); border: 1px solid var(--border);">User</span>
+                                                    </td>
+                        <td>
+                                                            <span class="pill todo" style="font-weight: 600;">
+                                    🏢 GEORGE STEUART OPTIMIZE (PVT) LTD
+                                </span>
+                                                    </td>
+                        <td class="right">
+                            <div class="inline-actions" style="justify-content: flex-end; gap: 8px;">
+                                <button class="btn btn-outline btn-xs" type="button" title="Edit User" data-show-dialog="edit-user-7">Edit</button>
+                                
+                                
+                                                                    <button class="btn btn-ghost btn-xs btn-delete-user" type="button" title="Delete User" data-user-id="7" data-user-name="Samadhi Pathirathna" style="color:var(--danger);">Delete</button>
+                                                            </div>
+
+                            <!-- Edit User Dialog -->
+                            <dialog id="edit-user-7" class="modal">
+                                <div class="modal-head">
+                                    <h2>Edit User: Samadhi Pathirathna</h2>
+                                    <button type="button" class="icon-btn" data-close-dialog>×</button>
+                                </div>
+                                <form method="post" action="http://127.0.0.1:8000/users/7" class="stack mt-16 edit-user-form" data-user-id="7">
+                                    <input type="hidden" name="_token" value="ypcyCFwqZdA7AweYPIqGquHmrd7oMR8jNO8rp5qE" autocomplete="off">                                    <input type="hidden" name="_method" value="PATCH">                                    
+                                    <label>Full Name <span class="required">*</span>
+                                        <input name="name" value="Samadhi Pathirathna" required maxlength="120">
+                                    </label>
+                                    
+                                    <label>Email Address
+                                        <input value="samadhi@gsoptimize.lk" disabled style="background: var(--surface);">
+                                    </label>
+
+                                    <!-- Role Selection (User or PMO) -->
+                                    <label>System Role <span class="required">*</span>
+                                        <select name="system_role" >
+                                            <option value="user" selected>User (Project Manager / Team Member)</option>
+                                            <option value="pmo" >PMO Admin (System Administrator)</option>
+                                        </select>
+                                    </label>
+
+                                    <!-- Subsidiary Selection -->
+                                                                            <label>Subsidiary / Company
+                                            <select name="subsidiary_id">
+                                                <option value="">-- None / General Group --</option>
+                                                                                                    <option value="3" >
+                                                        GS Consumer Goods [GSC]
+                                                    </option>
+                                                                                                    <option value="2" >
+                                                        GS Logistics [GSL]
+                                                    </option>
+                                                                                                    <option value="4" >
+                                                        GS Optimize [GSO]
+                                                    </option>
+                                                                                                    <option value="1" >
+                                                        GS Technologies [GST]
+                                                    </option>
+                                                                                            </select>
+                                        </label>
+                                    
+                                    <label>Account Status
+                                        <select name="account_status" >
+                                            <option value="active" selected>Enabled (Active)</option>
+                                            <option value="inactive" >Disabled (Inactive)</option>
+                                        </select>
+                                    </label>
+
+                                    <div class="form-actions mt-16">
+                                        <button type="button" class="btn btn-ghost" data-close-dialog>Cancel</button>
+                                        <button class="btn btn-primary" type="submit">Save Changes</button>
+                                    </div>
+                                </form>
+                            </dialog>
+                        </td>
+                    </tr>
+                            </tbody>
+        </table>
+    </div>
+
+    </div>
+
+<!-- =========================================================================
+     Unified "+ Add User" Dialog (2 Tabs: ☁ Microsoft Azure & ✍ Manual Create)
+     ========================================================================= -->
+<dialog id="user-dialog" class="modal" style="max-width: 620px;">
+    <div class="modal-head">
+        <h2>Add User</h2>
+        <button type="button" class="icon-btn" data-close-dialog>×</button>
+    </div>
+
+    <!-- Clean Tab Switcher -->
+    <div style="display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 18px; padding-bottom: 2px;">
+        <button type="button" id="tab-btn-azure" class="tab-link active" onclick="switchAddTab('azure')" style="padding: 8px 16px; font-weight: 650; font-size: 13px; border: none; background: transparent; cursor: pointer; border-bottom: 2px solid var(--primary); color: var(--primary);">
+            From Microsoft Azure
+        </button>
+        <button type="button" id="tab-btn-manual" class="tab-link" onclick="switchAddTab('manual')" style="padding: 8px 16px; font-weight: 600; font-size: 13px; border: none; background: transparent; cursor: pointer; border-bottom: 2px solid transparent; color: var(--muted);">
+            Manual Create
+        </button>
+    </div>
+
+    <!-- Tab 1: Microsoft Azure Live Search & 1-Click Add -->
+    <div id="tab-pane-azure">
+        <p class="muted text-sm" style="margin-bottom: 12px;">Search your organization's Microsoft Entra ID and add users with a single click.</p>
+        
+        <div style="position: relative; display: flex; align-items: center; margin-bottom: 14px;">
+            <input 
+                type="text" 
+                id="modal-azure-search" 
+                placeholder="Type name or work email (e.g. Aaron, abishan@gsconsumer.lk)..." 
+                autocomplete="off"
+                style="width: 100%; padding-left: 14px; height: 38px; font-size: 13.5px; border-radius: var(--radius); border: 1px solid var(--border);"
+            >
+            <span id="modal-azure-spinner" style="position: absolute; right: 12px; font-size: 11px; color: var(--muted); display: none;">Searching...</span>
+        </div>
+
+        <!-- Azure Results Container inside Modal -->
+        <div id="modal-azure-results" style="max-height: 280px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); padding: 8px;">
+            <div id="modal-azure-empty" class="muted text-sm" style="text-align: center; padding: 24px 12px;">
+                Type a name or email above to search Microsoft Entra ID.
+            </div>
+            <div id="modal-azure-list" style="display: none; display: flex; flex-direction: column; gap: 8px;"></div>
+        </div>
+
+        <div class="form-actions mt-16" style="justify-content: space-between; align-items: center;">
+            <a href="http://127.0.0.1:8000/users/azure/search" class="muted text-sm" style="text-decoration: underline;">Open dedicated Azure Search page →</a>
+            <button type="button" class="btn btn-ghost" data-close-dialog>Close</button>
+        </div>
+    </div>
+
+    <!-- Tab 2: Manual User Creation Form with Role Selection -->
+    <div id="tab-pane-manual" style="display: none;">
+        <p class="muted text-sm" style="margin-bottom: 12px;">Create a user manually with a temporary password and assigned role.</p>
+        <div id="manual-user-error" class="alert danger" style="display: none; margin-bottom: 12px;"></div>
+
+        <form id="manual-user-form" method="post" action="http://127.0.0.1:8000/users" class="stack">
+            <input type="hidden" name="_token" value="ypcyCFwqZdA7AweYPIqGquHmrd7oMR8jNO8rp5qE" autocomplete="off">            
+            <label>Full Name <span class="required">*</span>
+                <input name="name" id="manual_user_name" required maxlength="120" placeholder="e.g. Nimal Perera">
+            </label>
+
+            <label>Work Email <span class="required">*</span>
+                <input name="email" id="manual_user_email" type="email" required placeholder="nimal@company.com">
+            </label>
+
+            <!-- Role Selection -->
+            <label>System Role <span class="required">*</span>
+                <select name="system_role" id="manual_user_role">
+                    <option value="user" selected>User (Project Manager / Team Member)</option>
+                    <option value="pmo">PMO Admin (Full System Administrator)</option>
+                </select>
+                <small class="muted block mt-4">PMO Admin has full configuration access. Standard Users can manage projects and tasks assigned to them.</small>
+            </label>
+
+            <!-- Subsidiary Selection -->
+                            <label>Subsidiary Entity (Optional)
+                    <select name="subsidiary_id" id="manual_user_subsidiary">
+                        <option value="">-- None / General Group --</option>
+                                                    <option value="3">GS Consumer Goods [GSC]</option>
+                                                    <option value="2">GS Logistics [GSL]</option>
+                                                    <option value="4">GS Optimize [GSO]</option>
+                                                    <option value="1">GS Technologies [GST]</option>
+                                            </select>
+                </label>
+            
+            <div class="form-actions mt-16">
+                <button type="button" class="btn btn-ghost" data-close-dialog>Cancel</button>
+                <button type="button" class="btn btn-primary" id="btn-save-manual-user">Create User</button>
+            </div>
+        </form>
+    </div>
+</dialog>
+
+
+                <footer class="footer">
+                    GS ProjectFlow <span>·</span> Project Management, Simplified.
+                </footer>
+            </div>
+        </main>
+    </div>
+    <script>
+// Switch tabs inside Unified Add User Dialog
+function switchAddTab(tab) {
+    const paneAzure = document.getElementById('tab-pane-azure');
+    const paneManual = document.getElementById('tab-pane-manual');
+    const btnAzure = document.getElementById('tab-btn-azure');
+    const btnManual = document.getElementById('tab-btn-manual');
+
+    if (tab === 'azure') {
+        paneAzure.style.display = 'block';
+        paneManual.style.display = 'none';
+        btnAzure.style.borderBottomColor = 'var(--primary)';
+        btnAzure.style.color = 'var(--primary)';
+        btnManual.style.borderBottomColor = 'transparent';
+        btnManual.style.color = 'var(--muted)';
+        const input = document.getElementById('modal-azure-search');
+        if (input) setTimeout(() => input.focus(), 50);
+    } else {
+        paneAzure.style.display = 'none';
+        paneManual.style.display = 'block';
+        btnManual.style.borderBottomColor = 'var(--primary)';
+        btnManual.style.color = 'var(--primary)';
+        btnAzure.style.borderBottomColor = 'transparent';
+        btnAzure.style.color = 'var(--muted)';
+        const input = document.getElementById('manual_user_name');
+        if (input) setTimeout(() => input.focus(), 50);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    const alertBox = document.getElementById('users-alert-box');
+
+    function showAlert(msg, type = 'success') {
+        if (!alertBox) return;
+        alertBox.className = 'alert ' + type;
+        alertBox.textContent = msg;
+        alertBox.style.display = 'block';
+        setTimeout(() => { alertBox.style.display = 'none'; }, 5000);
+    }
+
+    // ---------------------------------------------------------
+    // 1. Live Instant Table Search (Zero Clicks, instant filter)
+    // ---------------------------------------------------------
+    const tableSearch = document.getElementById('user-table-search');
+    const rows = document.querySelectorAll('.user-row');
+    const searchCount = document.getElementById('user-search-count');
+
+    function filterTable() {
+        const query = tableSearch ? tableSearch.value.toLowerCase().trim() : '';
+        const activeSubBtn = document.querySelector('.sub-filter-chip.active');
+        const activeSub = activeSubBtn ? activeSubBtn.dataset.subId : '';
+
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const name = row.dataset.name || '';
+            const email = row.dataset.email || '';
+            const sub = row.dataset.subId || '';
+
+            const matchText = !query || name.includes(query) || email.includes(query);
+            const matchSub = !activeSub || sub === activeSub;
+
+            if (matchText && matchSub) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        if (searchCount && query) {
+            searchCount.textContent = visibleCount + ' matches';
+        } else if (searchCount) {
+            searchCount.textContent = '';
+        }
+    }
+
+    if (tableSearch) {
+        tableSearch.addEventListener('input', filterTable);
+    }
+
+    // Subsidiary Filter Chips
+    document.querySelectorAll('.sub-filter-chip').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.sub-filter-chip').forEach(b => {
+                b.classList.remove('active');
+                b.style.background = '#FFFFFF';
+                b.style.color = 'var(--text)';
+            });
+            this.classList.add('active');
+            this.style.background = 'var(--primary)';
+            this.style.color = '#FFFFFF';
+            filterTable();
+        });
+    });
+
+    // ---------------------------------------------------------
+    // 2. 1-Click User Delete (Permanent Delete with safe cleanup)
+    // ---------------------------------------------------------
+    document.querySelectorAll('.btn-delete-user').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const userId = this.dataset.userId;
+            const userName = this.dataset.userName || 'User';
+
+            if (!confirm(`Are you sure you want to permanently delete user "${userName}"?\n\nThis will remove their project access, task assignments, and memberships.`)) {
+                return;
+            }
+
+            this.disabled = true;
+            const row = document.getElementById('user-row-' + userId);
+
+            try {
+                const res = await fetch(`/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                });
+
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'Could not delete user.');
+
+                if (row) {
+                    row.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                    row.style.opacity = '0';
+                    row.style.transform = 'translateX(20px)';
+                    setTimeout(() => {
+                        row.remove();
+                        const counter = document.getElementById('total-users-counter');
+                        if (counter) {
+                            const cur = parseInt(counter.textContent) || 1;
+                            counter.textContent = Math.max(0, cur - 1);
+                        }
+                    }, 300);
+                }
+
+                showAlert(`✓ User "${userName}" has been deleted.`, 'success');
+            } catch (err) {
+                this.disabled = false;
+                showAlert(err.message, 'danger');
+            }
+        });
+    });
+
+    // ---------------------------------------------------------
+    // 3. 1-Click Temporary Password Reset
+    // ---------------------------------------------------------
+    document.querySelectorAll('.btn-reset-password').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            const userId = this.dataset.userId;
+            const userName = this.dataset.userName || 'User';
+
+            if (!confirm(`Generate a new temporary password for ${userName}?`)) return;
+
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`/users/${userId}/temporary-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    }
+                });
+
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || 'Password reset failed.');
+
+                alert(`Temporary password generated for ${userName}:\n\n${data.temp_password}\n\nCopy this password now. The user will be required to change it on login.`);
+            } catch (err) {
+                showAlert(err.message, 'danger');
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    });
+
+    // ---------------------------------------------------------
+    // 4. Modal Tab 1: Live Azure Search inside "+ Add User"
+    // ---------------------------------------------------------
+    const modalAzureSearch = document.getElementById('modal-azure-search');
+    const modalAzureSpinner = document.getElementById('modal-azure-spinner');
+    const modalAzureEmpty = document.getElementById('modal-azure-empty');
+    const modalAzureList = document.getElementById('modal-azure-list');
+    let modalDebounce = null;
+
+    if (modalAzureSearch) {
+        modalAzureSearch.addEventListener('input', function() {
+            const query = this.value.trim();
+            clearTimeout(modalDebounce);
+
+            if (query.length < 2) {
+                if (modalAzureSpinner) modalAzureSpinner.style.display = 'none';
+                if (modalAzureList) modalAzureList.style.display = 'none';
+                if (modalAzureEmpty) {
+                    modalAzureEmpty.style.display = 'block';
+                    modalAzureEmpty.textContent = '🔍 Type a name or email above to search Microsoft Entra ID.';
+                }
+                return;
+            }
+
+            if (modalAzureSpinner) modalAzureSpinner.style.display = 'inline';
+
+            modalDebounce = setTimeout(async function() {
+                try {
+                    const res = await fetch(`http://127.0.0.1:8000/users/azure/search?q=${encodeURIComponent(query)}&ajax=1`, {
+                        headers: { 'Accept': 'application/json' }
+                    });
+
+                    if (modalAzureSpinner) modalAzureSpinner.style.display = 'none';
+                    if (!res.ok) return;
+
+                    const data = await res.json();
+                    renderModalAzureResults(data.results, query);
+                } catch (e) {
+                    if (modalAzureSpinner) modalAzureSpinner.style.display = 'none';
+                }
+            }, 300);
+        });
+    }
+
+    function renderModalAzureResults(items, query) {
+        if (!items || items.length === 0) {
+            modalAzureList.style.display = 'none';
+            modalAzureEmpty.style.display = 'block';
+            modalAzureEmpty.textContent = `No users found matching "${query}".`;
+            return;
+        }
+
+        modalAzureEmpty.style.display = 'none';
+        modalAzureList.style.display = 'flex';
+
+        let html = '';
+        items.forEach(u => {
+            const initial = (u.displayName ? u.displayName.charAt(0) : 'U').toUpperCase();
+            const actionBtn = u.isAdded
+                ? `<span class="pill active" style="font-size: 11px;">✓ In System</span>`
+                : `<button type="button" class="btn btn-primary btn-sm btn-modal-add-azure" data-azure-id="${u.id}" data-user-name="${escapeHtml(u.displayName)}">+ Add</button>`;
+
+            html += `
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #FFFFFF; border: 1px solid var(--border); border-radius: var(--radius); gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px; min-width: 0;">
+                        <span class="avatar avatar-sm" style="flex-shrink: 0;">${initial}</span>
+                        <div style="min-width: 0;">
+                            <b style="font-size: 13px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(u.displayName)}</b>
+                            <small class="muted" style="display: block; font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(u.email)} ${u.company ? '· ' + escapeHtml(u.company) : ''}</small>
+                        </div>
+                    </div>
+                    <div id="modal-azure-action-${u.id}">
+                        ${actionBtn}
+                    </div>
+                </div>
+            `;
+        });
+
+        modalAzureList.innerHTML = html;
+
+        // Bind Add click
+        modalAzureList.querySelectorAll('.btn-modal-add-azure').forEach(btn => {
+            btn.addEventListener('click', async function() {
+                const azureId = this.dataset.azureId;
+                const userName = this.dataset.userName || 'User';
+                const cell = document.getElementById('modal-azure-action-' + azureId);
+
+                this.disabled = true;
+                this.textContent = 'Adding...';
+
+                try {
+                    const res = await fetch("http://127.0.0.1:8000/users/azure/add", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken
+                        },
+                        body: JSON.stringify({ azure_id: azureId })
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.message || 'Failed to add user.');
+
+                    if (cell) {
+                        cell.innerHTML = '<span class="pill active" style="font-size: 11px;">✓ Added</span>';
+                    }
+
+                    showAlert(`✓ Successfully added ${userName} from Microsoft Azure!`, 'success');
+                    setTimeout(() => window.location.reload(), 1200);
+                } catch (err) {
+                    this.disabled = false;
+                    this.textContent = '+ Add';
+                    alert(err.message);
+                }
+            });
+        });
+    }
+
+    // ---------------------------------------------------------
+    // 5. Modal Tab 2: Manual User Creation with Role
+    // ---------------------------------------------------------
+    const btnSaveManual = document.getElementById('btn-save-manual-user');
+    if (btnSaveManual) {
+        btnSaveManual.addEventListener('click', async function() {
+            const nameInput = document.getElementById('manual_user_name');
+            const emailInput = document.getElementById('manual_user_email');
+            const roleSelect = document.getElementById('manual_user_role');
+            const subSelect = document.getElementById('manual_user_subsidiary');
+            const errorBox = document.getElementById('manual-user-error');
+            const dialog = document.getElementById('user-dialog');
+
+            if (!nameInput.value.trim() || !emailInput.value.trim()) {
+                errorBox.style.display = 'block';
+                errorBox.textContent = 'Please enter both full name and a valid work email.';
+                return;
+            }
+
+            errorBox.style.display = 'none';
+            btnSaveManual.disabled = true;
+            btnSaveManual.textContent = 'Creating...';
+
+            try {
+                const res = await fetch("http://127.0.0.1:8000/users", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({
+                        name: nameInput.value.trim(),
+                        email: emailInput.value.trim(),
+                        system_role: roleSelect ? roleSelect.value : 'user',
+                        subsidiary_id: subSelect ? subSelect.value : null
+                    })
+                });
+
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.message || (data.errors ? Object.values(data.errors).flat().join(' ') : 'Could not create user.'));
+                }
+
+                if (dialog && typeof dialog.close === 'function') dialog.close();
+
+                alert(`User created successfully!\n\nName: ${data.user.name}\nEmail: ${data.user.email}\nTemporary Password: ${data.temp_password}\n\nPlease copy this password securely for the user.`);
+                window.location.reload();
+            } catch (err) {
+                errorBox.style.display = 'block';
+                errorBox.textContent = err.message;
+            } finally {
+                btnSaveManual.disabled = false;
+                btnSaveManual.textContent = 'Create User';
+            }
+        });
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return String(str).replace(/[&<>"']/g, function(m) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+        });
+    }
+});
+</script>
+</body>
+</html>

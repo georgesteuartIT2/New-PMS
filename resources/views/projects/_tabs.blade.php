@@ -1,1 +1,5 @@
-{{-- Legacy project tabs (Overview, Tasks, Team, Gantt Chart, Files, Closure) removed in favor of unified workspace navigation on projects.show --}}
+<nav class="project-return-nav" aria-label="Project navigation">
+    <a href="{{ route('projects.index') }}">Projects</a>
+    <span aria-hidden="true">/</span>
+    <a href="{{ route('projects.show', $project) }}">{{ $project->name }} workspace</a>
+</nav>

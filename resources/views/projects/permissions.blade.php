@@ -1,6 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Project Role Permissions')
 @section('content')
+@include('projects._tabs')
 
 <div class="page-head">
     <div>

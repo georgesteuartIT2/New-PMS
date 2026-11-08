@@ -10,32 +10,28 @@
     </div>
     <div class="inline-actions">
         @if(auth()->user()->isPmo())
-            <a class="btn btn-outline" href="{{ route('gantt.portfolio') }}">Portfolio Gantt</a>
+            <a class="btn btn-ghost" href="{{ route('templates.index') }}">Templates</a>
+            <a class="btn btn-ghost" href="{{ route('gantt.portfolio') }}">Portfolio timeline</a>
             <a class="btn btn-primary" href="{{ route('projects.create') }}">+ New Project</a>
         @endif
     </div>
 </div>
 
-<!-- 4 KPI Metric Cards in a row -->
-<div class="projects-kpi-row">
-    <div class="projects-kpi-card">
-        <span class="projects-kpi-label">{{ auth()->user()->isPmo() ? 'All Projects' : 'My Projects' }}</span>
-        <div class="projects-kpi-val">{{ $totalCount }}</div>
-    </div>
-    <div class="projects-kpi-card">
-        <span class="projects-kpi-label">Active Projects</span>
-        <div class="projects-kpi-val">{{ $activeCount }}</div>
-    </div>
-    <div class="projects-kpi-card">
-        <span class="projects-kpi-label">{{ auth()->user()->isPmo() ? 'Pending PM Acceptance' : 'Pending Action' }}</span>
-        <div class="projects-kpi-val">{{ $pendingCount }}</div>
-    </div>
-    <div class="projects-kpi-card {{ $attentionCount > 0 ? 'kpi-card-warning' : '' }}">
-        <span class="projects-kpi-label">Need Attention</span>
-        <div class="projects-kpi-val {{ $attentionCount > 0 ? 'text-warning' : '' }}">{{ $attentionCount }}</div>
-    </div>
-</div>
-
+@php
+    $projectSummary = [
+        ['label'=>'All projects', 'count'=>$totalCount, 'query'=>request()->except('page','status','attention'), 'active'=>!request()->filled('status') && !request()->boolean('attention')],
+        ['label'=>'Active', 'count'=>$activeCount, 'query'=>array_merge(request()->except('page','attention'), ['status'=>'active']), 'active'=>request('status')==='active' && !request()->boolean('attention')],
+        ['label'=>auth()->user()->isPmo() ? 'Awaiting PM approval' : 'Pending action', 'count'=>$pendingCount, 'query'=>array_merge(request()->except('page','attention'), ['status'=>'pending']), 'active'=>request('status')==='pending' && !request()->boolean('attention')],
+        ['label'=>'Needs attention', 'count'=>$attentionCount, 'query'=>array_merge(request()->except('page','status'), ['attention'=>1]), 'active'=>request()->boolean('attention')],
+    ];
+@endphp
+<nav class="project-library-summary" aria-label="Filter projects">
+    @foreach($projectSummary as $summaryItem)
+        <a href="{{ route('projects.index', $summaryItem['query']) }}" class="{{ $summaryItem['active'] ? 'active' : '' }}" @if($summaryItem['active']) aria-current="true" @endif>
+            <span>{{ $summaryItem['label'] }}</span><strong>{{ $summaryItem['count'] }}</strong>
+        </a>
+    @endforeach
+</nav>
 <!-- Search and Filter Bar -->
 <form method="get" action="{{ route('projects.index') }}" id="projects-filter-form" class="projects-toolbar-wrap">
     <div class="projects-search-input-wrap">
@@ -61,18 +57,25 @@
 
     <select name="status" class="projects-filter-select" onchange="this.form.submit()">
         <option value="">All Statuses</option>
-        @foreach(['active'=>'Active', 'pending'=>'Pending PM Acceptance', 'draft'=>'Draft', 'on_hold'=>'On Hold', 'completed'=>'Completed', 'declined'=>'Declined', 'archived'=>'Archived'] as $val => $label)
+        @foreach(['active'=>'Active', 'pending'=>'Awaiting PM approval', 'draft'=>'Draft', 'on_hold'=>'On Hold', 'completed'=>'Completed', 'declined'=>'Declined', 'archived'=>'Archived'] as $val => $label)
             <option value="{{ $val }}" @selected(request('status') === $val)>{{ $label }}</option>
         @endforeach
     </select>
 
+    @if(request()->filled('q') || request()->filled('status') || request()->filled('subsidiary_id') || request()->filled('scope') || request()->boolean('attention'))
+        <a href="{{ route('projects.index') }}" class="btn btn-ghost btn-sm">Clear filters</a>
+    @endif
+    @if(request()->boolean('attention'))
+        <input type="hidden" name="attention" value="1">
+        <span class="filter-context">Showing projects needing attention</span>
+    @endif
     <div class="view-toggle-group">
-        <button type="button" class="view-toggle-btn active" id="view-btn-list" title="List view" onclick="switchProjectsView('list')">
+        <button type="button" class="view-toggle-btn active" id="view-btn-list" aria-label="List view" aria-pressed="true" title="List view" onclick="switchProjectsView('list')">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M2.5 3.5a1 1 0 0 1 1-1h9a1 1 0 1 1 0 2h-9a1 1 0 0 1-1-1zm0 4.5a1 1 0 0 1 1-1h9a1 1 0 1 1 0 2h-9a1 1 0 0 1-1-1zm0 4.5a1 1 0 0 1 1-1h9a1 1 0 1 1 0 2h-9a1 1 0 0 1-1-1z"/>
             </svg>
         </button>
-        <button type="button" class="view-toggle-btn" id="view-btn-grid" title="Grid view" onclick="switchProjectsView('grid')">
+        <button type="button" class="view-toggle-btn" id="view-btn-grid" aria-label="Grid view" aria-pressed="false" title="Grid view" onclick="switchProjectsView('grid')">
             <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M1 2.5A1.5 1.5 0 0 1 2.5 1h3A1.5 1.5 0 0 1 7 2.5v3A1.5 1.5 0 0 1 5.5 7h-3A1.5 1.5 0 0 1 1 5.5v-3zm0 8A1.5 1.5 0 0 1 2.5 9h3A1.5 1.5 0 0 1 7 10.5v3A1.5 1.5 0 0 1 5.5 15h-3A1.5 1.5 0 0 1 1 13.5v-3zm8-8A1.5 1.5 0 0 1 10.5 1h3A1.5 1.5 0 0 1 15 2.5v3A1.5 1.5 0 0 1 13.5 7h-3A1.5 1.5 0 0 1 9 5.5v-3zm0 8A1.5 1.5 0 0 1 10.5 9h3a1.5 1.5 0 0 1 1.5 1.5v3a1.5 1.5 0 0 1-1.5 1.5h-3A1.5 1.5 0 0 1 9 13.5v-3z"/>
             </svg>
@@ -86,13 +89,13 @@
         <table class="projects-table">
             <thead>
                 <tr>
-                    <th>PROJECT</th>
-                    <th>{{ auth()->user()->isPmo() ? 'PROJECT MANAGER' : 'MY ROLE' }}</th>
-                    <th>TASKS</th>
-                    <th>PROGRESS</th>
-                    <th>DEADLINE</th>
-                    <th>STATUS & HEALTH</th>
-                    <th class="right">ACTIONS</th>
+                    <th>Project</th>
+                    <th>{{ auth()->user()->isPmo() ? 'Project manager' : 'My role' }}</th>
+
+                    <th>Progress</th>
+                    <th>Due</th>
+                    <th>Status</th>
+                    <th class="right"><span class="library-sr-only">Actions</span></th>
                 </tr>
             </thead>
             <tbody>
@@ -147,18 +150,12 @@
                                 </span>
                             @endif
                         </td>
-                        <td>
-                            @if($canViewTasks)
-                                <span class="tasks-count-badge">{{ $project->completed_tasks_count ?? 0 }} / {{ $project->tasks_count ?? 0 }}</span>
-                            @else
-                                <span class="muted text-sm">—</span>
-                            @endif
-                        </td>
+
                         <td>
                             @if($canViewTasks)
                                 <div class="progress-col-wrap">
                                     <span class="progress-pct-val">{{ $project->progress }}%</span>
-                                    <div class="progress-track-wide">
+                                    <small class="project-completion">{{ $project->completed_tasks_count ?? 0 }} / {{ $project->tasks_count ?? 0 }} tasks</small><div class="progress-track-wide">
                                         <div class="progress-fill" style="width: {{ $project->progress }}%;"></div>
                                     </div>
                                 </div>
@@ -174,7 +171,7 @@
                                 @if($project->status === 'declined')
                                     <span class="status-pill status-declined" style="background: #FEE2E2; color: #991B1B; font-weight: 600;">PM Declined</span>
                                 @elseif($project->status === 'pending')
-                                    <span class="status-pill status-pending" style="background: #FEF3C7; color: #92400E; font-weight: 600;">Pending Acceptance</span>
+                                    <span class="status-pill status-pending" style="background: #FEF3C7; color: #92400E; font-weight: 600;">Awaiting PM approval</span>
                                 @else
                                     <span class="status-pill status-{{ $project->status }}">{{ ucwords(str_replace('_', ' ', $project->status)) }}</span>
                                 @endif
@@ -205,7 +202,7 @@
                                             class="btn btn-outline btn-xs btn-review-delay" 
                                             onclick="openDelayAnalysis({{ $project->id }})"
                                             title="Open Project Delay & Critical Path Investigation">
-                                        Review Delay
+                                        Review
                                     </button>
                                 @endif
 
@@ -217,22 +214,16 @@
                                     <a href="{{ route('projects.show', $project) }}" class="btn btn-primary btn-xs">Review & Respond</a>
                                 @elseif(auth()->user()->isPmo() && $project->status === 'pending')
                                     <a href="{{ route('projects.show', [$project, 'reassign' => 1]) }}" class="btn btn-outline btn-xs">Reassign PM</a>
-                                @elseif($isPm)
-                                    <a href="{{ route('projects.show', $project) }}" class="btn btn-outline btn-xs">Open Plan</a>
-                                @elseif($canViewTasks)
-                                    <a href="{{ route('projects.show', $project) }}" class="btn btn-outline btn-xs">View Project</a>
-                                @else
-                                    <a href="{{ route('projects.show', $project) }}" class="btn btn-outline btn-xs">My Tasks</a>
                                 @endif
 
                                 <!-- 3-Dots Dropdown Trigger -->
                                 <div style="position: relative;">
-                                    <button type="button" class="btn-dots" onclick="toggleProjectMenu(event, 'proj-menu-{{ $project->id }}')" aria-label="More actions">⋮</button>
+                                    <button type="button" class="btn-dots" onclick="toggleProjectMenu(event, 'proj-menu-{{ $project->id }}')" aria-label="More project actions" aria-haspopup="true" aria-expanded="false">⋮</button>
                                     <div class="actions-dropdown-panel" id="proj-menu-{{ $project->id }}">
                                         <a href="{{ route('projects.show', $project) }}" class="dropdown-item">View Project</a>
                                         <button type="button" class="dropdown-item" onclick="openDelayAnalysis({{ $project->id }})">Delay Analysis</button>
                                         @if(auth()->user()->isPmo() || (isset($access) && $access->project(auth()->user(), $project, 'edit_project')))
-                                            <a href="{{ route('projects.edit', $project) }}" class="dropdown-item">Edit Project</a>
+                                            <a href="{{ route('projects.edit', $project) }}" class="dropdown-item" data-project-editor-url="{{ route('projects.edit', [$project, 'popup'=>1]) }}">Edit Project</a>
                                         @endif
                                         @if($canViewTasks)
                                             <a href="{{ route('projects.show', $project) }}#gantt" class="dropdown-item">Gantt Chart</a>
@@ -245,7 +236,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="empty-state">
+                        <td colspan="6" class="empty-state">
                             No projects found matching the filter criteria.
                         </td>
                     </tr>
@@ -281,7 +272,7 @@
                     @if($project->status === 'declined')
                         <span class="status-pill status-declined" style="background: #FEE2E2; color: #991B1B; font-weight: 600;">PM Declined</span>
                     @elseif($project->status === 'pending')
-                        <span class="status-pill status-pending" style="background: #FEF3C7; color: #92400E; font-weight: 600;">Pending Acceptance</span>
+                        <span class="status-pill status-pending" style="background: #FEF3C7; color: #92400E; font-weight: 600;">Awaiting PM approval</span>
                     @else
                         <span class="status-pill status-{{ $project->status }}">{{ ucwords(str_replace('_', ' ', $project->status)) }}</span>
                     @endif
@@ -319,7 +310,7 @@
                     <span>Progress</span>
                     <span>{{ $project->progress }}%</span>
                 </div>
-                <div class="progress-track-wide">
+                <small class="project-completion">{{ $project->completed_tasks_count ?? 0 }} / {{ $project->tasks_count ?? 0 }} tasks</small><div class="progress-track-wide">
                     <div class="progress-fill" style="width: {{ $project->progress }}%;"></div>
                 </div>
             </div>
@@ -1441,6 +1432,8 @@ function switchProjectsView(view) {
     const listBtn = document.getElementById('view-btn-list');
     const gridBtn = document.getElementById('view-btn-grid');
 
+    listBtn.setAttribute('aria-pressed', String(view !== 'grid'));
+    gridBtn.setAttribute('aria-pressed', String(view === 'grid'));
     if (view === 'grid') {
         listContainer.style.display = 'none';
         gridContainer.style.display = 'grid';
@@ -1464,15 +1457,36 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Dropdown menu toggle
+let projectLibraryMenuOpener = null;
+function closeProjectLibraryMenus() {
+    document.querySelectorAll('.actions-dropdown-panel').forEach(panel => panel.classList.remove('show'));
+    document.querySelectorAll('.btn-dots').forEach(button => button.setAttribute('aria-expanded', 'false'));
+}
 function toggleProjectMenu(event, menuId) {
     event.stopPropagation();
-    const allPanels = document.querySelectorAll('.actions-dropdown-panel');
-    allPanels.forEach(p => {
-        if(p.id !== menuId) p.classList.remove('show');
-    });
     const panel = document.getElementById(menuId);
-    if(panel) panel.classList.toggle('show');
+    if (!panel) return;
+    const wasOpen = panel.classList.contains('show');
+    closeProjectLibraryMenus();
+    if (wasOpen) return;
+    projectLibraryMenuOpener = event.currentTarget;
+    panel.classList.add('show');
+    projectLibraryMenuOpener.setAttribute('aria-expanded', 'true');
+    const rect = projectLibraryMenuOpener.getBoundingClientRect();
+    panel.style.position = 'fixed';
+    panel.style.right = Math.max(12, window.innerWidth - rect.right) + 'px';
+    panel.style.left = 'auto';
+    panel.style.bottom = 'auto';
+    panel.style.top = Math.max(12, Math.min(rect.bottom + 6, window.innerHeight - panel.offsetHeight - 12)) + 'px';
 }
+document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && document.querySelector('.actions-dropdown-panel.show')) {
+        closeProjectLibraryMenus();
+        projectLibraryMenuOpener?.focus();
+    }
+});
+window.addEventListener('resize', closeProjectLibraryMenus);
+document.addEventListener('scroll', closeProjectLibraryMenus, true);
 
 document.addEventListener('click', (e) => {
     if(!e.target.closest('.table-actions-cell')) {
@@ -2126,3 +2140,8 @@ function escapeHtml(str) {
 @endpush
 
 @endsection
+
+@push('scripts')
+<link rel="stylesheet" href="{{ asset('css/project-workspace.css') }}?v={{ filemtime(public_path('css/project-workspace.css')) }}">
+<script defer src="{{ asset('js/project-editor.js') }}?v={{ filemtime(public_path('js/project-editor.js')) }}"></script>
+@endpush

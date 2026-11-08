@@ -11,4 +11,5 @@ class Project extends Model {
  public function memberships(){return $this->hasMany(ProjectMembership::class);}
  public function tasks(){return $this->hasMany(Task::class);}
  public function invitations(){return $this->hasMany(ProjectInvitation::class);}
+ public function meetings(){return $this->hasMany(Meeting::class);}
 }

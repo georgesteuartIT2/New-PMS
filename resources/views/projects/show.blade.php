@@ -4,24 +4,19 @@
 
 <div class="project-workspace-v3" id="project-workspace">
 
-    <!-- Breadcrumb Trail -->
-    <div class="breadcrumb-trail" style="margin-bottom: 10px; font-size: 13px; color: var(--muted);">
-        <a href="{{ route('projects.index') }}" style="color: var(--muted); text-decoration: none;">Projects</a>
-        <span class="crumb-sep" style="margin: 0 6px;">›</span>
-        <span style="color: var(--text); font-weight: 500;">{{ $project->name }}</span>
-    </div>
-
+    <nav class="workspace-breadcrumb" aria-label="Breadcrumb">
+        <a href="{{ route('projects.index') }}">&larr; Projects</a>
+    </nav>
+    <section class="workspace-overview-card" aria-label="Project overview">
     <!-- Title & Top Action Bar -->
     <div class="pw-head-row">
         <div class="pw-head-left">
-            <h1>{{ $project->name }}</h1>
-            <div class="pw-head-meta">
-                <span>{{ $project->code }}</span>
-                <span class="meta-sep">|</span>
-                <span>{{ $project->subsidiary?->name ?? 'General Group' }}</span>
+            <span class="project-identity-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a1 1 0 0 1 1-1h6l2 3h8a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7z"/></svg></span>
+            <div class="project-identity-copy">
+                <h1>{{ $project->name }}</h1>
+                <div class="pw-head-meta"><span>{{ $project->code }}</span><span class="meta-sep" aria-hidden="true">&middot;</span><span>{{ $project->subsidiary?->name ?? 'General Group' }}</span></div>
             </div>
         </div>
-
         <div class="pw-head-actions">
             <!-- Project Status Badge -->
             <span class="project-status-pill status-{{ $project->status }}">
@@ -30,24 +25,23 @@
                     @if($project->status === 'declined')
                         PM Declined
                     @elseif($project->status === 'pending')
-                        Pending Acceptance
+                        Pending PM Approval
                     @else
                         {{ ucwords(str_replace('_', ' ', $project->status)) }}
                     @endif
                 </span>
             </span>
 
+            @if(app(\App\Services\Access::class)->project(auth()->user(), $project, 'edit_project') && $project->status !== 'archived')
+                <button type="button" class="btn btn-outline workspace-edit-project" data-show-dialog="project-edit-dialog">Edit project</button>
+            @endif
             <!-- More Actions (...) Dropdown -->
             <div class="pw-dropdown-wrap">
                 <button type="button" class="pw-more-btn pw-dropdown-toggle" title="More project actions" aria-label="More actions">
                     ···
                 </button>
                 <div class="pw-dropdown-menu align-right">
-                    @if(app(\App\Services\Access::class)->project(auth()->user(), $project, 'edit_project') && $project->status !== 'archived')
-                        <button type="button" class="pw-dropdown-item" data-show-dialog="project-edit-dialog">Edit Project Details</button>
-                    @endif
-
-                    @if($health && !$health['baseline_available'] && $canTeam && in_array($project->status, ['active', 'on_hold'], true))
+@if($health && !$health['baseline_available'] && $canTeam && in_array($project->status, ['active', 'on_hold'], true))
                         <form method="post" action="{{ route('projects.baseline', $project) }}">
                             @csrf
                             <button type="submit" class="pw-dropdown-item">Capture Schedule Baseline</button>
@@ -86,7 +80,7 @@
                     </div>
                     <div>
                         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
-                            <h2 style="font-size: 16.5px; font-weight: 700; margin: 0; color: #FFFFFF; letter-spacing: -0.2px;">Project Manager Assignment Request</h2>
+                            <h2 style="font-size: 16.5px; font-weight: 700; margin: 0; color: #FFFFFF; letter-spacing: -0.2px;">Your approval is needed</h2>
                             <span style="display: inline-flex; align-items: center; gap: 4px; background: rgba(255, 255, 255, 0.16); color: #E8F4EC; font-size: 10.5px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.5px; padding: 1px 7px; border-radius: 4px;">
                                 <span style="width: 5px; height: 5px; border-radius: 50%; background: #4ADE80;"></span> Action Required
                             </span>
@@ -101,7 +95,7 @@
                         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                         Decline Assignment
                     </button>
-                    <form action="{{ route('projects.respond', $project) }}" method="post" style="display: inline;" onsubmit="return confirm('Are you ready to accept this project assignment? This will activate the schedule plan and lock the initial baseline.');">
+                    <form action="{{ route('projects.respond', $project) }}" method="post" style="display: inline;">
                         @csrf
                         <input type="hidden" name="decision" value="accept">
                         <button type="submit" class="btn" style="background: #FFFFFF; color: #234842; border: 1px solid #FFFFFF; font-weight: 700; font-size: 13px; padding: 7px 18px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.14); cursor: pointer; transition: all 0.15s ease; display: inline-flex; align-items: center; gap: 6px;">
@@ -282,45 +276,39 @@
         </section>
     @endif
 
-    <!-- 5 Top KPI Cards Row -->
-    <div class="project-metrics-strip">
-        <!-- 1. Progress -->
-        <div class="project-metric-cell">
-            <span class="project-metric-label">Progress</span>
-            <div class="project-metric-val-row">
-                <span class="project-metric-val">{{ $project->progress }}%</span>
-                <div class="project-metric-progress-track">
-                    <div class="project-metric-progress-fill" style="width: {{ $project->progress }}%;"></div>
-                </div>
-            </div>
+    <dl class="workspace-summary workspace-overview-details" aria-label="Project summary">
+        <div class="workspace-manager">
+            <dt>Project manager</dt>
+            <dd>
+                @if($project->manager)
+                    <span class="workspace-manager-avatar" aria-hidden="true">{{ Str::upper(Str::substr($project->manager->name, 0, 1)) }}</span>
+                    <span class="workspace-manager-name">{{ $project->manager->name }}</span>
+                @else
+                    <span class="workspace-manager-unassigned">Not assigned</span>
+                @endif
+            </dd>
         </div>
-
-        <!-- 2. Tasks -->
-        <div class="project-metric-cell">
-            <span class="project-metric-label">Tasks</span>
-            <div class="project-metric-val">{{ $completedCount }} / {{ $totalCount }}</div>
+        <div class="workspace-schedule">
+            <dt>Schedule</dt>
+            <dd>
+                <time datetime="{{ $project->starts_on->format('Y-m-d') }}" aria-label="Start date">{{ $project->starts_on->format('d M Y') }}</time>
+                <span class="workspace-date-separator" aria-hidden="true">&rarr;</span>
+                <time datetime="{{ $project->ends_on->format('Y-m-d') }}" aria-label="Due date">{{ $project->ends_on->format('d M Y') }}</time>
+            </dd>
         </div>
-
-        <!-- 3. Start Date -->
-        <div class="project-metric-cell">
-            <span class="project-metric-label">Start Date</span>
-            <div class="project-metric-val">{{ $project->starts_on->format('d M Y') }}</div>
+        <div class="workspace-summary-progress">
+            <dt>Progress</dt>
+            <dd>
+                <strong>{{ $project->progress }}%</strong>
+                <span class="workspace-progress-track" role="progressbar" aria-label="Project progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ $project->progress }}">
+                    <span style="width:{{ $project->progress }}%;"></span>
+                </span>
+                <span class="workspace-completed-tasks">{{ $completedCount }} of {{ $totalCount }} tasks complete</span>
+            </dd>
         </div>
-
-        <!-- 4. Deadline -->
-        <div class="project-metric-cell">
-            <span class="project-metric-label">Deadline</span>
-            <div class="project-metric-val">{{ $project->ends_on->format('d M Y') }}</div>
-        </div>
-
-        <!-- 5. Remaining -->
-        <div class="project-metric-cell">
-            <span class="project-metric-label">Remaining</span>
-            <div class="project-metric-val">{{ $remainingCount }} {{ Str::plural('Task', $remainingCount) }}</div>
-        </div>
-    </div>
-
-    @php
+    </dl>
+    </section>
+@php
         $overdueCount = $tasks->filter(fn($t) => $t->isOverdue())->count();
     @endphp
 
@@ -333,16 +321,15 @@
             @endif
         </button>
         @if($canViewAllTasks ?? true)
-            <button type="button" class="project-tab-btn" data-tab-target="gantt">Gantt</button>
-            <button type="button" class="project-tab-btn" data-tab-target="team">Team ({{ $project->memberships->count() }})</button>
+            <button type="button" class="project-tab-btn" data-tab-target="gantt">Timeline</button>
+<button type="button" class="project-tab-btn" data-tab-target="team">Team ({{ $project->memberships->count() }})</button>
         @endif
-        <button type="button" class="project-tab-btn" data-tab-target="files">Files ({{ $files->count() }})</button>
         @if($canViewAllTasks ?? true)
             <button type="button" class="project-tab-btn" data-tab-target="milestones">Milestones</button>
-            <button type="button" class="project-tab-btn" data-tab-target="risks">Risks & Delays ({{ $delays->where('status', 'open')->count() }})</button>
+            <button type="button" class="project-tab-btn" data-tab-target="risks">Risks &amp; delays @if($delays->where('status', 'open')->count())<span class="workspace-tab-count">{{ $delays->where('status', 'open')->count() }}</span>@endif</button>
             <button type="button" class="project-tab-btn" data-tab-target="changes">Changes</button>
         @endif
-        <button type="button" class="project-tab-btn" data-tab-target="info">Info</button>
+        <button type="button" class="project-tab-btn" data-tab-target="info">Details</button>
     </nav>
 
     <!-- =========================================================================
@@ -357,58 +344,45 @@
             </div>
         @endif
 
-        <!-- Action Toolbar below Tabs: Clean Tasks Header -->
-        <div class="project-tasks-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
-            <div>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <h2 style="font-size: 18px; font-weight: 700; color: #22272B; margin: 0;">Project Tasks</h2>
-                    @if($overdueCount > 0)
-                        <span class="badge-overdue" style="font-size: 11px; padding: 2px 8px; border-radius: 12px; letter-spacing: 0;">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                            {{ $overdueCount }} Overdue
-                        </span>
-                    @endif
+        <div class="workspace-task-toolbar">
+            <h2 class="workspace-sr-only">Project tasks</h2>
+            @if($canViewTasks && $tasks->isNotEmpty())
+                <div class="task-quick-filters" role="search" aria-label="Filter project tasks">
+                    <label class="quick-search-label"><span class="workspace-sr-only">Find a task</span>
+                        <input type="search" data-task-search placeholder="Find a task or assignee..." autocomplete="off">
+                    </label>
+                    <label><span class="workspace-sr-only">Task status</span>
+                        <select data-task-filter>
+                            <option value="all">All tasks</option>
+                            <option value="overdue">Overdue</option>
+                            <option value="open">Open</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </label>
+                    <button type="button" class="btn btn-ghost btn-sm" data-clear-task-filters hidden>Clear</button>
+                    <span class="workspace-result-count" data-task-result-count role="status" aria-live="polite"></span>
                 </div>
-                <p class="muted" style="font-size: 13px; margin: 4px 0 0 0;">Manage tasks, assignments, schedules and progress.</p>
-            </div>
-
-            <div class="inline-actions" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                @if($canManage)
-                    <!-- + Add Task Dropdown -->
+            @endif
+            @if($canManage)
+                <div class="workspace-task-actions">
+                    <button type="button" class="btn btn-primary" data-show-dialog="add-task-dialog" data-add-mode="main">+ Add task</button>
+                    @if($tasks->isNotEmpty())
+                        <button type="button" class="btn btn-ghost" data-show-dialog="add-task-dialog" data-add-mode="sub">+ Subtask</button>
+                    @endif
+                    <button type="button" class="btn btn-outline" data-show-dialog="bulk-edit-tasks-dialog" id="open-bulk-edit-btn">Bulk edit</button>
                     <div class="pw-dropdown-wrap">
-                        <button type="button" class="btn btn-primary pw-dropdown-toggle" style="font-weight: 600; height: 36px; padding: 0 16px;">
-                            <span>+ Add Task</span>
-                            <span style="font-size: 10px; margin-left: 6px;">⌵</span>
-                        </button>
-                        <div class="pw-dropdown-menu">
-                            <button type="button" class="pw-dropdown-item" data-show-dialog="add-task-dialog" data-add-mode="main">+ Add Main Task</button>
-                            @if($tasks->isNotEmpty())
-                                <button type="button" class="pw-dropdown-item" data-show-dialog="add-task-dialog" data-add-mode="sub">+ Add Subtask</button>
-                            @endif
-                        </div>
-                    </div>
-
-                    <!-- Edit Tasks Button (Bulk Edit Modal Trigger) -->
-                    <button type="button" class="btn btn-outline" data-show-dialog="bulk-edit-tasks-dialog" id="open-bulk-edit-btn" style="height: 36px; padding: 0 16px; font-weight: 600; color: #315F58; border-color: #315F58;">
-                        Edit Tasks
-                    </button>
-
-                    <!-- Import / Export Dropdown -->
-                    <div class="pw-dropdown-wrap">
-                        <button type="button" class="btn btn-outline pw-dropdown-toggle" style="height: 36px; padding: 0 14px; font-weight: 600;">
-                            <span>Import / Export</span>
-                            <span style="font-size: 10px; margin-left: 6px;">⌵</span>
+                        <button type="button" class="btn btn-ghost pw-dropdown-toggle" aria-label="Import and export tasks">
+                            Import / export <span aria-hidden="true">&#8964;</span>
                         </button>
                         <div class="pw-dropdown-menu align-right">
                             <button type="button" class="pw-dropdown-item" data-show-dialog="import-task-dialog">Import from Excel</button>
-                            <a href="{{ route('tasks.export', ['project' => $project, 'blank' => 1]) }}" class="pw-dropdown-item">Download Blank Excel Template</a>
-                            <a href="{{ route('tasks.export', $project) }}" class="pw-dropdown-item">Export Tasks to Excel</a>
+                            <a href="{{ route('tasks.export', ['project' => $project, 'blank' => 1]) }}" class="pw-dropdown-item">Download blank Excel template</a>
+                            <a href="{{ route('tasks.export', $project) }}" class="pw-dropdown-item">Export tasks to Excel</a>
                         </div>
                     </div>
-                @endif
-            </div>
+                </div>
+            @endif
         </div>
-
         @if(!$canViewTasks)
             <div class="empty-state-inline" style="background: #FFFFFF; border: 1px solid var(--border); border-radius: 8px;">
                 @if($project->status === 'pending')
@@ -429,7 +403,8 @@
                 @endif
             </div>
         @else
-            <!-- Clean Full-Width 6-Column Project Tasks Table (Gantt timeline completely removed) -->
+            <p class="empty-state" data-task-no-results hidden>No matching tasks. Change your search or clear the filters.</p>
+            <!-- Project task list -->
             <div class="card" style="padding: 0; background: #FFFFFF; border: 1px solid var(--border, #D0D7DE); border-radius: 8px; overflow: hidden; margin-bottom: 24px;">
                 <div class="table-wrap" style="overflow-x: auto;">
                     <table class="clean-table project-tasks-full-table" style="width: 100%; border-collapse: collapse; text-align: left;">
@@ -437,8 +412,8 @@
                             <tr style="background: #F8FAFC; border-bottom: 1px solid #E2E8F0; font-size: 12px; font-weight: 700; color: #475569;">
                                 <th style="padding: 12px 16px; width: 34%;">Task / Subtask</th>
                                 <th style="padding: 12px 14px; width: 18%;">Assignee</th>
-                                <th style="padding: 12px 14px; width: 14%;">Start Date &amp; Time</th>
-                                <th style="padding: 12px 14px; width: 14%;">End Date &amp; Time</th>
+                                <th style="padding: 12px 14px; width: 14%;">Starts</th>
+                                <th style="padding: 12px 14px; width: 14%;">Due</th>
                                 <th style="padding: 12px 14px; width: 10%;">Progress</th>
                                 <th style="padding: 12px 16px; width: 10%;">Status</th>
                             </tr>
@@ -457,7 +432,7 @@
                                 <tr class="project-task-row {{ $isSubtask ? 'is-subtask' : 'is-main-task' }} {{ $isOverdue ? 'is-overdue-task' : '' }}" 
                                     data-task-id="{{ $task->id }}" 
                                     data-parent="{{ $task->parent_task_id ?? '' }}"
-                                    data-is-overdue="{{ $isOverdue ? '1' : '0' }}"
+                                    data-is-overdue="{{ $isOverdue ? '1' : '0' }}" data-task-status="{{ $task->status }}" data-task-search-text="{{ $task->title . ' ' . $assignees->pluck('name')->join(' ') }}"
                                     style="border-bottom: 1px solid #F1F5F9; transition: background 0.12s; {{ $isOverdue ? 'background: #FFF8F8;' : '' }}">
                                     
                                     <!-- Column 1: Task / Subtask -->
@@ -1435,46 +1410,7 @@
 @endif
 
 @if(app(\App\Services\Access::class)->project(auth()->user(), $project, 'edit_project') && $project->status !== 'archived')
-    <!-- Edit Project Dialog -->
-    <dialog id="project-edit-dialog" class="modal" style="max-width: 560px;">
-        <div class="modal-head">
-            <h2>Edit Project</h2>
-            <button type="button" class="icon-btn" data-close-dialog>×</button>
-        </div>
-        <form method="post" action="{{ route('projects.update', $project) }}" class="stack mt-16">
-            @csrf
-            @method('PUT')
-            <label>Project Name <span class="required">*</span>
-                <input name="name" value="{{ $project->name }}" required maxlength="160">
-            </label>
-            <div class="two-fields">
-                <label>Start Date <span class="required">*</span>
-                    <input type="date" name="starts_on" value="{{ $project->starts_on->format('Y-m-d') }}" required>
-                </label>
-                <label>Deadline <span class="required">*</span>
-                    <input type="date" name="ends_on" value="{{ $project->ends_on->format('Y-m-d') }}" required>
-                </label>
-            </div>
-            <label>Status <span class="required">*</span>
-                <select name="status" required>
-                    @if(in_array($project->status, ['draft', 'pending', 'declined']))
-                        <option value="{{ $project->status }}">{{ ucfirst($project->status) }}</option>
-                    @else
-                        @foreach(['active' => 'Active', 'on_hold' => 'On Hold', 'completed' => 'Completed', 'archived' => 'Archived'] as $val => $label)
-                            <option value="{{ $val }}" @selected($project->status === $val)>{{ $label }}</option>
-                        @endforeach
-                    @endif
-                </select>
-            </label>
-            <label>Description (Optional)
-                <textarea name="description" rows="3">{{ $project->description }}</textarea>
-            </label>
-            <div class="form-actions mt-16">
-                <button class="btn btn-ghost" type="button" data-close-dialog>Cancel</button>
-                <button class="btn btn-primary" type="submit">Save Changes</button>
-            </div>
-        </form>
-    </dialog>
+    @include('projects._edit-dialog')
 @endif
 
 @if($project->status === 'pending' && $project->pm_user_id === auth()->id())

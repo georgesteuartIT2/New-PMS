@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="0OeB8EGdieAAIJ6Rz2Y4noCsWcIis2jHJmEZaot9">
+    <title>Notifications · GS ProjectFlow</title>
+    <link rel="stylesheet" href="file:///C:/Users/nadumi/Desktop/GS_ProjectFlow_V3_Full_Project/GS_ProjectFlow_Complete_V2/public/css/app.css">
+    <link rel="stylesheet" href="file:///C:/Users/nadumi/Desktop/GS_ProjectFlow_V3_Full_Project/GS_ProjectFlow_Complete_V2/public/css/workspace.css">
+    <link rel="stylesheet" href="file:///C:/Users/nadumi/Desktop/GS_ProjectFlow_V3_Full_Project/GS_ProjectFlow_Complete_V2/public/css/premium.css?v=1794137180">
+                <script defer src="file:///C:/Users/nadumi/Desktop/GS_ProjectFlow_V3_Full_Project/GS_ProjectFlow_Complete_V2/public/js/app.js"></script>
+    <script defer src="file:///C:/Users/nadumi/Desktop/GS_ProjectFlow_V3_Full_Project/GS_ProjectFlow_Complete_V2/public/js/usability.js"></script>
+</head>
+<body data-page="notifications.index">
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <div class="app-shell">
+        <!-- Sidebar Navigation (Clean Typography, No Icons) -->
+        <aside class="sidebar" id="sidebar">
+            <a class="brand" href="http://127.0.0.1:8000/dashboard">
+                <span class="brand-mark">GS</span>
+                <div>
+                    <b>GS ProjectFlow</b>
+                    <small>Project Management, Simplified.</small>
+                </div>
+            </a>
+
+                        <nav class="nav nav-primary" aria-label="Main navigation">
+                                    <a href="http://127.0.0.1:8000/dashboard" class=" " >
+                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21h-6v-7H9v7H3z"/></svg>
+                        <span>My Workspace</span>
+                    </a>
+                                    <a href="http://127.0.0.1:8000/projects" class=" " >
+                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a1 1 0 0 1 1-1h6l2 3h8a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7z"/></svg>
+                        <span>My Projects</span>
+                    </a>
+                                    <a href="http://127.0.0.1:8000/tasks/my" class=" " >
+                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h12M9 12h12M9 18h12M3 6l1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2"/></svg>
+                        <span>My Tasks</span>
+                    </a>
+                                    <a href="http://127.0.0.1:8000/calendar" class=" " >
+                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3v4M16 3v4M3 10h18M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>
+                        <span>Calendar</span>
+                    </a>
+                            </nav>
+
+            <div class="sidebar-foot">
+                <a href="http://127.0.0.1:8000/profile" style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                    <span class="avatar">P</span>
+                    <div class="user-mini">
+                        <b>PM</b>
+                        <small>User</small>
+                    </div>
+                </a>
+            </div>
+        </aside>
+
+        <div class="mobile-shade" data-close-menu></div>
+
+        <!-- Main Content Area -->
+        <main class="main-area">
+            <!-- Topbar (Clean Professional SaaS Header) -->
+            <header class="topbar">
+                <button class="mobile-menu-btn" type="button" data-open-menu aria-label="Open menu" aria-controls="sidebar" aria-expanded="false">
+                    <span class="menu-bar"></span>
+                    <span class="menu-bar"></span>
+                    <span class="menu-bar"></span>
+                </button>
+
+                <!-- Search Bar -->
+                <form method="get" action="http://127.0.0.1:8000/projects" class="global-search-wrap">
+                    <input type="text" name="q" class="global-search-input" aria-label="Search projects" placeholder="Search projects by name or code..." value="">
+                </form>
+
+                <!-- Actions & Profile Chip -->
+                <div class="top-actions">
+                    <a class="nav-alerts-pill" aria-label="Notifications" title="Notifications" href="http://127.0.0.1:8000/notifications">
+                        <span>Notifications</span>
+                                            </a>
+
+                    <!-- User Profile Dropdown -->
+                    <div class="user-profile-menu">
+                        <button type="button" class="user-chip-btn" id="user-profile-btn" aria-haspopup="true" aria-expanded="false" aria-controls="user-profile-panel">
+                            <span class="avatar">P</span>
+                            <div class="user-chip-info">
+                                <b>PM</b>
+                                <small>User</small>
+                            </div>
+                            <span class="dropdown-caret"></span>
+                        </button>
+
+                        <div class="dropdown-panel" id="user-profile-panel">
+                            <a href="http://127.0.0.1:8000/profile" class="dropdown-item">My Account</a>
+                            <a href="http://127.0.0.1:8000/notifications" class="dropdown-item">Notifications</a>
+                                                        <div class="dropdown-divider"></div>
+                            <form method="post" action="http://127.0.0.1:8000/logout">
+                                <input type="hidden" name="_token" value="0OeB8EGdieAAIJ6Rz2Y4noCsWcIis2jHJmEZaot9" autocomplete="off">                                <button type="submit" class="dropdown-item dropdown-logout" style="width: 100%; text-align: left;">Sign out</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content" id="main-content" tabindex="-1">
+                                
+                                
+<div class="page-head" style="margin-bottom: 20px;">
+    <div>
+        <h1>Notifications</h1>
+        <p class="muted">Updates, assignments, and schedule alerts relevant to you.</p>
+    </div>
+    </div>
+
+<!-- Filter Tabs: All vs Unread -->
+<div style="display: flex; gap: 8px; border-bottom: 1px solid var(--border); margin-bottom: 20px;">
+    <a href="http://127.0.0.1:8000/notifications?filter=all" 
+       style="padding: 8px 16px; font-size: 13.5px; font-weight: 600; text-decoration: none; border-bottom: 2px solid var(--primary); color: var(--primary);">
+        All Notifications (0)
+    </a>
+    <a href="http://127.0.0.1:8000/notifications?filter=unread" 
+       style="padding: 8px 16px; font-size: 13.5px; font-weight: 600; text-decoration: none; border-bottom: 2px solid transparent; color: var(--muted);">
+        Unread Only (0)
+    </a>
+</div>
+
+<div class="card" style="padding: 0; overflow: hidden; background: #FFFFFF; border: 1px solid var(--border);">
+    <div style="display: flex; flex-direction: column;">
+                    <div class="empty" style="padding: 48px 24px; text-align: center;">
+                <b>You're all caught up</b>
+                <p class="muted" style="margin-top: 4px; font-size: 13px;">No  notifications at this time.</p>
+            </div>
+            </div>
+
+    </div>
+
+
+                <footer class="footer">
+                    GS ProjectFlow <span>·</span> Project Management, Simplified.
+                </footer>
+            </div>
+        </main>
+    </div>
+    </body>
+</html>

@@ -36,21 +36,6 @@
     </div>
 @endif
 
-@if(session('success'))
-    <div style="background: #EBF3F1; color: #315F58; border: 1px solid #C2DDD7; border-left: 4px solid #315F58; padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; font-size: 13.5px; display: flex; align-items: center; justify-content: space-between;">
-        <span>{{ session('success') }}</span>
-        <button type="button" onclick="this.parentElement.remove()" style="background:none;border:none;cursor:pointer;color:inherit;font-size:16px;">×</button>
-    </div>
-@endif
-
-@if(isset($errors) && $errors->any())
-    <div style="background: var(--danger-bg); color: var(--danger-text); border: 1px solid var(--border); border-left: 4px solid var(--danger); padding: 12px 16px; border-radius: var(--radius); margin-bottom: 16px; font-size: 13.5px;">
-        @foreach($errors->all() as $err)
-            <div>{{ $err }}</div>
-        @endforeach
-    </div>
-@endif
-
 <!-- Search & Filter Toolbar -->
 <div class="card" style="padding: 12px 16px; margin-bottom: 16px; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px;">
     <form method="GET" action="{{ route('templates.index') }}" id="template-filter-form" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">

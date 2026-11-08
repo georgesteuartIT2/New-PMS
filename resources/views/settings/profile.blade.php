@@ -7,7 +7,7 @@
         <h1>My Account</h1>
         <p class="muted">Manage your profile and login details.</p>
     </div>
-    <button type="button" class="btn btn-outline" data-show-dialog="edit-profile-dialog">Edit Profile</button>
+
 </div>
 
 <div class="card profile-card">
@@ -20,7 +20,7 @@
 
     <div style="display: inline-flex; gap: 8px; margin-bottom: 24px;">
         <span class="pill {{ $user->isPmo() ? 'active' : 'todo' }}">
-            {{ $user->isPmo() ? 'PMO Administrator' : 'Project User' }}
+            {{ $user->isPmo() ? 'PMO Admin' : 'User' }}
         </span>
         <span class="pill active">Account Active</span>
     </div>
@@ -60,10 +60,10 @@
     </div>
 </div>
 
-<dialog id="edit-profile-dialog" class="modal">
+<section class="card profile-edit-card" aria-labelledby="profile-edit-title">
     <div class="modal-head">
-        <h2>Edit Profile</h2>
-        <button class="icon-btn" type="button" data-close-dialog>×</button>
+        <h2 id="profile-edit-title">Profile details</h2>
+        
     </div>
     <form method="post" action="{{ route('profile.update') }}" class="stack">
         @csrf
@@ -76,9 +76,9 @@
             <small class="muted">Email changes must be performed by PMO administration.</small>
         </label>
         <div class="form-actions mt-16">
-            <button class="btn btn-ghost" type="button" data-close-dialog>Cancel</button>
+            
             <button class="btn btn-primary" type="submit">Save Changes</button>
         </div>
     </form>
-</dialog>
+</section>
 @endsection

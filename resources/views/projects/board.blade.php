@@ -1,6 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Tasks Board · ' . $project->name)
 @section('content')
+@include('projects._tabs')
 <!-- Screen 6: Tasks (Kanban View) -->
 <div class="page-head">
     <div>

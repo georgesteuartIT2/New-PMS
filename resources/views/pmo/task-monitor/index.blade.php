@@ -1,176 +1,100 @@
 @extends('layouts.app')
-@section('title', 'Task Monitor')
-
+@section('title', 'Tasks')
 @section('content')
-<div style="padding-bottom: 60px;">
-    <!-- Breadcrumb Trail -->
-    <div class="breadcrumb-trail" style="margin-bottom: 14px;">
-        <a href="{{ route('dashboard') }}">Dashboard</a>
-        <span class="crumb-sep">›</span>
-        <span>Monitoring</span>
-        <span class="crumb-sep">›</span>
-        <span>Task Monitor</span>
-    </div>
-
-    <!-- Page Header -->
-    <div class="page-head" style="margin-bottom: 22px;">
+<div class="task-monitor-workspace">
+    <header class="task-monitor-header">
         <div>
-            <h1 style="font-size: 24px; font-weight: 700; color: #22272B; margin: 0 0 4px;">Task Monitor</h1>
-            <p class="muted" style="margin: 0; font-size: 13.5px;">Monitor tasks across all company projects.</p>
-        </div>
-        <div style="display: flex; gap: 10px; align-items: center;">
-            <a href="{{ route('pmo.task-monitor.export', request()->query()) }}" class="btn btn-outline btn-sm" style="height: 36px; line-height: 34px; font-size: 13px;">
-                Export CSV
-            </a>
-            <a href="{{ route('pmo.team-monitor') }}" class="btn btn-outline btn-sm" style="height: 36px; line-height: 34px; font-size: 13px;">
-                Team Monitor →
-            </a>
-        </div>
-    </div>
-
-    <!-- Compact Summary (5 Real Aggregate Metric Cards with Filter Shortcuts) -->
-    <div class="kpi-row" style="grid-template-columns: repeat(5, minmax(0, 1fr)); margin-bottom: 22px;">
-        <!-- Total Tasks -->
-        <a href="{{ route('pmo.task-monitor', array_merge(request()->except('page'), ['filter' => 'all'])) }}" class="kpi-card" style="text-decoration: none; border-color: {{ ($filters['filter'] ?? 'all') === 'all' ? '#315F58' : '#E5E7EB' }}; background: {{ ($filters['filter'] ?? 'all') === 'all' ? '#F8FAFC' : '#FFFFFF' }};">
-            <span class="kpi-label">Total Tasks</span>
-            <div class="kpi-value" style="color: #22272B;">{{ $summary['total_tasks'] ?? 0 }}</div>
-            <span class="kpi-sub">Unique executable tasks</span>
-        </a>
-
-        <!-- Open Tasks -->
-        <a href="{{ route('pmo.task-monitor', array_merge(request()->except('page'), ['filter' => 'open'])) }}" class="kpi-card" style="text-decoration: none; border-color: {{ ($filters['filter'] ?? '') === 'open' ? '#315F58' : '#E5E7EB' }}; background: {{ ($filters['filter'] ?? '') === 'open' ? '#F8FAFC' : '#FFFFFF' }};">
-            <span class="kpi-label">Open Tasks</span>
-            <div class="kpi-value" style="color: #22272B;">{{ $summary['open_tasks'] ?? 0 }}</div>
-            <span class="kpi-sub">Incomplete work</span>
-        </a>
-
-        <!-- Completed Tasks -->
-        <a href="{{ route('pmo.task-monitor', array_merge(request()->except('page'), ['filter' => 'completed'])) }}" class="kpi-card" style="text-decoration: none; border-color: {{ ($filters['filter'] ?? '') === 'completed' ? '#315F58' : '#E5E7EB' }}; background: {{ ($filters['filter'] ?? '') === 'completed' ? '#F8FAFC' : '#FFFFFF' }};">
-            <span class="kpi-label">Completed Tasks</span>
-            <div class="kpi-value" style="color: #107C41;">{{ $summary['completed_tasks'] ?? 0 }}</div>
-            <span class="kpi-sub">Finished deliverables</span>
-        </a>
-
-        <!-- Overdue Tasks -->
-        <a href="{{ route('pmo.task-monitor', array_merge(request()->except('page'), ['filter' => 'overdue'])) }}" class="kpi-card {{ ($summary['overdue_tasks'] ?? 0) > 0 ? 'kpi-card-danger' : '' }}" style="text-decoration: none; border-color: {{ ($filters['filter'] ?? '') === 'overdue' ? '#DC2626' : '' }};">
-            <span class="kpi-label">Overdue Tasks</span>
-            <div class="kpi-value {{ ($summary['overdue_tasks'] ?? 0) > 0 ? 'text-danger' : '' }}">{{ $summary['overdue_tasks'] ?? 0 }}</div>
-            <span class="kpi-sub">Past scheduled deadline</span>
-        </a>
-
-        <!-- Unassigned Tasks -->
-        <a href="{{ route('pmo.task-monitor', array_merge(request()->except('page'), ['filter' => 'unassigned'])) }}" class="kpi-card {{ ($summary['unassigned_tasks'] ?? 0) > 0 ? 'kpi-card-warning' : '' }}" style="text-decoration: none; border-color: {{ ($filters['filter'] ?? '') === 'unassigned' ? '#D97706' : '' }};">
-            <span class="kpi-label">Unassigned Tasks</span>
-            <div class="kpi-value {{ ($summary['unassigned_tasks'] ?? 0) > 0 ? 'text-warning' : '' }}">{{ $summary['unassigned_tasks'] ?? 0 }}</div>
-            <span class="kpi-sub">Require resource assignment</span>
-        </a>
-    </div>
-
-    <!-- Filters Section -->
-    <div class="card" style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; padding: 18px 20px; margin-bottom: 20px;">
-        <form method="get" action="{{ route('pmo.task-monitor') }}" id="task-filter-form">
-            <!-- Quick Filter Tabs -->
-            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; border-bottom: 1px solid #F1F5F9; padding-bottom: 14px;">
-                @php
-                    $currentFilter = $filters['filter'] ?? 'all';
-                    $filterTabs = [
-                        'all' => ['label' => 'All Tasks', 'count' => $summary['total_tasks']],
-                        'overdue' => ['label' => 'Overdue', 'count' => $summary['overdue_tasks'], 'badge' => 'danger'],
-                        'critical' => ['label' => 'Critical Path', 'count' => $summary['critical_tasks'], 'badge' => 'warning'],
-                        'blocked' => ['label' => 'Blocked', 'count' => $summary['blocked_tasks'], 'badge' => 'danger'],
-                        'unassigned' => ['label' => 'Unassigned', 'count' => $summary['unassigned_tasks'], 'badge' => 'neutral'],
-                        'due_soon' => ['label' => 'Due Soon (7d)', 'count' => $summary['due_soon_tasks'], 'badge' => 'warning'],
-                        'needs_update' => ['label' => 'Needs Update', 'count' => $summary['needs_update_tasks'], 'badge' => 'neutral'],
-                    ];
-                @endphp
-
-                @foreach($filterTabs as $key => $tab)
-                    <button type="submit" name="filter" value="{{ $key }}" class="btn btn-sm" style="height: 32px; font-size: 12.5px; border-radius: 20px; border: 1px solid {{ $currentFilter === $key ? '#315F58' : '#CBD5E1' }}; background: {{ $currentFilter === $key ? '#315F58' : '#FFFFFF' }}; color: {{ $currentFilter === $key ? '#FFFFFF' : '#22272B' }}; font-weight: {{ $currentFilter === $key ? '650' : '500' }}; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
-                        <span>{{ $tab['label'] }}</span>
-                        @if(($tab['count'] ?? 0) > 0)
-                            <span style="font-size: 11px; padding: 1px 6px; border-radius: 10px; background: {{ $currentFilter === $key ? 'rgba(255,255,255,0.25)' : '#F1F5F9' }}; color: {{ $currentFilter === $key ? '#FFFFFF' : '#475569' }};">
-                                {{ $tab['count'] }}
-                            </span>
-                        @endif
-                    </button>
-                @endforeach
+            <div class="task-heading-line">
+                <h1>Tasks</h1>
+                @include('layouts._task-scope')
             </div>
+            <p>Track progress and follow up on work that needs attention.</p>
+        </div>
+        <a href="{{ route('pmo.task-monitor.export', request()->query()) }}" class="btn btn-outline btn-sm">Export CSV</a>
+    </header>
 
-            <!-- Detailed Searchable Filters -->
-            <div style="display: grid; grid-template-columns: 2fr 1.3fr 1.3fr 1.3fr 1.1fr auto; gap: 12px; align-items: end;">
-                <!-- Search Input -->
-                <div>
-                    <label style="display: block; font-size: 12px; font-weight: 650; color: #475569; margin-bottom: 4px;">Search Tasks / Projects</label>
-                    <input 
-                        type="text" 
-                        name="q" 
-                        value="{{ $filters['q'] ?? '' }}" 
-                        placeholder="Search task title, code, project, or user..." 
-                        style="width: 100%; height: 38px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 12px; font-size: 13px; background: #FFFFFF; color: #22272B;"
-                    >
+    @php
+        $currentFilter = $filters['filter'] ?? 'all';
+        $summaryLinks = [
+            'all' => ['label'=>'All tasks', 'count'=>$summary['total_tasks'] ?? 0],
+            'open' => ['label'=>'Open', 'count'=>$summary['open_tasks'] ?? 0],
+            'overdue' => ['label'=>'Overdue', 'count'=>$summary['overdue_tasks'] ?? 0],
+            'unassigned' => ['label'=>'Unassigned', 'count'=>$summary['unassigned_tasks'] ?? 0],
+            'completed' => ['label'=>'Completed', 'count'=>$summary['completed_tasks'] ?? 0],
+        ];
+        $extraFiltersActive = !empty($filters['subsidiary_id']) || !empty($filters['status']) || !array_key_exists($currentFilter, $summaryLinks);
+        $hasFilters = !empty($filters['q']) || !empty($filters['project_id']) || !empty($filters['user_id']) || $extraFiltersActive || $currentFilter !== 'all';
+    @endphp
+    <nav class="task-summary-links" aria-label="Task summaries">
+        @foreach($summaryLinks as $key => $item)
+            <a href="{{ route('pmo.task-monitor', array_merge(request()->except('page'), ['filter'=>$key])) }}" class="{{ $currentFilter === $key ? 'active' : '' }} {{ $key === 'overdue' && $item['count'] ? 'has-overdue' : '' }}" @if($currentFilter === $key) aria-current="true" @endif>
+                <span>{{ $item['label'] }}</span><strong>{{ $item['count'] }}</strong>
+            </a>
+        @endforeach
+    </nav>
+
+    <form method="get" action="{{ route('pmo.task-monitor') }}" id="task-filter-form" class="task-monitor-filters">
+        <div class="task-filter-primary">
+            <label class="task-monitor-search">
+                <span class="task-monitor-sr-only">Search tasks, projects or people</span>
+                <input type="search" name="q" value="{{ $filters['q'] ?? '' }}" placeholder="Search tasks, projects or people...">
+            </label>
+            <label>
+                <span class="task-monitor-sr-only">Project</span>
+                <select name="project_id" onchange="this.form.requestSubmit()">
+                    <option value="">All projects</option>
+                    @foreach($projects as $p)
+                        <option value="{{ $p->id }}" @selected(($filters['project_id'] ?? '') == $p->id)>{{ $p->name }}</option>
+                    @endforeach
+                </select>
+            </label>
+            <label>
+                <span class="task-monitor-sr-only">Assignee</span>
+                <select name="user_id" onchange="this.form.requestSubmit()">
+                    <option value="">Anyone</option>
+                    <option value="unassigned" @selected(($filters['user_id'] ?? '') === 'unassigned')>Unassigned</option>
+                    @foreach($assignees as $u)
+                        <option value="{{ $u->id }}" @selected(($filters['user_id'] ?? '') == $u->id)>{{ $u->name }}</option>
+                    @endforeach
+                </select>
+            </label>
+
+            <button type="submit" class="btn btn-outline btn-sm">Search</button>
+            @if($hasFilters)<a href="{{ route('pmo.task-monitor') }}" class="task-filter-clear">Clear</a>@endif
+        </div>
+        <div class="task-filter-secondary">
+            <details class="task-more-filters" @if($extraFiltersActive) open @endif>
+                <summary>More filters @if($extraFiltersActive)<span class="task-extra-count">{{ (int)!empty($filters['subsidiary_id']) + (int)!empty($filters['status']) + (int)!array_key_exists($currentFilter, $summaryLinks) }}</span>@endif</summary>
+                <div class="task-extra-fields">
+            <label>
+                Task focus
+                <select name="filter" onchange="this.form.requestSubmit()">
+                    @foreach(['all'=>'All tasks','open'=>'Open','completed'=>'Completed','overdue'=>'Overdue','unassigned'=>'Unassigned','critical'=>'Critical path','blocked'=>'Blocked','due_soon'=>'Due in 7 days','needs_update'=>'Needs update'] as $value=>$label)
+                        <option value="{{ $value }}" @selected($currentFilter === $value)>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </label>
+                    <label>Subsidiary
+                        <select name="subsidiary_id" onchange="this.form.requestSubmit()">
+                            <option value="">All subsidiaries</option>
+                            @foreach($subsidiaries as $s)
+                                <option value="{{ $s->id }}" @selected(($filters['subsidiary_id'] ?? '') == $s->id)>{{ $s->name }}</option>
+                            @endforeach
+                        </select>
+                    </label>
+                    <label>Status
+                        <select name="status" onchange="this.form.requestSubmit()">
+                            <option value="">Any status</option>
+                            @foreach(['todo'=>'To do','in_progress'=>'In progress','on_hold'=>'On hold','completed'=>'Completed'] as $value=>$label)
+                                <option value="{{ $value }}" @selected(($filters['status'] ?? '') === $value)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </label>
                 </div>
-
-                <!-- Project Filter -->
-                <div>
-                    <label style="display: block; font-size: 12px; font-weight: 650; color: #475569; margin-bottom: 4px;">Project</label>
-                    <select name="project_id" style="width: 100%; height: 38px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 10px; font-size: 12.5px; background: #FFFFFF; color: #22272B;">
-                        <option value="">All Projects</option>
-                        @foreach($projects as $p)
-                            <option value="{{ $p->id }}" @selected(($filters['project_id'] ?? '') == $p->id)>{{ $p->code }} · {{ $p->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <!-- Subsidiary Filter -->
-                <div>
-                    <label style="display: block; font-size: 12px; font-weight: 650; color: #475569; margin-bottom: 4px;">Subsidiary</label>
-                    <select name="subsidiary_id" style="width: 100%; height: 38px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 10px; font-size: 12.5px; background: #FFFFFF; color: #22272B;">
-                        <option value="">All Subsidiaries</option>
-                        @foreach($subsidiaries as $s)
-                            <option value="{{ $s->id }}" @selected(($filters['subsidiary_id'] ?? '') == $s->id)>{{ $s->code }} · {{ $s->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <!-- Assigned User Filter -->
-                <div>
-                    <label style="display: block; font-size: 12px; font-weight: 650; color: #475569; margin-bottom: 4px;">Assigned To</label>
-                    <select name="user_id" style="width: 100%; height: 38px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 10px; font-size: 12.5px; background: #FFFFFF; color: #22272B;">
-                        <option value="">All Assignees</option>
-                        <option value="unassigned" @selected(($filters['user_id'] ?? '') === 'unassigned')>-- Unassigned Only --</option>
-                        @foreach($assignees as $u)
-                            <option value="{{ $u->id }}" @selected(($filters['user_id'] ?? '') == $u->id)>{{ $u->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <!-- Status Filter -->
-                <div>
-                    <label style="display: block; font-size: 12px; font-weight: 650; color: #475569; margin-bottom: 4px;">Status</label>
-                    <select name="status" style="width: 100%; height: 38px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 10px; font-size: 12.5px; background: #FFFFFF; color: #22272B;">
-                        <option value="">All Statuses</option>
-                        <option value="todo" @selected(($filters['status'] ?? '') === 'todo')>To Do</option>
-                        <option value="in_progress" @selected(($filters['status'] ?? '') === 'in_progress')>In Progress</option>
-                        <option value="on_hold" @selected(($filters['status'] ?? '') === 'on_hold')>On Hold</option>
-                        <option value="completed" @selected(($filters['status'] ?? '') === 'completed')>Completed</option>
-                    </select>
-                </div>
-
-                <!-- Submit & Clear Buttons -->
-                <div style="display: flex; gap: 8px;">
-                    <button type="submit" class="btn btn-primary btn-sm" style="height: 38px; padding: 0 16px; font-size: 13px; font-weight: 600;">
-                        Filter
-                    </button>
-                    @if(request()->hasAny(['q', 'filter', 'project_id', 'subsidiary_id', 'user_id', 'status']))
-                        <a href="{{ route('pmo.task-monitor') }}" class="btn btn-outline btn-sm" style="height: 38px; line-height: 36px; padding: 0 12px; font-size: 12.5px; color: #64748B;">
-                            Clear
-                        </a>
-                    @endif
-                </div>
-            </div>
-        </form>
-    </div>
-
+            </details>
+            <span class="task-results-count" role="status">{{ $tasks->total() }} {{ Str::plural('task', $tasks->total()) }}</span>
+        </div>
+    </form>
     <!-- Task Monitor Table -->
     <div class="card" style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
         <div class="table-wrap">
@@ -179,8 +103,8 @@
                     <tr style="background: #F5F6F7; border-bottom: 1px solid #E5E7EB;">
                         <th style="padding: 12px 16px; font-size: 12px; font-weight: 700; color: #22272B; text-align: left;">Project / Task</th>
                         <th style="padding: 12px 14px; font-size: 12px; font-weight: 700; color: #22272B; text-align: left;">Assigned To</th>
-                        <th style="padding: 12px 14px; font-size: 12px; font-weight: 700; color: #22272B; text-align: left;">Start Date & Time</th>
-                        <th style="padding: 12px 14px; font-size: 12px; font-weight: 700; color: #22272B; text-align: left;">End Date & Time</th>
+                        <th style="padding: 12px 14px;">Starts</th>
+                        <th style="padding: 12px 14px;">Due</th>
                         <th style="padding: 12px 14px; font-size: 12px; font-weight: 700; color: #22272B; text-align: left; width: 130px;">Progress</th>
                         <th style="padding: 12px 14px; font-size: 12px; font-weight: 700; color: #22272B; text-align: left;">Status</th>
                         <th style="padding: 12px 14px; font-size: 12px; font-weight: 700; color: #22272B; text-align: left;">Schedule Health</th>

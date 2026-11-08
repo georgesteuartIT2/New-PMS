@@ -14,27 +14,21 @@
             </div>
         </div>
 
-        <!-- Architectural wave graphic matching mockup -->
-        <svg class="login-hero-art" viewBox="0 0 500 350" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path opacity="0.18" d="M0 240 C140 180, 260 300, 500 160 L500 350 L0 350 Z" fill="#FFFFFF"/>
-            <path opacity="0.25" d="M0 280 C180 200, 320 320, 500 210 L500 350 L0 350 Z" fill="#FFFFFF"/>
-            <path opacity="0.32" d="M0 310 C160 270, 340 330, 500 270 L500 350 L0 350 Z" fill="#FFFFFF"/>
-            <g opacity="0.12" stroke="#FFFFFF" stroke-width="1.5">
-                <line x1="80" y1="200" x2="80" y2="350"/>
-                <line x1="160" y1="180" x2="160" y2="350"/>
-                <line x1="240" y1="220" x2="240" y2="350"/>
-                <line x1="320" y1="190" x2="320" y2="350"/>
-                <line x1="400" y1="230" x2="400" y2="350"/>
-            </g>
-        </svg>
+        <div class="login-hero-copy">
+            <span class="login-eyebrow">A clearer way to work</span>
+            <h2>Projects,<br>made clear.</h2>
+            <p>Plan the work. Bring your team together.<br>Keep every next step in view.</p>
+        </div>
+        <p class="login-hero-foot">Your workspace for projects, people and progress.</p>
     </div>
 
     <!-- Right Form Pane -->
     <div class="login-form-pane">
         <div class="login-form-container">
+            <a class="login-mobile-brand" href="{{ route('login') }}"><span class="brand-mark">GS</span><b>GS ProjectFlow</b></a>
             <div class="login-header">
-                <h1>Welcome Back</h1>
-                <p>Sign in to your account</p>
+                <h1>Welcome back</h1>
+                <p>Sign in to your project workspace.</p>
             </div>
 
             @if ($errors->any())
@@ -48,11 +42,11 @@
             <form method="POST" action="{{ route('login.submit') }}" class="stack">
                 @csrf
                 <div class="field-group">
-                    <input type="email" name="email" id="email" value="{{ old('email') }}" autocomplete="username" required autofocus placeholder="Email">
+                    <label class="login-field-label" for="email">Work email</label><input type="email" name="email" id="email" value="{{ old('email') }}" autocomplete="username" required autofocus placeholder="you@company.com">
                 </div>
 
                 <div class="field-group" style="position: relative;">
-                    <input type="password" name="password" id="login-password" autocomplete="current-password" required placeholder="Password">
+                    <label class="login-field-label" for="login-password">Password</label><input type="password" name="password" id="login-password" autocomplete="current-password" required placeholder="Password">
                     <button type="button" class="password-toggle-text-btn" data-toggle-password="login-password" aria-label="Toggle password visibility">Show</button>
                 </div>
 
@@ -61,7 +55,6 @@
                         <input type="checkbox" name="remember" value="1">
                         <span>Remember me</span>
                     </label>
-                    <a href="#help" onclick="alert('Password resets and account updates are managed centrally by the PMO Administrator.')">Forgot password?</a>
                 </div>
 
                 <button class="btn btn-primary btn-wide" type="submit">Sign In</button>
@@ -74,9 +67,10 @@
                 Continue with Microsoft
             </a>
 
-            <p class="help-note center mt-24">
-                Your account is provisioned by the Project Management Office (PMO). Contact PMO if you need access.
-            </p>
+            <details class="signin-help">
+                <summary>Need help signing in?</summary>
+                <p>For a password reset or access to this workspace, contact your PMO administrator.</p>
+            </details>
         </div>
     </div>
 </div>

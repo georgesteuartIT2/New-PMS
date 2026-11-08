@@ -1,6 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Project Closure · ' . $project->name)
 @section('content')
+@include('projects._tabs')
 <div class="page-head">
     <div>
         <div class="breadcrumb-trail">

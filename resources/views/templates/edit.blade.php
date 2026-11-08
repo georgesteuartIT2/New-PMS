@@ -34,23 +34,6 @@
         </div>
     </div>
 
-    @if(session('success'))
-        <div style="background: #EBF3F1; color: #315F58; border: 1px solid #C2DDD7; border-left: 4px solid #315F58; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px; font-size: 13.5px;">
-            {{ session('success') }}
-        </div>
-    @endif
-
-    @if(isset($errors) && $errors->any())
-        <div style="background: var(--danger-bg); color: var(--danger-text); border: 1px solid var(--border); border-left: 4px solid var(--danger); padding: 12px 16px; border-radius: var(--radius); margin-bottom: 20px; font-size: 13.5px;">
-            <b style="display: block; margin-bottom: 4px;">Please review the following inputs:</b>
-            <ul style="margin: 0; padding-left: 18px;">
-                @foreach($errors->all() as $err)
-                    <li>{{ $err }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
     <!-- Card: Template Details -->
     <div class="card" style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); margin-bottom: 24px;">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px;">

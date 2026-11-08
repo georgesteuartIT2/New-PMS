@@ -1,0 +1,194 @@
+<div class="panel-task-top">
+    <span class="muted">Task T001  · Main task </span>
+    <h3>Planning</h3>
+    <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+        <span class="pill completed">Completed</span>
+            </div>
+</div>
+
+<div class="panel-details-grid">
+    <div><small>Assigned to</small><b>Not assigned</b></div>
+    <div><small>Priority</small><b>Medium</b></div>
+    <div><small>Start date</small><b>02 Nov 2026</b></div>
+    <div><small>Start time</small><b>09:00 AM</b></div>
+    <div><small>End date</small><b style="">03 Nov 2026 </b></div>
+    <div><small>End time</small><b style="">05:00 PM</b></div>
+</div>
+
+<details class="panel-inner-details"><summary>Edit task details and schedule</summary>
+    <form method="post" action="http://127.0.0.1:8000/tasks/12/details" class="stack">
+        <input type="hidden" name="_token" value="0OeB8EGdieAAIJ6Rz2Y4noCsWcIis2jHJmEZaot9" autocomplete="off">        <input type="hidden" name="_method" value="PUT">        <label>Task name
+            <input name="title" value="Planning" maxlength="200" required>
+        </label>
+        <div class="two-fields">
+            <label>Start date & time
+                <input type="datetime-local" name="starts_at" value="2026-11-02T09:00" required>
+            </label>
+            <label>End date & time
+                <input type="datetime-local" name="ends_at" value="2026-11-03T17:00" required>
+            </label>
+        </div>
+        <div class="two-fields">
+            <label>Priority
+                <select name="priority">
+                    <option value="low" >Low</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="high" >High</option>
+                </select>
+            </label>
+            <label>Status
+                <select name="status">
+                    <option value="todo" >To Do</option>
+                    <option value="in_progress" >In Progress</option>
+                    <option value="on_hold" >On Hold</option>
+                    <option value="completed" selected>Completed</option>
+                </select>
+            </label>
+        </div>
+        <div class="two-fields">
+            <label>Progress (%)
+                <input type="number" name="progress" min="0" max="100" value="100">
+            </label>
+            <label>Assigned member
+                <select name="assigned_user_id">
+                    <option value="">Unassigned</option>
+                                            <option value="2" >PM</option>
+                                    </select>
+            </label>
+        </div>
+        <label>Description
+            <textarea name="description" rows="2"></textarea>
+        </label>
+        <button class="btn btn-primary btn-sm">Save task details</button>
+    </form>
+</details>
+
+<details class="panel-inner-details"><summary>Change assignment</summary>
+    <form method="post" action="http://127.0.0.1:8000/tasks/12/assign" class="stack">
+        <input type="hidden" name="_token" value="0OeB8EGdieAAIJ6Rz2Y4noCsWcIis2jHJmEZaot9" autocomplete="off">        <label>Assign another person
+            <select name="user_id" required>
+                <option value="">Select project member</option>
+                                    <option value="2">PM</option>
+                            </select>
+        </label>
+        <button class="btn btn-outline btn-sm">Assign person</button>
+    </form>
+    </details>
+
+
+
+    <form method="post" action="http://127.0.0.1:8000/tasks/12" class="panel-section panel-update">
+        <input type="hidden" name="_token" value="0OeB8EGdieAAIJ6Rz2Y4noCsWcIis2jHJmEZaot9" autocomplete="off">        <input type="hidden" name="_method" value="PATCH">        <b>Quick update</b>
+        <div class="two-fields">
+            <label>Status
+                <select name="status" required>
+                                            <option value="todo" >To do</option>
+                                            <option value="in_progress" >In progress</option>
+                                            <option value="on_hold" >On hold</option>
+                                            <option value="completed" selected>Completed</option>
+                                    </select>
+            </label>
+            <label>Progress (%)
+                <input type="number" name="progress" min="0" max="100" value="100" required>
+            </label>
+        </div>
+        <button class="btn btn-primary btn-sm">Save update</button>
+    </form>
+
+<!-- Predecessor Dependencies Management -->
+<div class="panel-section">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <b>Predecessor Dependencies</b>
+        <span class="muted" style="font-size: 11px;">0 linked</span>
+    </div>
+
+            <p class="muted" style="font-size: 12px; margin-bottom: 8px;">No predecessor dependencies. This task can start independently.</p>
+    
+                        <form method="post" action="http://127.0.0.1:8000/tasks/12/dependencies" style="display: flex; gap: 6px; align-items: center; margin-top: 8px;">
+                <input type="hidden" name="_token" value="0OeB8EGdieAAIJ6Rz2Y4noCsWcIis2jHJmEZaot9" autocomplete="off">                <select name="depends_on_task_id" required style="flex: 1; font-size: 12px; padding: 6px 8px; border: 1px solid #D0D7DE; border-radius: 4px; background: #FFFFFF;">
+                    <option value="">Select predecessor task...</option>
+                                            <option value="11">TUM2JK0DF – requiremnt</option>
+                                            <option value="13">T002 – Procurement</option>
+                                            <option value="14">T003 – Site Preparation</option>
+                                            <option value="15">T004 – Installation</option>
+                                            <option value="16">T005 – Handover</option>
+                                    </select>
+                <button type="submit" class="btn btn-outline btn-sm" style="white-space: nowrap; font-size: 11.5px; padding: 5px 10px;">+ Add</button>
+            </form>
+            </div>
+
+<div class="panel-section" id="delay-section">
+    <div class="panel-section-title">
+        <b>Delay & blockers</b>
+            </div>
+            <p class="muted">No blocker has been reported. An overdue date alone does not establish the reason.</p>
+                <details class="panel-inner-details">
+            <summary>+ Report a delay</summary>
+            <form method="post" action="http://127.0.0.1:8000/tasks/12/delays" class="stack">
+                <input type="hidden" name="_token" value="0OeB8EGdieAAIJ6Rz2Y4noCsWcIis2jHJmEZaot9" autocomplete="off">                <label>What is causing the delay?
+                    <select name="reason_code" required>
+                        <option value="">Choose a reason</option>
+                                                    <option value="waiting_approval">Waiting for approval</option>
+                                                    <option value="supplier">Supplier or vendor delay</option>
+                                                    <option value="resources">People or resources unavailable</option>
+                                                    <option value="dependency">Waiting for another task</option>
+                                                    <option value="scope_change">Scope or requirement changed</option>
+                                                    <option value="technical">Technical or equipment problem</option>
+                                                    <option value="external">Other external issue</option>
+                                                    <option value="other">Other reason</option>
+                                            </select>
+                </label>
+                <label>Short explanation (optional)
+                    <textarea name="details" rows="2" maxlength="2000" placeholder="What is blocked and what happened?"></textarea>
+                </label>
+                <label>Involved party
+                    <select name="responsible_party_type" required>
+                        <option value="unknown">Not confirmed</option>
+                        <option value="internal">Internal team</option>
+                        <option value="supplier">Supplier/vendor</option>
+                        <option value="department">Another department</option>
+                        <option value="external">External party</option>
+                    </select>
+                </label>
+                <label>Party name (optional)
+                    <input name="responsible_party_name" maxlength="160" placeholder="e.g. Supplier name or department">
+                </label>
+                <label>Who will follow up?
+                    <select name="action_owner_id">
+                        <option value="">Assign later</option>
+                                                    <option value="2">PM</option>
+                                            </select>
+                </label>
+                <label>Revised expected finish (optional)
+                    <input type="datetime-local" name="revised_expected_end_at">
+                </label>
+                <button class="btn btn-primary btn-sm">Save delay report</button>
+            </form>
+        </details>
+    </div>
+
+<div class="panel-section">
+    <b>Files</b>
+            <p class="muted">No files attached.</p>
+                <form method="post" action="http://127.0.0.1:8000/tasks/12/attachments" enctype="multipart/form-data" class="panel-upload">
+            <input type="hidden" name="_token" value="0OeB8EGdieAAIJ6Rz2Y4noCsWcIis2jHJmEZaot9" autocomplete="off">            <label>Add files
+                <input type="file" name="files[]" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.jpg,.jpeg,.png" required>
+            </label>
+            <button class="btn btn-outline btn-sm">Upload</button>
+        </form>
+    </div>
+
+<div class="panel-section">
+    <b>Comments & updates</b>
+            <p class="muted">No comments yet.</p>
+                <form method="post" action="http://127.0.0.1:8000/tasks/12/comments" class="stack">
+            <input type="hidden" name="_token" value="0OeB8EGdieAAIJ6Rz2Y4noCsWcIis2jHJmEZaot9" autocomplete="off">            <label>Add a comment
+                <textarea name="body" rows="2" maxlength="2000" required placeholder="Write a short update..."></textarea>
+            </label>
+            <button class="btn btn-outline btn-sm">Post comment</button>
+        </form>
+    </div>
+
+<div class="panel-section">
+    <a class="text-action" href="http://127.0.0.1:8000/tasks/12">Open full task page →</a>
+</div>

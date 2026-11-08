@@ -39,7 +39,15 @@ class ProjectWorkspaceController {
  }
  public function edit(Request $request,Project $project,Access $access){
   abort_unless($access->project($request->user(),$project,'edit_project'),403);
-  return view('projects.edit',compact('project'));
+  abort_if($project->status==='archived',403);
+  if(!$request->boolean('popup'))return redirect()->route('projects.show',[$project,'edit'=>1]);
+  $project->load('manager','memberships.user','memberships.role','template','subsidiary','creator');
+  return view('projects._edit-dialog',[
+   'project'=>$project,'canTeam'=>$access->project($request->user(),$project,'manage_team'),
+   'canViewAllTasks'=>$request->user()->isPmo() || $project->pm_user_id===$request->user()->id || $access->project($request->user(),$project,'manage_team'),'tasks'=>$project->tasks()->with('assignees')->get(),
+   'users'=>User::where('account_status','active')->where('system_role','user')->orderBy('name')->get(),
+   'roles'=>\App\Models\ProjectRole::where('slug','!=','pm')->orderBy('name')->get(),
+  ]);
  }
  public function closure(Request $request,Project $project,Access $access){
   abort_unless($access->project($request->user(),$project),403);

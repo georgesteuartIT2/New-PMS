@@ -183,4 +183,284 @@ class AzureGraphService {
         $r->throw();
         return $r->json();
     }
+
+    /**
+     * Get free/busy schedule for a list of attendee emails from Microsoft Graph Calendar.
+     * Gracefully falls back to local scheduled meetings if Microsoft Graph is unconfigured or fails.
+     */
+    public function getSchedule(array $userEmails, string $startDate, ?string $timeZone = null): array {
+        $timeZone = $timeZone ?: config('app.timezone', 'Asia/Colombo');
+        $userEmails = array_values(array_unique(array_filter(array_map('trim', $userEmails))));
+
+        if (empty($userEmails)) {
+            return [];
+        }
+
+        $startIso = \Carbon\Carbon::parse($startDate)->startOfDay()->format('Y-m-d\T00:00:00');
+        $endIso = \Carbon\Carbon::parse($startDate)->endOfDay()->format('Y-m-d\T23:59:59');
+
+        $result = [];
+        $graphSuccess = false;
+
+        if ($this->configured()) {
+            try {
+                $token = $this->token();
+                $primaryEmail = $userEmails[0];
+                $response = Http::withToken($token)
+                    ->timeout(12)
+                    ->post("https://graph.microsoft.com/v1.0/users/" . rawurlencode($primaryEmail) . "/calendar/getSchedule", [
+                        'schedules' => $userEmails,
+                        'startTime' => [
+                            'dateTime' => $startIso,
+                            'timeZone' => $timeZone,
+                        ],
+                        'endTime' => [
+                            'dateTime' => $endIso,
+                            'timeZone' => $timeZone,
+                        ],
+                        'availabilityViewInterval' => 30,
+                    ]);
+
+                if ($response->successful()) {
+                    $items = $response->json('value', []);
+                    foreach ($items as $item) {
+                        $email = strtolower($item['scheduleId'] ?? '');
+                        $busySlots = [];
+                        foreach ($item['scheduleItems'] ?? [] as $si) {
+                            $busySlots[] = [
+                                'subject' => $si['subject'] ?? 'Busy (Outlook)',
+                                'status' => strtolower($si['status'] ?? 'busy'),
+                                'start' => $si['start']['dateTime'] ?? '',
+                                'end' => $si['end']['dateTime'] ?? '',
+                                'source' => 'outlook',
+                            ];
+                        }
+                        $result[$email] = [
+                            'email' => $email,
+                            'availability_view' => $item['availabilityView'] ?? '',
+                            'busy_slots' => $busySlots,
+                            'source' => 'microsoft_graph',
+                        ];
+                    }
+                    $graphSuccess = true;
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Microsoft Graph getSchedule error: ' . $e->getMessage());
+            }
+        }
+
+        // Fill or merge with local database meetings so all meetings are respected
+        $dateStart = \Carbon\Carbon::parse($startDate)->startOfDay();
+        $dateEnd = \Carbon\Carbon::parse($startDate)->endOfDay();
+
+        $localMeetings = \App\Models\Meeting::with(['attendeeRecords', 'creator'])
+            ->where('status', '!=', 'cancelled')
+            ->where(function ($q) use ($dateStart, $dateEnd) {
+                $q->whereBetween('starts_at', [$dateStart, $dateEnd])
+                  ->orWhereBetween('ends_at', [$dateStart, $dateEnd])
+                  ->orWhere(function ($sub) use ($dateStart, $dateEnd) {
+                      $sub->where('starts_at', '<=', $dateStart)->where('ends_at', '>=', $dateEnd);
+                  });
+            })
+            ->get();
+
+        foreach ($userEmails as $rawEmail) {
+            $email = strtolower($rawEmail);
+            if (!isset($result[$email])) {
+                $result[$email] = [
+                    'email' => $email,
+                    'availability_view' => '',
+                    'busy_slots' => [],
+                    'source' => $graphSuccess ? 'microsoft_graph' : 'local_database',
+                ];
+            }
+
+            foreach ($localMeetings as $m) {
+                $isAttending = strtolower($m->creator?->email ?? '') === $email ||
+                               $m->attendeeRecords->contains(fn ($ar) => strtolower($ar->email) === $email);
+
+                if ($isAttending) {
+                    $result[$email]['busy_slots'][] = [
+                        'subject' => $m->title,
+                        'status' => 'busy',
+                        'start' => $m->starts_at->format('Y-m-d\TH:i:s'),
+                        'end' => $m->ends_at->format('Y-m-d\TH:i:s'),
+                        'meeting_id' => $m->id,
+                        'source' => 'projectflow',
+                    ];
+                }
+            }
+
+            usort($result[$email]['busy_slots'], function ($a, $b) {
+                return strcmp($a['start'], $b['start']);
+            });
+        }
+
+        return $result;
+    }
+
+    /**
+     * Create an event in Microsoft Outlook Calendar via Microsoft Graph API.
+     */
+    public function createEvent(\App\Models\Meeting $meeting): array {
+        if (!$this->configured()) {
+            return [
+                'success' => false,
+                'status' => 'local_only',
+                'error' => 'Microsoft Azure configuration is not enabled in .env.',
+            ];
+        }
+
+        try {
+            $token = $this->token();
+            $organizer = $meeting->creator;
+            $organizerEmail = $organizer?->email ?: config('mail.from.address');
+
+            $attendees = [];
+            foreach ($meeting->attendeeRecords as $att) {
+                $attendees[] = [
+                    'emailAddress' => [
+                        'address' => $att->email,
+                        'name' => $att->name,
+                    ],
+                    'type' => 'required',
+                ];
+            }
+
+            $timeZone = config('app.timezone', 'Asia/Colombo');
+            $payload = [
+                'subject' => $meeting->title,
+                'body' => [
+                    'contentType' => 'HTML',
+                    'content' => nl2br(e($meeting->description ?: 'Meeting scheduled via GS ProjectFlow.')) .
+                                 "<br><br><strong>Project:</strong> " . e($meeting->project?->name ?? 'General') .
+                                 "<br><strong>Organized by:</strong> " . e($organizer?->name ?? 'PMO'),
+                ],
+                'start' => [
+                    'dateTime' => $meeting->starts_at->format('Y-m-d\TH:i:s'),
+                    'timeZone' => $timeZone,
+                ],
+                'end' => [
+                    'dateTime' => $meeting->ends_at->format('Y-m-d\TH:i:s'),
+                    'timeZone' => $timeZone,
+                ],
+                'location' => [
+                    'displayName' => $meeting->location ?: 'Online Meeting',
+                ],
+                'attendees' => $attendees,
+                'isOnlineMeeting' => true,
+                'onlineMeetingProvider' => 'teamsForBusiness',
+            ];
+
+            $response = Http::withToken($token)
+                ->timeout(15)
+                ->post("https://graph.microsoft.com/v1.0/users/" . rawurlencode($organizerEmail) . "/events", $payload);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                $eventId = $data['id'] ?? null;
+                $joinUrl = $data['onlineMeeting']['joinUrl'] ?? ($data['webLink'] ?? null);
+
+                return [
+                    'success' => true,
+                    'status' => 'synced',
+                    'ms_event_id' => $eventId,
+                    'meeting_link' => $joinUrl,
+                    'web_link' => $data['webLink'] ?? null,
+                ];
+            }
+
+            $errMsg = $response->json('error.message', 'HTTP ' . $response->status());
+            return [
+                'success' => false,
+                'status' => 'failed',
+                'error' => $errMsg,
+            ];
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Microsoft Graph createEvent failed: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'status' => 'failed',
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
+     * Update an event in Microsoft Outlook Calendar via Microsoft Graph API.
+     */
+    public function updateEvent(\App\Models\Meeting $meeting): array {
+        if (!$this->configured() || empty($meeting->ms_event_id)) {
+            return ['success' => false, 'status' => 'local_only'];
+        }
+
+        try {
+            $token = $this->token();
+            $organizerEmail = $meeting->creator?->email ?: config('mail.from.address');
+            $timeZone = config('app.timezone', 'Asia/Colombo');
+
+            $attendees = [];
+            foreach ($meeting->attendeeRecords as $att) {
+                $attendees[] = [
+                    'emailAddress' => [
+                        'address' => $att->email,
+                        'name' => $att->name,
+                    ],
+                    'type' => 'required',
+                ];
+            }
+
+            $payload = [
+                'subject' => $meeting->title,
+                'body' => [
+                    'contentType' => 'HTML',
+                    'content' => nl2br(e($meeting->description ?: '')) .
+                                 "<br><br><strong>Project:</strong> " . e($meeting->project?->name ?? 'General'),
+                ],
+                'start' => [
+                    'dateTime' => $meeting->starts_at->format('Y-m-d\TH:i:s'),
+                    'timeZone' => $timeZone,
+                ],
+                'end' => [
+                    'dateTime' => $meeting->ends_at->format('Y-m-d\TH:i:s'),
+                    'timeZone' => $timeZone,
+                ],
+                'location' => [
+                    'displayName' => $meeting->location ?: 'Online Meeting',
+                ],
+                'attendees' => $attendees,
+            ];
+
+            $response = Http::withToken($token)
+                ->timeout(15)
+                ->patch("https://graph.microsoft.com/v1.0/users/" . rawurlencode($organizerEmail) . "/events/" . $meeting->ms_event_id, $payload);
+
+            return ['success' => $response->successful(), 'status' => $response->successful() ? 'synced' : 'failed'];
+        } catch (\Throwable $e) {
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Delete an event in Microsoft Outlook Calendar via Microsoft Graph API.
+     */
+    public function deleteEvent(\App\Models\Meeting $meeting): bool {
+        if (!$this->configured() || empty($meeting->ms_event_id)) {
+            return true;
+        }
+
+        try {
+            $token = $this->token();
+            $organizerEmail = $meeting->creator?->email ?: config('mail.from.address');
+
+            $response = Http::withToken($token)
+                ->timeout(12)
+                ->delete("https://graph.microsoft.com/v1.0/users/" . rawurlencode($organizerEmail) . "/events/" . $meeting->ms_event_id);
+
+            return $response->successful() || $response->status() === 404;
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Microsoft Graph deleteEvent failed: ' . $e->getMessage());
+            return false;
+        }
+    }
 }

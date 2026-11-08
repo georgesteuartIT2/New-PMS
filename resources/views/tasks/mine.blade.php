@@ -7,6 +7,7 @@
      ========================================================================= -->
 <div style="padding-bottom: 60px;">
     <!-- Breadcrumbs -->
+    @unless(auth()->user()->isPmo())
     <div class="breadcrumb-trail" style="margin-bottom: 14px;">
         <a href="{{ route('dashboard') }}">{{ auth()->user()->isPmo() ? 'Dashboard' : 'My Workspace' }}</a>
         <span class="crumb-sep">›</span>
@@ -21,6 +22,7 @@
         @endif
     </div>
 
+    @endunless
     <!-- Page Header & Top View Switcher -->
     <div class="page-head" style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
         <div>
@@ -31,12 +33,12 @@
                 <h1 style="font-size: 24px; font-weight: 700; color: #22272B; margin: 0 0 4px;">Task Monitor</h1>
                 <p class="muted" style="margin: 0; font-size: 13.5px;">Monitor active tasks across projects you manage.</p>
             @else
-                <h1 style="font-size: 24px; font-weight: 700; color: #22272B; margin: 0 0 4px;">My Tasks</h1>
+                <div class="task-heading-line"><h1 style="font-size: 24px; font-weight: 700; color: #22272B; margin: 0 0 4px;">{{ auth()->user()->isPmo() ? 'Tasks' : 'My Tasks' }}</h1>@if(auth()->user()->isPmo()) @include('layouts._task-scope') @endif</div>
                 <p class="muted" style="margin: 0; font-size: 13.5px;">Manage and update tasks assigned directly to you.</p>
             @endif
         </div>
 
-        @if($hasMonitoredProjects)
+        @if($hasMonitoredProjects && !auth()->user()->isPmo())
             <!-- Top Segmented Control (Assigned to Me vs Managed by Me) -->
             <div style="display: inline-flex; background: #F1F5F9; padding: 3px; border-radius: 8px; border: 1px solid #E2E8F0;">
                 <a href="{{ route('tasks.mine', ['view' => 'assigned']) }}"

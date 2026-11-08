@@ -1,0 +1,2229 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="0OeB8EGdieAAIJ6Rz2Y4noCsWcIis2jHJmEZaot9">
+    <title>test · GS ProjectFlow</title>
+    <link rel="stylesheet" href="file:///C:/Users/nadumi/Desktop/GS_ProjectFlow_V3_Full_Project/GS_ProjectFlow_Complete_V2/public/css/app.css">
+    <link rel="stylesheet" href="file:///C:/Users/nadumi/Desktop/GS_ProjectFlow_V3_Full_Project/GS_ProjectFlow_Complete_V2/public/css/workspace.css">
+    <link rel="stylesheet" href="file:///C:/Users/nadumi/Desktop/GS_ProjectFlow_V3_Full_Project/GS_ProjectFlow_Complete_V2/public/css/premium.css?v=1794137180">
+                <link rel="stylesheet" href="file:///C:/Users/nadumi/Desktop/GS_ProjectFlow_V3_Full_Project/GS_ProjectFlow_Complete_V2/public/css/project-workspace.css?v=1794139865">
+            <script defer src="file:///C:/Users/nadumi/Desktop/GS_ProjectFlow_V3_Full_Project/GS_ProjectFlow_Complete_V2/public/js/app.js"></script>
+    <script defer src="file:///C:/Users/nadumi/Desktop/GS_ProjectFlow_V3_Full_Project/GS_ProjectFlow_Complete_V2/public/js/usability.js"></script>
+</head>
+<body data-page="projects.show">
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <div class="app-shell">
+        <!-- Sidebar Navigation (Clean Typography, No Icons) -->
+        <aside class="sidebar" id="sidebar">
+            <a class="brand" href="http://127.0.0.1:8000/dashboard">
+                <span class="brand-mark">GS</span>
+                <div>
+                    <b>GS ProjectFlow</b>
+                    <small>Project Management, Simplified.</small>
+                </div>
+            </a>
+
+                        <nav class="nav nav-primary" aria-label="Main navigation">
+                                    <a href="http://127.0.0.1:8000/dashboard" class=" " >
+                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21h-6v-7H9v7H3z"/></svg>
+                        <span>My Workspace</span>
+                    </a>
+                                    <a href="http://127.0.0.1:8000/projects" class="active "  aria-current="page" >
+                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a1 1 0 0 1 1-1h6l2 3h8a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7z"/></svg>
+                        <span>My Projects</span>
+                    </a>
+                                    <a href="http://127.0.0.1:8000/tasks/my" class=" " >
+                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h12M9 12h12M9 18h12M3 6l1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2"/></svg>
+                        <span>My Tasks</span>
+                    </a>
+                                    <a href="http://127.0.0.1:8000/calendar" class=" " >
+                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3v4M16 3v4M3 10h18M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>
+                        <span>Calendar</span>
+                    </a>
+                            </nav>
+
+            <div class="sidebar-foot">
+                <a href="http://127.0.0.1:8000/profile" style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                    <span class="avatar">P</span>
+                    <div class="user-mini">
+                        <b>PM</b>
+                        <small>User</small>
+                    </div>
+                </a>
+            </div>
+        </aside>
+
+        <div class="mobile-shade" data-close-menu></div>
+
+        <!-- Main Content Area -->
+        <main class="main-area">
+            <!-- Topbar (Clean Professional SaaS Header) -->
+            <header class="topbar">
+                <button class="mobile-menu-btn" type="button" data-open-menu aria-label="Open menu" aria-controls="sidebar" aria-expanded="false">
+                    <span class="menu-bar"></span>
+                    <span class="menu-bar"></span>
+                    <span class="menu-bar"></span>
+                </button>
+
+                <!-- Search Bar -->
+                <form method="get" action="http://127.0.0.1:8000/projects" class="global-search-wrap">
+                    <input type="text" name="q" class="global-search-input" aria-label="Search projects" placeholder="Search projects by name or code..." value="">
+                </form>
+
+                <!-- Actions & Profile Chip -->
+                <div class="top-actions">
+                    <a class="nav-alerts-pill" aria-label="Notifications" title="Notifications" href="http://127.0.0.1:8000/notifications">
+                        <span>Notifications</span>
+                                            </a>
+
+                    <!-- User Profile Dropdown -->
+                    <div class="user-profile-menu">
+                        <button type="button" class="user-chip-btn" id="user-profile-btn" aria-haspopup="true" aria-expanded="false" aria-controls="user-profile-panel">
+                            <span class="avatar">P</span>
+                            <div class="user-chip-info">
+                                <b>PM</b>
+                                <small>User</small>
+                            </div>
+                            <span class="dropdown-caret"></span>
+                        </button>
+
+                        <div class="dropdown-panel" id="user-profile-panel">
+                            <a href="http://127.0.0.1:8000/profile" class="dropdown-item">My Account</a>
+                            <a href="http://127.0.0.1:8000/notifications" class="dropdown-item">Notifications</a>
+                                                        <div class="dropdown-divider"></div>
+                            <form method="post" action="http://127.0.0.1:8000/logout">
+                                <input type="hidden" name="_token" value="0OeB8EGdieAAIJ6Rz2Y4noCsWcIis2jHJmEZaot9" autocomplete="off">                                <button type="submit" class="dropdown-item dropdown-logout" style="width: 100%; text-align: left;">Sign out</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content" id="main-content" tabindex="-1">
+                                
+                                
+<div class="project-workspace-v3" id="project-workspace">
+
+    <nav class="workspace-breadcrumb" aria-label="Breadcrumb">
+        <a href="http://127.0.0.1:8000/projects">&larr; Projects</a>
+    </nav>
+    <section class="workspace-overview-card" aria-label="Project overview">
+    <!-- Title & Top Action Bar -->
+    <div class="pw-head-row">
+        <div class="pw-head-left">
+            <span class="project-identity-icon" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a1 1 0 0 1 1-1h6l2 3h8a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7z"/></svg></span>
+            <div class="project-identity-copy">
+                <h1>test</h1>
+                <div class="pw-head-meta"><span>PRJ-8BVBN10</span><span class="meta-sep" aria-hidden="true">&middot;</span><span>General Group</span></div>
+            </div>
+        </div>
+        <div class="pw-head-actions">
+            <!-- Project Status Badge -->
+            <span class="project-status-pill status-active">
+                <span class="status-dot"></span>
+                <span>
+                                            Active
+                                    </span>
+            </span>
+
+                            <button type="button" class="btn btn-outline workspace-edit-project" data-show-dialog="project-edit-dialog">Edit project</button>
+                        <!-- More Actions (...) Dropdown -->
+            <div class="pw-dropdown-wrap">
+                <button type="button" class="pw-more-btn pw-dropdown-toggle" title="More project actions" aria-label="More actions">
+                    ···
+                </button>
+                <div class="pw-dropdown-menu align-right">
+
+                                            <a href="http://127.0.0.1:8000/projects/2/tasks/export" class="pw-dropdown-item">Export Tasks to Excel</a>
+                        <a href="http://127.0.0.1:8000/projects/2/tasks/export?blank=1" class="pw-dropdown-item">Download Blank Excel Template</a>
+                    
+                                            <button type="button" class="pw-dropdown-item" data-show-dialog="project-closure-dialog" style="text-align: left; width: 100%; background: none; border: none; font-size: inherit; cursor: pointer;">Project Closure & Sign-off</button>
+                                    </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PM Acceptance & Comprehensive Scope Review Banner (When project is pending and current user is PM) -->
+    
+    <dl class="workspace-summary workspace-overview-details" aria-label="Project summary">
+        <div class="workspace-manager">
+            <dt>Project manager</dt>
+            <dd>
+                                    <span class="workspace-manager-avatar" aria-hidden="true">P</span>
+                    <span class="workspace-manager-name">PM</span>
+                            </dd>
+        </div>
+        <div class="workspace-schedule">
+            <dt>Schedule</dt>
+            <dd>
+                <time datetime="2026-11-07" aria-label="Start date">07 Nov 2026</time>
+                <span class="workspace-date-separator" aria-hidden="true">&rarr;</span>
+                <time datetime="2026-11-19" aria-label="Due date">19 Nov 2026</time>
+            </dd>
+        </div>
+        <div class="workspace-summary-progress">
+            <dt>Progress</dt>
+            <dd>
+                <strong>25%</strong>
+                <span class="workspace-progress-track" role="progressbar" aria-label="Project progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="25">
+                    <span style="width:25%;"></span>
+                </span>
+                <span class="workspace-completed-tasks">1 of 6 tasks complete</span>
+            </dd>
+        </div>
+    </dl>
+    </section>
+
+    <!-- Main Tabs Navigation (Role-Scoped) -->
+    <nav class="project-tabs-nav" aria-label="Project workspace sections">
+        <button type="button" class="project-tab-btn active" data-tab-target="tasks">
+            Tasks
+                            <span style="background: #DC2626; color: #FFFFFF; font-size: 10.5px; font-weight: 700; padding: 1px 7px; border-radius: 10px; margin-left: 6px;" title="2 tasks overdue">2 Overdue</span>
+                    </button>
+                    <button type="button" class="project-tab-btn" data-tab-target="gantt">Timeline</button>
+<button type="button" class="project-tab-btn" data-tab-target="team">Team (1)</button>
+                            <button type="button" class="project-tab-btn" data-tab-target="milestones">Milestones</button>
+            <button type="button" class="project-tab-btn" data-tab-target="risks">Risks &amp; delays </button>
+            <button type="button" class="project-tab-btn" data-tab-target="changes">Changes</button>
+                <button type="button" class="project-tab-btn" data-tab-target="info">Details</button>
+    </nav>
+
+    <!-- =========================================================================
+         TAB 1: TASKS (Unified WBS Tree + Integrated Timeline Gantt)
+         ========================================================================= -->
+    <div class="pw-tab-panel active" id="tab-tasks">
+
+        
+        <div class="workspace-task-toolbar">
+            <h2 class="workspace-sr-only">Project tasks</h2>
+                            <div class="task-quick-filters" role="search" aria-label="Filter project tasks">
+                    <label class="quick-search-label"><span class="workspace-sr-only">Find a task</span>
+                        <input type="search" data-task-search placeholder="Find a task or assignee..." autocomplete="off">
+                    </label>
+                    <label><span class="workspace-sr-only">Task status</span>
+                        <select data-task-filter>
+                            <option value="all">All tasks</option>
+                            <option value="overdue">Overdue</option>
+                            <option value="open">Open</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </label>
+                    <button type="button" class="btn btn-ghost btn-sm" data-clear-task-filters hidden>Clear</button>
+                    <span class="workspace-result-count" data-task-result-count role="status" aria-live="polite"></span>
+                </div>
+                                        <div class="workspace-task-actions">
+                    <button type="button" class="btn btn-primary" data-show-dialog="add-task-dialog" data-add-mode="main">+ Add task</button>
+                                            <button type="button" class="btn btn-ghost" data-show-dialog="add-task-dialog" data-add-mode="sub">+ Subtask</button>
+                                        <button type="button" class="btn btn-outline" data-show-dialog="bulk-edit-tasks-dialog" id="open-bulk-edit-btn">Bulk edit</button>
+                    <div class="pw-dropdown-wrap">
+                        <button type="button" class="btn btn-ghost pw-dropdown-toggle" aria-label="Import and export tasks">
+                            Import / export <span aria-hidden="true">&#8964;</span>
+                        </button>
+                        <div class="pw-dropdown-menu align-right">
+                            <button type="button" class="pw-dropdown-item" data-show-dialog="import-task-dialog">Import from Excel</button>
+                            <a href="http://127.0.0.1:8000/projects/2/tasks/export?blank=1" class="pw-dropdown-item">Download blank Excel template</a>
+                            <a href="http://127.0.0.1:8000/projects/2/tasks/export" class="pw-dropdown-item">Export tasks to Excel</a>
+                        </div>
+                    </div>
+                </div>
+                    </div>
+                    <p class="empty-state" data-task-no-results hidden>No matching tasks. Change your search or clear the filters.</p>
+            <!-- Project task list -->
+            <div class="card" style="padding: 0; background: #FFFFFF; border: 1px solid var(--border, #D0D7DE); border-radius: 8px; overflow: hidden; margin-bottom: 24px;">
+                <div class="table-wrap" style="overflow-x: auto;">
+                    <table class="clean-table project-tasks-full-table" style="width: 100%; border-collapse: collapse; text-align: left;">
+                        <thead>
+                            <tr style="background: #F8FAFC; border-bottom: 1px solid #E2E8F0; font-size: 12px; font-weight: 700; color: #475569;">
+                                <th style="padding: 12px 16px; width: 34%;">Task / Subtask</th>
+                                <th style="padding: 12px 14px; width: 18%;">Assignee</th>
+                                <th style="padding: 12px 14px; width: 14%;">Starts</th>
+                                <th style="padding: 12px 14px; width: 14%;">Due</th>
+                                <th style="padding: 12px 14px; width: 10%;">Progress</th>
+                                <th style="padding: 12px 16px; width: 10%;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                                                                                            <tr class="project-task-row is-main-task " 
+                                    data-task-id="11" 
+                                    data-parent=""
+                                    data-is-overdue="0" data-task-status="todo" data-task-search-text="requiremnt PM"
+                                    style="border-bottom: 1px solid #F1F5F9; transition: background 0.12s; ">
+                                    
+                                    <!-- Column 1: Task / Subtask -->
+                                    <td style="padding: 12px 16px; ">
+                                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                            <span class="muted" style="font-size: 12px; font-weight: 600; min-width: 24px;">1</span>
+                                                                                        <button type="button" 
+                                                    class="uwt-task-title-link" 
+                                                    data-task-panel="http://127.0.0.1:8000/tasks/11/panel" 
+                                                    title="Click to view details"
+                                                    style="font-size: 13.5px; font-weight: 700; color: #0F172A; text-decoration: none; border: none; background: none; cursor: pointer; text-align: left; padding: 0;">
+                                                requiremnt
+                                            </button>
+                                                                                    </div>
+                                    </td>
+
+                                    <!-- Column 2: Assignee -->
+                                    <td style="padding: 12px 14px; font-size: 13px;">
+                                                                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                                <span style="color: #22272B; font-weight: 500;">PM</span>
+                                                                                            </div>
+                                                                            </td>
+
+                                    <!-- Column 3: Start Date & Time -->
+                                    <td style="padding: 12px 14px; font-size: 12.5px;">
+                                        <div style="color: #22272B; font-weight: 500;">07 Nov 2026</div>
+                                        <div class="muted" style="font-size: 11px;">09:00 AM</div>
+                                    </td>
+
+                                    <!-- Column 4: End Date & Time -->
+                                    <td style="padding: 12px 14px; font-size: 12.5px;" class="task-end-date-cell">
+                                                                                    <div class="task-date-val" style="color: #22272B; font-weight: 500;">19 Nov 2026</div>
+                                            <div class="muted task-time-val" style="font-size: 11px;">05:00 PM</div>
+                                                                            </td>
+
+                                    <!-- Column 5: Progress -->
+                                    <td style="padding: 12px 14px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <div style="width: 50px; height: 5px; background: #E5E7EB; border-radius: 3px; overflow: hidden; flex-shrink: 0;">
+                                                <div class="task-progress-fill" style="width: 0%; height: 100%; background: #315F58; border-radius: 3px; transition: width 0.2s;"></div>
+                                            </div>
+                                            <span class="task-progress-text" style="font-size: 12px; font-weight: 600; color: #374151;">0%</span>
+                                        </div>
+                                    </td>
+
+                                    <!-- Column 6: Status -->
+                                    <td style="padding: 12px 16px;">
+                                                                                    <select class="quick-status-select" 
+                                                    data-task-id="11"
+                                                    data-update-url="http://127.0.0.1:8000/tasks/11"
+                                                    data-current-status="todo"
+                                                    style="">
+                                                                                                    <option value="todo" selected>To Do</option>
+                                                                                                    <option value="in_progress" >In Progress</option>
+                                                                                                    <option value="on_hold" >On Hold</option>
+                                                                                                    <option value="completed" >Completed</option>
+                                                                                            </select>
+                                                                            </td>
+
+                                </tr>
+                                                                                            <tr class="project-task-row is-main-task " 
+                                    data-task-id="12" 
+                                    data-parent=""
+                                    data-is-overdue="0" data-task-status="completed" data-task-search-text="Planning "
+                                    style="border-bottom: 1px solid #F1F5F9; transition: background 0.12s; ">
+                                    
+                                    <!-- Column 1: Task / Subtask -->
+                                    <td style="padding: 12px 16px; ">
+                                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                            <span class="muted" style="font-size: 12px; font-weight: 600; min-width: 24px;">2</span>
+                                                                                        <button type="button" 
+                                                    class="uwt-task-title-link" 
+                                                    data-task-panel="http://127.0.0.1:8000/tasks/12/panel" 
+                                                    title="Click to view details"
+                                                    style="font-size: 13.5px; font-weight: 700; color: #0F172A; text-decoration: none; border: none; background: none; cursor: pointer; text-align: left; padding: 0;">
+                                                Planning
+                                            </button>
+                                                                                    </div>
+                                    </td>
+
+                                    <!-- Column 2: Assignee -->
+                                    <td style="padding: 12px 14px; font-size: 13px;">
+                                                                                    <span class="muted" style="font-size: 12.5px;">Unassigned</span>
+                                                                            </td>
+
+                                    <!-- Column 3: Start Date & Time -->
+                                    <td style="padding: 12px 14px; font-size: 12.5px;">
+                                        <div style="color: #22272B; font-weight: 500;">02 Nov 2026</div>
+                                        <div class="muted" style="font-size: 11px;">09:00 AM</div>
+                                    </td>
+
+                                    <!-- Column 4: End Date & Time -->
+                                    <td style="padding: 12px 14px; font-size: 12.5px;" class="task-end-date-cell">
+                                                                                    <div class="task-date-val" style="color: #22272B; font-weight: 500;">03 Nov 2026</div>
+                                            <div class="muted task-time-val" style="font-size: 11px;">05:00 PM</div>
+                                                                            </td>
+
+                                    <!-- Column 5: Progress -->
+                                    <td style="padding: 12px 14px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <div style="width: 50px; height: 5px; background: #E5E7EB; border-radius: 3px; overflow: hidden; flex-shrink: 0;">
+                                                <div class="task-progress-fill" style="width: 100%; height: 100%; background: #315F58; border-radius: 3px; transition: width 0.2s;"></div>
+                                            </div>
+                                            <span class="task-progress-text" style="font-size: 12px; font-weight: 600; color: #374151;">100%</span>
+                                        </div>
+                                    </td>
+
+                                    <!-- Column 6: Status -->
+                                    <td style="padding: 12px 16px;">
+                                                                                    <select class="quick-status-select" 
+                                                    data-task-id="12"
+                                                    data-update-url="http://127.0.0.1:8000/tasks/12"
+                                                    data-current-status="completed"
+                                                    style="">
+                                                                                                    <option value="todo" >To Do</option>
+                                                                                                    <option value="in_progress" >In Progress</option>
+                                                                                                    <option value="on_hold" >On Hold</option>
+                                                                                                    <option value="completed" selected>Completed</option>
+                                                                                            </select>
+                                                                            </td>
+
+                                </tr>
+                                                                                            <tr class="project-task-row is-main-task is-overdue-task" 
+                                    data-task-id="13" 
+                                    data-parent=""
+                                    data-is-overdue="1" data-task-status="in_progress" data-task-search-text="Procurement "
+                                    style="border-bottom: 1px solid #F1F5F9; transition: background 0.12s; background: #FFF8F8;">
+                                    
+                                    <!-- Column 1: Task / Subtask -->
+                                    <td style="padding: 12px 16px; ">
+                                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                            <span class="muted" style="font-size: 12px; font-weight: 600; min-width: 24px;">3</span>
+                                                                                        <button type="button" 
+                                                    class="uwt-task-title-link" 
+                                                    data-task-panel="http://127.0.0.1:8000/tasks/13/panel" 
+                                                    title="Click to view details"
+                                                    style="font-size: 13.5px; font-weight: 700; color: #0F172A; text-decoration: none; border: none; background: none; cursor: pointer; text-align: left; padding: 0;">
+                                                Procurement
+                                            </button>
+                                                                                            <span class="badge-overdue-tag" style="background: #FEE2E2; color: #DC2626; border: 1px solid #FECACA; font-size: 10px; font-weight: 700; padding: 1.5px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px; vertical-align: middle; flex-shrink: 0;" title="Task deadline has passed">
+                                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                                    Overdue
+                                                </span>
+                                                                                    </div>
+                                    </td>
+
+                                    <!-- Column 2: Assignee -->
+                                    <td style="padding: 12px 14px; font-size: 13px;">
+                                                                                    <span class="muted" style="font-size: 12.5px;">Unassigned</span>
+                                                                            </td>
+
+                                    <!-- Column 3: Start Date & Time -->
+                                    <td style="padding: 12px 14px; font-size: 12.5px;">
+                                        <div style="color: #22272B; font-weight: 500;">04 Nov 2026</div>
+                                        <div class="muted" style="font-size: 11px;">09:00 AM</div>
+                                    </td>
+
+                                    <!-- Column 4: End Date & Time -->
+                                    <td style="padding: 12px 14px; font-size: 12.5px;" class="task-end-date-cell">
+                                                                                    <div class="task-date-val" style="color: #DC2626; font-weight: 700;">06 Nov 2026</div>
+                                            <div style="display: flex; align-items: center; gap: 6px; margin-top: 3px;">
+                                                <span class="task-time-val" style="font-size: 11px; color: #DC2626; font-weight: 500;">05:00 PM</span>
+                                                <span class="badge-overdue" style="background: #FEE2E2; color: #DC2626; border: 1px solid #FECACA; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 2px;">
+                                                    Overdue
+                                                </span>
+                                            </div>
+                                                                            </td>
+
+                                    <!-- Column 5: Progress -->
+                                    <td style="padding: 12px 14px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <div style="width: 50px; height: 5px; background: #E5E7EB; border-radius: 3px; overflow: hidden; flex-shrink: 0;">
+                                                <div class="task-progress-fill" style="width: 50%; height: 100%; background: #DC2626; border-radius: 3px; transition: width 0.2s;"></div>
+                                            </div>
+                                            <span class="task-progress-text" style="font-size: 12px; font-weight: 600; color: #DC2626;">50%</span>
+                                        </div>
+                                    </td>
+
+                                    <!-- Column 6: Status -->
+                                    <td style="padding: 12px 16px;">
+                                                                                    <select class="quick-status-select" 
+                                                    data-task-id="13"
+                                                    data-update-url="http://127.0.0.1:8000/tasks/13"
+                                                    data-current-status="in_progress"
+                                                    style="border-color: #FCA5A5; color: #DC2626; font-weight: 600;">
+                                                                                                    <option value="todo" >To Do</option>
+                                                                                                    <option value="in_progress" selected>In Progress</option>
+                                                                                                    <option value="on_hold" >On Hold</option>
+                                                                                                    <option value="completed" >Completed</option>
+                                                                                            </select>
+                                                                            </td>
+
+                                </tr>
+                                                                                            <tr class="project-task-row is-main-task is-overdue-task" 
+                                    data-task-id="14" 
+                                    data-parent=""
+                                    data-is-overdue="1" data-task-status="todo" data-task-search-text="Site Preparation "
+                                    style="border-bottom: 1px solid #F1F5F9; transition: background 0.12s; background: #FFF8F8;">
+                                    
+                                    <!-- Column 1: Task / Subtask -->
+                                    <td style="padding: 12px 16px; ">
+                                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                            <span class="muted" style="font-size: 12px; font-weight: 600; min-width: 24px;">4</span>
+                                                                                        <button type="button" 
+                                                    class="uwt-task-title-link" 
+                                                    data-task-panel="http://127.0.0.1:8000/tasks/14/panel" 
+                                                    title="Click to view details"
+                                                    style="font-size: 13.5px; font-weight: 700; color: #0F172A; text-decoration: none; border: none; background: none; cursor: pointer; text-align: left; padding: 0;">
+                                                Site Preparation
+                                            </button>
+                                                                                            <span class="badge-overdue-tag" style="background: #FEE2E2; color: #DC2626; border: 1px solid #FECACA; font-size: 10px; font-weight: 700; padding: 1.5px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px; vertical-align: middle; flex-shrink: 0;" title="Task deadline has passed">
+                                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                                    Overdue
+                                                </span>
+                                                                                    </div>
+                                    </td>
+
+                                    <!-- Column 2: Assignee -->
+                                    <td style="padding: 12px 14px; font-size: 13px;">
+                                                                                    <span class="muted" style="font-size: 12.5px;">Unassigned</span>
+                                                                            </td>
+
+                                    <!-- Column 3: Start Date & Time -->
+                                    <td style="padding: 12px 14px; font-size: 12.5px;">
+                                        <div style="color: #22272B; font-weight: 500;">04 Nov 2026</div>
+                                        <div class="muted" style="font-size: 11px;">09:00 AM</div>
+                                    </td>
+
+                                    <!-- Column 4: End Date & Time -->
+                                    <td style="padding: 12px 14px; font-size: 12.5px;" class="task-end-date-cell">
+                                                                                    <div class="task-date-val" style="color: #DC2626; font-weight: 700;">05 Nov 2026</div>
+                                            <div style="display: flex; align-items: center; gap: 6px; margin-top: 3px;">
+                                                <span class="task-time-val" style="font-size: 11px; color: #DC2626; font-weight: 500;">05:00 PM</span>
+                                                <span class="badge-overdue" style="background: #FEE2E2; color: #DC2626; border: 1px solid #FECACA; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 2px;">
+                                                    Overdue
+                                                </span>
+                                            </div>
+                                                                            </td>
+
+                                    <!-- Column 5: Progress -->
+                                    <td style="padding: 12px 14px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <div style="width: 50px; height: 5px; background: #E5E7EB; border-radius: 3px; overflow: hidden; flex-shrink: 0;">
+                                                <div class="task-progress-fill" style="width: 0%; height: 100%; background: #DC2626; border-radius: 3px; transition: width 0.2s;"></div>
+                                            </div>
+                                            <span class="task-progress-text" style="font-size: 12px; font-weight: 600; color: #DC2626;">0%</span>
+                                        </div>
+                                    </td>
+
+                                    <!-- Column 6: Status -->
+                                    <td style="padding: 12px 16px;">
+                                                                                    <select class="quick-status-select" 
+                                                    data-task-id="14"
+                                                    data-update-url="http://127.0.0.1:8000/tasks/14"
+                                                    data-current-status="todo"
+                                                    style="border-color: #FCA5A5; color: #DC2626; font-weight: 600;">
+                                                                                                    <option value="todo" selected>To Do</option>
+                                                                                                    <option value="in_progress" >In Progress</option>
+                                                                                                    <option value="on_hold" >On Hold</option>
+                                                                                                    <option value="completed" >Completed</option>
+                                                                                            </select>
+                                                                            </td>
+
+                                </tr>
+                                                                                            <tr class="project-task-row is-main-task " 
+                                    data-task-id="15" 
+                                    data-parent=""
+                                    data-is-overdue="0" data-task-status="todo" data-task-search-text="Installation "
+                                    style="border-bottom: 1px solid #F1F5F9; transition: background 0.12s; ">
+                                    
+                                    <!-- Column 1: Task / Subtask -->
+                                    <td style="padding: 12px 16px; ">
+                                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                            <span class="muted" style="font-size: 12px; font-weight: 600; min-width: 24px;">5</span>
+                                                                                        <button type="button" 
+                                                    class="uwt-task-title-link" 
+                                                    data-task-panel="http://127.0.0.1:8000/tasks/15/panel" 
+                                                    title="Click to view details"
+                                                    style="font-size: 13.5px; font-weight: 700; color: #0F172A; text-decoration: none; border: none; background: none; cursor: pointer; text-align: left; padding: 0;">
+                                                Installation
+                                            </button>
+                                                                                    </div>
+                                    </td>
+
+                                    <!-- Column 2: Assignee -->
+                                    <td style="padding: 12px 14px; font-size: 13px;">
+                                                                                    <span class="muted" style="font-size: 12.5px;">Unassigned</span>
+                                                                            </td>
+
+                                    <!-- Column 3: Start Date & Time -->
+                                    <td style="padding: 12px 14px; font-size: 12.5px;">
+                                        <div style="color: #22272B; font-weight: 500;">09 Nov 2026</div>
+                                        <div class="muted" style="font-size: 11px;">09:00 AM</div>
+                                    </td>
+
+                                    <!-- Column 4: End Date & Time -->
+                                    <td style="padding: 12px 14px; font-size: 12.5px;" class="task-end-date-cell">
+                                                                                    <div class="task-date-val" style="color: #22272B; font-weight: 500;">10 Nov 2026</div>
+                                            <div class="muted task-time-val" style="font-size: 11px;">05:00 PM</div>
+                                                                            </td>
+
+                                    <!-- Column 5: Progress -->
+                                    <td style="padding: 12px 14px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <div style="width: 50px; height: 5px; background: #E5E7EB; border-radius: 3px; overflow: hidden; flex-shrink: 0;">
+                                                <div class="task-progress-fill" style="width: 0%; height: 100%; background: #315F58; border-radius: 3px; transition: width 0.2s;"></div>
+                                            </div>
+                                            <span class="task-progress-text" style="font-size: 12px; font-weight: 600; color: #374151;">0%</span>
+                                        </div>
+                                    </td>
+
+                                    <!-- Column 6: Status -->
+                                    <td style="padding: 12px 16px;">
+                                                                                    <select class="quick-status-select" 
+                                                    data-task-id="15"
+                                                    data-update-url="http://127.0.0.1:8000/tasks/15"
+                                                    data-current-status="todo"
+                                                    style="">
+                                                                                                    <option value="todo" selected>To Do</option>
+                                                                                                    <option value="in_progress" >In Progress</option>
+                                                                                                    <option value="on_hold" >On Hold</option>
+                                                                                                    <option value="completed" >Completed</option>
+                                                                                            </select>
+                                                                            </td>
+
+                                </tr>
+                                                                                            <tr class="project-task-row is-main-task " 
+                                    data-task-id="16" 
+                                    data-parent=""
+                                    data-is-overdue="0" data-task-status="todo" data-task-search-text="Handover "
+                                    style="border-bottom: 1px solid #F1F5F9; transition: background 0.12s; ">
+                                    
+                                    <!-- Column 1: Task / Subtask -->
+                                    <td style="padding: 12px 16px; ">
+                                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                            <span class="muted" style="font-size: 12px; font-weight: 600; min-width: 24px;">6</span>
+                                                                                        <button type="button" 
+                                                    class="uwt-task-title-link" 
+                                                    data-task-panel="http://127.0.0.1:8000/tasks/16/panel" 
+                                                    title="Click to view details"
+                                                    style="font-size: 13.5px; font-weight: 700; color: #0F172A; text-decoration: none; border: none; background: none; cursor: pointer; text-align: left; padding: 0;">
+                                                Handover
+                                            </button>
+                                                                                    </div>
+                                    </td>
+
+                                    <!-- Column 2: Assignee -->
+                                    <td style="padding: 12px 14px; font-size: 13px;">
+                                                                                    <span class="muted" style="font-size: 12.5px;">Unassigned</span>
+                                                                            </td>
+
+                                    <!-- Column 3: Start Date & Time -->
+                                    <td style="padding: 12px 14px; font-size: 12.5px;">
+                                        <div style="color: #22272B; font-weight: 500;">11 Nov 2026</div>
+                                        <div class="muted" style="font-size: 11px;">09:00 AM</div>
+                                    </td>
+
+                                    <!-- Column 4: End Date & Time -->
+                                    <td style="padding: 12px 14px; font-size: 12.5px;" class="task-end-date-cell">
+                                                                                    <div class="task-date-val" style="color: #22272B; font-weight: 500;">11 Nov 2026</div>
+                                            <div class="muted task-time-val" style="font-size: 11px;">05:00 PM</div>
+                                                                            </td>
+
+                                    <!-- Column 5: Progress -->
+                                    <td style="padding: 12px 14px;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            <div style="width: 50px; height: 5px; background: #E5E7EB; border-radius: 3px; overflow: hidden; flex-shrink: 0;">
+                                                <div class="task-progress-fill" style="width: 0%; height: 100%; background: #315F58; border-radius: 3px; transition: width 0.2s;"></div>
+                                            </div>
+                                            <span class="task-progress-text" style="font-size: 12px; font-weight: 600; color: #374151;">0%</span>
+                                        </div>
+                                    </td>
+
+                                    <!-- Column 6: Status -->
+                                    <td style="padding: 12px 16px;">
+                                                                                    <select class="quick-status-select" 
+                                                    data-task-id="16"
+                                                    data-update-url="http://127.0.0.1:8000/tasks/16"
+                                                    data-current-status="todo"
+                                                    style="">
+                                                                                                    <option value="todo" selected>To Do</option>
+                                                                                                    <option value="in_progress" >In Progress</option>
+                                                                                                    <option value="on_hold" >On Hold</option>
+                                                                                                    <option value="completed" >Completed</option>
+                                                                                            </select>
+                                                                            </td>
+
+                                </tr>
+                                                    </tbody>
+                    </table>
+                </div>
+            </div>
+            </div>
+
+    <!-- =========================================================================
+         TAB 2: GANTT (Dedicated Schedule Gantt with Critical Path Analysis)
+         ========================================================================= -->
+    <div class="pw-tab-panel" id="tab-gantt">
+        <div class="card" style="padding: 20px; background: #FFFFFF; border: 1px solid var(--border); border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+                <div>
+                    <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 4px;">Full Schedule Gantt</h2>
+                    <p class="muted" style="font-size: 13px; margin: 0;">Comprehensive schedule with dependencies and Critical Path Analysis.</p>
+                </div>
+                <div class="inline-actions" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                                            <label class="quiet-check" style="font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <input type="checkbox" id="highlight-critical" checked>
+                            Highlight Critical Path
+                        </label>
+                    
+                    <!-- Scale Switcher Segmented Control -->
+                    <div class="view-scale-segmented" role="group" aria-label="Timeline scale">
+                        <button type="button" class="view-scale-btn" data-scale="day">Day</button>
+                        <button type="button" class="view-scale-btn active" data-scale="week">Week</button>
+                        <button type="button" class="view-scale-btn" data-scale="month">Month</button>
+                    </div>
+                </div>
+            </div>
+
+            
+                            <!-- Interactive Gantt Timeline Grid in Tab 2 -->
+                <div class="unified-workplan-card" style="border: 1px solid var(--border); border-radius: 6px; margin-top: 14px;">
+                    <div class="unified-workplan-scroll" id="unified-workplan-scroll">
+                        <div class="unified-workplan-table" id="unified-workplan-grid">
+                            <!-- Header Row -->
+                            <div class="uwt-header-row">
+                                <div class="uwt-head-table">
+                                    <div style="text-align: center;">#</div>
+                                    <div>Task</div>
+                                    <div>Status</div>
+                                    <div>Progress</div>
+                                    <div>Start</div>
+                                    <div>End</div>
+                                </div>
+                                <div class="uwt-head-timeline">
+                                    <div class="uwt-timeline-month-band" id="uwt-month-band"></div>
+                                    <div class="uwt-timeline-sub-band" id="uwt-sub-band">
+                                        <div class="uwt-today-badge" style="display: none;">Today</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Body Rows for Gantt -->
+                                                                                            <div class="uwt-body-row  " data-task-id="11">
+                                    <div class="uwt-cell-table">
+                                        <div class="uwt-wbs-num" style="text-align: center;">1</div>
+                                        <div class="uwt-task-title-cell" style="display: flex; align-items: center; gap: 4px; overflow: hidden;">
+                                            <button type="button" class="uwt-task-title-link" data-task-panel="http://127.0.0.1:8000/tasks/11/panel" data-uwt-task-link="11" title="requiremnt" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                                                requiremnt
+                                            </button>
+                                                                                    </div>
+                                        <div>
+                                            <span class="uwt-status-pill status-todo">Todo</span>
+                                        </div>
+                                        <div style="font-size: 12px; font-weight: 600; color: #374151;">0%</div>
+                                        <div style="font-size: 11.5px; color: var(--muted);">07 Nov</div>
+                                        <div style="font-size: 11.5px; color: var(--muted);">
+                                            19 Nov
+                                                                                    </div>
+                                    </div>
+                                    <div class="uwt-cell-timeline" data-uwt-track="11">
+                                        <div class="uwt-today-line" style="display: none;"></div>
+                                    </div>
+                                </div>
+                                                                                            <div class="uwt-body-row  " data-task-id="12">
+                                    <div class="uwt-cell-table">
+                                        <div class="uwt-wbs-num" style="text-align: center;">2</div>
+                                        <div class="uwt-task-title-cell" style="display: flex; align-items: center; gap: 4px; overflow: hidden;">
+                                            <button type="button" class="uwt-task-title-link" data-task-panel="http://127.0.0.1:8000/tasks/12/panel" data-uwt-task-link="12" title="Planning" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                                                Planning
+                                            </button>
+                                                                                    </div>
+                                        <div>
+                                            <span class="uwt-status-pill status-completed">Completed</span>
+                                        </div>
+                                        <div style="font-size: 12px; font-weight: 600; color: #374151;">100%</div>
+                                        <div style="font-size: 11.5px; color: var(--muted);">02 Nov</div>
+                                        <div style="font-size: 11.5px; color: var(--muted);">
+                                            03 Nov
+                                                                                    </div>
+                                    </div>
+                                    <div class="uwt-cell-timeline" data-uwt-track="12">
+                                        <div class="uwt-today-line" style="display: none;"></div>
+                                    </div>
+                                </div>
+                                                                                            <div class="uwt-body-row  is-overdue-row" data-task-id="13">
+                                    <div class="uwt-cell-table">
+                                        <div class="uwt-wbs-num" style="text-align: center;">3</div>
+                                        <div class="uwt-task-title-cell" style="display: flex; align-items: center; gap: 4px; overflow: hidden;">
+                                            <button type="button" class="uwt-task-title-link" data-task-panel="http://127.0.0.1:8000/tasks/13/panel" data-uwt-task-link="13" title="Procurement" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                                                Procurement
+                                            </button>
+                                                                                            <span style="background: #FEE2E2; color: #DC2626; border: 1px solid #FECACA; font-size: 9px; font-weight: 700; padding: 1px 4px; border-radius: 3px; flex-shrink: 0;">Overdue</span>
+                                                                                    </div>
+                                        <div>
+                                            <span class="uwt-status-pill status-in_progress">In Progress</span>
+                                        </div>
+                                        <div style="font-size: 12px; font-weight: 600; color: #DC2626;">50%</div>
+                                        <div style="font-size: 11.5px; color: var(--muted);">04 Nov</div>
+                                        <div style="font-size: 11.5px; color: #DC2626; font-weight: 700;">
+                                            06 Nov
+                                                                                            <span style="color: #DC2626; font-size: 9px; font-weight: 700; display: block;">(Overdue)</span>
+                                                                                    </div>
+                                    </div>
+                                    <div class="uwt-cell-timeline" data-uwt-track="13">
+                                        <div class="uwt-today-line" style="display: none;"></div>
+                                    </div>
+                                </div>
+                                                                                            <div class="uwt-body-row  is-overdue-row" data-task-id="14">
+                                    <div class="uwt-cell-table">
+                                        <div class="uwt-wbs-num" style="text-align: center;">4</div>
+                                        <div class="uwt-task-title-cell" style="display: flex; align-items: center; gap: 4px; overflow: hidden;">
+                                            <button type="button" class="uwt-task-title-link" data-task-panel="http://127.0.0.1:8000/tasks/14/panel" data-uwt-task-link="14" title="Site Preparation" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                                                Site Preparation
+                                            </button>
+                                                                                            <span style="background: #FEE2E2; color: #DC2626; border: 1px solid #FECACA; font-size: 9px; font-weight: 700; padding: 1px 4px; border-radius: 3px; flex-shrink: 0;">Overdue</span>
+                                                                                    </div>
+                                        <div>
+                                            <span class="uwt-status-pill status-todo">Todo</span>
+                                        </div>
+                                        <div style="font-size: 12px; font-weight: 600; color: #DC2626;">0%</div>
+                                        <div style="font-size: 11.5px; color: var(--muted);">04 Nov</div>
+                                        <div style="font-size: 11.5px; color: #DC2626; font-weight: 700;">
+                                            05 Nov
+                                                                                            <span style="color: #DC2626; font-size: 9px; font-weight: 700; display: block;">(Overdue)</span>
+                                                                                    </div>
+                                    </div>
+                                    <div class="uwt-cell-timeline" data-uwt-track="14">
+                                        <div class="uwt-today-line" style="display: none;"></div>
+                                    </div>
+                                </div>
+                                                                                            <div class="uwt-body-row  " data-task-id="15">
+                                    <div class="uwt-cell-table">
+                                        <div class="uwt-wbs-num" style="text-align: center;">5</div>
+                                        <div class="uwt-task-title-cell" style="display: flex; align-items: center; gap: 4px; overflow: hidden;">
+                                            <button type="button" class="uwt-task-title-link" data-task-panel="http://127.0.0.1:8000/tasks/15/panel" data-uwt-task-link="15" title="Installation" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                                                Installation
+                                            </button>
+                                                                                    </div>
+                                        <div>
+                                            <span class="uwt-status-pill status-todo">Todo</span>
+                                        </div>
+                                        <div style="font-size: 12px; font-weight: 600; color: #374151;">0%</div>
+                                        <div style="font-size: 11.5px; color: var(--muted);">09 Nov</div>
+                                        <div style="font-size: 11.5px; color: var(--muted);">
+                                            10 Nov
+                                                                                    </div>
+                                    </div>
+                                    <div class="uwt-cell-timeline" data-uwt-track="15">
+                                        <div class="uwt-today-line" style="display: none;"></div>
+                                    </div>
+                                </div>
+                                                                                            <div class="uwt-body-row  " data-task-id="16">
+                                    <div class="uwt-cell-table">
+                                        <div class="uwt-wbs-num" style="text-align: center;">6</div>
+                                        <div class="uwt-task-title-cell" style="display: flex; align-items: center; gap: 4px; overflow: hidden;">
+                                            <button type="button" class="uwt-task-title-link" data-task-panel="http://127.0.0.1:8000/tasks/16/panel" data-uwt-task-link="16" title="Handover" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                                                Handover
+                                            </button>
+                                                                                    </div>
+                                        <div>
+                                            <span class="uwt-status-pill status-todo">Todo</span>
+                                        </div>
+                                        <div style="font-size: 12px; font-weight: 600; color: #374151;">0%</div>
+                                        <div style="font-size: 11.5px; color: var(--muted);">11 Nov</div>
+                                        <div style="font-size: 11.5px; color: var(--muted);">
+                                            11 Nov
+                                                                                    </div>
+                                    </div>
+                                    <div class="uwt-cell-timeline" data-uwt-track="16">
+                                        <div class="uwt-today-line" style="display: none;"></div>
+                                    </div>
+                                </div>
+                                                    </div>
+                    </div>
+                </div>
+                    </div>
+    </div>
+
+    <!-- =========================================================================
+         TAB 3: TEAM & ROLES
+         ========================================================================= -->
+    <div class="pw-tab-panel" id="tab-team">
+        <div class="card" style="padding: 20px; background: #FFFFFF;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
+                <div>
+                    <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 4px;">Project Team & Stakeholders</h2>
+                    <p class="muted" style="font-size: 13px; margin: 0;">Assigned employees, roles, and project leadership.</p>
+                </div>
+                                    <button class="btn btn-primary btn-sm" type="button" onclick="document.getElementById('add-member-form-box').style.display = document.getElementById('add-member-form-box').style.display === 'none' ? 'block' : 'none'">
+                        + Add Member
+                    </button>
+                            </div>
+
+            <!-- Inline Add Member Form (Hidden by default, 0 clicks to expand) -->
+            <div id="add-member-form-box" style="display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 16px; margin-bottom: 20px;">
+                <form method="post" action="http://127.0.0.1:8000/projects/2/members" style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+                    <input type="hidden" name="_token" value="0OeB8EGdieAAIJ6Rz2Y4noCsWcIis2jHJmEZaot9" autocomplete="off">                    <label style="flex: 1; min-width: 220px; margin: 0; font-size: 12px; font-weight: 600;">Person
+                        <select name="user_id" required style="height: 38px; font-size: 13px; background: #FFFFFF; margin-top: 4px;">
+                            <option value="">Select team member...</option>
+                                                            <option value="6">Nadumi Jayawardhana (nadumi@gsoptimize.lk)</option>
+                                                            <option value="2">PM (pm@gmail.com)</option>
+                                                            <option value="7">Samadhi Pathirathna (samadhi@gsoptimize.lk)</option>
+                                                    </select>
+                    </label>
+                    <label style="min-width: 180px; margin: 0; font-size: 12px; font-weight: 600;">Role
+                        <select name="project_role_id" required style="height: 38px; font-size: 13px; background: #FFFFFF; margin-top: 4px;">
+                            <option value="">Select role...</option>
+                                                            <option value="3">Project Owner</option>
+                                                            <option value="2">Project Sponsor</option>
+                                                            <option value="4">Steering Committee</option>
+                                                            <option value="5">Team Member</option>
+                                                    </select>
+                    </label>
+                    <button type="submit" class="btn btn-primary" style="height: 38px; font-size: 13px;">Add to Team</button>
+                    <button type="button" class="btn btn-ghost" style="height: 38px;" onclick="document.getElementById('add-member-form-box').style.display='none'">Cancel</button>
+                </form>
+            </div>
+
+            <!-- Team Members Table -->
+            <div class="table-wrap">
+                <table class="clean-table">
+                    <thead>
+                        <tr>
+                            <th>Member Name</th>
+                            <th>Work Email</th>
+                            <th>Project Role</th>
+                            <th>Assigned Tasks</th>
+                             <th class="right">Action</th>                         </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Project Manager Row -->
+                        <tr>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <span class="avatar avatar-sm">P</span>
+                                    <b>PM</b>
+                                </div>
+                            </td>
+                            <td><span class="muted text-sm">pm@gmail.com</span></td>
+                            <td><span class="pill" style="background: #E8F0EE; color: var(--primary); font-weight: 700;">Project Manager</span></td>
+                            <td>1</td>
+                                                            <td class="right">
+                                                                            <span class="muted text-sm">Lead</span>
+                                                                    </td>
+                                                    </tr>
+
+                        <!-- Other Members -->
+                                                                                                </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================================
+         TAB 4: FILES REPOSITORY
+         ========================================================================= -->
+    <div class="pw-tab-panel" id="tab-files">
+        <div class="card" style="padding: 20px; background: #FFFFFF;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
+                <div>
+                    <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 4px;">Project Files & Attachments</h2>
+                    <p class="muted" style="font-size: 13px; margin: 0;">Documents, deliverables, specifications, and task uploads.</p>
+                </div>
+            </div>
+
+                            <div class="empty-state-inline">
+                    <b>No files attached yet</b>
+                    <p class="muted">Upload deliverables or documents directly from any task detail panel.</p>
+                </div>
+                    </div>
+    </div>
+
+    <!-- =========================================================================
+         TAB 5: MILESTONES
+         ========================================================================= -->
+    <div class="pw-tab-panel" id="tab-milestones">
+        <div class="card" style="padding: 20px; background: #FFFFFF;">
+            <div style="margin-bottom: 16px;">
+                <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 4px;">Project Milestones & Deliverables</h2>
+                <p class="muted" style="font-size: 13px; margin: 0;">Major schedule checkpoints and completion deadlines.</p>
+            </div>
+
+            
+                            <p class="muted">All scheduled tasks are tracked in the <b>Tasks</b> view.</p>
+                    </div>
+    </div>
+
+    <!-- =========================================================================
+         TAB 6: RISKS & REPORTED DELAYS
+         ========================================================================= -->
+    <div class="pw-tab-panel" id="tab-risks">
+        <div class="card" style="padding: 20px; background: #FFFFFF;">
+            <div style="margin-bottom: 16px;">
+                <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 4px;">Risks, Blockers & Delay Reports</h2>
+                <p class="muted" style="font-size: 13px; margin: 0;">Investigate reported bottlenecks, responsible parties, and action owners.</p>
+            </div>
+
+                            <div class="empty-state-inline">
+                    <b>No reported blockers</b>
+                    <p class="muted">Team members can flag delay reasons and follow-up owners directly on any task.</p>
+                </div>
+                    </div>
+    </div>
+
+    <!-- =========================================================================
+         TAB 7: CHANGES & BASELINE AUDIT
+         ========================================================================= -->
+    <div class="pw-tab-panel" id="tab-changes">
+        <div class="card" style="padding: 20px; background: #FFFFFF;">
+            <div style="margin-bottom: 16px;">
+                <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 4px;">Baseline Variance & Audit Trail</h2>
+                <p class="muted" style="font-size: 13px; margin: 0;">Historical baseline comparison and recorded project changes.</p>
+            </div>
+
+                            <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 14px 18px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <b>Schedule Baseline Active</b>
+                            <p class="muted text-sm" style="margin: 2px 0 0;">
+                                Saved on 07 Nov 2026. Original planned deadline: <b>19 Nov 2026</b>.
+                            </p>
+                        </div>
+                        <div>
+                                                                                        <span class="pill active">On Baseline</span>
+                                                    </div>
+                    </div>
+                </div>
+            
+            <h3 style="font-size: 14px; font-weight: 700; margin: 20px 0 10px;">Recent Activity History</h3>
+                            <p class="muted text-sm">No activity records logged yet.</p>
+                    </div>
+    </div>
+
+    <!-- =========================================================================
+         TAB 8: PROJECT INFO & CLOSURE
+         ========================================================================= -->
+    <div class="pw-tab-panel" id="tab-info">
+        <div class="card" style="padding: 20px; background: #FFFFFF;">
+            <div style="margin-bottom: 18px;">
+                <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 4px;">Project Overview & Configuration</h2>
+                <p class="muted" style="font-size: 13px; margin: 0;">General specifications, subsidiary entity, and closure details.</p>
+            </div>
+
+            <div class="info-grid" style="margin-bottom: 20px;">
+                <div>
+                    <small>Project Code</small>
+                    <b>PRJ-8BVBN10</b>
+                </div>
+                <div>
+                    <small>Subsidiary</small>
+                    <b>None [—]</b>
+                </div>
+                <div>
+                    <small>Project Manager</small>
+                    <b>PM</b>
+                </div>
+                <div>
+                    <small>Timeline</small>
+                    <b>07 Nov 2026 – 19 Nov 2026</b>
+                </div>
+            </div>
+
+            
+            <div style="border-top: 1px solid var(--border); padding-top: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                <div>
+                    <b>Project Governance & Closure</b>
+                    <p class="muted text-sm" style="margin: 2px 0 0;">Complete all deliverables, review sign-offs, and submit for formal closure.</p>
+                </div>
+                <div class="inline-actions">
+                                            <button type="button" class="btn btn-outline btn-sm" data-show-dialog="project-edit-dialog">Edit Details</button>
+                                                                <button type="button" class="btn btn-outline btn-sm" data-show-dialog="project-closure-dialog">Closure Sign-off →</button>
+                                    </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- =========================================================================
+     SLIDE-OUT TASK DETAILS SIDE PANEL (Accessible Drawer, 0 Page Reload)
+     ========================================================================= -->
+<aside class="task-side-panel" id="task-side-panel" aria-labelledby="task-panel-title" aria-hidden="true" hidden>
+    <div class="task-panel-top">
+        <h2 id="task-panel-title">Task Details</h2>
+        <button type="button" class="panel-close" id="task-panel-close" aria-label="Close task details">×</button>
+    </div>
+    <div id="task-panel-content" class="task-panel-content">
+        <p class="muted">Select a task to see its details.</p>
+    </div>
+</aside>
+<div id="task-panel-shade" class="task-panel-shade" hidden></div>
+
+<!-- =========================================================================
+     COMPACT INLINE DIALOGS (Add Task, Import Tasks, Edit Project, Assign PM)
+     ========================================================================= -->
+    <!-- Add Task Dialog -->
+    <dialog id="add-task-dialog" class="modal" style="max-width: 560px;">
+        <div class="modal-head">
+            <h2>Add Task</h2>
+            <button type="button" class="icon-btn" data-close-dialog aria-label="Close">×</button>
+        </div>
+        <form method="post" action="http://127.0.0.1:8000/projects/2/tasks" enctype="multipart/form-data" class="stack mt-16">
+            <input type="hidden" name="_token" value="0OeB8EGdieAAIJ6Rz2Y4noCsWcIis2jHJmEZaot9" autocomplete="off">            <label>Task Name <span class="required">*</span>
+                <input name="title" required maxlength="200" placeholder="e.g. Requirement Gathering">
+            </label>
+
+            <label>Main Task or Subtask
+                <select name="parent_task_id" id="add-task-parent-select">
+                    <option value="">Main Task (Top Level)</option>
+                                            <option value="11">Under 1 requiremnt</option>
+                                            <option value="12">Under 2 Planning</option>
+                                            <option value="13">Under 3 Procurement</option>
+                                            <option value="14">Under 4 Site Preparation</option>
+                                            <option value="15">Under 5 Installation</option>
+                                            <option value="16">Under 6 Handover</option>
+                                    </select>
+            </label>
+
+            <div class="two-fields">
+                <label>Start Date & Time <span class="required">*</span>
+                    <input type="datetime-local" name="starts_at" value="2026-11-07T09:00" required>
+                </label>
+                <label>End Date & Time <span class="required">*</span>
+                    <input type="datetime-local" name="ends_at" value="2026-11-19T17:00" required>
+                </label>
+            </div>
+
+            <div class="two-fields">
+                <label>Assign To
+                    <select name="assigned_user_id" id="add-task-assignee-select">
+                        <option value="">Unassigned (Assign later...)</option>
+                                                    <option value="2">PM (Project Manager)</option>
+                                            </select>
+                                            <button type="button" class="text-action" id="add-task-open-member-btn" style="font-size: 11px; margin-top: 4px; display: inline-block; padding: 0; background: none; border: none; cursor: pointer; color: #315F58; text-decoration: underline;">
+                            + Add Project Member
+                        </button>
+                                    </label>
+                <label>Priority
+                    <select name="priority">
+                        <option value="medium">Normal</option>
+                        <option value="low">Low</option>
+                        <option value="high">High</option>
+                    </select>
+                </label>
+            </div>
+
+            <label>Description (Optional)
+                <textarea name="description" rows="2" placeholder="Task deliverables or scope..."></textarea>
+            </label>
+
+            <div class="form-actions mt-16">
+                <button class="btn btn-ghost" type="button" data-close-dialog>Cancel</button>
+                <button class="btn btn-primary" type="submit">Create Task</button>
+            </div>
+        </form>
+    </dialog>
+
+    <!-- =========================================================================
+         BULK TASK EDITING MODAL (Desktop Wide ~95vw, Max 1400px, Sticky Header/Footer)
+         ========================================================================= -->
+    <dialog id="bulk-edit-tasks-dialog" class="modal" style="width: 95vw; max-width: 1400px; max-height: 90vh; padding: 0; border: none; border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.25);">
+        <form method="post" action="http://127.0.0.1:8000/projects/2/tasks/bulk-update" id="bulk-edit-form" style="display: flex; flex-direction: column; height: 100%; max-height: 90vh;">
+            <input type="hidden" name="_token" value="0OeB8EGdieAAIJ6Rz2Y4noCsWcIis2jHJmEZaot9" autocomplete="off">            
+            <!-- Sticky Modal Header -->
+            <div class="modal-head" style="padding: 16px 24px; border-bottom: 1px solid #E1E4E8; display: flex; justify-content: space-between; align-items: center; background: #FFFFFF; flex-shrink: 0;">
+                <div>
+                    <h2 style="font-size: 18px; font-weight: 700; color: #22272B; margin: 0 0 2px;">Edit Project Tasks</h2>
+                    <p class="muted" style="font-size: 13px; margin: 0;">Update tasks directly in the table.</p>
+                </div>
+                <button type="button" class="icon-btn" data-close-dialog id="bulk-edit-x-btn" aria-label="Close dialog" style="font-size: 20px; background: none; border: none; cursor: pointer; color: #6B7280; padding: 4px 8px;">×</button>
+            </div>
+
+            <!-- Scrollable Bulk Edit Table -->
+            <div class="bulk-edit-scroll" style="flex: 1; overflow-y: auto; overflow-x: auto; background: #FAFAFA; padding: 0;">
+                <table class="clean-table bulk-edit-table" style="width: 100%; border-collapse: separate; border-spacing: 0; text-align: left; background: #FFFFFF; font-size: 12.5px;">
+                    <thead style="position: sticky; top: 0; z-index: 5; background: #F8FAFC;">
+                        <tr style="border-bottom: 1px solid #CBD5E1; color: #475569; font-size: 11.5px; font-weight: 700;">
+                            <th style="padding: 10px 12px; width: 45px; border-bottom: 1px solid #CBD5E1;">#</th>
+                            <th style="padding: 10px 12px; min-width: 220px; border-bottom: 1px solid #CBD5E1;">Task / Subtask</th>
+                            <th style="padding: 10px 12px; min-width: 180px; border-bottom: 1px solid #CBD5E1;">
+                                Assignee
+                                                                    <button type="button" class="text-action" id="bulk-open-add-member" style="font-size: 10.5px; color: #315F58; margin-left: 6px; text-decoration: underline; background: none; border: none; cursor: pointer;">+ Add Member</button>
+                                                            </th>
+                            <th style="padding: 10px 8px; width: 130px; border-bottom: 1px solid #CBD5E1;">Start Date</th>
+                            <th style="padding: 10px 8px; width: 95px; border-bottom: 1px solid #CBD5E1;">Start Time</th>
+                            <th style="padding: 10px 8px; width: 130px; border-bottom: 1px solid #CBD5E1;">End Date</th>
+                            <th style="padding: 10px 8px; width: 95px; border-bottom: 1px solid #CBD5E1;">End Time</th>
+                            <th style="padding: 10px 8px; width: 75px; border-bottom: 1px solid #CBD5E1;">Progress</th>
+                            <th style="padding: 10px 10px; width: 120px; border-bottom: 1px solid #CBD5E1;">Status</th>
+                            <th style="padding: 10px 12px; min-width: 200px; border-bottom: 1px solid #CBD5E1;">Dependencies</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                                                                                <tr class="bulk-task-row " 
+                                data-task-id="11"
+                                style="border-bottom: 1px solid #E2E8F0; transition: background 0.15s;">
+                                
+                                <!-- 1. Number / Code -->
+                                <td style="padding: 8px 12px; color: #64748B; font-weight: 600; font-size: 11.5px; border-bottom: 1px solid #E2E8F0;">
+                                    1
+                                                                    </td>
+
+                                <!-- 2. Task Name -->
+                                <td style="padding: 8px 12px; border-bottom: 1px solid #E2E8F0; ">
+                                    <input type="text" 
+                                           name="tasks[11][title]" 
+                                           value="requiremnt" 
+                                           required 
+                                           maxlength="200"
+                                           class="bulk-input bulk-field-track"
+                                           data-field="title"
+                                           style="width: 100%; font-size: 12.5px; padding: 5px 8px; border: 1px solid #CBD5E1; border-radius: 4px; font-weight: 650; color: #0F172A;">
+                                </td>
+
+                                <!-- 3. Assignee -->
+                                <td style="padding: 8px 12px; border-bottom: 1px solid #E2E8F0;">
+                                    <select name="tasks[11][assigned_user_id]" 
+                                            class="bulk-select bulk-assignee-select bulk-field-track"
+                                            data-field="assigned_user_id"
+                                            style="width: 100%; font-size: 12px; padding: 5px 6px; border: 1px solid #CBD5E1; border-radius: 4px; background: #FFFFFF;">
+                                        <option value="">Unassigned</option>
+                                                                                    <option value="2" selected>
+                                                PM (Project Manager)
+                                            </option>
+                                                                            </select>
+                                </td>
+
+                                <!-- 4. Start Date -->
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
+                                    <input type="date" 
+                                           name="tasks[11][start_date]" 
+                                           value="2026-11-07" 
+                                           required 
+                                           class="bulk-input bulk-field-track"
+                                           data-field="start_date"
+                                           style="width: 100%; font-size: 11.5px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px;">
+                                </td>
+
+                                <!-- 5. Start Time -->
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
+                                    <input type="time" 
+                                           name="tasks[11][start_time]" 
+                                           value="09:00" 
+                                           required 
+                                           class="bulk-input bulk-field-track"
+                                           data-field="start_time"
+                                           style="width: 100%; font-size: 11.5px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px;">
+                                </td>
+
+                                <!-- 6. End Date -->
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
+                                    <input type="date" 
+                                           name="tasks[11][end_date]" 
+                                           value="2026-11-19" 
+                                           required 
+                                           class="bulk-input bulk-field-track"
+                                           data-field="end_date"
+                                           style="width: 100%; font-size: 11.5px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px;">
+                                </td>
+
+                                <!-- 7. End Time -->
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
+                                    <input type="time" 
+                                           name="tasks[11][end_time]" 
+                                           value="17:00" 
+                                           required 
+                                           class="bulk-input bulk-field-track"
+                                           data-field="end_time"
+                                           style="width: 100%; font-size: 11.5px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px;">
+                                </td>
+
+                                <!-- 8. Progress -->
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
+                                    <div style="display: flex; align-items: center; gap: 4px;">
+                                        <input type="number" 
+                                               name="tasks[11][progress]" 
+                                               value="0" 
+                                               min="0" 
+                                               max="100" 
+                                               required 
+                                               class="bulk-input bulk-progress-input bulk-field-track"
+                                               data-task-id="11"
+                                               data-field="progress"
+                                               style="width: 52px; font-size: 12px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px; text-align: center;">
+                                        <span class="muted" style="font-size: 11px;">%</span>
+                                    </div>
+                                </td>
+
+                                <!-- 9. Status -->
+                                <td style="padding: 8px 10px; border-bottom: 1px solid #E2E8F0;">
+                                    <select name="tasks[11][status]" 
+                                            class="bulk-select bulk-status-select bulk-field-track"
+                                            data-task-id="11"
+                                            data-field="status"
+                                            style="width: 100%; font-size: 12px; padding: 5px 6px; border: 1px solid #CBD5E1; border-radius: 4px; background: #FFFFFF; font-weight: 500;">
+                                        <option value="todo" selected>To Do</option>
+                                        <option value="in_progress" >In Progress</option>
+                                        <option value="on_hold" >On Hold</option>
+                                        <option value="completed" >Completed</option>
+                                    </select>
+                                </td>
+
+                                <!-- 10. Dependencies (Predecessors) -->
+                                <td style="padding: 8px 12px; border-bottom: 1px solid #E2E8F0;">
+                                    <div class="bulk-dep-cell" data-task-id="11">
+                                        <div class="bulk-dep-chips" id="bulk-chips-11" style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px;">
+                                                                                    </div>
+                                        <select class="bulk-add-dep-select" 
+                                                data-task-id="11"
+                                                style="width: 100%; font-size: 11px; padding: 3px 6px; border: 1px dashed #94A3B8; border-radius: 3px; background: #FFFFFF; color: #475569;">
+                                            <option value="">+ Add Predecessor...</option>
+                                                                                                                                                <option value="12" data-label="2">
+                                                        2 – Planning
+                                                    </option>
+                                                                                                                                                                                                <option value="13" data-label="3">
+                                                        3 – Procurement
+                                                    </option>
+                                                                                                                                                                                                <option value="14" data-label="4">
+                                                        4 – Site Preparation
+                                                    </option>
+                                                                                                                                                                                                <option value="15" data-label="5">
+                                                        5 – Installation
+                                                    </option>
+                                                                                                                                                                                                <option value="16" data-label="6">
+                                                        6 – Handover
+                                                    </option>
+                                                                                                                                    </select>
+                                    </div>
+                                </td>
+
+                            </tr>
+                                                                                <tr class="bulk-task-row " 
+                                data-task-id="12"
+                                style="border-bottom: 1px solid #E2E8F0; transition: background 0.15s;">
+                                
+                                <!-- 1. Number / Code -->
+                                <td style="padding: 8px 12px; color: #64748B; font-weight: 600; font-size: 11.5px; border-bottom: 1px solid #E2E8F0;">
+                                    2
+                                                                    </td>
+
+                                <!-- 2. Task Name -->
+                                <td style="padding: 8px 12px; border-bottom: 1px solid #E2E8F0; ">
+                                    <input type="text" 
+                                           name="tasks[12][title]" 
+                                           value="Planning" 
+                                           required 
+                                           maxlength="200"
+                                           class="bulk-input bulk-field-track"
+                                           data-field="title"
+                                           style="width: 100%; font-size: 12.5px; padding: 5px 8px; border: 1px solid #CBD5E1; border-radius: 4px; font-weight: 650; color: #0F172A;">
+                                </td>
+
+                                <!-- 3. Assignee -->
+                                <td style="padding: 8px 12px; border-bottom: 1px solid #E2E8F0;">
+                                    <select name="tasks[12][assigned_user_id]" 
+                                            class="bulk-select bulk-assignee-select bulk-field-track"
+                                            data-field="assigned_user_id"
+                                            style="width: 100%; font-size: 12px; padding: 5px 6px; border: 1px solid #CBD5E1; border-radius: 4px; background: #FFFFFF;">
+                                        <option value="">Unassigned</option>
+                                                                                    <option value="2" >
+                                                PM (Project Manager)
+                                            </option>
+                                                                            </select>
+                                </td>
+
+                                <!-- 4. Start Date -->
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
+                                    <input type="date" 
+                                           name="tasks[12][start_date]" 
+                                           value="2026-11-02" 
+                                           required 
+                                           class="bulk-input bulk-field-track"
+                                           data-field="start_date"
+                                           style="width: 100%; font-size: 11.5px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px;">
+                                </td>
+
+                                <!-- 5. Start Time -->
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
+                                    <input type="time" 
+                                           name="tasks[12][start_time]" 
+                                           value="09:00" 
+                                           required 
+                                           class="bulk-input bulk-field-track"
+                                           data-field="start_time"
+                                           style="width: 100%; font-size: 11.5px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px;">
+                                </td>
+
+                                <!-- 6. End Date -->
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
+                                    <input type="date" 
+                                           name="tasks[12][end_date]" 
+                                           value="2026-11-03" 
+                                           required 
+                                           class="bulk-input bulk-field-track"
+                                           data-field="end_date"
+                                           style="width: 100%; font-size: 11.5px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px;">
+                                </td>
+
+                                <!-- 7. End Time -->
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
+                                    <input type="time" 
+                                           name="tasks[12][end_time]" 
+                                           value="17:00" 
+                                           required 
+                                           class="bulk-input bulk-field-track"
+                                           data-field="end_time"
+                                           style="width: 100%; font-size: 11.5px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px;">
+                                </td>
+
+                                <!-- 8. Progress -->
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
+                                    <div style="display: flex; align-items: center; gap: 4px;">
+                                        <input type="number" 
+                                               name="tasks[12][progress]" 
+                                               value="100" 
+                                               min="0" 
+                                               max="100" 
+                                               required 
+                                               class="bulk-input bulk-progress-input bulk-field-track"
+                                               data-task-id="12"
+                                               data-field="progress"
+                                               style="width: 52px; font-size: 12px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px; text-align: center;">
+                                        <span class="muted" style="font-size: 11px;">%</span>
+                                    </div>
+                                </td>
+
+                                <!-- 9. Status -->
+                                <td style="padding: 8px 10px; border-bottom: 1px solid #E2E8F0;">
+                                    <select name="tasks[12][status]" 
+                                            class="bulk-select bulk-status-select bulk-field-track"
+                                            data-task-id="12"
+                                            data-field="status"
+                                            style="width: 100%; font-size: 12px; padding: 5px 6px; border: 1px solid #CBD5E1; border-radius: 4px; background: #FFFFFF; font-weight: 500;">
+                                        <option value="todo" >To Do</option>
+                                        <option value="in_progress" >In Progress</option>
+                                        <option value="on_hold" >On Hold</option>
+                                        <option value="completed" selected>Completed</option>
+                                    </select>
+                                </td>
+
+                                <!-- 10. Dependencies (Predecessors) -->
+                                <td style="padding: 8px 12px; border-bottom: 1px solid #E2E8F0;">
+                                    <div class="bulk-dep-cell" data-task-id="12">
+                                        <div class="bulk-dep-chips" id="bulk-chips-12" style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px;">
+                                                                                    </div>
+                                        <select class="bulk-add-dep-select" 
+                                                data-task-id="12"
+                                                style="width: 100%; font-size: 11px; padding: 3px 6px; border: 1px dashed #94A3B8; border-radius: 3px; background: #FFFFFF; color: #475569;">
+                                            <option value="">+ Add Predecessor...</option>
+                                                                                                                                                <option value="11" data-label="1">
+                                                        1 – requiremnt
+                                                    </option>
+                                                                                                                                                                                                <option value="13" data-label="3">
+                                                        3 – Procurement
+                                                    </option>
+                                                                                                                                                                                                <option value="14" data-label="4">
+                                                        4 – Site Preparation
+                                                    </option>
+                                                                                                                                                                                                <option value="15" data-label="5">
+                                                        5 – Installation
+                                                    </option>
+                                                                                                                                                                                                <option value="16" data-label="6">
+                                                        6 – Handover
+                                                    </option>
+                                                                                                                                    </select>
+                                    </div>
+                                </td>
+
+                            </tr>
+                                                                                <tr class="bulk-task-row " 
+                                data-task-id="13"
+                                style="border-bottom: 1px solid #E2E8F0; transition: background 0.15s;">
+                                
+                                <!-- 1. Number / Code -->
+                                <td style="padding: 8px 12px; color: #64748B; font-weight: 600; font-size: 11.5px; border-bottom: 1px solid #E2E8F0;">
+                                    3
+                                                                            <div style="color: #DC2626; font-size: 9.5px; font-weight: 700; margin-top: 2px;">Overdue</div>
+                                                                    </td>
+
+                                <!-- 2. Task Name -->
+                                <td style="padding: 8px 12px; border-bottom: 1px solid #E2E8F0; ">
+                                    <input type="text" 
+                                           name="tasks[13][title]" 
+                                           value="Procurement" 
+                                           required 
+                                           maxlength="200"
+                                           class="bulk-input bulk-field-track"
+                                           data-field="title"
+                                           style="width: 100%; font-size: 12.5px; padding: 5px 8px; border: 1px solid #CBD5E1; border-radius: 4px; font-weight: 650; color: #0F172A;">
+                                </td>
+
+                                <!-- 3. Assignee -->
+                                <td style="padding: 8px 12px; border-bottom: 1px solid #E2E8F0;">
+                                    <select name="tasks[13][assigned_user_id]" 
+                                            class="bulk-select bulk-assignee-select bulk-field-track"
+                                            data-field="assigned_user_id"
+                                            style="width: 100%; font-size: 12px; padding: 5px 6px; border: 1px solid #CBD5E1; border-radius: 4px; background: #FFFFFF;">
+                                        <option value="">Unassigned</option>
+                                                                                    <option value="2" >
+                                                PM (Project Manager)
+                                            </option>
+                                                                            </select>
+                                </td>
+
+                                <!-- 4. Start Date -->
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
+                                    <input type="date" 
+                                           name="tasks[13][start_date]" 
+                                           value="2026-11-04" 
+                                           required 
+                                           class="bulk-input bulk-field-track"
+                                           data-field="start_date"
+                                           style="width: 100%; font-size: 11.5px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px;">
+                                </td>
+
+                                <!-- 5. Start Time -->
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
+                                    <input type="time" 
+                                           name="tasks[13][start_time]" 
+                                           value="09:00" 
+                                           required 
+                                           class="bulk-input bulk-field-track"
+                                           data-field="start_time"
+                                           style="width: 100%; font-size: 11.5px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px;">
+                                </td>
+
+                                <!-- 6. End Date -->
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
+                                    <input type="date" 
+                                           name="tasks[13][end_date]" 
+                                           value="2026-11-06" 
+                                           required 
+                                           class="bulk-input bulk-field-track"
+                                           data-field="end_date"
+                                           style="width: 100%; font-size: 11.5px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px;">
+                                </td>
+
+                                <!-- 7. End Time -->
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
+                                    <input type="time" 
+                                           name="tasks[13][end_time]" 
+                                           value="17:00" 
+                                           required 
+                                           class="bulk-input bulk-field-track"
+                                           data-field="end_time"
+                                           style="width: 100%; font-size: 11.5px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px;">
+                                </td>
+
+                                <!-- 8. Progress -->
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
+                                    <div style="display: flex; align-items: center; gap: 4px;">
+                                        <input type="number" 
+                                               name="tasks[13][progress]" 
+                                               value="50" 
+                                               min="0" 
+                                               max="100" 
+                                               required 
+                                               class="bulk-input bulk-progress-input bulk-field-track"
+                                               data-task-id="13"
+                                               data-field="progress"
+                                               style="width: 52px; font-size: 12px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px; text-align: center;">
+                                        <span class="muted" style="font-size: 11px;">%</span>
+                                    </div>
+                                </td>
+
+                                <!-- 9. Status -->
+                                <td style="padding: 8px 10px; border-bottom: 1px solid #E2E8F0;">
+                                    <select name="tasks[13][status]" 
+                                            class="bulk-select bulk-status-select bulk-field-track"
+                                            data-task-id="13"
+                                            data-field="status"
+                                            style="width: 100%; font-size: 12px; padding: 5px 6px; border: 1px solid #CBD5E1; border-radius: 4px; background: #FFFFFF; font-weight: 500;">
+                                        <option value="todo" >To Do</option>
+                                        <option value="in_progress" selected>In Progress</option>
+                                        <option value="on_hold" >On Hold</option>
+                                        <option value="completed" >Completed</option>
+                                    </select>
+                                </td>
+
+                                <!-- 10. Dependencies (Predecessors) -->
+                                <td style="padding: 8px 12px; border-bottom: 1px solid #E2E8F0;">
+                                    <div class="bulk-dep-cell" data-task-id="13">
+                                        <div class="bulk-dep-chips" id="bulk-chips-13" style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px;">
+                                                                                            <span class="bulk-dep-chip" data-dep-id="12" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 3px; font-size: 11px; color: #334155;">
+                                                    <span>2</span>
+                                                    <button type="button" class="bulk-remove-dep-btn" title="Remove dependency" style="border: none; background: none; cursor: pointer; color: #EF4444; font-weight: bold; font-size: 12px; line-height: 1; padding: 0 2px;">×</button>
+                                                    <input type="hidden" name="tasks[13][dependencies][]" value="12">
+                                                </span>
+                                                                                    </div>
+                                        <select class="bulk-add-dep-select" 
+                                                data-task-id="13"
+                                                style="width: 100%; font-size: 11px; padding: 3px 6px; border: 1px dashed #94A3B8; border-radius: 3px; background: #FFFFFF; color: #475569;">
+                                            <option value="">+ Add Predecessor...</option>
+                                                                                                                                                <option value="11" data-label="1">
+                                                        1 – requiremnt
+                                                    </option>
+                                                                                                                                                                                                                                                                                            <option value="14" data-label="4">
+                                                        4 – Site Preparation
+                                                    </option>
+                                                                                                                                                                                                <option value="15" data-label="5">
+                                                        5 – Installation
+                                                    </option>
+                                                                                                                                                                                                <option value="16" data-label="6">
+                                                        6 – Handover
+                                                    </option>
+                                                                                                                                    </select>
+                                    </div>
+                                </td>
+
+                            </tr>
+                                                                                <tr class="bulk-task-row " 
+                                data-task-id="14"
+                                style="border-bottom: 1px solid #E2E8F0; transition: background 0.15s;">
+                                
+                                <!-- 1. Number / Code -->
+                                <td style="padding: 8px 12px; color: #64748B; font-weight: 600; font-size: 11.5px; border-bottom: 1px solid #E2E8F0;">
+                                    4
+                                                                            <div style="color: #DC2626; font-size: 9.5px; font-weight: 700; margin-top: 2px;">Overdue</div>
+                                                                    </td>
+
+                                <!-- 2. Task Name -->
+                                <td style="padding: 8px 12px; border-bottom: 1px solid #E2E8F0; ">
+                                    <input type="text" 
+                                           name="tasks[14][title]" 
+                                           value="Site Preparation" 
+                                           required 
+                                           maxlength="200"
+                                           class="bulk-input bulk-field-track"
+                                           data-field="title"
+                                           style="width: 100%; font-size: 12.5px; padding: 5px 8px; border: 1px solid #CBD5E1; border-radius: 4px; font-weight: 650; color: #0F172A;">
+                                </td>
+
+                                <!-- 3. Assignee -->
+                                <td style="padding: 8px 12px; border-bottom: 1px solid #E2E8F0;">
+                                    <select name="tasks[14][assigned_user_id]" 
+                                            class="bulk-select bulk-assignee-select bulk-field-track"
+                                            data-field="assigned_user_id"
+                                            style="width: 100%; font-size: 12px; padding: 5px 6px; border: 1px solid #CBD5E1; border-radius: 4px; background: #FFFFFF;">
+                                        <option value="">Unassigned</option>
+                                                                                    <option value="2" >
+                                                PM (Project Manager)
+                                            </option>
+                                                                            </select>
+                                </td>
+
+                                <!-- 4. Start Date -->
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
+                                    <input type="date" 
+                                           name="tasks[14][start_date]" 
+                                           value="2026-11-04" 
+                                           required 
+                                           class="bulk-input bulk-field-track"
+                                           data-field="start_date"
+                                           style="width: 100%; font-size: 11.5px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px;">
+                                </td>
+
+                                <!-- 5. Start Time -->
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
+                                    <input type="time" 
+                                           name="tasks[14][start_time]" 
+                                           value="09:00" 
+                                           required 
+                                           class="bulk-input bulk-field-track"
+                                           data-field="start_time"
+                                           style="width: 100%; font-size: 11.5px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px;">
+                                </td>
+
+                                <!-- 6. End Date -->
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
+                                    <input type="date" 
+                                           name="tasks[14][end_date]" 
+                                           value="2026-11-05" 
+                                           required 
+                                           class="bulk-input bulk-field-track"
+                                           data-field="end_date"
+                                           style="width: 100%; font-size: 11.5px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px;">
+                                </td>
+
+                                <!-- 7. End Time -->
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
+                                    <input type="time" 
+                                           name="tasks[14][end_time]" 
+                                           value="17:00" 
+                                           required 
+                                           class="bulk-input bulk-field-track"
+                                           data-field="end_time"
+                                           style="width: 100%; font-size: 11.5px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px;">
+                                </td>
+
+                                <!-- 8. Progress -->
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
+                                    <div style="display: flex; align-items: center; gap: 4px;">
+                                        <input type="number" 
+                                               name="tasks[14][progress]" 
+                                               value="0" 
+                                               min="0" 
+                                               max="100" 
+                                               required 
+                                               class="bulk-input bulk-progress-input bulk-field-track"
+                                               data-task-id="14"
+                                               data-field="progress"
+                                               style="width: 52px; font-size: 12px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px; text-align: center;">
+                                        <span class="muted" style="font-size: 11px;">%</span>
+                                    </div>
+                                </td>
+
+                                <!-- 9. Status -->
+                                <td style="padding: 8px 10px; border-bottom: 1px solid #E2E8F0;">
+                                    <select name="tasks[14][status]" 
+                                            class="bulk-select bulk-status-select bulk-field-track"
+                                            data-task-id="14"
+                                            data-field="status"
+                                            style="width: 100%; font-size: 12px; padding: 5px 6px; border: 1px solid #CBD5E1; border-radius: 4px; background: #FFFFFF; font-weight: 500;">
+                                        <option value="todo" selected>To Do</option>
+                                        <option value="in_progress" >In Progress</option>
+                                        <option value="on_hold" >On Hold</option>
+                                        <option value="completed" >Completed</option>
+                                    </select>
+                                </td>
+
+                                <!-- 10. Dependencies (Predecessors) -->
+                                <td style="padding: 8px 12px; border-bottom: 1px solid #E2E8F0;">
+                                    <div class="bulk-dep-cell" data-task-id="14">
+                                        <div class="bulk-dep-chips" id="bulk-chips-14" style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px;">
+                                                                                            <span class="bulk-dep-chip" data-dep-id="12" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 3px; font-size: 11px; color: #334155;">
+                                                    <span>2</span>
+                                                    <button type="button" class="bulk-remove-dep-btn" title="Remove dependency" style="border: none; background: none; cursor: pointer; color: #EF4444; font-weight: bold; font-size: 12px; line-height: 1; padding: 0 2px;">×</button>
+                                                    <input type="hidden" name="tasks[14][dependencies][]" value="12">
+                                                </span>
+                                                                                    </div>
+                                        <select class="bulk-add-dep-select" 
+                                                data-task-id="14"
+                                                style="width: 100%; font-size: 11px; padding: 3px 6px; border: 1px dashed #94A3B8; border-radius: 3px; background: #FFFFFF; color: #475569;">
+                                            <option value="">+ Add Predecessor...</option>
+                                                                                                                                                <option value="11" data-label="1">
+                                                        1 – requiremnt
+                                                    </option>
+                                                                                                                                                                                                                                                                                            <option value="13" data-label="3">
+                                                        3 – Procurement
+                                                    </option>
+                                                                                                                                                                                                <option value="15" data-label="5">
+                                                        5 – Installation
+                                                    </option>
+                                                                                                                                                                                                <option value="16" data-label="6">
+                                                        6 – Handover
+                                                    </option>
+                                                                                                                                    </select>
+                                    </div>
+                                </td>
+
+                            </tr>
+                                                                                <tr class="bulk-task-row " 
+                                data-task-id="15"
+                                style="border-bottom: 1px solid #E2E8F0; transition: background 0.15s;">
+                                
+                                <!-- 1. Number / Code -->
+                                <td style="padding: 8px 12px; color: #64748B; font-weight: 600; font-size: 11.5px; border-bottom: 1px solid #E2E8F0;">
+                                    5
+                                                                    </td>
+
+                                <!-- 2. Task Name -->
+                                <td style="padding: 8px 12px; border-bottom: 1px solid #E2E8F0; ">
+                                    <input type="text" 
+                                           name="tasks[15][title]" 
+                                           value="Installation" 
+                                           required 
+                                           maxlength="200"
+                                           class="bulk-input bulk-field-track"
+                                           data-field="title"
+                                           style="width: 100%; font-size: 12.5px; padding: 5px 8px; border: 1px solid #CBD5E1; border-radius: 4px; font-weight: 650; color: #0F172A;">
+                                </td>
+
+                                <!-- 3. Assignee -->
+                                <td style="padding: 8px 12px; border-bottom: 1px solid #E2E8F0;">
+                                    <select name="tasks[15][assigned_user_id]" 
+                                            class="bulk-select bulk-assignee-select bulk-field-track"
+                                            data-field="assigned_user_id"
+                                            style="width: 100%; font-size: 12px; padding: 5px 6px; border: 1px solid #CBD5E1; border-radius: 4px; background: #FFFFFF;">
+                                        <option value="">Unassigned</option>
+                                                                                    <option value="2" >
+                                                PM (Project Manager)
+                                            </option>
+                                                                            </select>
+                                </td>
+
+                                <!-- 4. Start Date -->
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
+                                    <input type="date" 
+                                           name="tasks[15][start_date]" 
+                                           value="2026-11-09" 
+                                           required 
+                                           class="bulk-input bulk-field-track"
+                                           data-field="start_date"
+                                           style="width: 100%; font-size: 11.5px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px;">
+                                </td>
+
+                                <!-- 5. Start Time -->
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
+                                    <input type="time" 
+                                           name="tasks[15][start_time]" 
+                                           value="09:00" 
+                                           required 
+                                           class="bulk-input bulk-field-track"
+                                           data-field="start_time"
+                                           style="width: 100%; font-size: 11.5px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px;">
+                                </td>
+
+                                <!-- 6. End Date -->
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
+                                    <input type="date" 
+                                           name="tasks[15][end_date]" 
+                                           value="2026-11-10" 
+                                           required 
+                                           class="bulk-input bulk-field-track"
+                                           data-field="end_date"
+                                           style="width: 100%; font-size: 11.5px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px;">
+                                </td>
+
+                                <!-- 7. End Time -->
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
+                                    <input type="time" 
+                                           name="tasks[15][end_time]" 
+                                           value="17:00" 
+                                           required 
+                                           class="bulk-input bulk-field-track"
+                                           data-field="end_time"
+                                           style="width: 100%; font-size: 11.5px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px;">
+                                </td>
+
+                                <!-- 8. Progress -->
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
+                                    <div style="display: flex; align-items: center; gap: 4px;">
+                                        <input type="number" 
+                                               name="tasks[15][progress]" 
+                                               value="0" 
+                                               min="0" 
+                                               max="100" 
+                                               required 
+                                               class="bulk-input bulk-progress-input bulk-field-track"
+                                               data-task-id="15"
+                                               data-field="progress"
+                                               style="width: 52px; font-size: 12px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px; text-align: center;">
+                                        <span class="muted" style="font-size: 11px;">%</span>
+                                    </div>
+                                </td>
+
+                                <!-- 9. Status -->
+                                <td style="padding: 8px 10px; border-bottom: 1px solid #E2E8F0;">
+                                    <select name="tasks[15][status]" 
+                                            class="bulk-select bulk-status-select bulk-field-track"
+                                            data-task-id="15"
+                                            data-field="status"
+                                            style="width: 100%; font-size: 12px; padding: 5px 6px; border: 1px solid #CBD5E1; border-radius: 4px; background: #FFFFFF; font-weight: 500;">
+                                        <option value="todo" selected>To Do</option>
+                                        <option value="in_progress" >In Progress</option>
+                                        <option value="on_hold" >On Hold</option>
+                                        <option value="completed" >Completed</option>
+                                    </select>
+                                </td>
+
+                                <!-- 10. Dependencies (Predecessors) -->
+                                <td style="padding: 8px 12px; border-bottom: 1px solid #E2E8F0;">
+                                    <div class="bulk-dep-cell" data-task-id="15">
+                                        <div class="bulk-dep-chips" id="bulk-chips-15" style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px;">
+                                                                                            <span class="bulk-dep-chip" data-dep-id="13" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 3px; font-size: 11px; color: #334155;">
+                                                    <span>3</span>
+                                                    <button type="button" class="bulk-remove-dep-btn" title="Remove dependency" style="border: none; background: none; cursor: pointer; color: #EF4444; font-weight: bold; font-size: 12px; line-height: 1; padding: 0 2px;">×</button>
+                                                    <input type="hidden" name="tasks[15][dependencies][]" value="13">
+                                                </span>
+                                                                                            <span class="bulk-dep-chip" data-dep-id="14" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 3px; font-size: 11px; color: #334155;">
+                                                    <span>4</span>
+                                                    <button type="button" class="bulk-remove-dep-btn" title="Remove dependency" style="border: none; background: none; cursor: pointer; color: #EF4444; font-weight: bold; font-size: 12px; line-height: 1; padding: 0 2px;">×</button>
+                                                    <input type="hidden" name="tasks[15][dependencies][]" value="14">
+                                                </span>
+                                                                                    </div>
+                                        <select class="bulk-add-dep-select" 
+                                                data-task-id="15"
+                                                style="width: 100%; font-size: 11px; padding: 3px 6px; border: 1px dashed #94A3B8; border-radius: 3px; background: #FFFFFF; color: #475569;">
+                                            <option value="">+ Add Predecessor...</option>
+                                                                                                                                                <option value="11" data-label="1">
+                                                        1 – requiremnt
+                                                    </option>
+                                                                                                                                                                                                <option value="12" data-label="2">
+                                                        2 – Planning
+                                                    </option>
+                                                                                                                                                                                                                                                                                                                                                                                        <option value="16" data-label="6">
+                                                        6 – Handover
+                                                    </option>
+                                                                                                                                    </select>
+                                    </div>
+                                </td>
+
+                            </tr>
+                                                                                <tr class="bulk-task-row " 
+                                data-task-id="16"
+                                style="border-bottom: 1px solid #E2E8F0; transition: background 0.15s;">
+                                
+                                <!-- 1. Number / Code -->
+                                <td style="padding: 8px 12px; color: #64748B; font-weight: 600; font-size: 11.5px; border-bottom: 1px solid #E2E8F0;">
+                                    6
+                                                                    </td>
+
+                                <!-- 2. Task Name -->
+                                <td style="padding: 8px 12px; border-bottom: 1px solid #E2E8F0; ">
+                                    <input type="text" 
+                                           name="tasks[16][title]" 
+                                           value="Handover" 
+                                           required 
+                                           maxlength="200"
+                                           class="bulk-input bulk-field-track"
+                                           data-field="title"
+                                           style="width: 100%; font-size: 12.5px; padding: 5px 8px; border: 1px solid #CBD5E1; border-radius: 4px; font-weight: 650; color: #0F172A;">
+                                </td>
+
+                                <!-- 3. Assignee -->
+                                <td style="padding: 8px 12px; border-bottom: 1px solid #E2E8F0;">
+                                    <select name="tasks[16][assigned_user_id]" 
+                                            class="bulk-select bulk-assignee-select bulk-field-track"
+                                            data-field="assigned_user_id"
+                                            style="width: 100%; font-size: 12px; padding: 5px 6px; border: 1px solid #CBD5E1; border-radius: 4px; background: #FFFFFF;">
+                                        <option value="">Unassigned</option>
+                                                                                    <option value="2" >
+                                                PM (Project Manager)
+                                            </option>
+                                                                            </select>
+                                </td>
+
+                                <!-- 4. Start Date -->
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
+                                    <input type="date" 
+                                           name="tasks[16][start_date]" 
+                                           value="2026-11-11" 
+                                           required 
+                                           class="bulk-input bulk-field-track"
+                                           data-field="start_date"
+                                           style="width: 100%; font-size: 11.5px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px;">
+                                </td>
+
+                                <!-- 5. Start Time -->
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
+                                    <input type="time" 
+                                           name="tasks[16][start_time]" 
+                                           value="09:00" 
+                                           required 
+                                           class="bulk-input bulk-field-track"
+                                           data-field="start_time"
+                                           style="width: 100%; font-size: 11.5px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px;">
+                                </td>
+
+                                <!-- 6. End Date -->
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
+                                    <input type="date" 
+                                           name="tasks[16][end_date]" 
+                                           value="2026-11-11" 
+                                           required 
+                                           class="bulk-input bulk-field-track"
+                                           data-field="end_date"
+                                           style="width: 100%; font-size: 11.5px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px;">
+                                </td>
+
+                                <!-- 7. End Time -->
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
+                                    <input type="time" 
+                                           name="tasks[16][end_time]" 
+                                           value="17:00" 
+                                           required 
+                                           class="bulk-input bulk-field-track"
+                                           data-field="end_time"
+                                           style="width: 100%; font-size: 11.5px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px;">
+                                </td>
+
+                                <!-- 8. Progress -->
+                                <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
+                                    <div style="display: flex; align-items: center; gap: 4px;">
+                                        <input type="number" 
+                                               name="tasks[16][progress]" 
+                                               value="0" 
+                                               min="0" 
+                                               max="100" 
+                                               required 
+                                               class="bulk-input bulk-progress-input bulk-field-track"
+                                               data-task-id="16"
+                                               data-field="progress"
+                                               style="width: 52px; font-size: 12px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px; text-align: center;">
+                                        <span class="muted" style="font-size: 11px;">%</span>
+                                    </div>
+                                </td>
+
+                                <!-- 9. Status -->
+                                <td style="padding: 8px 10px; border-bottom: 1px solid #E2E8F0;">
+                                    <select name="tasks[16][status]" 
+                                            class="bulk-select bulk-status-select bulk-field-track"
+                                            data-task-id="16"
+                                            data-field="status"
+                                            style="width: 100%; font-size: 12px; padding: 5px 6px; border: 1px solid #CBD5E1; border-radius: 4px; background: #FFFFFF; font-weight: 500;">
+                                        <option value="todo" selected>To Do</option>
+                                        <option value="in_progress" >In Progress</option>
+                                        <option value="on_hold" >On Hold</option>
+                                        <option value="completed" >Completed</option>
+                                    </select>
+                                </td>
+
+                                <!-- 10. Dependencies (Predecessors) -->
+                                <td style="padding: 8px 12px; border-bottom: 1px solid #E2E8F0;">
+                                    <div class="bulk-dep-cell" data-task-id="16">
+                                        <div class="bulk-dep-chips" id="bulk-chips-16" style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px;">
+                                                                                            <span class="bulk-dep-chip" data-dep-id="15" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; background: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 3px; font-size: 11px; color: #334155;">
+                                                    <span>5</span>
+                                                    <button type="button" class="bulk-remove-dep-btn" title="Remove dependency" style="border: none; background: none; cursor: pointer; color: #EF4444; font-weight: bold; font-size: 12px; line-height: 1; padding: 0 2px;">×</button>
+                                                    <input type="hidden" name="tasks[16][dependencies][]" value="15">
+                                                </span>
+                                                                                    </div>
+                                        <select class="bulk-add-dep-select" 
+                                                data-task-id="16"
+                                                style="width: 100%; font-size: 11px; padding: 3px 6px; border: 1px dashed #94A3B8; border-radius: 3px; background: #FFFFFF; color: #475569;">
+                                            <option value="">+ Add Predecessor...</option>
+                                                                                                                                                <option value="11" data-label="1">
+                                                        1 – requiremnt
+                                                    </option>
+                                                                                                                                                                                                <option value="12" data-label="2">
+                                                        2 – Planning
+                                                    </option>
+                                                                                                                                                                                                <option value="13" data-label="3">
+                                                        3 – Procurement
+                                                    </option>
+                                                                                                                                                                                                <option value="14" data-label="4">
+                                                        4 – Site Preparation
+                                                    </option>
+                                                                                                                                                                                                                                </select>
+                                    </div>
+                                </td>
+
+                            </tr>
+                                            </tbody>
+                </table>
+            </div>
+
+            <!-- Sticky Modal Footer -->
+            <div class="modal-foot" style="padding: 12px 24px; border-top: 1px solid #E1E4E8; display: flex; justify-content: space-between; align-items: center; background: #FFFFFF; flex-shrink: 0;">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    <button type="button" class="btn btn-ghost" data-close-dialog id="bulk-edit-cancel-btn">Cancel</button>
+                    <span id="bulk-modified-counter" class="muted" style="font-size: 13px; font-weight: 500;">0 tasks modified</span>
+                </div>
+                <button type="submit" class="btn btn-primary" id="bulk-edit-save-btn" style="min-width: 150px; font-weight: 650;">
+                    Save All Changes
+                </button>
+            </div>
+        </form>
+    </dialog>
+
+            <!-- Quick Add Project Member Dialog (non-disruptive inline modal) -->
+        <dialog id="quick-add-member-dialog" class="modal" style="max-width: 440px;">
+            <div class="modal-head">
+                <h2>Add Project Member</h2>
+                <button type="button" class="icon-btn" data-close-dialog aria-label="Close">×</button>
+            </div>
+            <form id="quick-add-member-form" method="post" action="http://127.0.0.1:8000/projects/2/members" class="stack mt-16">
+                <input type="hidden" name="_token" value="0OeB8EGdieAAIJ6Rz2Y4noCsWcIis2jHJmEZaot9" autocomplete="off">                <label>Person <span class="required">*</span>
+                    <select name="user_id" id="quick-member-user-id" required>
+                        <option value="">Select team member...</option>
+                                                                                    <option value="6">Nadumi Jayawardhana (nadumi@gsoptimize.lk)</option>
+                                                                                                                                                                    <option value="7">Samadhi Pathirathna (samadhi@gsoptimize.lk)</option>
+                                                                        </select>
+                </label>
+                <label>Project Role <span class="required">*</span>
+                    <select name="project_role_id" id="quick-member-role-id" required>
+                                                    <option value="3" >Project Owner</option>
+                                                    <option value="2" >Project Sponsor</option>
+                                                    <option value="4" >Steering Committee</option>
+                                                    <option value="5" selected>Team Member</option>
+                                            </select>
+                </label>
+                <div class="form-actions mt-16">
+                    <button type="button" class="btn btn-ghost" data-close-dialog>Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="quick-add-member-submit-btn">Add to Project</button>
+                </div>
+            </form>
+        </dialog>
+    
+    <!-- Import Task Dialog -->
+    <dialog id="import-task-dialog" class="modal" style="max-width: 520px;">
+        <div class="modal-head">
+            <h2>Import Tasks from Excel</h2>
+            <button type="button" class="icon-btn" data-close-dialog>×</button>
+        </div>
+        <p class="muted text-sm mt-8">Download an Excel template, fill in your tasks, and upload below for a review before saving.</p>
+        
+        <div class="inline-actions mt-12 mb-16">
+            <a class="btn btn-outline btn-sm" href="http://127.0.0.1:8000/projects/2/tasks/export?blank=1">Download Blank Template</a>
+            <a class="btn btn-outline btn-sm" href="http://127.0.0.1:8000/projects/2/tasks/export">Export Current Tasks</a>
+        </div>
+
+        <form method="post" action="http://127.0.0.1:8000/projects/2/tasks/import/preview" enctype="multipart/form-data" class="stack">
+            <input type="hidden" name="_token" value="0OeB8EGdieAAIJ6Rz2Y4noCsWcIis2jHJmEZaot9" autocomplete="off">            <label>Excel File (.xlsx, .csv) <span class="required">*</span>
+                <input type="file" name="file" accept=".xlsx,.csv" required>
+            </label>
+            <div class="form-actions mt-16">
+                <button type="button" class="btn btn-ghost" data-close-dialog>Cancel</button>
+                <button class="btn btn-primary" type="submit">Preview Import</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="project-edit-dialog" class="project-editor" aria-labelledby="project-editor-title" aria-describedby="project-editor-subtitle" data-reopen="false">
+    <header class="project-editor-head">
+        <div>
+            <h2 id="project-editor-title">Edit project</h2>
+            <p id="project-editor-subtitle">PRJ-8BVBN10 <span aria-hidden="true">&middot;</span> test</p>
+        </div>
+        <button type="button" class="project-editor-close" data-close-dialog aria-label="Close edit project">&times;</button>
+    </header>
+
+    <div class="project-editor-body">
+                <div class="project-editor-grid">
+            <section class="project-editor-details" aria-labelledby="project-edit-details-title">
+                <div class="project-editor-section-head"><h3 id="project-edit-details-title">Project details</h3><span>Required fields marked *</span></div>
+                <form method="post" action="http://127.0.0.1:8000/projects/2" id="project-details-edit-form" class="project-editor-fields">
+                    <input type="hidden" name="_token" value="0OeB8EGdieAAIJ6Rz2Y4noCsWcIis2jHJmEZaot9" autocomplete="off">                    <input type="hidden" name="_method" value="PUT">                    <input type="hidden" name="_project_edit" value="1">
+                    <label>Project name <span class="required">*</span>
+                        <input name="name" value="test" required maxlength="160" autofocus>
+                    </label>
+                    <label>Description <span class="project-editor-optional">Optional</span>
+                        <textarea name="description" rows="3" maxlength="3000" placeholder="What will this project deliver?"></textarea>
+                    </label>
+                    <div class="project-editor-two-fields">
+                        <label>Start date <span class="required">*</span>
+                            <input type="date" name="starts_on" value="2026-11-07" required>
+                        </label>
+                        <label>Due date <span class="required">*</span>
+                            <input type="date" name="ends_on" value="2026-11-19" min="2026-11-07" required>
+                        </label>
+                    </div>
+                    <label>Project status <span class="required">*</span>
+                        <select name="status" required>
+                                                            <option value="active" selected>Active</option>
+                                                            <option value="on_hold" >On hold</option>
+                                                            <option value="completed" >Completed</option>
+                                                            <option value="archived" >Archived</option>
+                                                    </select>
+                                            </label>
+                </form>
+            </section>
+
+            <aside class="project-editor-context" aria-label="Project setup and ownership">
+                <section class="project-editor-context-card" data-project-setup="blank">
+                    <h3>Project setup</h3>
+                    <label>Project template
+                        <select name="project_template_id" form="project-details-edit-form">
+                            <option value="">Blank project</option>
+                                                        <option value="3" >Corporate Branding &amp; Identity</option>
+                                                        <option value="2" >Mobile App Development</option>
+                                                        <option value="4" >testing 1</option>
+                                                        <option value="1" >Website Redesign &amp; Launch</option>
+                                                    </select>
+                    </label>
+                    <p>Change the linked template or choose Blank. Existing tasks, dates and progress are kept.</p>
+                    <dl class="project-editor-context-list">
+                        <div><dt>Project code</dt><dd>PRJ-8BVBN10</dd></div>
+                        <div><dt>Subsidiary</dt><dd>General Group</dd></div>
+                    </dl>
+                </section>
+
+                <section class="project-editor-context-card">
+                    <h3>Project manager</h3>
+                                                                <div class="project-editor-person">
+                            <span class="project-editor-avatar" aria-hidden="true">P</span>
+                            <div><b>PM</b><small>pm@gmail.com</small></div>
+                        </div>
+                                        <dl class="project-editor-context-list">
+                        <div><dt>Created by</dt><dd>PMO Admin</dd></div>
+                        <div><dt>Created on</dt><dd>07 Nov 2026</dd></div>
+                    </dl>
+                </section>
+            </aside>
+
+                            <section class="project-editor-team" aria-labelledby="project-editor-team-title" data-editor-team-count="1">
+                    <div class="project-editor-team-head">
+                        <div><h3 id="project-editor-team-title">Assigned team <span>1</span></h3><p>People assigned to this project and its tasks.</p></div>
+                        <button type="button" class="btn btn-outline btn-sm" data-editor-add-member>+ Add person</button>                    </div>
+                                            <input type="hidden" name="edit_team" value="1" form="project-details-edit-form">
+                        <p class="muted">Removing a person also removes their task assignments. The manager is managed separately.</p>
+                        <div data-editor-members>
+                                                </div>
+                        <template data-editor-member-template><div class="project-editor-member" data-editor-member>
+                            <label><span class="workspace-sr-only">Person</span><select data-member-user form="project-details-edit-form" required><option value="">Choose person</option><option value="6">Nadumi Jayawardhana</option><option value="7">Samadhi Pathirathna</option></select></label>
+                            <label><span class="workspace-sr-only">Project role</span><select data-member-role form="project-details-edit-form" required><option value="">Choose role</option><option value="3">Project Owner</option><option value="2">Project Sponsor</option><option value="4">Steering Committee</option><option value="5">Team Member</option></select></label>
+                            <button type="button" class="btn btn-ghost" data-editor-remove-member aria-label="Remove person">&times;</button>
+                        </div></template>
+                                                            <div class="project-editor-people"  hidden >
+                                                    <div class="project-editor-team-person" data-editor-person="2" data-person-name="pm pm@gmail.com">
+                                <span class="project-editor-avatar" aria-hidden="true">P</span>
+                                <div class="project-editor-person-copy"><b>PM</b><small>pm@gmail.com</small></div>
+                                <span class="project-editor-role">Project manager</span>
+                            </div>
+                                            </div>
+                    <p class="project-editor-empty" data-editor-no-people hidden>No matching people.</p>
+                </section>
+                                        <details class="project-editor-baseline">
+                    <summary>Original schedule</summary>
+                    <p>07 Nov 2026 &ndash; 19 Nov 2026 <span>&middot; Baseline saved 07 Nov 2026</span></p>
+                </details>
+                    </div>
+    </div>
+
+    <footer class="project-editor-footer">
+        <span data-editor-feedback role="status">Project details, template and team</span>
+        <div>
+            <button type="button" class="btn btn-ghost" data-close-dialog>Cancel</button>
+            <button type="submit" form="project-details-edit-form" class="btn btn-primary">Save changes</button>
+        </div>
+    </footer>
+</dialog>
+
+
+
+    <!-- Project Closure & Sign-off Dialog -->
+    <dialog id="project-closure-dialog" class="modal" style="max-width: 540px;">
+        <div class="modal-head">
+            <h2>Project Closure & Sign-off</h2>
+            <button type="button" class="icon-btn" data-close-dialog>×</button>
+        </div>
+        <p class="muted text-sm mt-8">Review the deliverables checklist and submit this project for formal sign-off and closure.</p>
+        <form method="post" action="http://127.0.0.1:8000/projects/2/closure" class="stack mt-16">
+            <input type="hidden" name="_token" value="0OeB8EGdieAAIJ6Rz2Y4noCsWcIis2jHJmEZaot9" autocomplete="off">            <div class="closure-checklist stack" style="gap: 10px; background: var(--surface); padding: 14px; border-radius: 6px; border: 1px solid var(--border);">
+                <div style="font-weight: 600; font-size: 13px;">Completion checklist</div>
+                <label class="custom-checkbox-row" style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                    <input type="checkbox" name="tasks_completed" value="1" >
+                    <span>All project tasks are completed.</span>
+                </label>
+                <label class="custom-checkbox-row" style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                    <input type="checkbox" name="deliverables_submitted" value="1" checked>
+                    <span>Deliverables are submitted.</span>
+                </label>
+                <label class="custom-checkbox-row" style="display: flex; align-items: center; gap: 8px; font-size: 13px;">
+                    <input type="checkbox" name="approval_obtained" value="1">
+                    <span>Client / Sponsor approval is obtained.</span>
+                </label>
+            </div>
+
+            <label class="mt-16" style="display: block; font-weight: 600; font-size: 13px;">Closure Notes
+                <textarea name="notes" rows="4" placeholder="Enter closure notes..." class="form-textarea" style="width: 100%; margin-top: 6px;"></textarea>
+            </label>
+
+            <div class="form-actions mt-16" style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn btn-ghost" data-close-dialog>Cancel</button>
+                <button type="submit" name="action" value="draft" class="btn btn-outline">Save Draft</button>
+                <button type="submit" name="action" value="request" class="btn btn-primary">Request Closure</button>
+            </div>
+        </form>
+    </dialog>
+
+
+
+                <footer class="footer">
+                    GS ProjectFlow <span>·</span> Project Management, Simplified.
+                </footer>
+            </div>
+        </main>
+    </div>
+    <script defer src="file:///C:/Users/nadumi/Desktop/GS_ProjectFlow_V3_Full_Project/GS_ProjectFlow_Complete_V2/public/js/project-editor.js?v=1794139865"></script>
+<script>
+window.gsProjectTimeline = JSON.parse('[{\u0022id\u0022:11,\u0022title\u0022:\u0022requiremnt\u0022,\u0022start\u0022:\u00222026-11-07T09:00:00+05:30\u0022,\u0022end\u0022:\u00222026-11-19T17:00:00+05:30\u0022,\u0022progress\u0022:0,\u0022critical\u0022:true},{\u0022id\u0022:12,\u0022title\u0022:\u0022Planning\u0022,\u0022start\u0022:\u00222026-11-02T09:00:00+05:30\u0022,\u0022end\u0022:\u00222026-11-03T17:00:00+05:30\u0022,\u0022progress\u0022:100,\u0022critical\u0022:false},{\u0022id\u0022:13,\u0022title\u0022:\u0022Procurement\u0022,\u0022start\u0022:\u00222026-11-04T09:00:00+05:30\u0022,\u0022end\u0022:\u00222026-11-06T17:00:00+05:30\u0022,\u0022progress\u0022:50,\u0022critical\u0022:false},{\u0022id\u0022:14,\u0022title\u0022:\u0022Site Preparation\u0022,\u0022start\u0022:\u00222026-11-04T09:00:00+05:30\u0022,\u0022end\u0022:\u00222026-11-05T17:00:00+05:30\u0022,\u0022progress\u0022:0,\u0022critical\u0022:false},{\u0022id\u0022:15,\u0022title\u0022:\u0022Installation\u0022,\u0022start\u0022:\u00222026-11-09T09:00:00+05:30\u0022,\u0022end\u0022:\u00222026-11-10T17:00:00+05:30\u0022,\u0022progress\u0022:0,\u0022critical\u0022:false},{\u0022id\u0022:16,\u0022title\u0022:\u0022Handover\u0022,\u0022start\u0022:\u00222026-11-11T09:00:00+05:30\u0022,\u0022end\u0022:\u00222026-11-11T17:00:00+05:30\u0022,\u0022progress\u0022:0,\u0022critical\u0022:false}]');
+</script>
+<script defer src="file:///C:/Users/nadumi/Desktop/GS_ProjectFlow_V3_Full_Project/GS_ProjectFlow_Complete_V2/public/js/project-workspace.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('reassign') === '1') {
+        const dialog = document.getElementById('assign-pm-dialog');
+        if (dialog && typeof dialog.showModal === 'function') {
+            dialog.showModal();
+        }
+    }
+});
+</script>
+</body>
+</html>

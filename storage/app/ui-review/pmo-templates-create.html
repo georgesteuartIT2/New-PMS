@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="ypcyCFwqZdA7AweYPIqGquHmrd7oMR8jNO8rp5qE">
+    <title>Create Template · GS ProjectFlow</title>
+    <link rel="stylesheet" href="file:///C:/Users/nadumi/Desktop/GS_ProjectFlow_V3_Full_Project/GS_ProjectFlow_Complete_V2/public/css/app.css">
+    <link rel="stylesheet" href="file:///C:/Users/nadumi/Desktop/GS_ProjectFlow_V3_Full_Project/GS_ProjectFlow_Complete_V2/public/css/workspace.css">
+    <link rel="stylesheet" href="file:///C:/Users/nadumi/Desktop/GS_ProjectFlow_V3_Full_Project/GS_ProjectFlow_Complete_V2/public/css/premium.css?v=1794137180">
+                <script defer src="file:///C:/Users/nadumi/Desktop/GS_ProjectFlow_V3_Full_Project/GS_ProjectFlow_Complete_V2/public/js/app.js"></script>
+    <script defer src="file:///C:/Users/nadumi/Desktop/GS_ProjectFlow_V3_Full_Project/GS_ProjectFlow_Complete_V2/public/js/usability.js"></script>
+</head>
+<body data-page="templates.create">
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <div class="app-shell">
+        <!-- Sidebar Navigation (Clean Typography, No Icons) -->
+        <aside class="sidebar" id="sidebar">
+            <a class="brand" href="http://127.0.0.1:8000/dashboard">
+                <span class="brand-mark">GS</span>
+                <div>
+                    <b>GS ProjectFlow</b>
+                    <small>Project Management, Simplified.</small>
+                </div>
+            </a>
+
+                        <nav class="nav nav-primary" aria-label="Main navigation">
+                                    <a href="http://127.0.0.1:8000/dashboard" class=" " >
+                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21h-6v-7H9v7H3z"/></svg>
+                        <span>Dashboard</span>
+                    </a>
+                                    <a href="http://127.0.0.1:8000/projects" class="active "  aria-current="page" >
+                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a1 1 0 0 1 1-1h6l2 3h8a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7z"/></svg>
+                        <span>Projects</span>
+                    </a>
+                                    <a href="http://127.0.0.1:8000/pmo/task-monitor" class=" " >
+                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h12M9 12h12M9 18h12M3 6l1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2"/></svg>
+                        <span>Tasks</span>
+                    </a>
+                                    <a href="http://127.0.0.1:8000/calendar" class=" " >
+                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3v4M16 3v4M3 10h18M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>
+                        <span>Calendar</span>
+                    </a>
+                                    <a href="http://127.0.0.1:8000/users" class=" " >
+                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg>
+                        <span>People</span>
+                    </a>
+                                    <a href="http://127.0.0.1:8000/administration" class=" nav-admin" >
+                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 17h16M8 4v6M16 14v6"/></svg>
+                        <span>Administration</span>
+                    </a>
+                            </nav>
+
+            <div class="sidebar-foot">
+                <a href="http://127.0.0.1:8000/profile" style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                    <span class="avatar">P</span>
+                    <div class="user-mini">
+                        <b>PMO Admin</b>
+                        <small>PMO Admin</small>
+                    </div>
+                </a>
+            </div>
+        </aside>
+
+        <div class="mobile-shade" data-close-menu></div>
+
+        <!-- Main Content Area -->
+        <main class="main-area">
+            <!-- Topbar (Clean Professional SaaS Header) -->
+            <header class="topbar">
+                <button class="mobile-menu-btn" type="button" data-open-menu aria-label="Open menu" aria-controls="sidebar" aria-expanded="false">
+                    <span class="menu-bar"></span>
+                    <span class="menu-bar"></span>
+                    <span class="menu-bar"></span>
+                </button>
+
+                <!-- Search Bar -->
+                <form method="get" action="http://127.0.0.1:8000/projects" class="global-search-wrap">
+                    <input type="text" name="q" class="global-search-input" aria-label="Search projects" placeholder="Search projects by name or code..." value="">
+                </form>
+
+                <!-- Actions & Profile Chip -->
+                <div class="top-actions">
+                    <a class="nav-alerts-pill" aria-label="Notifications" title="Notifications" href="http://127.0.0.1:8000/notifications">
+                        <span>Notifications</span>
+                                            </a>
+
+                    <!-- User Profile Dropdown -->
+                    <div class="user-profile-menu">
+                        <button type="button" class="user-chip-btn" id="user-profile-btn" aria-haspopup="true" aria-expanded="false" aria-controls="user-profile-panel">
+                            <span class="avatar">P</span>
+                            <div class="user-chip-info">
+                                <b>PMO Admin</b>
+                                <small>PMO Admin</small>
+                            </div>
+                            <span class="dropdown-caret"></span>
+                        </button>
+
+                        <div class="dropdown-panel" id="user-profile-panel">
+                            <a href="http://127.0.0.1:8000/profile" class="dropdown-item">My Account</a>
+                            <a href="http://127.0.0.1:8000/notifications" class="dropdown-item">Notifications</a>
+                                                            <a href="http://127.0.0.1:8000/activity" class="dropdown-item">Activity Log</a>
+                                <a href="http://127.0.0.1:8000/reports" class="dropdown-item">Reports</a>
+                                <a href="http://127.0.0.1:8000/settings" class="dropdown-item">Settings</a>
+                                                        <div class="dropdown-divider"></div>
+                            <form method="post" action="http://127.0.0.1:8000/logout">
+                                <input type="hidden" name="_token" value="ypcyCFwqZdA7AweYPIqGquHmrd7oMR8jNO8rp5qE" autocomplete="off">                                <button type="submit" class="dropdown-item dropdown-logout" style="width: 100%; text-align: left;">Sign out</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content" id="main-content" tabindex="-1">
+                                
+                <nav class="section-nav" aria-label="Section navigation">
+                    <a href="http://127.0.0.1:8000/projects" class="" >Projects</a>
+                    <a href="http://127.0.0.1:8000/templates" class="active"  aria-current="page" >Templates</a>
+            </nav>
+                <div class="form-width" style="max-width: 880px; margin: 0 auto; padding-bottom: 60px;">
+    <!-- Breadcrumb Trail -->
+    <div class="breadcrumb-trail" style="margin-bottom: 14px;">
+        <a href="http://127.0.0.1:8000/templates">Templates</a>
+        <span class="crumb-sep">›</span>
+        <span>Create Template</span>
+    </div>
+
+    <!-- Page Header -->
+    <div class="page-head" style="margin-bottom: 22px;">
+        <div>
+            <h1 style="font-size: 24px; font-weight: 700; color: #22272B; margin: 0 0 4px;">Create Template</h1>
+            <p class="muted" style="margin: 0; font-size: 13.5px;">Create a reusable schedule for your projects.</p>
+        </div>
+        <div>
+            <a href="http://127.0.0.1:8000/templates" class="btn btn-outline btn-sm" style="height: 36px; line-height: 34px; font-size: 13px;">
+                ← Back to Templates
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Card -->
+    <div class="card form-card" style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.03); padding: 28px;">
+        <form id="create-template-form" onsubmit="event.preventDefault(); submitCreateTemplateForm();">
+            
+            <!-- SECTION 1: TEMPLATE IDENTITY -->
+            <div style="margin-bottom: 24px;">
+                <div class="form-section-title" style="font-size: 14px; font-weight: 700; color: #22272B; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
+                    <span>Template Information</span>
+                    <span style="font-size: 11.5px; font-weight: 500; color: #64748B;">* Required fields</span>
+                </div>
+
+                <!-- Template Name -->
+                <div style="margin-bottom: 16px;">
+                    <label for="create_template_name" style="display: block; font-size: 13px; font-weight: 650; margin-bottom: 6px; color: #22272B;">
+                        Template Name <span style="color: #DC2626;">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="create_template_name" 
+                        name="name" 
+                        value="" 
+                        placeholder="e.g. Network Infrastructure Upgrade" 
+                        required 
+                        autofocus
+                        style="width: 100%; height: 40px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 12px; font-size: 13.5px; background: #FFFFFF; color: #22272B;"
+                    >
+                    <small style="display: block; font-size: 12px; color: #64748B; margin-top: 4px;">
+                        Give this template a descriptive title that clearly identifies its purpose across projects.
+                    </small>
+                </div>
+
+                <!-- Category & Description -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div>
+                        <label for="create_category" style="display: block; font-size: 13px; font-weight: 650; margin-bottom: 6px; color: #22272B;">
+                            Category <span style="color: #DC2626;">*</span>
+                        </label>
+                        <select id="create_category" name="category" required style="width: 100%; height: 40px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 12px; font-size: 13px; background: #FFFFFF; color: #22272B;">
+                                                            <option value="IT &amp; Software" >IT &amp; Software</option>
+                                                            <option value="Infrastructure" >Infrastructure</option>
+                                                            <option value="Construction" >Construction</option>
+                                                            <option value="Finance" >Finance</option>
+                                                            <option value="Procurement" >Procurement</option>
+                                                            <option value="Operations" >Operations</option>
+                                                            <option value="Marketing" >Marketing</option>
+                                                            <option value="HR" >HR</option>
+                                                            <option value="General" selected>General</option>
+                                                    </select>
+                    </div>
+
+                    <div>
+                        <label for="create_description" style="display: block; font-size: 13px; font-weight: 650; margin-bottom: 6px; color: #475569;">
+                            Description <span style="font-weight: 400; font-size: 12px; color: #94A3B8;">(Optional)</span>
+                        </label>
+                        <input 
+                            type="text"
+                            id="create_description" 
+                            name="description" 
+                            value="" 
+                            placeholder="Brief summary of template purpose..." 
+                            style="width: 100%; height: 40px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 12px; font-size: 13px; background: #FFFFFF; color: #22272B;"
+                        >
+                    </div>
+                </div>
+            </div>
+
+            <hr style="border: 0; border-top: 1px solid #E5E7EB; margin: 24px 0;">
+
+            <!-- SECTION 2: REFERENCE SCHEDULE & WORKING CALENDAR -->
+            <div style="margin-bottom: 24px;">
+                <div class="form-section-title" style="font-size: 14px; font-weight: 700; color: #22272B; margin-bottom: 16px;">
+                    Reference Schedule & Working Calendar
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                    <!-- Estimated Duration -->
+                    <div>
+                        <label for="create_duration" style="display: block; font-size: 13px; font-weight: 650; margin-bottom: 6px; color: #22272B;">
+                            Estimated Duration <span style="color: #DC2626;">*</span>
+                        </label>
+                        <div style="display: flex; gap: 8px;">
+                            <input 
+                                type="number" 
+                                id="create_duration" 
+                                name="estimated_duration" 
+                                value="14" 
+                                min="1" 
+                                max="3650" 
+                                required 
+                                style="width: 85px; height: 40px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 10px; font-size: 13.5px; text-align: center; background: #FFFFFF; color: #22272B;"
+                            >
+                            <select id="create_duration_unit" name="duration_unit" style="flex: 1; height: 40px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 12px; font-size: 13px; background: #FFFFFF; color: #22272B;">
+                                <option value="working_days" selected>Working Days</option>
+                                <option value="days" >Calendar Days</option>
+                                <option value="weeks" >Weeks</option>
+                                <option value="months" >Months</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Reference Start Date -->
+                    <div>
+                        <label for="create_reference_start_date" style="display: block; font-size: 13px; font-weight: 650; margin-bottom: 6px; color: #22272B;">
+                            Reference Start Date <span style="color: #DC2626;">*</span>
+                        </label>
+                        <input 
+                            type="date" 
+                            id="create_reference_start_date" 
+                            name="reference_start_date" 
+                            value="2026-11-08" 
+                            required 
+                            style="width: 100%; height: 40px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 12px; font-size: 13px; background: #FFFFFF; color: #22272B;"
+                        >
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px;">
+                    <!-- Working Hours -->
+                    <div>
+                        <label for="create_working_hours" style="display: block; font-size: 13px; font-weight: 650; margin-bottom: 6px; color: #22272B;">
+                            Working Hours
+                        </label>
+                        <select id="create_working_hours" name="working_hours" style="width: 100%; height: 40px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 12px; font-size: 13px; background: #FFFFFF; color: #22272B;">
+                            <option value="09:00 - 17:00" selected>09:00 AM – 05:00 PM (Standard 8h)</option>
+                            <option value="08:30 - 17:00" >08:30 AM – 05:00 PM</option>
+                            <option value="08:00 - 16:30" >08:00 AM – 04:30 PM</option>
+                            <option value="09:00 - 18:00" >09:00 AM – 06:00 PM</option>
+                        </select>
+                    </div>
+
+                    <!-- Working Days Policy -->
+                    <div>
+                        <label style="display: block; font-size: 13px; font-weight: 650; margin-bottom: 6px; color: #22272B;">
+                            Working Days Policy
+                        </label>
+                        <div style="height: 40px; border: 1px solid #E2E8F0; border-radius: 6px; padding: 0 12px; font-size: 13px; background: #F8FAFC; color: #334155; display: flex; align-items: center; justify-content: space-between;">
+                            <span>Monday – Friday (5 Days / Week)</span>
+                            <span style="font-size: 11px; font-weight: 600; background: #E2E8F0; color: #475569; padding: 2px 8px; border-radius: 4px;">Excludes Weekends</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Calculated Reference Schedule Box -->
+                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-left: 4px solid #315F58; border-radius: 6px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <div style="font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.5px; color: #64748B; margin-bottom: 3px;">
+                            Calculated Reference Schedule
+                        </div>
+                        <div id="create-schedule-text" style="font-size: 14px; font-weight: 700; color: #22272B;">
+                            <!-- Auto-calculated live via JS -->
+                        </div>
+                    </div>
+                    <div style="font-size: 12px; color: #64748B;">
+                        Dates shift automatically to actual project start dates upon project creation.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #E5E7EB; padding-top: 20px; margin-top: 24px;">
+                <a href="http://127.0.0.1:8000/templates" class="btn btn-outline" style="height: 40px; font-size: 13px; padding: 0 16px;">
+                    Cancel
+                </a>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <a href="http://127.0.0.1:8000/templates/download-blank-excel" class="btn btn-outline" style="height: 40px; font-size: 13px; padding: 0 14px;">
+                        Download Excel Sample
+                    </a>
+                    <button type="submit" id="btn-create-task-plan" class="btn btn-primary" style="background: #315F58; color: #FFFFFF; font-weight: 650; height: 40px; font-size: 13.5px; padding: 0 22px; border: 1px solid #315F58;">
+                        Create Task Plan →
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Shared Smart Task Plan Popup Modal -->
+<!-- Smart Task Plan Modal Component -->
+<div id="smart-task-plan-backdrop" class="smart-task-plan-backdrop" role="dialog" aria-modal="true" aria-labelledby="stp-modal-title">
+    <div id="smart-task-plan-modal" class="smart-task-plan-dialog">
+        <!-- Sticky Header -->
+        <div class="stp-header">
+            <div class="stp-title-group">
+                <h2>
+                    <span id="stp-modal-title">Task Plan</span>
+                    <span id="stp-mode-badge" class="stp-badge stp-badge-view">View Mode</span>
+                </h2>
+                <div style="display: flex; align-items: center; gap: 10px; margin-top: 3px; flex-wrap: wrap;">
+                    <span id="stp-template-title" style="font-weight: 650; font-size: 13.5px; color: #22272B;"></span>
+                    <span style="color: #CBD5E1;">•</span>
+                    <span id="stp-schedule-badge" class="stp-subtitle" style="font-size: 12px; font-weight: 550; color: #475569;"></span>
+                </div>
+            </div>
+
+            <div class="stp-header-actions">
+                <!-- View Mode Actions -->
+                <a id="stp-btn-use" href="#" class="btn btn-primary btn-sm" style="background: #315F58; color: #FFFFFF; font-weight: 650; height: 32px; font-size: 12px; display: none;">
+                    Use Template
+                </a>
+                <button type="button" id="stp-btn-edit-mode" class="btn btn-outline btn-sm" style="height: 32px; font-size: 12px; display: none;">
+                    Edit Template
+                </button>
+                <a id="stp-btn-export" href="#" class="btn btn-outline btn-sm" style="height: 32px; font-size: 12px; display: none;">
+                    Export Excel
+                </a>
+
+                <!-- Edit Mode Actions -->
+                <button type="button" id="stp-btn-toggle-details" class="btn btn-outline btn-sm" style="height: 32px; font-size: 12px; display: none;">
+                    Edit Details ▾
+                </button>
+
+                <!-- Close Button -->
+                <button type="button" id="stp-btn-close" class="stp-close-btn" title="Close" aria-label="Close dialog">✕</button>
+            </div>
+        </div>
+
+        <!-- Optional Collapsible Details Drawer (in Edit Mode) -->
+        <div id="stp-details-drawer" class="stp-details-drawer" style="display: none;"></div>
+
+        <!-- Edit Mode Toolbar -->
+        <div id="stp-toolbar" class="stp-toolbar" style="display: none;"></div>
+
+        <!-- Hidden Excel File Input -->
+        <input type="file" id="stp-excel-file-input" style="display: none;" accept=".xlsx,.csv">
+
+        <!-- Live Summary & Notification Bar -->
+        <div class="stp-summary-bar">
+            <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+                <span id="stp-summary-counts" style="font-weight: 600; color: #334155;">0 Tasks</span>
+                <span id="stp-periods-count-badge" style="font-size: 11.5px; font-weight: 500; color: #64748B;">0 Planning Periods</span>
+            </div>
+            <div>
+                <div id="stp-warning-banner" class="stp-warning-banner" style="display: none;">
+                    <span>⚠ Some tasks extend beyond the planned template duration.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Excel Import Notification Banner -->
+        <div id="stp-import-banner" style="display: none;"></div>
+
+        <!-- Scrollable Modal Body (Pure Table View) -->
+        <div class="stp-body">
+            <!-- Flat Table View Container -->
+            <div id="stp-table-wrap" style="padding: 10px 18px 24px;">
+                <table class="stp-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 48px; text-align: center;">#</th>
+                            <th style="min-width: 240px;">Task Name</th>
+                            <th style="width: 220px;">Start Date & Time</th>
+                            <th style="width: 220px;">End Date & Time</th>
+                            <th style="width: 75px; text-align: center;">Duration</th>
+                            <th style="width: 145px;">Predecessor</th>
+                            <th style="width: 160px;">Suggested Role</th>
+                            <th style="width: 135px; text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stp-table-body">
+                        <!-- Injected dynamically via SmartTaskPlan.renderTable() -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Sticky Footer -->
+        <div class="stp-footer">
+            <div>
+                <span id="stp-unsaved-text" style="font-size: 12px; color: #64748B;">All changes saved</span>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button type="button" id="stp-btn-cancel" class="btn btn-outline btn-sm" style="height: 34px; font-size: 12.5px; padding: 0 14px;">
+                    Close
+                </button>
+                <button type="button" id="stp-btn-save" class="stp-btn-primary" style="height: 34px; font-size: 12.5px; padding: 0 16px; display: none;">
+                    Save Template
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Task Editor Popup Dialog -->
+<div id="stp-task-editor-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 10005; align-items: center; justify-content: center;">
+    <div style="background: #FFFFFF; border-radius: 8px; width: 92%; max-width: 580px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); overflow: hidden; display: flex; flex-direction: column;">
+        <div style="padding: 14px 20px; border-bottom: 1px solid #E5E7EB; display: flex; align-items: center; justify-content: space-between; background: #F8FAFC;">
+            <h3 id="stp-task-editor-title" style="margin: 0; font-size: 15px; font-weight: 700; color: #22272B;">Add Task</h3>
+            <button type="button" onclick="SmartTaskPlan.closeTaskEditor()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748B;">✕</button>
+        </div>
+        <div style="padding: 20px; max-height: 75vh; overflow-y: auto;">
+            <form id="stp-task-form" onsubmit="event.preventDefault(); SmartTaskPlan.saveTaskFromEditor();">
+                <input type="hidden" id="task_edit_index" value="">
+
+                <div style="margin-bottom: 14px;">
+                    <label style="display: block; font-size: 12.5px; font-weight: 650; margin-bottom: 5px; color: #22272B;">
+                        Task Name <span style="color: #DC2626;">*</span>
+                    </label>
+                    <input type="text" id="task_edit_title" required placeholder="e.g. Requirements Gathering" style="width: 100%; height: 36px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 10px; font-size: 13px;">
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                    <label style="display: block; font-size: 12.5px; font-weight: 650; margin-bottom: 5px; color: #22272B;">
+                        Parent Task (Optional)
+                    </label>
+                    <select id="task_edit_parent" style="width: 100%; height: 36px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 10px; font-size: 13px;">
+                        <option value="">None (Top-Level Main Task)</option>
+                    </select>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                    <div>
+                        <label style="display: block; font-size: 12.5px; font-weight: 650; margin-bottom: 5px; color: #22272B;">
+                            Start Period <span style="color: #DC2626;">*</span>
+                        </label>
+                        <select id="task_edit_start_period" required style="width: 100%; height: 36px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 10px; font-size: 13px;" onchange="SmartTaskPlan.onEditorPeriodChange()">
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12.5px; font-weight: 650; margin-bottom: 5px; color: #22272B;">
+                            End Period <span style="color: #DC2626;">*</span>
+                        </label>
+                        <select id="task_edit_end_period" required style="width: 100%; height: 36px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 10px; font-size: 13px;" onchange="SmartTaskPlan.onEditorPeriodChange()">
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #475569;">
+                            Start Time
+                        </label>
+                        <input type="time" id="task_edit_start_time" value="09:00" style="width: 100%; height: 34px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 8px; font-size: 12.5px;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #475569;">
+                            End Time
+                        </label>
+                        <input type="time" id="task_edit_end_time" value="17:00" style="width: 100%; height: 34px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 8px; font-size: 12.5px;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #475569;">
+                            Duration (Days)
+                        </label>
+                        <input type="number" id="task_edit_duration" value="1" min="1" max="365" style="width: 100%; height: 34px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 8px; font-size: 12.5px; text-align: center;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 650; margin-bottom: 5px; color: #22272B;">
+                            Dependencies
+                        </label>
+                        <input type="text" id="task_edit_dependency" placeholder="e.g. 1, 1.1" style="width: 100%; height: 36px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 10px; font-size: 12.5px;">
+                        <small style="font-size: 11px; color: #64748B;">Enter task code that must finish first.</small>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 650; margin-bottom: 5px; color: #22272B;">
+                            Suggested Role
+                        </label>
+                        <select id="task_edit_role" style="width: 100%; height: 36px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 10px; font-size: 12.5px;">
+                            <option value="">None</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                    <label style="display: block; font-size: 12px; font-weight: 650; margin-bottom: 5px; color: #475569;">
+                        Description (Optional)
+                    </label>
+                    <textarea id="task_edit_description" rows="2" placeholder="Task notes and instructions..." style="width: 100%; border: 1px solid #CBD5E1; border-radius: 6px; padding: 6px 10px; font-size: 12.5px; resize: vertical;"></textarea>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #E5E7EB; padding-top: 14px; margin-top: 14px;">
+                    <button type="button" onclick="SmartTaskPlan.closeTaskEditor()" class="btn btn-outline btn-sm" style="height: 34px;">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm" style="background: #315F58; color: #FFFFFF; font-weight: 650; height: 34px; padding: 0 16px;">Save Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Import Confirmation / Merge Modal -->
+<div id="stp-import-confirm-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10010; align-items: center; justify-content: center;">
+    <div style="background: #FFFFFF; border-radius: 8px; width: 90%; max-width: 500px; padding: 22px; box-shadow: 0 10px 25px rgba(0,0,0,0.18);">
+        <h3 style="margin: 0 0 8px; font-size: 16px; font-weight: 700; color: #22272B;">Confirm Excel Import</h3>
+        <p id="stp-import-confirm-msg" style="margin: 0 0 16px; font-size: 13px; color: #475569;"></p>
+        
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 12px 14px; margin-bottom: 18px;">
+            <div style="font-size: 12px; font-weight: 650; color: #22272B; margin-bottom: 8px;">Select Import Mode:</div>
+            <label style="display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; cursor: pointer; font-size: 12.5px; color: #334155;">
+                <input type="radio" name="stp_import_mode" value="merge" checked style="margin-top: 2px;">
+                <div>
+                    <b>Merge / Update Matching Tasks (Recommended)</b>
+                    <div style="font-size: 11.5px; color: #64748B;">Updates matching task codes, adds new tasks, and preserves existing tasks that were not in Excel.</div>
+                </div>
+            </label>
+            <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 12.5px; color: #334155;">
+                <input type="radio" name="stp_import_mode" value="replace" style="margin-top: 2px;">
+                <div>
+                    <b>Replace Draft Task Plan</b>
+                    <div style="font-size: 11.5px; color: #64748B;">Replaces current draft tasks completely with the tasks from Excel.</div>
+                </div>
+            </label>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 8px;">
+            <button type="button" onclick="SmartTaskPlan.cancelImport()" class="btn btn-outline btn-sm">Cancel</button>
+            <button type="button" onclick="SmartTaskPlan.confirmImport()" class="btn btn-primary btn-sm" style="background: #315F58; color: #FFFFFF; font-weight: 650;">Apply Import</button>
+        </div>
+    </div>
+</div>
+
+<script src="file:///C:/Users/nadumi/Desktop/GS_ProjectFlow_V3_Full_Project/GS_ProjectFlow_Complete_V2/public/js/template-builder.js"></script>
+<script>
+    function initSmartTaskPlan() {
+        if (window.SmartTaskPlan) {
+            window.SmartTaskPlan.init({
+                roles: [{"id":1,"name":"Project Manager","slug":"pm","is_system":true,"default_permissions":["view_project","view_tasks","view_gantt","manage_tasks","assign_tasks","manage_team","edit_project","upload_files"],"created_at":"2026-11-06T20:09:39.000000Z","updated_at":"2026-11-06T20:09:39.000000Z"},{"id":3,"name":"Project Owner","slug":"po","is_system":true,"default_permissions":["view_project","view_tasks","view_gantt"],"created_at":"2026-11-06T20:09:39.000000Z","updated_at":"2026-11-06T20:09:39.000000Z"},{"id":2,"name":"Project Sponsor","slug":"ps","is_system":true,"default_permissions":["view_project","view_tasks","view_gantt"],"created_at":"2026-11-06T20:09:39.000000Z","updated_at":"2026-11-06T20:09:39.000000Z"},{"id":4,"name":"Steering Committee","slug":"steering","is_system":true,"default_permissions":["view_project","view_tasks","view_gantt"],"created_at":"2026-11-06T20:09:39.000000Z","updated_at":"2026-11-06T20:09:39.000000Z"},{"id":5,"name":"Team Member","slug":"team","is_system":true,"default_permissions":["view_assigned_tasks","update_own_tasks","upload_own_files"],"created_at":"2026-11-06T20:09:39.000000Z","updated_at":"2026-11-06T20:09:39.000000Z"}],
+                canManage: true,
+                canCreateProject: true            });
+        }
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initSmartTaskPlan);
+    } else {
+        initSmartTaskPlan();
+    }
+</script>
+
+<script>
+    function updateCreateSchedulePreview() {
+        const durInput = document.getElementById('create_duration');
+        const unitInput = document.getElementById('create_duration_unit');
+        const startInput = document.getElementById('create_reference_start_date');
+        const previewEl = document.getElementById('create-schedule-text');
+
+        if (!durInput || !unitInput || !startInput || !previewEl) return;
+
+        const dur = parseInt(durInput.value, 10) || 1;
+        const unit = unitInput.value;
+        const start = startInput.value;
+
+        if (window.SmartTaskPlan) {
+            const end = window.SmartTaskPlan.calculateTemplateEndDate(start, dur, unit);
+            const unitLabel = unit.replace('_', ' ');
+            const startDisplay = window.SmartTaskPlan.formatDateDisplay(start);
+            const endDisplay = window.SmartTaskPlan.formatDateDisplay(end);
+
+            previewEl.textContent = `${dur} ${unitLabel} · ${startDisplay} – ${endDisplay} (Working Calendar)`;
+        }
+    }
+
+    document.getElementById('create_duration').addEventListener('input', updateCreateSchedulePreview);
+    document.getElementById('create_duration_unit').addEventListener('change', updateCreateSchedulePreview);
+    document.getElementById('create_reference_start_date').addEventListener('change', updateCreateSchedulePreview);
+
+    function submitCreateTemplateForm() {
+        const name = document.getElementById('create_template_name').value.trim();
+        const duration = parseInt(document.getElementById('create_duration').value, 10) || 14;
+        const unit = document.getElementById('create_duration_unit').value;
+        const startDate = document.getElementById('create_reference_start_date').value;
+        const workingHours = document.getElementById('create_working_hours').value;
+        const category = document.getElementById('create_category').value;
+        const description = document.getElementById('create_description').value.trim();
+
+        if (!name) {
+            alert('Please enter a Template Name before creating the task plan.');
+            document.getElementById('create_template_name').focus();
+            return;
+        }
+
+        if (window.SmartTaskPlan) {
+            window.SmartTaskPlan.openCreate({
+                name: name,
+                estimated_duration: duration,
+                duration_unit: unit,
+                reference_start_date: startDate,
+                working_hours: workingHours,
+                category: category,
+                description: description
+            });
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        updateCreateSchedulePreview();
+    });
+</script>
+
+                <footer class="footer">
+                    GS ProjectFlow <span>·</span> Project Management, Simplified.
+                </footer>
+            </div>
+        </main>
+    </div>
+    </body>
+</html>

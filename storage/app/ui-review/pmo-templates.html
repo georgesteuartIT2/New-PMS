@@ -1,0 +1,927 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="ypcyCFwqZdA7AweYPIqGquHmrd7oMR8jNO8rp5qE">
+    <title>Templates · GS ProjectFlow</title>
+    <link rel="stylesheet" href="file:///C:/Users/nadumi/Desktop/GS_ProjectFlow_V3_Full_Project/GS_ProjectFlow_Complete_V2/public/css/app.css">
+    <link rel="stylesheet" href="file:///C:/Users/nadumi/Desktop/GS_ProjectFlow_V3_Full_Project/GS_ProjectFlow_Complete_V2/public/css/workspace.css">
+    <link rel="stylesheet" href="file:///C:/Users/nadumi/Desktop/GS_ProjectFlow_V3_Full_Project/GS_ProjectFlow_Complete_V2/public/css/premium.css?v=1794137180">
+                <script defer src="file:///C:/Users/nadumi/Desktop/GS_ProjectFlow_V3_Full_Project/GS_ProjectFlow_Complete_V2/public/js/app.js"></script>
+    <script defer src="file:///C:/Users/nadumi/Desktop/GS_ProjectFlow_V3_Full_Project/GS_ProjectFlow_Complete_V2/public/js/usability.js"></script>
+</head>
+<body data-page="templates.index">
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <div class="app-shell">
+        <!-- Sidebar Navigation (Clean Typography, No Icons) -->
+        <aside class="sidebar" id="sidebar">
+            <a class="brand" href="http://127.0.0.1:8000/dashboard">
+                <span class="brand-mark">GS</span>
+                <div>
+                    <b>GS ProjectFlow</b>
+                    <small>Project Management, Simplified.</small>
+                </div>
+            </a>
+
+                        <nav class="nav nav-primary" aria-label="Main navigation">
+                                    <a href="http://127.0.0.1:8000/dashboard" class=" " >
+                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V21h-6v-7H9v7H3z"/></svg>
+                        <span>Dashboard</span>
+                    </a>
+                                    <a href="http://127.0.0.1:8000/projects" class="active "  aria-current="page" >
+                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7V5a1 1 0 0 1 1-1h6l2 3h8a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7z"/></svg>
+                        <span>Projects</span>
+                    </a>
+                                    <a href="http://127.0.0.1:8000/pmo/task-monitor" class=" " >
+                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h12M9 12h12M9 18h12M3 6l1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2"/></svg>
+                        <span>Tasks</span>
+                    </a>
+                                    <a href="http://127.0.0.1:8000/calendar" class=" " >
+                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3v4M16 3v4M3 10h18M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>
+                        <span>Calendar</span>
+                    </a>
+                                    <a href="http://127.0.0.1:8000/users" class=" " >
+                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8"/></svg>
+                        <span>People</span>
+                    </a>
+                                    <a href="http://127.0.0.1:8000/administration" class=" nav-admin" >
+                        <svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 17h16M8 4v6M16 14v6"/></svg>
+                        <span>Administration</span>
+                    </a>
+                            </nav>
+
+            <div class="sidebar-foot">
+                <a href="http://127.0.0.1:8000/profile" style="display: flex; align-items: center; gap: 10px; width: 100%;">
+                    <span class="avatar">P</span>
+                    <div class="user-mini">
+                        <b>PMO Admin</b>
+                        <small>PMO Admin</small>
+                    </div>
+                </a>
+            </div>
+        </aside>
+
+        <div class="mobile-shade" data-close-menu></div>
+
+        <!-- Main Content Area -->
+        <main class="main-area">
+            <!-- Topbar (Clean Professional SaaS Header) -->
+            <header class="topbar">
+                <button class="mobile-menu-btn" type="button" data-open-menu aria-label="Open menu" aria-controls="sidebar" aria-expanded="false">
+                    <span class="menu-bar"></span>
+                    <span class="menu-bar"></span>
+                    <span class="menu-bar"></span>
+                </button>
+
+                <!-- Search Bar -->
+                <form method="get" action="http://127.0.0.1:8000/projects" class="global-search-wrap">
+                    <input type="text" name="q" class="global-search-input" aria-label="Search projects" placeholder="Search projects by name or code..." value="">
+                </form>
+
+                <!-- Actions & Profile Chip -->
+                <div class="top-actions">
+                    <a class="nav-alerts-pill" aria-label="Notifications" title="Notifications" href="http://127.0.0.1:8000/notifications">
+                        <span>Notifications</span>
+                                            </a>
+
+                    <!-- User Profile Dropdown -->
+                    <div class="user-profile-menu">
+                        <button type="button" class="user-chip-btn" id="user-profile-btn" aria-haspopup="true" aria-expanded="false" aria-controls="user-profile-panel">
+                            <span class="avatar">P</span>
+                            <div class="user-chip-info">
+                                <b>PMO Admin</b>
+                                <small>PMO Admin</small>
+                            </div>
+                            <span class="dropdown-caret"></span>
+                        </button>
+
+                        <div class="dropdown-panel" id="user-profile-panel">
+                            <a href="http://127.0.0.1:8000/profile" class="dropdown-item">My Account</a>
+                            <a href="http://127.0.0.1:8000/notifications" class="dropdown-item">Notifications</a>
+                                                            <a href="http://127.0.0.1:8000/activity" class="dropdown-item">Activity Log</a>
+                                <a href="http://127.0.0.1:8000/reports" class="dropdown-item">Reports</a>
+                                <a href="http://127.0.0.1:8000/settings" class="dropdown-item">Settings</a>
+                                                        <div class="dropdown-divider"></div>
+                            <form method="post" action="http://127.0.0.1:8000/logout">
+                                <input type="hidden" name="_token" value="ypcyCFwqZdA7AweYPIqGquHmrd7oMR8jNO8rp5qE" autocomplete="off">                                <button type="submit" class="dropdown-item dropdown-logout" style="width: 100%; text-align: left;">Sign out</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content" id="main-content" tabindex="-1">
+                                
+                <nav class="section-nav" aria-label="Section navigation">
+                    <a href="http://127.0.0.1:8000/projects" class="" >Projects</a>
+                    <a href="http://127.0.0.1:8000/templates" class="active"  aria-current="page" >Templates</a>
+            </nav>
+                <div class="page-head" style="margin-bottom: 20px;">
+    <div>
+        <h1 style="font-size: 24px; font-weight: 700; color: #22272B; margin: 0 0 4px;">Templates</h1>
+        <p class="muted" style="margin: 0; font-size: 13.5px;">Create and reuse project plans with predefined tasks and schedules.</p>
+    </div>
+    <div style="display: flex; gap: 10px; align-items: center;">
+        <a class="btn btn-outline" href="http://127.0.0.1:8000/templates/download-blank-excel" title="Download standard Excel import template" style="font-size: 13px; height: 38px;">
+            Excel Sample
+        </a>
+                    <a class="btn btn-primary" href="http://127.0.0.1:8000/templates/create" style="background: #315F58; color: #FFFFFF; font-size: 13px; height: 38px; font-weight: 650;">
+                + Create Template
+            </a>
+            </div>
+</div>
+
+
+<!-- Search & Filter Toolbar -->
+<div class="card" style="padding: 12px 16px; margin-bottom: 16px; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px;">
+    <form method="GET" action="http://127.0.0.1:8000/templates" id="template-filter-form" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+        <!-- Search Input -->
+        <div style="position: relative; flex: 1; min-width: 240px;">
+            <input 
+                type="text" 
+                name="search" 
+                value="" 
+                placeholder="Search templates by name, description, or category..." 
+                style="width: 100%; height: 36px; padding-left: 14px; font-size: 13px; background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 6px;"
+            >
+        </div>
+
+        <!-- Category Filter -->
+        <div style="min-width: 180px;">
+            <select name="category" onchange="this.form.submit()" style="width: 100%; height: 36px; font-size: 13px; background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 6px;">
+                <option value="all" selected>All Categories</option>
+                                    <option value="Construction" >Construction</option>
+                                    <option value="Finance" >Finance</option>
+                                    <option value="General" >General</option>
+                                    <option value="HR" >HR</option>
+                                    <option value="IT &amp; Software" >IT &amp; Software</option>
+                                    <option value="Infrastructure" >Infrastructure</option>
+                                    <option value="Marketing" >Marketing</option>
+                                    <option value="Operations" >Operations</option>
+                                    <option value="Procurement" >Procurement</option>
+                            </select>
+        </div>
+
+        <!-- Status Filter -->
+        <div style="min-width: 140px;">
+            <select name="status" onchange="this.form.submit()" style="width: 100%; height: 36px; font-size: 13px; background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 6px;">
+                <option value="active" selected>Active (4)</option>
+                <option value="archived" >Archived (0)</option>
+                <option value="all" >All Status (4)</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-outline btn-sm" style="height: 36px; padding: 0 14px; font-size: 13px;">Filter</button>
+            </form>
+</div>
+
+<!-- Template Listing Table -->
+<div class="card" style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; padding: 0; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+    <div class="table-wrap">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+                <tr style="background: #F5F6F7; border-bottom: 1px solid #E5E7EB;">
+                    <th style="padding: 12px 18px; font-size: 12px; font-weight: 650; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Template Name</th>
+                    <th style="padding: 12px 16px; font-size: 12px; font-weight: 650; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Category</th>
+                    <th style="padding: 12px 16px; font-size: 12px; font-weight: 650; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Duration</th>
+                    <th style="padding: 12px 16px; font-size: 12px; font-weight: 650; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Tasks</th>
+                    <th style="padding: 12px 16px; font-size: 12px; font-weight: 650; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Last Updated</th>
+                    <th style="padding: 12px 18px; font-size: 12px; font-weight: 650; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                                                        <tr 
+                        class="template-table-row"
+                        style="border-bottom: 1px solid #F1F5F9; transition: background 0.12s ease; cursor: pointer;" 
+                        data-template-id="4"
+                        onclick="openTemplatePlan(4, 'view')"
+                        onmouseover="this.style.background='#F8FAFC'" 
+                        onmouseout="this.style.background='transparent'"
+                    >
+                        <!-- Template Name -->
+                        <td style="padding: 14px 18px; max-width: 320px;">
+                            <div style="display: flex; align-items: baseline; gap: 8px;">
+                                <span class="template-name-link" style="font-weight: 650; font-size: 13.5px; color: #22272B;">
+                                    testing 1
+                                </span>
+                                                            </div>
+                            <small style="display: block; font-size: 12px; margin-top: 3px; color: #64748B; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px;">
+                                Standard reusable project plan structure.
+                            </small>
+                        </td>
+
+                        <!-- Category -->
+                        <td style="padding: 14px 16px; font-size: 13px; color: #334155;">
+                            General
+                        </td>
+
+                        <!-- Duration -->
+                        <td style="padding: 14px 16px;">
+                            <div style="font-size: 13px; font-weight: 600; color: #22272B;">
+                                14 working days
+                            </div>
+                            <small style="font-size: 11.5px; color: #64748B;">08:30 - 17:00</small>
+                        </td>
+
+                        <!-- Tasks Count -->
+                        <td style="padding: 14px 16px;">
+                            <div style="font-size: 13px; font-weight: 600; color: #22272B;">
+                                1 Task
+                            </div>
+                                                            <small style="font-size: 11px; color: #94A3B8;">Main phases</small>
+                                                    </td>
+
+                        <!-- Last Updated -->
+                        <td style="padding: 14px 16px; font-size: 12.5px; color: #64748B;">
+                            07 Nov 2026
+                        </td>
+
+                        <!-- Actions -->
+                        <td style="padding: 14px 18px; text-align: right;" onclick="event.stopPropagation()">
+                            <div style="display: inline-flex; align-items: center; gap: 6px; justify-content: flex-end;">
+                                                                    <a 
+                                        href="http://127.0.0.1:8000/projects/create?template_id=4&amp;mode=template" 
+                                        class="btn btn-primary btn-sm" 
+                                        style="background: #315F58; color: #FFFFFF; font-size: 12px; height: 30px; font-weight: 600; padding: 0 10px;"
+                                        title="Create a new project using this template"
+                                        onclick="event.stopPropagation()"
+                                    >
+                                        Use
+                                    </a>
+                                
+                                                                    <button 
+                                        type="button" 
+                                        class="btn btn-outline btn-sm btn-edit-template-popup" 
+                                        onclick="event.stopPropagation(); openTemplatePlan(4, 'edit')"
+                                        style="font-size: 12px; height: 30px; padding: 0 10px;"
+                                        title="Edit this template in Task Plan popup"
+                                    >
+                                        Edit
+                                    </button>
+
+                                    <!-- More Actions Dropdown -->
+                                    <div style="position: relative; display: inline-block;">
+                                        <button 
+                                            type="button" 
+                                            class="btn btn-ghost btn-sm" 
+                                            onclick="toggleTemplateMenu(this, event)" 
+                                            style="height: 30px; width: 30px; padding: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; color: #64748B;"
+                                            title="More actions"
+                                        >
+                                            ⋮
+                                        </button>
+                                        <div class="template-menu-dropdown" style="display: none; position: absolute; right: 0; top: 100%; margin-top: 4px; background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); min-width: 150px; z-index: 50; padding: 4px 0; text-align: left;">
+                                            <a href="http://127.0.0.1:8000/templates/4/export-excel" style="display: block; padding: 6px 12px; font-size: 12.5px; color: #22272B; text-decoration: none;">
+                                                Export Excel
+                                            </a>
+                                            <form method="POST" action="http://127.0.0.1:8000/templates/4/duplicate" style="margin: 0;">
+                                                <input type="hidden" name="_token" value="ypcyCFwqZdA7AweYPIqGquHmrd7oMR8jNO8rp5qE" autocomplete="off">                                                <button type="submit" style="display: block; width: 100%; text-align: left; padding: 6px 12px; font-size: 12.5px; color: #22272B; background: none; border: none; cursor: pointer;">
+                                                    Duplicate
+                                                </button>
+                                            </form>
+                                            <form method="POST" action="http://127.0.0.1:8000/templates/4/archive" style="margin: 0;">
+                                                <input type="hidden" name="_token" value="ypcyCFwqZdA7AweYPIqGquHmrd7oMR8jNO8rp5qE" autocomplete="off">                                                <input type="hidden" name="_method" value="PATCH">                                                <button type="submit" style="display: block; width: 100%; text-align: left; padding: 6px 12px; font-size: 12.5px; color: #22272B; background: none; border: none; cursor: pointer;">
+                                                    Archive
+                                                </button>
+                                            </form>
+                                            <hr style="margin: 4px 0; border: none; border-top: 1px solid #E2E8F0;">
+                                            <form method="POST" action="http://127.0.0.1:8000/templates/4" style="margin: 0;" onsubmit="return confirm('Are you sure you want to delete template \'testing 1\'?')">
+                                                <input type="hidden" name="_token" value="ypcyCFwqZdA7AweYPIqGquHmrd7oMR8jNO8rp5qE" autocomplete="off">                                                <input type="hidden" name="_method" value="DELETE">                                                <button type="submit" style="display: block; width: 100%; text-align: left; padding: 6px 12px; font-size: 12.5px; color: #DC2626; background: none; border: none; cursor: pointer;">
+                                                    Delete
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                                            </div>
+                        </td>
+                    </tr>
+                                                        <tr 
+                        class="template-table-row"
+                        style="border-bottom: 1px solid #F1F5F9; transition: background 0.12s ease; cursor: pointer;" 
+                        data-template-id="1"
+                        onclick="openTemplatePlan(1, 'view')"
+                        onmouseover="this.style.background='#F8FAFC'" 
+                        onmouseout="this.style.background='transparent'"
+                    >
+                        <!-- Template Name -->
+                        <td style="padding: 14px 18px; max-width: 320px;">
+                            <div style="display: flex; align-items: baseline; gap: 8px;">
+                                <span class="template-name-link" style="font-weight: 650; font-size: 13.5px; color: #22272B;">
+                                    Website Redesign &amp; Launch
+                                </span>
+                                                            </div>
+                            <small style="display: block; font-size: 12px; margin-top: 3px; color: #64748B; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px;">
+                                Corporate website overhaul: UX, prototyping, frontend, backend API integration, and go-live.
+                            </small>
+                        </td>
+
+                        <!-- Category -->
+                        <td style="padding: 14px 16px; font-size: 13px; color: #334155;">
+                            IT &amp; Software
+                        </td>
+
+                        <!-- Duration -->
+                        <td style="padding: 14px 16px;">
+                            <div style="font-size: 13px; font-weight: 600; color: #22272B;">
+                                14 working days
+                            </div>
+                            <small style="font-size: 11.5px; color: #64748B;">08:30 - 17:00</small>
+                        </td>
+
+                        <!-- Tasks Count -->
+                        <td style="padding: 14px 16px;">
+                            <div style="font-size: 13px; font-weight: 600; color: #22272B;">
+                                7 Tasks
+                            </div>
+                                                            <small style="font-size: 11px; color: #64748B;">(1 subtask)</small>
+                                                    </td>
+
+                        <!-- Last Updated -->
+                        <td style="padding: 14px 16px; font-size: 12.5px; color: #64748B;">
+                            07 Nov 2026
+                        </td>
+
+                        <!-- Actions -->
+                        <td style="padding: 14px 18px; text-align: right;" onclick="event.stopPropagation()">
+                            <div style="display: inline-flex; align-items: center; gap: 6px; justify-content: flex-end;">
+                                                                    <a 
+                                        href="http://127.0.0.1:8000/projects/create?template_id=1&amp;mode=template" 
+                                        class="btn btn-primary btn-sm" 
+                                        style="background: #315F58; color: #FFFFFF; font-size: 12px; height: 30px; font-weight: 600; padding: 0 10px;"
+                                        title="Create a new project using this template"
+                                        onclick="event.stopPropagation()"
+                                    >
+                                        Use
+                                    </a>
+                                
+                                                                    <button 
+                                        type="button" 
+                                        class="btn btn-outline btn-sm btn-edit-template-popup" 
+                                        onclick="event.stopPropagation(); openTemplatePlan(1, 'edit')"
+                                        style="font-size: 12px; height: 30px; padding: 0 10px;"
+                                        title="Edit this template in Task Plan popup"
+                                    >
+                                        Edit
+                                    </button>
+
+                                    <!-- More Actions Dropdown -->
+                                    <div style="position: relative; display: inline-block;">
+                                        <button 
+                                            type="button" 
+                                            class="btn btn-ghost btn-sm" 
+                                            onclick="toggleTemplateMenu(this, event)" 
+                                            style="height: 30px; width: 30px; padding: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; color: #64748B;"
+                                            title="More actions"
+                                        >
+                                            ⋮
+                                        </button>
+                                        <div class="template-menu-dropdown" style="display: none; position: absolute; right: 0; top: 100%; margin-top: 4px; background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); min-width: 150px; z-index: 50; padding: 4px 0; text-align: left;">
+                                            <a href="http://127.0.0.1:8000/templates/1/export-excel" style="display: block; padding: 6px 12px; font-size: 12.5px; color: #22272B; text-decoration: none;">
+                                                Export Excel
+                                            </a>
+                                            <form method="POST" action="http://127.0.0.1:8000/templates/1/duplicate" style="margin: 0;">
+                                                <input type="hidden" name="_token" value="ypcyCFwqZdA7AweYPIqGquHmrd7oMR8jNO8rp5qE" autocomplete="off">                                                <button type="submit" style="display: block; width: 100%; text-align: left; padding: 6px 12px; font-size: 12.5px; color: #22272B; background: none; border: none; cursor: pointer;">
+                                                    Duplicate
+                                                </button>
+                                            </form>
+                                            <form method="POST" action="http://127.0.0.1:8000/templates/1/archive" style="margin: 0;">
+                                                <input type="hidden" name="_token" value="ypcyCFwqZdA7AweYPIqGquHmrd7oMR8jNO8rp5qE" autocomplete="off">                                                <input type="hidden" name="_method" value="PATCH">                                                <button type="submit" style="display: block; width: 100%; text-align: left; padding: 6px 12px; font-size: 12.5px; color: #22272B; background: none; border: none; cursor: pointer;">
+                                                    Archive
+                                                </button>
+                                            </form>
+                                            <hr style="margin: 4px 0; border: none; border-top: 1px solid #E2E8F0;">
+                                            <form method="POST" action="http://127.0.0.1:8000/templates/1" style="margin: 0;" onsubmit="return confirm('Are you sure you want to delete template \'Website Redesign &amp; Launch\'?')">
+                                                <input type="hidden" name="_token" value="ypcyCFwqZdA7AweYPIqGquHmrd7oMR8jNO8rp5qE" autocomplete="off">                                                <input type="hidden" name="_method" value="DELETE">                                                <button type="submit" style="display: block; width: 100%; text-align: left; padding: 6px 12px; font-size: 12.5px; color: #DC2626; background: none; border: none; cursor: pointer;">
+                                                    Delete
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                                            </div>
+                        </td>
+                    </tr>
+                                                        <tr 
+                        class="template-table-row"
+                        style="border-bottom: 1px solid #F1F5F9; transition: background 0.12s ease; cursor: pointer;" 
+                        data-template-id="2"
+                        onclick="openTemplatePlan(2, 'view')"
+                        onmouseover="this.style.background='#F8FAFC'" 
+                        onmouseout="this.style.background='transparent'"
+                    >
+                        <!-- Template Name -->
+                        <td style="padding: 14px 18px; max-width: 320px;">
+                            <div style="display: flex; align-items: baseline; gap: 8px;">
+                                <span class="template-name-link" style="font-weight: 650; font-size: 13.5px; color: #22272B;">
+                                    Mobile App Development
+                                </span>
+                                                            </div>
+                            <small style="display: block; font-size: 12px; margin-top: 3px; color: #64748B; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px;">
+                                End-to-end iOS &amp; Android mobile application development and App Store publishing workflow.
+                            </small>
+                        </td>
+
+                        <!-- Category -->
+                        <td style="padding: 14px 16px; font-size: 13px; color: #334155;">
+                            IT &amp; Software
+                        </td>
+
+                        <!-- Duration -->
+                        <td style="padding: 14px 16px;">
+                            <div style="font-size: 13px; font-weight: 600; color: #22272B;">
+                                14 working days
+                            </div>
+                            <small style="font-size: 11.5px; color: #64748B;">08:30 - 17:00</small>
+                        </td>
+
+                        <!-- Tasks Count -->
+                        <td style="padding: 14px 16px;">
+                            <div style="font-size: 13px; font-weight: 600; color: #22272B;">
+                                6 Tasks
+                            </div>
+                                                            <small style="font-size: 11px; color: #94A3B8;">Main phases</small>
+                                                    </td>
+
+                        <!-- Last Updated -->
+                        <td style="padding: 14px 16px; font-size: 12.5px; color: #64748B;">
+                            07 Nov 2026
+                        </td>
+
+                        <!-- Actions -->
+                        <td style="padding: 14px 18px; text-align: right;" onclick="event.stopPropagation()">
+                            <div style="display: inline-flex; align-items: center; gap: 6px; justify-content: flex-end;">
+                                                                    <a 
+                                        href="http://127.0.0.1:8000/projects/create?template_id=2&amp;mode=template" 
+                                        class="btn btn-primary btn-sm" 
+                                        style="background: #315F58; color: #FFFFFF; font-size: 12px; height: 30px; font-weight: 600; padding: 0 10px;"
+                                        title="Create a new project using this template"
+                                        onclick="event.stopPropagation()"
+                                    >
+                                        Use
+                                    </a>
+                                
+                                                                    <button 
+                                        type="button" 
+                                        class="btn btn-outline btn-sm btn-edit-template-popup" 
+                                        onclick="event.stopPropagation(); openTemplatePlan(2, 'edit')"
+                                        style="font-size: 12px; height: 30px; padding: 0 10px;"
+                                        title="Edit this template in Task Plan popup"
+                                    >
+                                        Edit
+                                    </button>
+
+                                    <!-- More Actions Dropdown -->
+                                    <div style="position: relative; display: inline-block;">
+                                        <button 
+                                            type="button" 
+                                            class="btn btn-ghost btn-sm" 
+                                            onclick="toggleTemplateMenu(this, event)" 
+                                            style="height: 30px; width: 30px; padding: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; color: #64748B;"
+                                            title="More actions"
+                                        >
+                                            ⋮
+                                        </button>
+                                        <div class="template-menu-dropdown" style="display: none; position: absolute; right: 0; top: 100%; margin-top: 4px; background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); min-width: 150px; z-index: 50; padding: 4px 0; text-align: left;">
+                                            <a href="http://127.0.0.1:8000/templates/2/export-excel" style="display: block; padding: 6px 12px; font-size: 12.5px; color: #22272B; text-decoration: none;">
+                                                Export Excel
+                                            </a>
+                                            <form method="POST" action="http://127.0.0.1:8000/templates/2/duplicate" style="margin: 0;">
+                                                <input type="hidden" name="_token" value="ypcyCFwqZdA7AweYPIqGquHmrd7oMR8jNO8rp5qE" autocomplete="off">                                                <button type="submit" style="display: block; width: 100%; text-align: left; padding: 6px 12px; font-size: 12.5px; color: #22272B; background: none; border: none; cursor: pointer;">
+                                                    Duplicate
+                                                </button>
+                                            </form>
+                                            <form method="POST" action="http://127.0.0.1:8000/templates/2/archive" style="margin: 0;">
+                                                <input type="hidden" name="_token" value="ypcyCFwqZdA7AweYPIqGquHmrd7oMR8jNO8rp5qE" autocomplete="off">                                                <input type="hidden" name="_method" value="PATCH">                                                <button type="submit" style="display: block; width: 100%; text-align: left; padding: 6px 12px; font-size: 12.5px; color: #22272B; background: none; border: none; cursor: pointer;">
+                                                    Archive
+                                                </button>
+                                            </form>
+                                            <hr style="margin: 4px 0; border: none; border-top: 1px solid #E2E8F0;">
+                                            <form method="POST" action="http://127.0.0.1:8000/templates/2" style="margin: 0;" onsubmit="return confirm('Are you sure you want to delete template \'Mobile App Development\'?')">
+                                                <input type="hidden" name="_token" value="ypcyCFwqZdA7AweYPIqGquHmrd7oMR8jNO8rp5qE" autocomplete="off">                                                <input type="hidden" name="_method" value="DELETE">                                                <button type="submit" style="display: block; width: 100%; text-align: left; padding: 6px 12px; font-size: 12.5px; color: #DC2626; background: none; border: none; cursor: pointer;">
+                                                    Delete
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                                            </div>
+                        </td>
+                    </tr>
+                                                        <tr 
+                        class="template-table-row"
+                        style="border-bottom: 1px solid #F1F5F9; transition: background 0.12s ease; cursor: pointer;" 
+                        data-template-id="3"
+                        onclick="openTemplatePlan(3, 'view')"
+                        onmouseover="this.style.background='#F8FAFC'" 
+                        onmouseout="this.style.background='transparent'"
+                    >
+                        <!-- Template Name -->
+                        <td style="padding: 14px 18px; max-width: 320px;">
+                            <div style="display: flex; align-items: baseline; gap: 8px;">
+                                <span class="template-name-link" style="font-weight: 650; font-size: 13.5px; color: #22272B;">
+                                    Corporate Branding &amp; Identity
+                                </span>
+                                                            </div>
+                            <small style="display: block; font-size: 12px; margin-top: 3px; color: #64748B; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px;">
+                                Complete brand identity guidelines, typography, marketing collateral, and digital asset pack.
+                            </small>
+                        </td>
+
+                        <!-- Category -->
+                        <td style="padding: 14px 16px; font-size: 13px; color: #334155;">
+                            Marketing
+                        </td>
+
+                        <!-- Duration -->
+                        <td style="padding: 14px 16px;">
+                            <div style="font-size: 13px; font-weight: 600; color: #22272B;">
+                                14 working days
+                            </div>
+                            <small style="font-size: 11.5px; color: #64748B;">08:30 - 17:00</small>
+                        </td>
+
+                        <!-- Tasks Count -->
+                        <td style="padding: 14px 16px;">
+                            <div style="font-size: 13px; font-weight: 600; color: #22272B;">
+                                4 Tasks
+                            </div>
+                                                            <small style="font-size: 11px; color: #94A3B8;">Main phases</small>
+                                                    </td>
+
+                        <!-- Last Updated -->
+                        <td style="padding: 14px 16px; font-size: 12.5px; color: #64748B;">
+                            07 Nov 2026
+                        </td>
+
+                        <!-- Actions -->
+                        <td style="padding: 14px 18px; text-align: right;" onclick="event.stopPropagation()">
+                            <div style="display: inline-flex; align-items: center; gap: 6px; justify-content: flex-end;">
+                                                                    <a 
+                                        href="http://127.0.0.1:8000/projects/create?template_id=3&amp;mode=template" 
+                                        class="btn btn-primary btn-sm" 
+                                        style="background: #315F58; color: #FFFFFF; font-size: 12px; height: 30px; font-weight: 600; padding: 0 10px;"
+                                        title="Create a new project using this template"
+                                        onclick="event.stopPropagation()"
+                                    >
+                                        Use
+                                    </a>
+                                
+                                                                    <button 
+                                        type="button" 
+                                        class="btn btn-outline btn-sm btn-edit-template-popup" 
+                                        onclick="event.stopPropagation(); openTemplatePlan(3, 'edit')"
+                                        style="font-size: 12px; height: 30px; padding: 0 10px;"
+                                        title="Edit this template in Task Plan popup"
+                                    >
+                                        Edit
+                                    </button>
+
+                                    <!-- More Actions Dropdown -->
+                                    <div style="position: relative; display: inline-block;">
+                                        <button 
+                                            type="button" 
+                                            class="btn btn-ghost btn-sm" 
+                                            onclick="toggleTemplateMenu(this, event)" 
+                                            style="height: 30px; width: 30px; padding: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; color: #64748B;"
+                                            title="More actions"
+                                        >
+                                            ⋮
+                                        </button>
+                                        <div class="template-menu-dropdown" style="display: none; position: absolute; right: 0; top: 100%; margin-top: 4px; background: #FFFFFF; border: 1px solid #CBD5E1; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); min-width: 150px; z-index: 50; padding: 4px 0; text-align: left;">
+                                            <a href="http://127.0.0.1:8000/templates/3/export-excel" style="display: block; padding: 6px 12px; font-size: 12.5px; color: #22272B; text-decoration: none;">
+                                                Export Excel
+                                            </a>
+                                            <form method="POST" action="http://127.0.0.1:8000/templates/3/duplicate" style="margin: 0;">
+                                                <input type="hidden" name="_token" value="ypcyCFwqZdA7AweYPIqGquHmrd7oMR8jNO8rp5qE" autocomplete="off">                                                <button type="submit" style="display: block; width: 100%; text-align: left; padding: 6px 12px; font-size: 12.5px; color: #22272B; background: none; border: none; cursor: pointer;">
+                                                    Duplicate
+                                                </button>
+                                            </form>
+                                            <form method="POST" action="http://127.0.0.1:8000/templates/3/archive" style="margin: 0;">
+                                                <input type="hidden" name="_token" value="ypcyCFwqZdA7AweYPIqGquHmrd7oMR8jNO8rp5qE" autocomplete="off">                                                <input type="hidden" name="_method" value="PATCH">                                                <button type="submit" style="display: block; width: 100%; text-align: left; padding: 6px 12px; font-size: 12.5px; color: #22272B; background: none; border: none; cursor: pointer;">
+                                                    Archive
+                                                </button>
+                                            </form>
+                                            <hr style="margin: 4px 0; border: none; border-top: 1px solid #E2E8F0;">
+                                            <form method="POST" action="http://127.0.0.1:8000/templates/3" style="margin: 0;" onsubmit="return confirm('Are you sure you want to delete template \'Corporate Branding &amp; Identity\'?')">
+                                                <input type="hidden" name="_token" value="ypcyCFwqZdA7AweYPIqGquHmrd7oMR8jNO8rp5qE" autocomplete="off">                                                <input type="hidden" name="_method" value="DELETE">                                                <button type="submit" style="display: block; width: 100%; text-align: left; padding: 6px 12px; font-size: 12.5px; color: #DC2626; background: none; border: none; cursor: pointer;">
+                                                    Delete
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                                            </div>
+                        </td>
+                    </tr>
+                            </tbody>
+        </table>
+    </div>
+
+    </div>
+
+<!-- Shared Smart Task Plan Popup Modal -->
+<!-- Smart Task Plan Modal Component -->
+<div id="smart-task-plan-backdrop" class="smart-task-plan-backdrop" role="dialog" aria-modal="true" aria-labelledby="stp-modal-title">
+    <div id="smart-task-plan-modal" class="smart-task-plan-dialog">
+        <!-- Sticky Header -->
+        <div class="stp-header">
+            <div class="stp-title-group">
+                <h2>
+                    <span id="stp-modal-title">Task Plan</span>
+                    <span id="stp-mode-badge" class="stp-badge stp-badge-view">View Mode</span>
+                </h2>
+                <div style="display: flex; align-items: center; gap: 10px; margin-top: 3px; flex-wrap: wrap;">
+                    <span id="stp-template-title" style="font-weight: 650; font-size: 13.5px; color: #22272B;"></span>
+                    <span style="color: #CBD5E1;">•</span>
+                    <span id="stp-schedule-badge" class="stp-subtitle" style="font-size: 12px; font-weight: 550; color: #475569;"></span>
+                </div>
+            </div>
+
+            <div class="stp-header-actions">
+                <!-- View Mode Actions -->
+                <a id="stp-btn-use" href="#" class="btn btn-primary btn-sm" style="background: #315F58; color: #FFFFFF; font-weight: 650; height: 32px; font-size: 12px; display: none;">
+                    Use Template
+                </a>
+                <button type="button" id="stp-btn-edit-mode" class="btn btn-outline btn-sm" style="height: 32px; font-size: 12px; display: none;">
+                    Edit Template
+                </button>
+                <a id="stp-btn-export" href="#" class="btn btn-outline btn-sm" style="height: 32px; font-size: 12px; display: none;">
+                    Export Excel
+                </a>
+
+                <!-- Edit Mode Actions -->
+                <button type="button" id="stp-btn-toggle-details" class="btn btn-outline btn-sm" style="height: 32px; font-size: 12px; display: none;">
+                    Edit Details ▾
+                </button>
+
+                <!-- Close Button -->
+                <button type="button" id="stp-btn-close" class="stp-close-btn" title="Close" aria-label="Close dialog">✕</button>
+            </div>
+        </div>
+
+        <!-- Optional Collapsible Details Drawer (in Edit Mode) -->
+        <div id="stp-details-drawer" class="stp-details-drawer" style="display: none;"></div>
+
+        <!-- Edit Mode Toolbar -->
+        <div id="stp-toolbar" class="stp-toolbar" style="display: none;"></div>
+
+        <!-- Hidden Excel File Input -->
+        <input type="file" id="stp-excel-file-input" style="display: none;" accept=".xlsx,.csv">
+
+        <!-- Live Summary & Notification Bar -->
+        <div class="stp-summary-bar">
+            <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+                <span id="stp-summary-counts" style="font-weight: 600; color: #334155;">0 Tasks</span>
+                <span id="stp-periods-count-badge" style="font-size: 11.5px; font-weight: 500; color: #64748B;">0 Planning Periods</span>
+            </div>
+            <div>
+                <div id="stp-warning-banner" class="stp-warning-banner" style="display: none;">
+                    <span>⚠ Some tasks extend beyond the planned template duration.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Excel Import Notification Banner -->
+        <div id="stp-import-banner" style="display: none;"></div>
+
+        <!-- Scrollable Modal Body (Pure Table View) -->
+        <div class="stp-body">
+            <!-- Flat Table View Container -->
+            <div id="stp-table-wrap" style="padding: 10px 18px 24px;">
+                <table class="stp-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 48px; text-align: center;">#</th>
+                            <th style="min-width: 240px;">Task Name</th>
+                            <th style="width: 220px;">Start Date & Time</th>
+                            <th style="width: 220px;">End Date & Time</th>
+                            <th style="width: 75px; text-align: center;">Duration</th>
+                            <th style="width: 145px;">Predecessor</th>
+                            <th style="width: 160px;">Suggested Role</th>
+                            <th style="width: 135px; text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stp-table-body">
+                        <!-- Injected dynamically via SmartTaskPlan.renderTable() -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Sticky Footer -->
+        <div class="stp-footer">
+            <div>
+                <span id="stp-unsaved-text" style="font-size: 12px; color: #64748B;">All changes saved</span>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button type="button" id="stp-btn-cancel" class="btn btn-outline btn-sm" style="height: 34px; font-size: 12.5px; padding: 0 14px;">
+                    Close
+                </button>
+                <button type="button" id="stp-btn-save" class="stp-btn-primary" style="height: 34px; font-size: 12.5px; padding: 0 16px; display: none;">
+                    Save Template
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Task Editor Popup Dialog -->
+<div id="stp-task-editor-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 10005; align-items: center; justify-content: center;">
+    <div style="background: #FFFFFF; border-radius: 8px; width: 92%; max-width: 580px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); overflow: hidden; display: flex; flex-direction: column;">
+        <div style="padding: 14px 20px; border-bottom: 1px solid #E5E7EB; display: flex; align-items: center; justify-content: space-between; background: #F8FAFC;">
+            <h3 id="stp-task-editor-title" style="margin: 0; font-size: 15px; font-weight: 700; color: #22272B;">Add Task</h3>
+            <button type="button" onclick="SmartTaskPlan.closeTaskEditor()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748B;">✕</button>
+        </div>
+        <div style="padding: 20px; max-height: 75vh; overflow-y: auto;">
+            <form id="stp-task-form" onsubmit="event.preventDefault(); SmartTaskPlan.saveTaskFromEditor();">
+                <input type="hidden" id="task_edit_index" value="">
+
+                <div style="margin-bottom: 14px;">
+                    <label style="display: block; font-size: 12.5px; font-weight: 650; margin-bottom: 5px; color: #22272B;">
+                        Task Name <span style="color: #DC2626;">*</span>
+                    </label>
+                    <input type="text" id="task_edit_title" required placeholder="e.g. Requirements Gathering" style="width: 100%; height: 36px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 10px; font-size: 13px;">
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                    <label style="display: block; font-size: 12.5px; font-weight: 650; margin-bottom: 5px; color: #22272B;">
+                        Parent Task (Optional)
+                    </label>
+                    <select id="task_edit_parent" style="width: 100%; height: 36px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 10px; font-size: 13px;">
+                        <option value="">None (Top-Level Main Task)</option>
+                    </select>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                    <div>
+                        <label style="display: block; font-size: 12.5px; font-weight: 650; margin-bottom: 5px; color: #22272B;">
+                            Start Period <span style="color: #DC2626;">*</span>
+                        </label>
+                        <select id="task_edit_start_period" required style="width: 100%; height: 36px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 10px; font-size: 13px;" onchange="SmartTaskPlan.onEditorPeriodChange()">
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12.5px; font-weight: 650; margin-bottom: 5px; color: #22272B;">
+                            End Period <span style="color: #DC2626;">*</span>
+                        </label>
+                        <select id="task_edit_end_period" required style="width: 100%; height: 36px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 10px; font-size: 13px;" onchange="SmartTaskPlan.onEditorPeriodChange()">
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #475569;">
+                            Start Time
+                        </label>
+                        <input type="time" id="task_edit_start_time" value="09:00" style="width: 100%; height: 34px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 8px; font-size: 12.5px;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #475569;">
+                            End Time
+                        </label>
+                        <input type="time" id="task_edit_end_time" value="17:00" style="width: 100%; height: 34px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 8px; font-size: 12.5px;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: #475569;">
+                            Duration (Days)
+                        </label>
+                        <input type="number" id="task_edit_duration" value="1" min="1" max="365" style="width: 100%; height: 34px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 8px; font-size: 12.5px; text-align: center;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 650; margin-bottom: 5px; color: #22272B;">
+                            Dependencies
+                        </label>
+                        <input type="text" id="task_edit_dependency" placeholder="e.g. 1, 1.1" style="width: 100%; height: 36px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 10px; font-size: 12.5px;">
+                        <small style="font-size: 11px; color: #64748B;">Enter task code that must finish first.</small>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 650; margin-bottom: 5px; color: #22272B;">
+                            Suggested Role
+                        </label>
+                        <select id="task_edit_role" style="width: 100%; height: 36px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 10px; font-size: 12.5px;">
+                            <option value="">None</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 14px;">
+                    <label style="display: block; font-size: 12px; font-weight: 650; margin-bottom: 5px; color: #475569;">
+                        Description (Optional)
+                    </label>
+                    <textarea id="task_edit_description" rows="2" placeholder="Task notes and instructions..." style="width: 100%; border: 1px solid #CBD5E1; border-radius: 6px; padding: 6px 10px; font-size: 12.5px; resize: vertical;"></textarea>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 8px; border-top: 1px solid #E5E7EB; padding-top: 14px; margin-top: 14px;">
+                    <button type="button" onclick="SmartTaskPlan.closeTaskEditor()" class="btn btn-outline btn-sm" style="height: 34px;">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm" style="background: #315F58; color: #FFFFFF; font-weight: 650; height: 34px; padding: 0 16px;">Save Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Import Confirmation / Merge Modal -->
+<div id="stp-import-confirm-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10010; align-items: center; justify-content: center;">
+    <div style="background: #FFFFFF; border-radius: 8px; width: 90%; max-width: 500px; padding: 22px; box-shadow: 0 10px 25px rgba(0,0,0,0.18);">
+        <h3 style="margin: 0 0 8px; font-size: 16px; font-weight: 700; color: #22272B;">Confirm Excel Import</h3>
+        <p id="stp-import-confirm-msg" style="margin: 0 0 16px; font-size: 13px; color: #475569;"></p>
+        
+        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 12px 14px; margin-bottom: 18px;">
+            <div style="font-size: 12px; font-weight: 650; color: #22272B; margin-bottom: 8px;">Select Import Mode:</div>
+            <label style="display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; cursor: pointer; font-size: 12.5px; color: #334155;">
+                <input type="radio" name="stp_import_mode" value="merge" checked style="margin-top: 2px;">
+                <div>
+                    <b>Merge / Update Matching Tasks (Recommended)</b>
+                    <div style="font-size: 11.5px; color: #64748B;">Updates matching task codes, adds new tasks, and preserves existing tasks that were not in Excel.</div>
+                </div>
+            </label>
+            <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 12.5px; color: #334155;">
+                <input type="radio" name="stp_import_mode" value="replace" style="margin-top: 2px;">
+                <div>
+                    <b>Replace Draft Task Plan</b>
+                    <div style="font-size: 11.5px; color: #64748B;">Replaces current draft tasks completely with the tasks from Excel.</div>
+                </div>
+            </label>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 8px;">
+            <button type="button" onclick="SmartTaskPlan.cancelImport()" class="btn btn-outline btn-sm">Cancel</button>
+            <button type="button" onclick="SmartTaskPlan.confirmImport()" class="btn btn-primary btn-sm" style="background: #315F58; color: #FFFFFF; font-weight: 650;">Apply Import</button>
+        </div>
+    </div>
+</div>
+
+<script src="file:///C:/Users/nadumi/Desktop/GS_ProjectFlow_V3_Full_Project/GS_ProjectFlow_Complete_V2/public/js/template-builder.js"></script>
+<script>
+    function initSmartTaskPlan() {
+        if (window.SmartTaskPlan) {
+            window.SmartTaskPlan.init({
+                roles: [{"id":1,"name":"Project Manager","slug":"pm","is_system":true,"default_permissions":["view_project","view_tasks","view_gantt","manage_tasks","assign_tasks","manage_team","edit_project","upload_files"],"created_at":"2026-11-06T20:09:39.000000Z","updated_at":"2026-11-06T20:09:39.000000Z"},{"id":3,"name":"Project Owner","slug":"po","is_system":true,"default_permissions":["view_project","view_tasks","view_gantt"],"created_at":"2026-11-06T20:09:39.000000Z","updated_at":"2026-11-06T20:09:39.000000Z"},{"id":2,"name":"Project Sponsor","slug":"ps","is_system":true,"default_permissions":["view_project","view_tasks","view_gantt"],"created_at":"2026-11-06T20:09:39.000000Z","updated_at":"2026-11-06T20:09:39.000000Z"},{"id":4,"name":"Steering Committee","slug":"steering","is_system":true,"default_permissions":["view_project","view_tasks","view_gantt"],"created_at":"2026-11-06T20:09:39.000000Z","updated_at":"2026-11-06T20:09:39.000000Z"},{"id":5,"name":"Team Member","slug":"team","is_system":true,"default_permissions":["view_assigned_tasks","update_own_tasks","upload_own_files"],"created_at":"2026-11-06T20:09:39.000000Z","updated_at":"2026-11-06T20:09:39.000000Z"}],
+                canManage: true,
+                canCreateProject: true            });
+        }
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initSmartTaskPlan);
+    } else {
+        initSmartTaskPlan();
+    }
+</script>
+
+<script>
+    window.TEMPLATES_CACHE = {"4":{"template":{"id":4,"name":"testing 1","description":null,"category":"General","estimated_duration":14,"duration_unit":"working_days","reference_start_date":"2026-11-08","working_hours":"08:30 - 17:00","planning_periods":[],"status":"active"},"tasks":[{"id":18,"code":"9","parent_code":null,"title":"test","description":null,"start_date":null,"start_time":"08:30","end_date":null,"end_time":"17:00","duration_days":10,"suggested_role_id":null,"suggested_role_name":null,"dependency_code":null,"priority":"medium"}]},"1":{"template":{"id":1,"name":"Website Redesign \u0026 Launch","description":"Corporate website overhaul: UX, prototyping, frontend, backend API integration, and go-live.","category":"IT \u0026 Software","estimated_duration":14,"duration_unit":"working_days","reference_start_date":"2026-11-08","working_hours":"08:30 - 17:00","planning_periods":[],"status":"active"},"tasks":[{"id":1,"code":"WS-01","parent_code":null,"title":"Requirements \u0026 Scope Alignment","description":null,"start_date":null,"start_time":"08:30","end_date":null,"end_time":"17:00","duration_days":3,"suggested_role_id":null,"suggested_role_name":null,"dependency_code":null,"priority":"high"},{"id":2,"code":"WS-02","parent_code":null,"title":"UI\/UX Wireframes \u0026 Design System","description":null,"start_date":null,"start_time":"08:30","end_date":null,"end_time":"17:00","duration_days":5,"suggested_role_id":null,"suggested_role_name":null,"dependency_code":null,"priority":"high"},{"id":3,"code":"WS-02-1","parent_code":"WS-02","title":"Responsive Mobile Prototypes","description":null,"start_date":null,"start_time":"08:30","end_date":null,"end_time":"17:00","duration_days":3,"suggested_role_id":null,"suggested_role_name":null,"dependency_code":null,"priority":"medium"},{"id":4,"code":"WS-03","parent_code":null,"title":"Frontend Component Engineering","description":null,"start_date":null,"start_time":"08:30","end_date":null,"end_time":"17:00","duration_days":6,"suggested_role_id":null,"suggested_role_name":null,"dependency_code":null,"priority":"high"},{"id":5,"code":"WS-04","parent_code":null,"title":"Backend API \u0026 CMS Integration","description":null,"start_date":null,"start_time":"08:30","end_date":null,"end_time":"17:00","duration_days":5,"suggested_role_id":null,"suggested_role_name":null,"dependency_code":null,"priority":"high"},{"id":6,"code":"WS-05","parent_code":null,"title":"QA Cross-Browser \u0026 Security Audit","description":null,"start_date":null,"start_time":"08:30","end_date":null,"end_time":"17:00","duration_days":3,"suggested_role_id":null,"suggested_role_name":null,"dependency_code":null,"priority":"medium"},{"id":7,"code":"WS-06","parent_code":null,"title":"Staging Deployment \u0026 Final Sign-off","description":null,"start_date":null,"start_time":"08:30","end_date":null,"end_time":"17:00","duration_days":2,"suggested_role_id":null,"suggested_role_name":null,"dependency_code":null,"priority":"high"}]},"2":{"template":{"id":2,"name":"Mobile App Development","description":"End-to-end iOS \u0026 Android mobile application development and App Store publishing workflow.","category":"IT \u0026 Software","estimated_duration":14,"duration_unit":"working_days","reference_start_date":"2026-11-08","working_hours":"08:30 - 17:00","planning_periods":[],"status":"active"},"tasks":[{"id":8,"code":"MOB-01","parent_code":null,"title":"Architecture \u0026 Technical Specifications","description":null,"start_date":null,"start_time":"08:30","end_date":null,"end_time":"17:00","duration_days":4,"suggested_role_id":null,"suggested_role_name":null,"dependency_code":null,"priority":"high"},{"id":9,"code":"MOB-02","parent_code":null,"title":"UI\/UX Screens \u0026 Interaction Design","description":null,"start_date":null,"start_time":"08:30","end_date":null,"end_time":"17:00","duration_days":7,"suggested_role_id":null,"suggested_role_name":null,"dependency_code":null,"priority":"high"},{"id":10,"code":"MOB-03","parent_code":null,"title":"Core Mobile App Feature Development","description":null,"start_date":null,"start_time":"08:30","end_date":null,"end_time":"17:00","duration_days":14,"suggested_role_id":null,"suggested_role_name":null,"dependency_code":null,"priority":"high"},{"id":11,"code":"MOB-04","parent_code":null,"title":"Backend API \u0026 Cloud Database Setup","description":null,"start_date":null,"start_time":"08:30","end_date":null,"end_time":"17:00","duration_days":8,"suggested_role_id":null,"suggested_role_name":null,"dependency_code":null,"priority":"high"},{"id":12,"code":"MOB-05","parent_code":null,"title":"Beta Testing \u0026 Device Compatibility","description":null,"start_date":null,"start_time":"08:30","end_date":null,"end_time":"17:00","duration_days":5,"suggested_role_id":null,"suggested_role_name":null,"dependency_code":null,"priority":"medium"},{"id":13,"code":"MOB-06","parent_code":null,"title":"App Store \u0026 Google Play Submission","description":null,"start_date":null,"start_time":"08:30","end_date":null,"end_time":"17:00","duration_days":3,"suggested_role_id":null,"suggested_role_name":null,"dependency_code":null,"priority":"high"}]},"3":{"template":{"id":3,"name":"Corporate Branding \u0026 Identity","description":"Complete brand identity guidelines, typography, marketing collateral, and digital asset pack.","category":"Marketing","estimated_duration":14,"duration_unit":"working_days","reference_start_date":"2026-11-08","working_hours":"08:30 - 17:00","planning_periods":[],"status":"active"},"tasks":[{"id":14,"code":"BR-01","parent_code":null,"title":"Brand Discovery \u0026 Stakeholder Interviews","description":null,"start_date":null,"start_time":"08:30","end_date":null,"end_time":"17:00","duration_days":3,"suggested_role_id":null,"suggested_role_name":null,"dependency_code":null,"priority":"medium"},{"id":15,"code":"BR-02","parent_code":null,"title":"Logo Concepts \u0026 Visual Exploration","description":null,"start_date":null,"start_time":"08:30","end_date":null,"end_time":"17:00","duration_days":5,"suggested_role_id":null,"suggested_role_name":null,"dependency_code":null,"priority":"high"},{"id":16,"code":"BR-03","parent_code":null,"title":"Color Palette \u0026 Typography System","description":null,"start_date":null,"start_time":"08:30","end_date":null,"end_time":"17:00","duration_days":3,"suggested_role_id":null,"suggested_role_name":null,"dependency_code":null,"priority":"medium"},{"id":17,"code":"BR-04","parent_code":null,"title":"Brand Guidelines \u0026 Collateral Deliverables","description":null,"start_date":null,"start_time":"08:30","end_date":null,"end_time":"17:00","duration_days":4,"suggested_role_id":null,"suggested_role_name":null,"dependency_code":null,"priority":"high"}]}};
+
+    function openTemplatePlan(templateId, mode) {
+        mode = mode || 'view';
+        const idStr = String(templateId);
+        const cached = window.TEMPLATES_CACHE && window.TEMPLATES_CACHE[idStr];
+
+        if (window.SmartTaskPlan) {
+            if (mode === 'select') {
+                if (cached && cached.template) {
+                    window.SmartTaskPlan.openSelect(cached.template, cached.tasks || []);
+                } else {
+                    window.SmartTaskPlan.openSelect({ id: templateId }, null);
+                }
+            } else if (mode === 'edit') {
+                if (cached && cached.template) {
+                    window.SmartTaskPlan.openEdit(cached.template, cached.tasks || []);
+                } else {
+                    window.SmartTaskPlan.openEdit({ id: templateId }, null);
+                }
+            } else {
+                if (cached && cached.template) {
+                    window.SmartTaskPlan.openView(cached.template, cached.tasks || []);
+                } else {
+                    window.SmartTaskPlan.openView({ id: templateId }, null);
+                }
+            }
+        } else {
+            console.error('SmartTaskPlan modal engine is not ready.');
+        }
+    }
+
+    function toggleTemplateMenu(btn, e) {
+        e.stopPropagation();
+        document.querySelectorAll('.template-menu-dropdown').forEach(d => {
+            if (d !== btn.nextElementSibling) d.style.display = 'none';
+        });
+        const dropdown = btn.nextElementSibling;
+        dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+    }
+
+    document.addEventListener('click', function() {
+        document.querySelectorAll('.template-menu-dropdown').forEach(d => d.style.display = 'none');
+    });
+</script>
+
+                <footer class="footer">
+                    GS ProjectFlow <span>·</span> Project Management, Simplified.
+                </footer>
+            </div>
+        </main>
+    </div>
+    </body>
+</html>

@@ -46,6 +46,13 @@ class ProjectController {
   $declinedCount = (clone $baseQuery)->where('status','declined')->count();
   $attentionCount = (clone $baseQuery)->where(function($q){$q->where('status','pending')->orWhere('status','declined')->orWhere(fn($inner)=>$inner->where('status','draft')->whereNull('pm_user_id'))->orWhere(fn($inner)=>$inner->whereIn('status',['active','on_hold'])->whereHas('tasks',fn($t)=>$t->where('progress','<',100)->where('ends_at','<',now())));})->count();
 
+  if($request->boolean('attention')){
+   $query->where(function($q){
+    $q->whereIn('status',['pending','declined'])
+      ->orWhere(fn($draft)=>$draft->where('status','draft')->whereNull('pm_user_id'))
+      ->orWhere(fn($active)=>$active->whereIn('status',['active','on_hold'])->whereHas('tasks',fn($task)=>$task->where('progress','<',100)->where('ends_at','<',now())));
+   });
+  }
   if($request->filled('q')){ 
    $search=trim($request->input('q')); 
    $query->where(fn($q)=>$q->where('name','like','%'.$search.'%')->orWhere('code','like','%'.$search.'%')->orWhereHas('manager',fn($m)=>$m->where('name','like','%'.$search.'%'))); 
@@ -267,7 +274,45 @@ class ProjectController {
   if(!$request->user()->isPmo() && $project->status==='pending')abort(403);
   if(in_array($project->status,['draft','pending','declined'],true) && $data['status']!==$project->status)abort(422,'Only PM acceptance can activate a project.');
   if(!in_array($project->status,['draft','pending','declined'],true)&&in_array($data['status'],['draft','pending','declined'],true))abort(422,'Cannot revert an active project to an invitation state.');
-  $project->update($data);Audit::record('project.updated',$project);return back()->with('success','Project updated.');
+  $extra=$request->validate([
+   'project_template_id'=>['sometimes','nullable',\Illuminate\Validation\Rule::exists('project_templates','id')->where(fn($q)=>$q->where('status','active')->orWhere('id',$project->project_template_id))],
+   'pm_user_id'=>'sometimes|nullable|integer|exists:users,id','edit_team'=>'sometimes|in:1','members'=>'nullable|array|max:100',
+   'members.*.user_id'=>'required|integer|distinct|exists:users,id',
+   'members.*.project_role_id'=>['required','integer',\Illuminate\Validation\Rule::exists('project_roles','id')->where(fn($q)=>$q->where('slug','!=','pm'))],
+  ]);
+  $newPm=isset($extra['pm_user_id']) && (int)$extra['pm_user_id']!==(int)$project->pm_user_id ? User::findOrFail($extra['pm_user_id']) : null;
+  if($newPm){
+   abort_unless($access->project($request->user(),$project,'manage_team'),403);
+   abort_unless(in_array($project->status,['draft','pending','declined','on_hold'],true),422,'Manager reassignment is available before activation or while on hold.');
+   abort_unless($newPm->isActive() && !$newPm->isPmo(),422,'Choose an active project user as manager.');
+  }
+  $editTeam=$request->boolean('edit_team');
+  if($editTeam){
+   abort_unless($access->project($request->user(),$project,'manage_team'),403);
+   foreach($extra['members']??[] as $member){
+    abort_if((int)$member['user_id']===$project->pm_user_id,422,'The project manager must be changed through the manager assignment workflow.');
+    $existing=$project->memberships()->where('user_id',$member['user_id'])->exists();
+    abort_unless(User::whereKey($member['user_id'])->where('system_role','user')->when(!$existing,fn($q)=>$q->where('account_status','active'))->exists(),422,'Choose an active project user.');
+   }
+  }
+  DB::transaction(function()use($project,$data,$extra,$editTeam,$newPm){
+   Project::whereKey($project->id)->lockForUpdate()->firstOrFail();
+   if(array_key_exists('project_template_id',$extra))$data['project_template_id']=$extra['project_template_id'];
+   $project->update($data);
+   if($editTeam){
+    $members=collect($extra['members']??[]);
+    $kept=$members->pluck('user_id')->push($project->pm_user_id)->filter()->all();
+    $assigned=DB::table('task_assignments')->whereIn('task_id',$project->tasks()->select('id'))->pluck('user_id');
+    $removed=$project->memberships()->pluck('user_id')->merge($assigned)->unique()->diff($kept)->all();
+    $project->memberships()->whereNotIn('user_id',$kept)->delete();
+    DB::table('task_assignments')->whereIn('task_id',$project->tasks()->select('id'))->whereIn('user_id',$removed)->delete();
+    foreach($members as $member)ProjectMembership::updateOrCreate(['project_id'=>$project->id,'user_id'=>$member['user_id']],['project_role_id'=>$member['project_role_id']]);
+   }
+   if($newPm)app(ProjectService::class)->assignManager($project,$newPm);
+   Audit::record('project.updated',$project);
+  });
+  if($request->expectsJson())return response()->json(['message'=>'Project updated.']);
+  return back()->with('success','Project updated.');
  }
  public function captureBaseline(Request $request, Project $project, ProjectService $service, Access $access){
   abort_unless($access->project($request->user(),$project,'edit_project'),403);

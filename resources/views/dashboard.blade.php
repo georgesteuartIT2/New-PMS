@@ -1,11 +1,11 @@
 @extends('layouts.app')
-@section('title', $isPmo ? 'Project Overview' : 'My Workspace')
+@section('title', $isPmo ? 'Dashboard' : 'My Workspace')
 @section('content')
 
 <!-- Page Header -->
 <div class="page-head">
     <div>
-        <h1>{{ $isPmo ? 'Project Overview' : 'My Workspace' }}</h1>
+        <h1>{{ $isPmo ? 'Dashboard' : 'My Workspace' }}</h1>
         <p class="muted">{{ $isPmo ? 'Monitor projects, risks, and actions across the organization.' : 'Your projects, tasks, and what needs attention.' }}</p>
     </div>
     <div class="inline-actions">
@@ -21,31 +21,21 @@
 @if($isPmo)
     <!-- 5 KPI Metric Cards (Clean, Professional, No Icons) -->
     <div class="kpi-row">
-        <div class="kpi-card">
+        <a class="kpi-card kpi-shortcut" href="{{ route('projects.index') }}">
             <span class="kpi-label">Total Projects</span>
-            <div class="kpi-value">{{ $kpi['totalProjects'] ?? 0 }}</div>
-            <span class="kpi-sub">Across all subsidiaries</span>
-        </div>
-        <div class="kpi-card">
+            <div class="kpi-value">{{ $kpi['totalProjects'] ?? 0 }}</div><span class="kpi-sub">Across all subsidiaries</span></a>
+        <a class="kpi-card kpi-shortcut" href="{{ route('projects.index', ['status'=>'active']) }}">
             <span class="kpi-label">Active Projects</span>
-            <div class="kpi-value">{{ $kpi['activeProjects'] ?? 0 }}</div>
-            <span class="kpi-sub">Currently in execution</span>
-        </div>
-        <div class="kpi-card">
-            <span class="kpi-label">Pending Acceptance</span>
-            <div class="kpi-value">{{ $kpi['pendingAcceptance'] ?? 0 }}</div>
-            <span class="kpi-sub">Awaiting PMO review</span>
-        </div>
-        <div class="kpi-card {{ ($kpi['atRiskProjects'] ?? 0) > 0 ? 'kpi-card-warning' : '' }}">
+            <div class="kpi-value">{{ $kpi['activeProjects'] ?? 0 }}</div><span class="kpi-sub">Currently in execution</span></a>
+        <a class="kpi-card kpi-shortcut" href="{{ route('projects.index', ['status'=>'pending']) }}">
+            <span class="kpi-label">Pending PM Approval</span>
+            <div class="kpi-value">{{ $kpi['pendingAcceptance'] ?? 0 }}</div><span class="kpi-sub">Awaiting Project Manager approval</span></a>
+        <a class="kpi-card {{ ($kpi['atRiskProjects'] ?? 0) > 0 ? 'kpi-card-warning' : '' }} kpi-shortcut" href="{{ route('projects.index', ['attention'=>1]) }}">
             <span class="kpi-label">At Risk Projects</span>
-            <div class="kpi-value {{ ($kpi['atRiskProjects'] ?? 0) > 0 ? 'text-warning' : '' }}">{{ $kpi['atRiskProjects'] ?? 0 }}</div>
-            <span class="kpi-sub">Require attention</span>
-        </div>
-        <div class="kpi-card {{ ($kpi['overdueTasks'] ?? 0) > 0 ? 'kpi-card-danger' : '' }}">
+            <div class="kpi-value {{ ($kpi['atRiskProjects'] ?? 0) > 0 ? 'text-warning' : '' }}">{{ $kpi['atRiskProjects'] ?? 0 }}</div><span class="kpi-sub">Review projects needing attention</span></a>
+        <a class="kpi-card {{ ($kpi['overdueTasks'] ?? 0) > 0 ? 'kpi-card-danger' : '' }} kpi-shortcut" href="{{ route('pmo.task-monitor', ['filter'=>'overdue']) }}">
             <span class="kpi-label">Overdue Tasks</span>
-            <div class="kpi-value {{ ($kpi['overdueTasks'] ?? 0) > 0 ? 'text-danger' : '' }}">{{ $kpi['overdueTasks'] ?? 0 }}</div>
-            <span class="kpi-sub">Past due across {{ $kpi['overdueProjectsCount'] ?? 0 }} {{ ($kpi['overdueProjectsCount'] ?? 0) === 1 ? 'project' : 'projects' }}</span>
-        </div>
+            <div class="kpi-value {{ ($kpi['overdueTasks'] ?? 0) > 0 ? 'text-danger' : '' }}">{{ $kpi['overdueTasks'] ?? 0 }}</div><span class="kpi-sub">Past due across {{ $kpi['overdueProjectsCount'] ?? 0 }} {{ ($kpi['overdueProjectsCount'] ?? 0) === 1 ? 'project' : 'projects' }}</span></a>
     </div>
 
     <!-- Main Two-Column Dashboard Layout -->
@@ -118,8 +108,8 @@
                     <table class="clean-table">
                         <thead>
                             <tr>
-                                <th>Project Code</th>
-                                <th>Project Name</th>
+                                
+                                <th>Project</th>
                                 <th>Project Manager</th>
                                 <th>Progress</th>
                                 <th>Status</th>
@@ -129,12 +119,7 @@
                         <tbody>
                             @forelse($recentProjects as $p)
                                 <tr>
-                                    <td>
-                                        <span class="code-mono">{{ $p['code'] }}</span>
-                                    </td>
-                                    <td>
-                                        <a class="strong-link" href="{{ $p['url'] }}">{{ $p['name'] }}</a>
-                                    </td>
+                                    <td><a class="strong-link" href="{{ $p['url'] }}">{{ $p['name'] }}</a><small class="block muted">{{ $p['code'] }}</small></td>
                                     <td>
                                         <span class="manager-text">{{ $p['manager'] }}</span>
                                     </td>
@@ -155,7 +140,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="empty-state">
+                                    <td colspan="5" class="empty-state">
                                         No projects found. Click "+ New Project" above to create one.
                                     </td>
                                 </tr>
@@ -298,7 +283,7 @@
                                 <span class="deadline-month">{{ $task->ends_at->format('M') }}</span>
                             </div>
                             <div class="deadline-body">
-                                <a href="{{ route('projects.show', $task->project) }}#project-attention" class="deadline-title">{{ $task->title }}</a>
+                                <button type="button" data-task-panel="{{ route('tasks.panel', $task) }}" class="deadline-title">{{ $task->title }}</button>
                                 <span class="deadline-project">{{ $task->project->code }} · {{ $task->project->name }}</span>
                             </div>
                             <span class="status-pill {{ $badgeClass }}">{{ $badgeText }}</span>
@@ -317,22 +302,16 @@
          SCREEN 01: MY WORKSPACE DASHBOARD (Dynamic, Clean, Zero-Icons)
          ========================================================================= -->
     <!-- 3 Compact Neutral Summary KPI Cards -->
-    <div class="kpi-row" style="grid-template-columns: repeat(3, minmax(0, 1fr)); margin-bottom: 24px;">
-        <div class="kpi-card">
+    <div class="kpi-row user-summary">
+        <a class="kpi-card kpi-shortcut" href="{{ route('projects.index') }}">
             <span class="kpi-label">My Projects</span>
-            <div class="kpi-value">{{ $kpi['myProjects'] ?? 0 }}</div>
-            <span class="kpi-sub">Projects you are involved in</span>
-        </div>
-        <div class="kpi-card">
+            <div class="kpi-value">{{ $kpi['myProjects'] ?? 0 }}</div><span class="kpi-sub">Projects you are involved in</span></a>
+        <a class="kpi-card kpi-shortcut" href="{{ route('tasks.mine') }}">
             <span class="kpi-label">My Active Tasks</span>
-            <div class="kpi-value">{{ $kpi['activeTasks'] ?? 0 }}</div>
-            <span class="kpi-sub">Open Tasks assigned to you</span>
-        </div>
-        <div class="kpi-card {{ ($kpi['attentionCount'] ?? 0) > 0 ? 'kpi-card-warning' : '' }}">
+            <div class="kpi-value">{{ $kpi['activeTasks'] ?? 0 }}</div><span class="kpi-sub">Open Tasks assigned to you</span></a>
+        <a class="kpi-card {{ ($kpi['attentionCount'] ?? 0) > 0 ? 'kpi-card-warning' : '' }} kpi-shortcut" href="#my-attention">
             <span class="kpi-label">Needs My Attention</span>
-            <div class="kpi-value {{ ($kpi['attentionCount'] ?? 0) > 0 ? 'text-warning' : '' }}">{{ $kpi['attentionCount'] ?? 0 }}</div>
-            <span class="kpi-sub">Items requiring your action</span>
-        </div>
+            <div class="kpi-value {{ ($kpi['attentionCount'] ?? 0) > 0 ? 'text-warning' : '' }}">{{ $kpi['attentionCount'] ?? 0 }}</div><span class="kpi-sub">Items requiring your action</span></a>
     </div>
 
     <!-- 2-Column Responsive Workspace Grid -->
@@ -344,7 +323,7 @@
             <section class="dashboard-card" style="margin-bottom: 20px;">
                 <div class="dashboard-card-head" style="flex-wrap: wrap; gap: 10px;">
                     <div class="dashboard-card-title">
-                        <h2>Needs My Attention</h2>
+                        <h2 id="my-attention" tabindex="-1">Needs My Attention</h2>
                         <p>Key items requiring your action or review.</p>
                     </div>
                     <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
@@ -547,7 +526,8 @@
         </div>
     </div>
 
-    <!-- Slide-out Drawer Component for Tasks on Dashboard -->
+@endif
+    <!-- Shared task drawer for both system identities -->
     <aside class="task-side-panel" id="task-side-panel" aria-labelledby="task-panel-title" aria-hidden="true" hidden>
         <div class="task-panel-top">
             <h2 id="task-panel-title">Task Details</h2>
@@ -562,6 +542,4 @@
     @push('scripts')
     <script defer src="{{ asset('js/project-workspace.js') }}"></script>
     @endpush
-@endif
-
 @endsection

@@ -6,7 +6,7 @@
 <div class="page-head">
     <div>
         <h1>Roles & Permissions</h1>
-        <p class="muted">Configure role definitions, company-wide authorities, and default project permissions.</p>
+        <p class="muted">System roles are PMO Admin and User. Set the responsibilities a User can have in each project here.</p>
     </div>
     <div class="inline-actions">
         <button type="button" class="btn btn-primary" onclick="toggleNewRoleForm()">+ New Role</button>
@@ -82,7 +82,7 @@
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
                         <h2 style="margin: 0; font-size: 20px;">{{ $selectedRole->name }}</h2>
                         <span class="status-pill {{ $selectedRole->is_system ? 'pill-neutral' : 'pill-success' }}" style="font-size: 11px; padding: 2px 8px;">
-                            {{ $selectedRole->is_system ? 'Built-in System Role' : 'Custom Project Role' }}
+                            {{ $selectedRole->is_system ? 'Built-in Project Role' : 'Custom Project Role' }}
                         </span>
                         <code style="font-size: 11px; background: #F3F4F6; padding: 2px 6px; border-radius: 4px; color: #4B5563;">{{ $selectedRole->slug }}</code>
                     </div>

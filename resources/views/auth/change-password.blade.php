@@ -4,7 +4,7 @@
 <div style="min-height: 100vh; display: grid; place-items: center; background: #F8FAFB; padding: 24px;">
     <div class="card" style="width: 100%; max-width: 420px; padding: 32px;">
         <div class="brand center mb-16" style="justify-content: center;">
-            <span class="brand-mark">▤</span>
+            <span class="brand-mark">GS</span>
             <b>GS ProjectFlow</b>
         </div>
         <h1 class="center mt-8" style="font-size: 20px;">Choose a new password</h1>

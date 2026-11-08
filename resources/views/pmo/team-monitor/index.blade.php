@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Team Monitor')
+@section('title', 'People workload')
 
 @section('content')
 <div style="padding-bottom: 60px;">
@@ -7,7 +7,7 @@
     <div class="breadcrumb-trail" style="margin-bottom: 14px;">
         <a href="{{ route('dashboard') }}">Dashboard</a>
         <span class="crumb-sep">›</span>
-        <span>Monitoring</span>
+        <span>People</span>
         <span class="crumb-sep">›</span>
         <span>Team Monitor</span>
     </div>
@@ -15,7 +15,7 @@
     <!-- Page Header -->
     <div class="page-head" style="margin-bottom: 22px;">
         <div>
-            <h1 style="font-size: 24px; font-weight: 700; color: #22272B; margin: 0 0 4px;">Team Monitor</h1>
+            <h1 style="font-size: 24px; font-weight: 700; color: #22272B; margin: 0 0 4px;">People workload</h1>
             <p class="muted" style="margin: 0; font-size: 13.5px;">Review employee assignments and workload across projects.</p>
         </div>
         <div style="display: flex; gap: 10px; align-items: center;">
@@ -237,8 +237,8 @@
 
                             <!-- Action -->
                             <td style="padding: 12px 16px; text-align: right; white-space: nowrap;">
-                                <button type="button" onclick="openEmployeeWorkloadModal({{ $emp->id }})" class="btn btn-outline btn-xs" style="height: 30px; font-size: 12px; padding: 0 12px;">
-                                    View Workload
+                                <button type="button" title="View employee workload" onclick="openEmployeeWorkloadModal({{ $emp->id }})" class="btn btn-outline btn-xs" style="height: 30px; font-size: 12px; padding: 0 12px;">
+                                    View
                                 </button>
                             </td>
                         </tr>

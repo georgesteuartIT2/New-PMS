@@ -1,13 +1,14 @@
 @extends('layouts.app')
-@section('title', 'Users')
+@section('title', 'People')
 @section('content')
 <!-- Screen 9: Users Management (Clean, Low-Click, Subsidiary Column & Delete) -->
 <div class="page-head">
     <div>
-        <h1>Users</h1>
-        <p class="muted">Manage system users, access roles, and subsidiary assignments.</p>
+        <h1>People</h1>
+        <p class="muted">Add people, update their details, and manage access to the system.</p>
     </div>
     <div class="inline-actions">
+        <a class="btn btn-outline" href="{{ route('users.azure') }}">Add from Microsoft</a>
         <button class="btn btn-primary" data-show-dialog="user-dialog" style="display: inline-flex; align-items: center; gap: 8px;">
             <span style="font-size: 16px; line-height: 1;">+</span> Add User
         </button>
@@ -117,14 +118,14 @@
                         </td>
                         <td class="right">
                             <div class="inline-actions" style="justify-content: flex-end; gap: 8px;">
-                                <button class="icon-btn" type="button" title="Edit User" data-show-dialog="edit-user-{{ $user->id }}">✎</button>
+                                <button class="btn btn-outline btn-xs" type="button" title="Edit User" data-show-dialog="edit-user-{{ $user->id }}">Edit</button>
                                 
                                 @if($user->password && !$user->isPmo())
-                                    <button class="icon-btn btn-reset-password" type="button" title="Reset Password" data-user-id="{{ $user->id }}" data-user-name="{{ $user->name }}" style="color: var(--warning);">🔑</button>
+                                    <button class="btn btn-outline btn-xs btn-reset-password" type="button" title="Reset Password" data-user-id="{{ $user->id }}" data-user-name="{{ $user->name }}" style="color:var(--warning);">Reset password</button>
                                 @endif
 
                                 @if($user->id !== 1 && $user->id !== auth()->id())
-                                    <button class="icon-btn btn-delete-user" type="button" title="Delete User" data-user-id="{{ $user->id }}" data-user-name="{{ $user->name }}" style="color: var(--danger);">🗑</button>
+                                    <button class="btn btn-ghost btn-xs btn-delete-user" type="button" title="Delete User" data-user-id="{{ $user->id }}" data-user-name="{{ $user->name }}" style="color:var(--danger);">Delete</button>
                                 @endif
                             </div>
 

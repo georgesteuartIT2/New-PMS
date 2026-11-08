@@ -31,7 +31,13 @@ Route::middleware(['auth','account.active'])->group(function(){
   Route::get('/projects/{project}/delay-analysis',[\App\Http\Controllers\ProjectDelayAnalysisController::class,'show'])->name('projects.delay-analysis');
   Route::get('/projects/{project}/delay-investigation',[\App\Http\Controllers\ProjectDelayInvestigationController::class,'show'])->name('projects.delay-investigation');
   Route::get('/projects/{project}/board',[\App\Http\Controllers\ProjectWorkspaceController::class,'board'])->name('projects.board');
-  Route::get('/projects/{project}/calendar',[\App\Http\Controllers\ProjectWorkspaceController::class,'calendar'])->name('projects.calendar');
+  Route::get('/projects/{project}/calendar',[\App\Http\Controllers\CalendarController::class,'projectCalendar'])->name('projects.calendar');
+  Route::get('/calendar',[\App\Http\Controllers\CalendarController::class,'index'])->name('calendar.index');
+  Route::post('/meetings/check-availability',[\App\Http\Controllers\MeetingController::class,'checkAvailability'])->name('meetings.check-availability');
+  Route::post('/projects/{project}/meetings',[\App\Http\Controllers\MeetingController::class,'store'])->name('meetings.store');
+  Route::put('/meetings/{meeting}',[\App\Http\Controllers\MeetingController::class,'update'])->name('meetings.update');
+  Route::delete('/meetings/{meeting}',[\App\Http\Controllers\MeetingController::class,'destroy'])->name('meetings.destroy');
+  Route::get('/meetings/{meeting}/ics',[\App\Http\Controllers\MeetingController::class,'ics'])->name('meetings.ics');
   Route::get('/projects/{project}/files',[\App\Http\Controllers\ProjectWorkspaceController::class,'files'])->name('projects.files');
   Route::get('/projects/{project}/edit',[\App\Http\Controllers\ProjectWorkspaceController::class,'edit'])->name('projects.edit');
   Route::get('/projects/{project}/closure',[\App\Http\Controllers\ProjectWorkspaceController::class,'closure'])->name('projects.closure');
@@ -91,6 +97,7 @@ Route::middleware(['auth','account.active'])->group(function(){
   })->name('team-monitor');
 
   Route::middleware('pmo')->group(function(){
+   Route::view('/administration','administration.index')->name('administration.index');
    Route::post('/projects/{project}/manager',[ProjectController::class,'assignPm'])->name('projects.manager');
    Route::get('/projects/{project}/permissions',[RoleController::class,'index'])->name('roles.index');
    Route::put('/projects/{project}/permissions',[RoleController::class,'update'])->name('roles.update');

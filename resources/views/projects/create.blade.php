@@ -11,7 +11,7 @@
             <span>Create Project</span>
         </div>
         <h1 style="font-size: 24px; font-weight: 700; color: #22272B; margin: 4px 0 2px;">Create Project</h1>
-        <p class="muted" style="margin: 0; font-size: 13.5px;">Add the essentials to get your project started with automated schedules and team assignments.</p>
+        <p class="muted" style="margin: 0; font-size: 13.5px;">Add the project details and choose a manager. The project starts after the manager approves.</p>
     </div>
     <a href="{{ route('projects.index') }}" class="btn btn-outline btn-sm">← Back to Projects</a>
 </div>
@@ -451,7 +451,7 @@
         <!-- =====================================================================
              SECTION G: BOTTOM ACTIONS
              ===================================================================== -->
-        <div class="form-actions" style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border);">
+        <div class="form-actions project-create-actions" style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border);">
             <a class="btn btn-outline" href="{{ route('projects.index') }}" style="height: 40px; line-height: 38px;">Cancel</a>
             
             <div style="display: flex; gap: 10px; align-items: center;">
@@ -476,7 +476,7 @@
                     id="btn-create-project" 
                     style="height: 40px; font-weight: 650; min-width: 140px; background: #315F58; color: #FFFFFF;"
                 >
-                    Create Project
+                    Send for PM Approval
                 </button>
             </div>
         </div>
@@ -1473,7 +1473,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (form) {
         form.addEventListener('submit', function(e) {
-            const activeAction = document.activeElement ? document.activeElement.value : 'create';
+            const activeAction = e.submitter?.value || 'create';
             
             // If clicking Create Project and no PM selected, prompt user
             if (activeAction === 'create' && (!pmUserIdHidden || !pmUserIdHidden.value)) {
@@ -1483,6 +1483,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
+            // Preserve the selected action when the submit buttons are disabled.
+            const selectedAction = document.createElement('input');
+            selectedAction.type = 'hidden';
+            selectedAction.name = 'action';
+            selectedAction.value = activeAction;
+            form.appendChild(selectedAction);
             // Clear draft storage on submit
             sessionStorage.removeItem('gs_project_create_draft');
 

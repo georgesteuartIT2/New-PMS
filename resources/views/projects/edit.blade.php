@@ -1,6 +1,7 @@
 @extends('layouts.app')
 @section('title','Edit project')
 @section('content')
+@include('projects._tabs')
 <div class="page-head"><div><a href="{{ route('projects.show',$project) }}" class="back-link">← {{ $project->name }}</a><h1>Edit project</h1><p class="muted">Keep the essentials up to date.</p></div></div>
 
 <div class="form-width"><form action="{{ route('projects.update',$project) }}" method="post" class="card form-card stack">@csrf @method('PUT')

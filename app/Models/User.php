@@ -19,4 +19,6 @@ class User extends Authenticatable {
  public function directPermissions(): HasMany {return $this->hasMany(UserPermission::class);}
  public function assignmentHistoriesAsNew(): HasMany {return $this->hasMany(TaskAssignmentHistory::class, 'new_user_id');}
  public function assignmentHistoriesAsOld(): HasMany {return $this->hasMany(TaskAssignmentHistory::class, 'previous_user_id');}
+ public function meetings(): \Illuminate\Database\Eloquent\Relations\BelongsToMany {return $this->belongsToMany(Meeting::class, 'meeting_attendees')->withPivot('response_status')->withTimestamps();}
+ public function organizedMeetings(): HasMany {return $this->hasMany(Meeting::class, 'created_by');}
 }
