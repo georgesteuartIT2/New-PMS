@@ -153,7 +153,8 @@ class EmployeeWorkloadService
         if (!empty($filters['workload'])) {
             $condition = $filters['workload'];
             $filteredCollection = $paginator->getCollection()->filter(function ($emp) use ($condition) {
-                return $emp->workload_status === $condition;
+                return ($emp->display_workload_status ?? $emp->workload_status) === $condition
+                    || $emp->workload_status === $condition;
             });
             $paginator->setCollection($filteredCollection);
         }
@@ -203,7 +204,7 @@ class EmployeeWorkloadService
         $remainingHours = $hasEstimatedTasks ? round($totalRemainingHours, 1) : null;
         $availableCapacity = $employee->weekly_capacity_hours ? (int) $employee->weekly_capacity_hours : null;
 
-        // 4. Workload Utilization
+        // 4. Workload Status & Utilization
         if ($availableCapacity !== null && $availableCapacity > 0 && $remainingHours !== null) {
             $utilization = round(($remainingHours / $availableCapacity) * 100);
             if ($utilization > 100) {
@@ -226,6 +227,31 @@ class EmployeeWorkloadService
             $badgeClass = 'pill-default';
         }
 
+        // Smart Display Workload (Task count based fallback when capacity is not configured)
+        $openCount = $openTasks->count();
+        $overdueCount = $overdueTasks->count();
+        if ($openCount === 0) {
+            $taskStatus = 'available';
+            $taskStatusLabel = 'Available';
+            $taskBadgeClass = 'pill-neutral';
+        } elseif ($openCount >= 7 || ($openCount >= 4 && $overdueCount >= 2)) {
+            $taskStatus = 'over_capacity';
+            $taskStatusLabel = "High Load ({$openCount} tasks)";
+            $taskBadgeClass = 'pill-danger';
+        } elseif ($openCount >= 4) {
+            $taskStatus = 'near_capacity';
+            $taskStatusLabel = "Optimal ({$openCount} tasks)";
+            $taskBadgeClass = 'pill-warning';
+        } else {
+            $taskStatus = 'within_capacity';
+            $taskStatusLabel = "Light Load ({$openCount} tasks)";
+            $taskBadgeClass = 'pill-success';
+        }
+
+        $displayStatus = ($status !== 'not_configured') ? $status : $taskStatus;
+        $displayLabel = ($status !== 'not_configured') ? "{$statusLabel}" . ($utilization !== null ? " ({$utilization}%)" : '') : $taskStatusLabel;
+        $displayBadge = ($status !== 'not_configured') ? $badgeClass : $taskBadgeClass;
+
         return [
             'active_projects_count' => $activeProjectsCount,
             'open_tasks_count' => $openTasks->count(),
@@ -238,6 +264,9 @@ class EmployeeWorkloadService
             'workload_status' => $status,
             'workload_label' => $statusLabel,
             'badge_class' => $badgeClass,
+            'display_workload_status' => $displayStatus,
+            'display_workload_label' => $displayLabel,
+            'display_badge_class' => $displayBadge,
         ];
     }
 

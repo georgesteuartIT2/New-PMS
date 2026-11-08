@@ -105,11 +105,10 @@
 
                 <!-- Actions & Profile Chip -->
                 <div class="top-actions">
-                    <a class="nav-alerts-pill" aria-label="Notifications" title="Notifications" href="{{ route('notifications.index') }}">
-                        <span>Notifications</span>
-                        @if(auth()->user()->unreadNotifications()->count())
-                            <span class="alert-count">{{ auth()->user()->unreadNotifications()->count() }}</span>
-                        @endif
+                    @php($headerUnreadCount = auth()->user()->unreadNotifications()->count())
+                    <a class="nav-alerts-pill notification-bell" aria-label="Notifications, {{ $headerUnreadCount }} unread" title="Notifications" href="{{ route('notifications.index') }}" @if(request()->routeIs('notifications.*')) aria-current="page" @endif>
+                        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
+                        @if($headerUnreadCount > 0)<span class="notification-bell-count" aria-hidden="true">{{ $headerUnreadCount > 99 ? '99+' : $headerUnreadCount }}</span>@endif
                     </a>
 
                     <!-- User Profile Dropdown -->

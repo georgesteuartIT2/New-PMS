@@ -442,18 +442,29 @@ class UserTaskMonitoringService
                 $utilizationPct = (int) round(($remainingHours / $capacity) * 100);
                 if ($utilizationPct > 100) {
                     $workloadKey = 'over_capacity';
-                    $workloadLabel = 'Over Capacity';
+                    $workloadLabel = "Over Capacity ({$utilizationPct}%)";
                 } elseif ($utilizationPct >= 80) {
                     $workloadKey = 'near_capacity';
-                    $workloadLabel = 'Near Capacity';
+                    $workloadLabel = "Near Capacity ({$utilizationPct}%)";
                 } else {
                     $workloadKey = 'within_capacity';
-                    $workloadLabel = 'Within Capacity';
+                    $workloadLabel = "Within Capacity ({$utilizationPct}%)";
                 }
             } else {
                 $utilizationPct = null;
-                $workloadKey = 'not_configured';
-                $workloadLabel = 'Capacity not configured';
+                if ($openTasksCount === 0) {
+                    $workloadKey = 'available';
+                    $workloadLabel = 'Available';
+                } elseif ($openTasksCount >= 7 || ($openTasksCount >= 4 && $overdueTasksCount >= 2)) {
+                    $workloadKey = 'over_capacity';
+                    $workloadLabel = "High Load ({$openTasksCount} tasks)";
+                } elseif ($openTasksCount >= 4) {
+                    $workloadKey = 'near_capacity';
+                    $workloadLabel = "Optimal ({$openTasksCount} tasks)";
+                } else {
+                    $workloadKey = 'within_capacity';
+                    $workloadLabel = "Light Load ({$openTasksCount} tasks)";
+                }
             }
 
             // Role / Project display
@@ -614,6 +625,29 @@ class UserTaskMonitoringService
         $parts = preg_split('/\s+/', trim($employee->name));
         $initials = strtoupper(substr($parts[0], 0, 1) . (isset($parts[1]) ? substr($parts[1], 0, 1) : ''));
 
+        $openCount = $openTasks->count();
+        $overdueCount = $overdueTasks->count();
+        $capacity = $employee->weekly_capacity_hours;
+        if ($capacity && $remainingHours !== null) {
+            $utilPct = (int) round(($remainingHours / $capacity) * 100);
+            $workloadLabel = $utilPct > 100 ? "Over Capacity ({$utilPct}%)" : ($utilPct >= 80 ? "Near Capacity ({$utilPct}%)" : "Within Capacity ({$utilPct}%)");
+            $workloadPill = $utilPct > 100 ? 'pill-danger' : ($utilPct >= 80 ? 'pill-warning' : 'pill-success');
+        } else {
+            if ($openCount === 0) {
+                $workloadLabel = 'Available';
+                $workloadPill = 'pill-neutral';
+            } elseif ($openCount >= 7 || ($openCount >= 4 && $overdueCount >= 2)) {
+                $workloadLabel = "High Load ({$openCount} tasks)";
+                $workloadPill = 'pill-danger';
+            } elseif ($openCount >= 4) {
+                $workloadLabel = "Optimal ({$openCount} tasks)";
+                $workloadPill = 'pill-warning';
+            } else {
+                $workloadLabel = "Light Load ({$openCount} tasks)";
+                $workloadPill = 'pill-success';
+            }
+        }
+
         return [
             'employee' => [
                 'id' => $employee->id,
@@ -629,6 +663,8 @@ class UserTaskMonitoringService
                 'completed_tasks' => $completedTasks->count(),
                 'overdue_tasks' => $overdueTasks->count(),
                 'critical_tasks' => $criticalTasks->count(),
+                'workload_label' => $workloadLabel,
+                'workload_pill' => $workloadPill,
                 'remaining_effort' => $remainingHours !== null ? "{$remainingHours}h" : 'Not estimated',
                 'capacity' => $employee->weekly_capacity_hours ? "{$employee->weekly_capacity_hours}h / week" : 'Not configured',
             ],

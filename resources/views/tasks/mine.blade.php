@@ -609,10 +609,10 @@
                         <label style="display: block; font-size: 12px; font-weight: 650; color: #475569; margin-bottom: 4px;">Workload Condition</label>
                         <select name="workload" style="width: 100%; height: 38px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 10px; font-size: 12.5px;">
                             <option value="">All Workload</option>
-                            <option value="over_capacity" @selected(($filters['workload'] ?? '') === 'over_capacity')>Over Capacity (>100%)</option>
-                            <option value="near_capacity" @selected(($filters['workload'] ?? '') === 'near_capacity')>Near Capacity (80-100%)</option>
-                            <option value="within_capacity" @selected(($filters['workload'] ?? '') === 'within_capacity')>Within Capacity (<80%)</option>
-                            <option value="not_configured" @selected(($filters['workload'] ?? '') === 'not_configured')>Capacity Not Configured</option>
+                            <option value="over_capacity" @selected(($filters['workload'] ?? '') === 'over_capacity')>High / Over Capacity</option>
+                            <option value="near_capacity" @selected(($filters['workload'] ?? '') === 'near_capacity')>Optimal / Near Capacity</option>
+                            <option value="within_capacity" @selected(($filters['workload'] ?? '') === 'within_capacity')>Light / Within Capacity</option>
+                            <option value="available" @selected(($filters['workload'] ?? '') === 'available')>Available (0 tasks)</option>
                         </select>
                     </div>
 
@@ -652,8 +652,7 @@
                                 <th>COMPLETED</th>
                                 <th>OVERDUE</th>
                                 <th>CRITICAL</th>
-                                <th>REMAINING EFFORT</th>
-                                <th>WORKLOAD</th>
+                                <th>WORKLOAD STATUS</th>
                                 <th class="right">ACTIONS</th>
                             </tr>
                         </thead>
@@ -719,21 +718,11 @@
                                         @endif
                                     </td>
 
-                                    <!-- Remaining Effort -->
-                                    <td>
-                                        <span style="font-size: 13px; font-weight: 600; color: #334155;">{{ $wm['remaining_effort_text'] }}</span>
-                                    </td>
-
                                     <!-- Workload Status -->
                                     <td>
-                                        <span class="status-pill {{ $workloadPill }}" style="font-size: 11.5px; padding: 2px 8px; white-space: nowrap;">
+                                        <span class="status-pill {{ $workloadPill }}" style="font-size: 11.5px; padding: 3px 9px; white-space: nowrap;">
                                             {{ $wm['workload_label'] }}
                                         </span>
-                                        @if($wm['capacity'])
-                                            <small class="block muted" style="font-size: 11px; margin-top: 2px;">
-                                                Cap: {{ $wm['capacity'] }}h / week
-                                            </small>
-                                        @endif
                                     </td>
 
                                     <!-- Action -->
@@ -748,7 +737,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="9" class="empty">
+                                    <td colspan="8" class="empty">
                                         <b>No team members found</b>
                                         <p class="muted">No project members match your search or filter criteria in this scope.</p>
                                     </td>
@@ -910,9 +899,10 @@
                         <div style="font-size:20px;font-weight:700;color:${data.summary.critical_tasks > 0 ? '#DC2626' : '#22272B'};margin-top:2px;">${data.summary.critical_tasks}</div>
                     </div>
                     <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;padding:12px 14px;">
-                        <span style="font-size:11px;font-weight:650;color:#64748B;text-transform:uppercase;">Remaining Effort</span>
-                        <div style="font-size:16px;font-weight:700;color:#315F58;margin-top:4px;">${data.summary.remaining_effort}</div>
-                        <small style="color:#64748B;font-size:11px;">Cap: ${data.summary.capacity}</small>
+                        <span style="font-size:11px;font-weight:650;color:#64748B;text-transform:uppercase;">Workload Status</span>
+                        <div style="font-size:14px;font-weight:700;margin-top:4px;">
+                            <span class="status-pill ${data.summary.workload_pill || 'pill-neutral'}" style="font-size:12px;padding:3px 9px;">${data.summary.workload_label || 'Normal'}</span>
+                        </div>
                     </div>
                 </div>
 

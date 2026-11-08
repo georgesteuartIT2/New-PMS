@@ -103,8 +103,8 @@ class DashboardController
                     'name' => $project->name,
                     'issue' => $hasPm ? 'Draft (Ready to create & send to PM)' : 'Draft (No PM assigned)',
                     'owner' => $project->manager?->name ?? '—',
-                    'action_label' => $hasPm ? 'Create Project' : 'Assign PM',
-                    'action_url' => $hasPm ? route('projects.create', ['draft' => $project->id]) : route('projects.show', [$project, 'reassign' => 1]),
+                    'action_label' => 'Continue draft',
+                    'action_url' => route('projects.create', ['draft' => $project->id]),
                 ]);
             }
 
@@ -178,6 +178,8 @@ class DashboardController
                 }
             }
 
+            $attentionItems = $attentionItems->reject(fn($item) => $item['type'] === 'unmanaged')
+                ->sortBy(fn($item) => array_search($item['type'], ['critical', 'overdue_task', 'declined', 'pending']))->values();
             $totalAttentionCount = $attentionItems->count();
 
             // Recent projects formatted
@@ -215,12 +217,15 @@ class DashboardController
             $upcomingTasks = Task::with('project')
                 ->where('progress', '<', 100)
                 ->whereHas('project', fn($q) => $q->whereIn('status', ['active', 'on_hold']))
+                ->whereNotNull('ends_at')->where('ends_at', '>=', now())
                 ->orderBy('ends_at')
                 ->take(5)
                 ->get();
 
             return view('dashboard', [
                 'isPmo' => true,
+                'draftProjects' => $draftProjects,
+                'draftCount' => Project::where('status', 'draft')->count(),
                 'projects' => $allProjects->take(12),
                 'recentProjects' => $recentProjects,
                 'pendingInvitations' => collect(),
@@ -325,12 +330,13 @@ class DashboardController
                 'is_invitation' => false,
                 'task_id' => $task->id,
                 'action_label' => 'Update Task',
-                'action_url' => route('tasks.panel', $task),
+                'action_url' => route('projects.show', [$task->project_id, 'focus_task' => $task->id]),
             ]);
         }
 
         // 3. Blocked tasks
         $blockedDelays = TaskDelay::with('task.project', 'actionOwner')
+            ->whereHas('task.project', fn($q) => $q->whereIn('id', $userProjects->pluck('id'))->whereIn('status', ['active', 'on_hold']))
             ->where('status', 'open')
             ->where(function($q) use ($user) {
                 $q->where('action_owner_id', $user->id)
@@ -348,7 +354,7 @@ class DashboardController
                 'is_invitation' => false,
                 'task_id' => $delay->task_id,
                 'action_label' => 'View Blocker',
-                'action_url' => route('tasks.panel', $delay->task_id),
+                'action_url' => route('projects.show', [$delay->task->project_id, 'focus_task' => $delay->task_id]),
             ]);
         }
 
@@ -363,7 +369,7 @@ class DashboardController
                 'is_invitation' => false,
                 'task_id' => $task->id,
                 'action_label' => 'Open Task',
-                'action_url' => route('tasks.panel', $task),
+                'action_url' => route('projects.show', [$task->project_id, 'focus_task' => $task->id]),
             ]);
         }
 
@@ -438,10 +444,14 @@ class DashboardController
         });
 
         // Upcoming work short list
-        $upcomingWork = $userTasks->take(5);
+        $attentionItems = $attentionItems->sortBy(fn($item) => array_search($item['type'], ['invitation', 'blocker', 'overdue_task', 'closure', 'managed_overdue', 'managed_unassigned', 'due_soon']))
+            ->unique(fn($item) => isset($item['task_id']) ? 'task:'.$item['task_id'] : $item['type'].':'.($item['project_id'] ?? $item['title']))->values();
+        $upcomingWork = $userTasks->filter(fn($task) => $task->ends_at && !$task->ends_at->isPast())->take(5);
 
         return view('dashboard', [
             'isPmo' => false,
+            'dueTodayCount' => $userTasks->filter(fn($task) => $task->ends_at?->isToday())->count(),
+            'myOverdueCount' => $userTasks->filter(fn($task) => $task->ends_at && $task->ends_at->isPast())->count(),
             'projects' => $userProjects,
             'myProjectsPreview' => $myProjectsPreview,
             'tasks' => $userTasks,

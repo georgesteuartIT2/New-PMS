@@ -41,7 +41,7 @@
         <div class="monitoring-team-primary">
             <label class="monitoring-team-search"><span class="workspace-sr-only">Search people</span><input type="search" name="q" value="{{ $filters['q']??'' }}" placeholder="Search people by name, title or email..."></label>
             <label><span class="workspace-sr-only">Project</span><select name="project_id" onchange="this.form.requestSubmit()"><option value="">All projects</option>@foreach($projects as $project)<option value="{{ $project->id }}" @selected(($filters['project_id']??'')==$project->id)>{{ $project->name }}</option>@endforeach</select></label>
-            <label><span class="workspace-sr-only">Workload</span><select name="workload" onchange="this.form.requestSubmit()"><option value="">All workload levels</option>@foreach(['over_capacity'=>'Over capacity (>100%)','near_capacity'=>'Near capacity (80-100%)','within_capacity'=>'Within capacity (<80%)','not_configured'=>'Capacity not configured'] as $key=>$label)<option value="{{ $key }}" @selected(($filters['workload']??'')===$key)>{{ $label }}</option>@endforeach</select></label>
+            <label><span class="workspace-sr-only">Workload</span><select name="workload" onchange="this.form.requestSubmit()"><option value="">All workload levels</option>@foreach(['over_capacity'=>'High / Over Capacity','near_capacity'=>'Optimal / Near Capacity','within_capacity'=>'Light / Within Capacity','available'=>'Available (0 tasks)'] as $key=>$label)<option value="{{ $key }}" @selected(($filters['workload']??'')===$key)>{{ $label }}</option>@endforeach</select></label>
             <button type="submit" class="btn btn-outline btn-sm">Search</button>
             @if(request()->hasAny(['q','project_id','subsidiary_id','workload','has_overdue','has_critical']))<a class="task-filter-clear" href="{{ route(auth()->user()->isPmo() ? 'monitoring.index' : 'pmo.team-monitor',['tab'=>'team']) }}">Clear</a>@endif
         </div>
@@ -60,8 +60,8 @@
                         <th style="padding: 12px 14px; font-size: 12px; font-weight: 700; color: #22272B; text-align: center;">Completed</th>
                         <th style="padding: 12px 14px; font-size: 12px; font-weight: 700; color: #22272B; text-align: center;">Overdue</th>
                         <th style="padding: 12px 14px; font-size: 12px; font-weight: 700; color: #22272B; text-align: center;">Critical Tasks</th>
-                        <th style="padding: 12px 14px; font-size: 12px; font-weight: 700; color: #22272B; text-align: left;">Remaining Effort</th>
-                        <th style="padding: 12px 14px; font-size: 12px; font-weight: 700; color: #22272B; text-align: left;">Workload Utilization</th>
+                        <th style="padding: 12px 14px; font-size: 12px; font-weight: 700; color: #22272B; text-align: left;">Workload Status</th>
+                        <th style="padding: 12px 16px; font-size: 12px; font-weight: 700; color: #22272B; text-align: right;">Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -121,32 +121,18 @@
                                 @endif
                             </td>
 
-                            <!-- Remaining Effort -->
-                            <td style="padding: 12px 14px; font-size: 12.5px; color: #334155;">
-                                @if($emp->remaining_hours !== null)
-                                    <b>{{ $emp->remaining_hours }}h</b> remaining
-                                @else
-                                    <span style="color: #94A3B8; font-style: italic;">Not estimated</span>
-                                @endif
+                            <!-- Workload Status -->
+                            <td style="padding: 12px 14px;">
+                                <span class="status-pill {{ $emp->badge_class }}" style="font-size: 11.5px; padding: 3px 9px; white-space: nowrap;">
+                                    {{ $emp->workload_label }}
+                                </span>
                             </td>
 
-                            <!-- Workload Utilization -->
-                            <td style="padding: 12px 14px;">
-                                @if($emp->utilization_percent !== null)
-                                    <div style="display: flex; align-items: center; gap: 8px;">
-                                        <span style="font-size: 13px; font-weight: 700; color: #22272B;">{{ $emp->utilization_percent }}%</span>
-                                        <span class="status-pill {{ $emp->badge_class }}" style="font-size: 11px; padding: 2px 7px;">
-                                            {{ $emp->workload_label }}
-                                        </span>
-                                    </div>
-                                    @if($emp->available_capacity)
-                                        <div style="font-size: 11px; color: #94A3B8; margin-top: 2px;">
-                                            Cap: {{ $emp->available_capacity }}h / week
-                                        </div>
-                                    @endif
-                                @else
-                                    <span style="font-size: 12px; color: #94A3B8; font-style: italic;">Capacity not configured</span>
-                                @endif
+                            <!-- Action -->
+                            <td style="padding: 12px 16px; text-align: right; white-space: nowrap;">
+                                <button type="button" onclick="openEmployeeWorkloadModal({{ $emp->id }})" class="btn btn-outline btn-xs" style="padding: 4px 10px; font-size: 12px; font-weight: 600; color: #315F58; border-color: #CBD5E1;">
+                                    View Workload
+                                </button>
                             </td>
 
 
@@ -302,9 +288,9 @@
                         <div style="font-size:20px;font-weight:700;color:${data.summary.overdue_tasks_count > 0 ? '#DC2626' : '#22272B'};margin-top:2px;">${data.summary.overdue_tasks_count}</div>
                     </div>
                     <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:6px;padding:12px 14px;">
-                        <span style="font-size:11px;font-weight:650;color:#64748B;text-transform:uppercase;">Workload Utilization</span>
+                        <span style="font-size:11px;font-weight:650;color:#64748B;text-transform:uppercase;">Workload Status</span>
                         <div style="font-size:14px;font-weight:700;margin-top:4px;">
-                            ${data.summary.utilization_percent !== null ? `<span style="font-size:18px;">${data.summary.utilization_percent}%</span> <span class="status-pill ${data.summary.badge_class}" style="font-size:11px;margin-left:4px;">${data.summary.workload_label}</span>` : `<span style="color:#64748B;">Capacity not configured</span>`}
+                            <span class="status-pill ${data.summary.badge_class || 'pill-neutral'}" style="font-size:12px;padding:3px 9px;">${data.summary.workload_label || 'Normal'}</span>
                         </div>
                     </div>
                 </div>

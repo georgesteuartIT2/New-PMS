@@ -337,7 +337,17 @@
 <button type="button" class="project-tab-btn" data-tab-target="team">Team ({{ $project->memberships->count() }})</button>
         @endif
         @if($canViewAllTasks ?? true)
-            <button type="button" class="project-tab-btn" data-tab-target="risks">Issues &amp; changes @if($delays->where('status', 'open')->count())<span class="workspace-tab-count">{{ $delays->where('status', 'open')->count() }}</span>@endif</button>
+            @php
+                $totalActiveIssues = ($delays->where('status', 'open')->count()) + ($overdueCount ?? 0);
+            @endphp
+            <button type="button" class="project-tab-btn" data-tab-target="risks">
+                Risks &amp; Issues
+                @if($totalActiveIssues > 0)
+                    <span class="workspace-tab-count" style="background: {{ $delays->where('status', 'open')->count() > 0 ? '#DC2626' : '#D97706' }}; color: #FFFFFF; font-weight: 700;">
+                        {{ $totalActiveIssues }}
+                    </span>
+                @endif
+            </button>
         @endif
         <button type="button" class="project-tab-btn" data-tab-target="info">Overview</button>
     </nav>
@@ -832,68 +842,253 @@
 
 
     <!-- =========================================================================
-         TAB 6: RISKS & REPORTED DELAYS
+         TAB 4: RISKS, BLOCKERS & SCHEDULE DELAYS
          ========================================================================= -->
     <div class="pw-tab-panel" id="tab-risks">
-        <div class="card" style="padding: 20px; background: #FFFFFF;">
-            <div style="margin-bottom: 16px;">
-                <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 4px;">Risks, Blockers & Delay Reports</h2>
-                <p class="muted" style="font-size: 13px; margin: 0;">Investigate reported bottlenecks, responsible parties, and action owners.</p>
+        @php
+            $overdueList = $tasks->filter(fn($t) => $t->isOverdue());
+            $openDelaysCount = $delays->where('status', 'open')->count();
+            $criticalOverdueCount = $overdueList->filter(fn($t) => in_array($t->id, $health['critical_ids'] ?? [], true))->count();
+        @endphp
+
+        <!-- 1. Top Risk & Health Summary Cards -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px;">
+            <div style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; padding: 14px 18px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748B;">Reported Blockers</span>
+                <div style="font-size: 22px; font-weight: 700; color: {{ $openDelaysCount > 0 ? '#DC2626' : '#107C41' }}; margin: 4px 0 2px;">
+                    {{ $openDelaysCount }}
+                </div>
+                <small style="color: #64748B; font-size: 12px;">{{ $openDelaysCount > 0 ? 'Active impediments' : 'No active blockers' }}</small>
             </div>
 
-            @if($delays->isEmpty())
-                <div class="empty-state-inline">
-                    <b>No reported blockers</b>
-                    <p class="muted">Team members can flag delay reasons and follow-up owners directly on any task.</p>
+            <div style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; padding: 14px 18px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748B;">Overdue Tasks</span>
+                <div style="font-size: 22px; font-weight: 700; color: {{ $overdueList->count() > 0 ? '#DC2626' : '#107C41' }}; margin: 4px 0 2px;">
+                    {{ $overdueList->count() }}
+                </div>
+                <small style="color: #64748B; font-size: 12px;">
+                    @if($criticalOverdueCount > 0)
+                        <span style="color: #DC2626; font-weight: 600;">{{ $criticalOverdueCount }} on Critical Path</span>
+                    @else
+                        {{ $overdueList->count() > 0 ? 'Exceeded scheduled deadline' : 'All tasks on schedule' }}
+                    @endif
+                </small>
+            </div>
+
+            <div style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; padding: 14px 18px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748B;">Baseline Variance</span>
+                <div style="margin: 6px 0 2px;">
+                    @if($health && $health['baseline_available'])
+                        @php $bDiff = $project->ends_on->diffInDays($project->baseline_ends_on, false); @endphp
+                        @if($bDiff < 0)
+                            <span class="status-pill pill-danger" style="font-size: 13px; font-weight: 700;">{{ abs($bDiff) }} Days Delayed</span>
+                        @else
+                            <span class="status-pill pill-success" style="font-size: 13px; font-weight: 700;">On Baseline</span>
+                        @endif
+                    @else
+                        <span class="status-pill pill-neutral" style="font-size: 12px;">No Baseline</span>
+                    @endif
+                </div>
+                <small style="color: #64748B; font-size: 12px;">Target: {{ $project->ends_on->format('d M Y') }}</small>
+            </div>
+
+            <div style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; padding: 14px 18px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748B;">Schedule Health</span>
+                <div style="margin: 6px 0 2px;">
+                    @if($overdueList->count() > 0 || $openDelaysCount > 0)
+                        <span class="status-pill pill-warning" style="font-size: 13px; font-weight: 700;">At Risk</span>
+                    @elseif($project->ends_on->lessThan(now()) && $project->status !== 'completed')
+                        <span class="status-pill pill-danger" style="font-size: 13px; font-weight: 700;">Delayed</span>
+                    @else
+                        <span class="status-pill pill-success" style="font-size: 13px; font-weight: 700;">On Track</span>
+                    @endif
+                </div>
+                <small style="color: #64748B; font-size: 12px;">{{ (int)$project->progress }}% completed</small>
+            </div>
+        </div>
+
+        <!-- 2. CARD A: Schedule Bottlenecks & Overdue Tasks -->
+        <div class="card" style="padding: 20px; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 4px; color: #22272B;">Schedule Bottlenecks &amp; Overdue Tasks</h2>
+                    <p class="muted" style="font-size: 13px; margin: 0;">Tasks that have exceeded their target deadline and are actively delaying the project.</p>
+                </div>
+                @if($overdueList->isNotEmpty())
+                    <span class="status-pill pill-danger" style="font-size: 12px; font-weight: 700;">
+                        {{ $overdueList->count() }} Overdue {{ $overdueList->count() === 1 ? 'Task' : 'Tasks' }}
+                    </span>
+                @endif
+            </div>
+
+            @if($overdueList->isEmpty())
+                <div style="background: #F0FDF4; border: 1px solid #DCFCE7; border-radius: 6px; padding: 18px; text-align: center; color: #166534;">
+                    <div style="font-size: 14px; font-weight: 700; margin-bottom: 2px;">✓ All tasks are on schedule</div>
+                    <p style="font-size: 12.5px; margin: 0; color: #15803D;">No overdue tasks detected in this project. Work is progressing within planned deadlines.</p>
                 </div>
             @else
                 <div class="table-wrap">
-                    <table class="clean-table">
+                    <table class="clean-table" style="width: 100%; font-size: 13px;">
                         <thead>
-                            <tr>
-                                <th>Task</th>
-                                <th>Cause / Blocker</th>
-                                <th>Involved Party</th>
-                                <th>Follow-up Owner</th>
-                                <th>Status</th>
-                                <th class="right">Action</th>
+                            <tr style="background: #F8FAFC;">
+                                <th style="padding: 10px 14px;">Task</th>
+                                <th style="padding: 10px 14px;">Assignee</th>
+                                <th style="padding: 10px 14px;">Deadline</th>
+                                <th style="padding: 10px 14px; text-align: center;">Delay</th>
+                                <th style="padding: 10px 14px; text-align: center;">Progress</th>
+                                <th style="padding: 10px 14px; text-align: right;">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($overdueList as $ot)
+                                @php
+                                    $daysLate = max(1, (int) $ot->ends_at->diffInDays(now()));
+                                    $isCrit = in_array($ot->id, $health['critical_ids'] ?? [], true);
+                                    $firstAssignee = $ot->assignees->first();
+                                @endphp
+                                <tr>
+                                    <td style="padding: 10px 14px;">
+                                        <button type="button" class="text-action" data-task-panel="{{ route('tasks.panel', $ot) }}" style="text-align: left; background: none; border: none; padding: 0; font-size: 13px; font-weight: 650; color: #22272B; cursor: pointer;">
+                                            <span style="color: #64748B;">{{ $ot->code }}</span> {{ $ot->title }}
+                                        </button>
+                                        @if($isCrit)
+                                            <span class="status-pill pill-danger" style="font-size: 10px; margin-left: 6px; padding: 1px 6px;">Critical Path</span>
+                                        @endif
+                                        @if($ot->openDelay)
+                                            <span class="status-pill pill-warning" style="font-size: 10px; margin-left: 4px; padding: 1px 6px;">Blocker Reported</span>
+                                        @endif
+                                    </td>
+                                    <td style="padding: 10px 14px; color: #475569;">
+                                        @if($firstAssignee)
+                                            <span style="font-weight: 600;">{{ $firstAssignee->name }}</span>
+                                            @if($ot->assignees->count() > 1)
+                                                <small class="muted">+{{ $ot->assignees->count() - 1 }}</small>
+                                            @endif
+                                        @else
+                                            <span style="color: #94A3B8; font-style: italic;">Unassigned</span>
+                                        @endif
+                                    </td>
+                                    <td style="padding: 10px 14px; color: #DC2626; font-weight: 600;">
+                                        {{ $ot->ends_at->format('d M Y') }}
+                                    </td>
+                                    <td style="padding: 10px 14px; text-align: center;">
+                                        <span class="status-pill pill-danger" style="font-size: 11px; padding: 2px 8px;">
+                                            {{ $daysLate }}d overdue
+                                        </span>
+                                    </td>
+                                    <td style="padding: 10px 14px; text-align: center;">
+                                        <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                            <span style="font-weight: 700; font-size: 12px; width: 32px;">{{ $ot->progress }}%</span>
+                                            <div style="width: 70px; height: 6px; background: #E2E8F0; border-radius: 3px; overflow: hidden;">
+                                                <div style="width: {{ $ot->progress }}%; height: 100%; background: #315F58;"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style="padding: 10px 14px; text-align: right; white-space: nowrap;">
+                                        <button type="button" class="btn btn-outline btn-xs" data-task-panel="{{ route('tasks.panel', $ot) }}" style="padding: 3px 10px; font-size: 12px;">
+                                            Open Task →
+                                        </button>
+                                        @if($canManage && !$ot->openDelay)
+                                            <button type="button" class="btn btn-primary btn-xs" onclick="openReportDelayModal({{ $ot->id }})" style="padding: 3px 10px; font-size: 12px; background: #DC2626; border-color: #DC2626; margin-left: 4px;">
+                                                Flag Blocker
+                                            </button>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </div>
+
+        <!-- 3. CARD B: Reported Blockers & Impediments Registry -->
+        <div class="card" style="padding: 20px; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+                <div>
+                    <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 4px; color: #22272B;">Reported Blockers &amp; Impediments Registry</h2>
+                    <p class="muted" style="font-size: 13px; margin: 0;">Formal delay reasons, vendor dependencies, and assigned action owners.</p>
+                </div>
+                @if($canManage)
+                    <button type="button" class="btn btn-primary btn-sm" onclick="openReportDelayModal()" style="background: #315F58; color: #FFFFFF; font-weight: 600; font-size: 12.5px;">
+                        + Report Blocker / Delay
+                    </button>
+                @endif
+            </div>
+
+            @if($delays->isEmpty())
+                <div style="background: #F8FAFC; border: 1px dashed #CBD5E1; border-radius: 6px; padding: 28px 20px; text-align: center;">
+                    <div style="font-size: 14px; font-weight: 650; color: #334155; margin-bottom: 4px;">No formal blockers reported</div>
+                    <p class="muted" style="font-size: 12.5px; margin: 0 0 14px; max-width: 500px; margin-inline: auto;">
+                        If any task is being delayed by vendors, external parties, pending approvals, or technical blockers, log it to track the responsible owner and impact.
+                    </p>
+                    @if($canManage)
+                        <button type="button" class="btn btn-outline btn-sm" onclick="openReportDelayModal()">
+                            + Report Blocker Now
+                        </button>
+                    @endif
+                </div>
+            @else
+                <div class="table-wrap">
+                    <table class="clean-table" style="width: 100%; font-size: 13px;">
+                        <thead>
+                            <tr style="background: #F8FAFC;">
+                                <th style="padding: 10px 14px;">Task</th>
+                                <th style="padding: 10px 14px;">Cause / Reason</th>
+                                <th style="padding: 10px 14px;">Involved Party</th>
+                                <th style="padding: 10px 14px;">Action Owner</th>
+                                <th style="padding: 10px 14px;">Reported</th>
+                                <th style="padding: 10px 14px; text-align: center;">Status</th>
+                                <th style="padding: 10px 14px; text-align: right;">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($delays as $delay)
                                 <tr>
-                                    <td>
-                                        <button type="button" class="text-action" data-task-panel="{{ route('tasks.panel', $delay->task) }}">
-                                            <b>{{ $delay->task?->title ?? 'Task' }}</b>
+                                    <td style="padding: 10px 14px;">
+                                        <button type="button" class="text-action" data-task-panel="{{ route('tasks.panel', $delay->task) }}" style="text-align: left; background: none; border: none; padding: 0; font-size: 13px; font-weight: 650; color: #22272B; cursor: pointer;">
+                                            <span style="color: #64748B;">{{ $delay->task?->code }}</span> {{ $delay->task?->title ?? 'Task' }}
                                         </button>
                                     </td>
-                                    <td>
-                                        <b>{{ \App\Http\Controllers\TaskDelayController::REASONS[$delay->reason_code] ?? $delay->reason_code }}</b>
+                                    <td style="padding: 10px 14px;">
+                                        <b style="color: #22272B;">{{ \App\Http\Controllers\TaskDelayController::REASONS[$delay->reason_code] ?? $delay->reason_code }}</b>
                                         @if($delay->details)
-                                            <small class="block muted">{{ $delay->details }}</small>
+                                            <small class="block muted" style="font-size: 12px; margin-top: 2px; max-width: 300px;">{{ $delay->details }}</small>
                                         @endif
                                     </td>
-                                    <td>
-                                        <span class="pill todo">
+                                    <td style="padding: 10px 14px;">
+                                        <span class="status-pill pill-neutral" style="font-size: 11px;">
                                             {{ $delay->responsible_party_name ?: ucwords($delay->responsible_party_type) }}
                                         </span>
                                     </td>
-                                    <td>{{ $delay->actionOwner?->name ?? 'Not assigned' }}</td>
-                                    <td>
-                                        <span class="pill {{ $delay->status === 'open' ? 'on_hold' : 'active' }}">
+                                    <td style="padding: 10px 14px;">
+                                        @if($delay->actionOwner)
+                                            <span style="font-weight: 600; color: #334155;">{{ $delay->actionOwner->name }}</span>
+                                        @else
+                                            <span style="color: #94A3B8; font-style: italic;">Unassigned</span>
+                                        @endif
+                                    </td>
+                                    <td style="padding: 10px 14px; color: #64748B; font-size: 12px;">
+                                        {{ $delay->created_at->format('d M Y') }}
+                                    </td>
+                                    <td style="padding: 10px 14px; text-align: center;">
+                                        <span class="status-pill {{ $delay->status === 'open' ? 'pill-warning' : 'pill-success' }}" style="font-size: 11.5px; padding: 2px 8px;">
                                             {{ ucfirst($delay->status) }}
                                         </span>
                                     </td>
-                                    <td class="right">
+                                    <td style="padding: 10px 14px; text-align: right; white-space: nowrap;">
                                         @if($delay->status === 'open' && $canManage)
                                             <form method="post" action="{{ route('tasks.delays.resolve', $delay) }}" style="display: inline-block;">
                                                 @csrf
                                                 @method('PATCH')
-                                                <button type="submit" class="btn btn-outline btn-sm">Resolve</button>
+                                                <button type="submit" class="btn btn-outline btn-xs" style="color: #107C41; border-color: #107C41; font-weight: 600;" onclick="return confirm('Mark this blocker as resolved?')">
+                                                    ✓ Resolve
+                                                </button>
                                             </form>
-                                        @else
-                                            <button type="button" class="btn btn-outline btn-sm" data-task-panel="{{ route('tasks.panel', $delay->task) }}">Details</button>
                                         @endif
+                                        <button type="button" class="btn btn-outline btn-xs" data-task-panel="{{ route('tasks.panel', $delay->task) }}" style="margin-left: 4px;">
+                                            Details
+                                        </button>
                                     </td>
                                 </tr>
                             @endforeach
@@ -902,75 +1097,85 @@
                 </div>
             @endif
         </div>
+
+        <!-- 4. CARD C: Baseline Variance & Audit Trail -->
         <section class="workspace-subsection" id="project-changes">
-        <div class="card" style="padding: 20px; background: #FFFFFF;">
-            <div style="margin-bottom: 16px;">
-                <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 4px;">Baseline Variance & Audit Trail</h2>
-                <p class="muted" style="font-size: 13px; margin: 0;">Historical baseline comparison and recorded project changes.</p>
-            </div>
+            <div class="card" style="padding: 20px; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px;">
+                <div style="margin-bottom: 16px;">
+                    <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 4px; color: #22272B;">Baseline Variance &amp; Schedule Stability</h2>
+                    <p class="muted" style="font-size: 13px; margin: 0;">Compares current projected schedule against approved baseline milestone dates.</p>
+                </div>
 
-            @if($health && $health['baseline_available'])
-                <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 14px 18px; margin-bottom: 20px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                        <div>
-                            <b>Schedule Baseline Active</b>
-                            <p class="muted text-sm" style="margin: 2px 0 0;">
-                                Saved on {{ $project->baseline_captured_at?->format('d M Y') }}. Original planned deadline: <b>{{ $project->baseline_ends_on?->format('d M Y') }}</b>.
-                            </p>
-                        </div>
-                        <div>
-                            @php
-                                $diff = $project->ends_on->diffInDays($project->baseline_ends_on, false);
-                            @endphp
-                            @if($diff < 0)
-                                <span class="pill on_hold">{{ abs($diff) }} Days Delayed</span>
-                            @else
-                                <span class="pill active">On Baseline</span>
-                            @endif
+                @if($health && $health['baseline_available'])
+                    <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 16px 20px; margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                            <div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <b style="font-size: 14px; color: #22272B;">Schedule Baseline Active</b>
+                                    <span class="status-pill pill-success" style="font-size: 11px;">Locked</span>
+                                </div>
+                                <p class="muted" style="margin: 4px 0 0; font-size: 12.5px;">
+                                    Approved and captured on <b>{{ $project->baseline_captured_at?->format('d M Y') }}</b>. 
+                                    Original target deadline: <b>{{ $project->baseline_ends_on?->format('d M Y') }}</b> · Current target: <b>{{ $project->ends_on->format('d M Y') }}</b>
+                                </p>
+                            </div>
+                            <div>
+                                @php $diff = $project->ends_on->diffInDays($project->baseline_ends_on, false); @endphp
+                                @if($diff < 0)
+                                    <span class="status-pill pill-danger" style="font-size: 13px; font-weight: 700; padding: 4px 12px;">
+                                        {{ abs($diff) }} Days Delayed vs Baseline
+                                    </span>
+                                @else
+                                    <span class="status-pill pill-success" style="font-size: 13px; font-weight: 700; padding: 4px 12px;">
+                                        On Approved Baseline
+                                    </span>
+                                @endif
+                            </div>
                         </div>
                     </div>
-                </div>
-            @else
-                <div style="background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 14px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                    <div>
-                        <b>No Baseline Captured</b>
-                        <p class="muted text-sm" style="margin: 2px 0 0;">Save the approved schedule baseline to compare future variance and delays.</p>
+                @else
+                    <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 16px 20px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <b style="font-size: 14px; color: #22272B;">No Schedule Baseline Captured</b>
+                            <p class="muted" style="margin: 3px 0 0; font-size: 12.5px;">Capture an approved schedule baseline to lock milestone dates and measure future delay variance.</p>
+                        </div>
+                        @if($canTeam && in_array($project->status, ['active', 'on_hold'], true))
+                            <form method="post" action="{{ route('projects.baseline', $project) }}">
+                                @csrf
+                                <button type="submit" class="btn btn-outline btn-sm" onclick="return confirm('Capture current schedule as the approved baseline?')">
+                                    Capture Schedule Baseline
+                                </button>
+                            </form>
+                        @endif
                     </div>
-                    @if($canTeam && in_array($project->status, ['active', 'on_hold'], true))
-                        <form method="post" action="{{ route('projects.baseline', $project) }}">
-                            @csrf
-                            <button type="submit" class="btn btn-outline btn-sm">Capture Baseline</button>
-                        </form>
-                    @endif
-                </div>
-            @endif
+                @endif
 
-            <h3 style="font-size: 14px; font-weight: 700; margin: 20px 0 10px;">Recent Activity History</h3>
-            @if($activities->isEmpty())
-                <p class="muted text-sm">No activity records logged yet.</p>
-            @else
-                <div class="table-wrap">
-                    <table class="clean-table">
-                        <thead>
-                            <tr>
-                                <th>Action</th>
-                                <th>User</th>
-                                <th>Date & Time</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach($activities as $act)
-                                <tr>
-                                    <td><b>{{ ucwords(str_replace('.', ' ', $act->action)) }}</b></td>
-                                    <td>{{ $act->actor?->name ?? 'System' }}</td>
-                                    <td><span class="muted text-sm">{{ $act->created_at->format('d M Y, H:i') }}</span></td>
+                <h3 style="font-size: 14px; font-weight: 700; margin: 20px 0 10px; color: #22272B;">Recent Schedule &amp; Task Activity</h3>
+                @if($activities->isEmpty())
+                    <p class="muted text-sm">No activity records logged yet.</p>
+                @else
+                    <div class="table-wrap">
+                        <table class="clean-table" style="width: 100%; font-size: 12.5px;">
+                            <thead>
+                                <tr style="background: #F8FAFC;">
+                                    <th style="padding: 8px 12px;">Action</th>
+                                    <th style="padding: 8px 12px;">User</th>
+                                    <th style="padding: 8px 12px; text-align: right;">Date &amp; Time</th>
                                 </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            @endif
-        </div>
+                            </thead>
+                            <tbody>
+                                @foreach($activities as $act)
+                                    <tr>
+                                        <td style="padding: 8px 12px;"><b style="color: #334155;">{{ ucwords(str_replace('.', ' ', $act->action)) }}</b></td>
+                                        <td style="padding: 8px 12px; color: #475569;">{{ $act->actor?->name ?? 'System' }}</td>
+                                        <td style="padding: 8px 12px; text-align: right;"><span class="muted text-sm">{{ $act->created_at->format('d M Y, H:i') }}</span></td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </div>
         </section>
     </div>
 
@@ -1577,6 +1782,82 @@
     </dialog>
 @endif
 
+@if($canManage)
+    <!-- Report Blocker / Issue Dialog -->
+    <dialog id="report-blocker-dialog" class="modal" style="max-width: 540px;">
+        <div class="modal-head">
+            <h2>Report Blocker / Delay</h2>
+            <button type="button" class="icon-btn" data-close-dialog>×</button>
+        </div>
+        <p class="muted text-sm mt-8">Log a task impediment, vendor dependency, or approval delay with an assigned follow-up owner.</p>
+        <form method="post" id="report-blocker-form" action="" class="stack mt-16" onsubmit="return validateBlockerForm(this);">
+            @csrf
+            <label style="display: block; font-weight: 600; font-size: 13px;">Affected Task <span class="required">*</span>
+                <select name="task_id" id="rb-task-select" required onchange="onBlockerTaskChange(this)" style="width: 100%; margin-top: 6px; padding: 8px 10px; border: 1px solid #D1D5DB; border-radius: 6px;">
+                    <option value="">-- Choose affected task --</option>
+                    @foreach($tasks->filter(fn($t) => $t->status !== 'completed' && (int)$t->progress < 100) as $ot)
+                        <option value="{{ $ot->id }}" data-action="{{ route('tasks.delays.store', $ot) }}">
+                            {{ $ot->code }} - {{ $ot->title }} {{ $ot->isOverdue() ? '(Overdue)' : '' }}
+                        </option>
+                    @endforeach
+                </select>
+            </label>
+
+            <label style="display: block; font-weight: 600; font-size: 13px; margin-top: 10px;">Root Cause / Category <span class="required">*</span>
+                <select name="reason_code" required style="width: 100%; margin-top: 6px; padding: 8px 10px; border: 1px solid #D1D5DB; border-radius: 6px;">
+                    <option value="">-- Choose category --</option>
+                    @foreach(\App\Http\Controllers\TaskDelayController::REASONS as $code => $lbl)
+                        <option value="{{ $code }}">{{ $lbl }}</option>
+                    @endforeach
+                </select>
+            </label>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                <label style="display: block; font-weight: 600; font-size: 13px;">Involved Party Type <span class="required">*</span>
+                    <select name="responsible_party_type" required style="width: 100%; margin-top: 6px; padding: 8px 10px; border: 1px solid #D1D5DB; border-radius: 6px;">
+                        <option value="supplier">Supplier / Vendor</option>
+                        <option value="internal" selected>Internal Team</option>
+                        <option value="department">Other Department</option>
+                        <option value="external">External Authority</option>
+                        <option value="unknown">Unknown</option>
+                    </select>
+                </label>
+                <label style="display: block; font-weight: 600; font-size: 13px;">Party / Vendor Name
+                    <input type="text" name="responsible_party_name" placeholder="e.g. Legal, Vendor name" style="width: 100%; margin-top: 6px; padding: 8px 10px; border: 1px solid #D1D5DB; border-radius: 6px;">
+                </label>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                <label style="display: block; font-weight: 600; font-size: 13px;">Follow-up Owner
+                    <select name="action_owner_id" style="width: 100%; margin-top: 6px; padding: 8px 10px; border: 1px solid #D1D5DB; border-radius: 6px;">
+                        <option value="">-- Select follow-up owner --</option>
+                        @if($project->manager)
+                            <option value="{{ $project->manager->id }}">{{ $project->manager->name }} (Project Manager)</option>
+                        @endif
+                        @foreach($project->memberships as $m)
+                            @if(!$project->manager || $m->user_id !== $project->manager->id)
+                                <option value="{{ $m->user_id }}">{{ $m->user?->name ?? 'User #' . $m->user_id }}</option>
+                            @endif
+                        @endforeach
+                    </select>
+                </label>
+                <label style="display: block; font-weight: 600; font-size: 13px;">Revised Target End Date
+                    <input type="date" name="revised_expected_end_at" style="width: 100%; margin-top: 6px; padding: 8px 10px; border: 1px solid #D1D5DB; border-radius: 6px;">
+                </label>
+            </div>
+
+            <label style="display: block; font-weight: 600; font-size: 13px; margin-top: 10px;">Blocker Details &amp; Mitigation
+                <textarea name="details" rows="3" placeholder="Explain what is causing the bottleneck and what is required to unblock it..." style="width: 100%; margin-top: 6px; padding: 8px 10px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 13px;"></textarea>
+            </label>
+
+            <div class="form-actions mt-16" style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn btn-ghost" data-close-dialog>Cancel</button>
+                <button type="submit" class="btn btn-primary" style="background: #315F58; color: #FFFFFF; font-weight: 650;">Submit Blocker Report</button>
+            </div>
+        </form>
+    </dialog>
+@endif
+
 @push('scripts')
 @if($canViewTasks && $tasks->isNotEmpty())
 <script>
@@ -1592,6 +1873,38 @@ window.gsProjectTimeline = {{ \Illuminate\Support\Js::from($tasks->map(fn($t) =>
 @endif
 <script defer src="{{ asset('js/project-workspace.js') }}?v={{ filemtime(public_path('js/project-workspace.js')) }}"></script>
 <script>
+function openReportDelayModal(taskId) {
+    const dialog = document.getElementById('report-blocker-dialog');
+    if (!dialog) return;
+    const taskSelect = document.getElementById('rb-task-select');
+    if (taskId && taskSelect) {
+        taskSelect.value = taskId;
+        onBlockerTaskChange(taskSelect);
+    }
+    if (typeof dialog.showModal === 'function') {
+        dialog.showModal();
+    } else {
+        dialog.style.display = 'flex';
+    }
+}
+function onBlockerTaskChange(select) {
+    const form = document.getElementById('report-blocker-form');
+    if (!form || !select) return;
+    const opt = select.options[select.selectedIndex];
+    if (opt && opt.dataset.action) {
+        form.action = opt.dataset.action;
+    }
+}
+function validateBlockerForm(form) {
+    const taskSelect = document.getElementById('rb-task-select');
+    if (!taskSelect || !taskSelect.value) {
+        alert('Please select an affected task.');
+        return false;
+    }
+    onBlockerTaskChange(taskSelect);
+    return true;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('reassign') === '1') {

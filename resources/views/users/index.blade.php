@@ -5,12 +5,12 @@
 <div class="page-head">
     <div>
         <h1>People</h1>
-        <p class="muted">Add people, update their details, and manage access to the system.</p>
+        <p class="muted">Manage your team and system access in one place.</p>
     </div>
     <div class="inline-actions">
-        <a class="btn btn-outline" href="{{ route('users.azure') }}">Add from Microsoft</a>
+
         <button class="btn btn-primary" data-show-dialog="user-dialog" style="display: inline-flex; align-items: center; gap: 8px;">
-            <span style="font-size: 16px; line-height: 1;">+</span> Add User
+            <span style="font-size: 16px; line-height: 1;">+</span> Add person
         </button>
     </div>
 </div>
@@ -36,48 +36,23 @@
 @endif
 
 <!-- Users Filter & Table Card -->
-<div class="card" style="padding: 0; overflow: hidden;">
-    <!-- Filter Bar: Search + Subsidiary Chips -->
-    <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); background: var(--surface);">
-        <!-- Quick Subsidiary Filter Chips -->
-        @if(count($subsidiaries))
-            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; align-items: center;">
-                <span class="muted text-sm" style="font-weight: 600; margin-right: 4px;">Filter:</span>
-                <button type="button" class="sub-filter-chip {{ empty($subId) ? 'active' : '' }}" data-sub-id="" style="border: 1px solid var(--border); background: {{ empty($subId) ? 'var(--primary)' : '#FFFFFF' }}; color: {{ empty($subId) ? '#FFFFFF' : 'var(--text)' }}; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer;">
-                    All Users (<span id="total-users-counter">{{ $totalUsersCount }}</span>)
-                </button>
-                @foreach($subsidiaries as $sub)
-                    <button type="button" class="sub-filter-chip {{ $subId == $sub->id ? 'active' : '' }}" data-sub-id="{{ $sub->id }}" style="border: 1px solid var(--border); background: {{ $subId == $sub->id ? 'var(--primary)' : '#FFFFFF' }}; color: {{ $subId == $sub->id ? '#FFFFFF' : 'var(--text)' }}; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer;">
-                        {{ $sub->code }} ({{ $sub->users_count }})
-                    </button>
-                @endforeach
-            </div>
-        @endif
-
-        <!-- Live Instant Search Bar (Zero-Click Filter) -->
-        <div style="position: relative; display: flex; align-items: center;">
-            <input 
-                type="text" 
-                id="user-table-search" 
-                placeholder="Search users instantly by name or email..." 
-                value="{{ $q }}" 
-                autocomplete="off"
-                style="width: 100%; padding-left: 14px; height: 38px; font-size: 13.5px; border-radius: var(--radius); border: 1px solid var(--border); background: #FFFFFF;"
-            >
-            <span id="user-search-count" style="position: absolute; right: 14px; font-size: 12px; color: var(--muted);"></span>
-        </div>
-    </div>
+<div class="card people-directory" style="padding: 0; overflow: hidden;">
+    <form method="get" action="{{ route('users.index') }}" class="people-toolbar" id="people-filter-form" role="search">
+        <div class="people-search"><label class="workspace-sr-only" for="user-table-search">Search people by name or email</label><input type="search" name="q" id="user-table-search" placeholder="Search name or email..." value="{{ $q }}" autocomplete="off"><span id="user-search-count" class="workspace-sr-only"></span></div>
+        <label class="people-company"><span class="workspace-sr-only">Company</span><select name="subsidiary_id" id="people-company-filter"><option value="">All companies</option>@foreach($subsidiaries as $sub)<option value="{{ $sub->id }}" @selected($subId == $sub->id)>{{ $sub->name }}</option>@endforeach</select></label>
+        <span class="people-result-count" role="status">{{ $users->total() }} {{ $users->total() === 1 ? 'person' : 'people' }}</span>
+        @if($q !== '' || $subId)<a class="text-action" href="{{ route('users.index') }}">Clear</a>@endif
+    </form>
 
     <!-- Users Table (With SUBSIDIARY column & DELETE action) -->
     <div class="table-wrap">
         <table id="users-table">
             <thead>
                 <tr>
-                    <th>Name</th>
-                    <th>Email</th>
+                    <th>Person</th>
                     <th>System Role</th>
                     <th>Subsidiary</th>
-                    <th class="right">Action</th>
+                    <th class="right">Actions</th>
                 </tr>
             </thead>
             <tbody id="users-tbody">
@@ -90,11 +65,9 @@
                                     <a class="strong-link" href="{{ route('users.show', $user) }}" style="font-weight: 650; font-size: 13.5px;">
                                         {{ $user->name }}
                                     </a>
+                                    <span class="people-email">{{ $user->email }}</span>
                                 </div>
                             </div>
-                        </td>
-                        <td>
-                            <span style="font-size: 13px; color: var(--muted);">{{ $user->email }}</span>
                         </td>
                         <td>
                             @if($user->isPmo())
@@ -105,21 +78,21 @@
                         </td>
                         <td>
                             @if($user->subsidiary)
-                                <span class="pill todo" style="font-weight: 600;">
-                                    🏢 {{ $user->subsidiary->name }} <small style="font-size: 10.5px; opacity: 0.85;">[{{ $user->subsidiary->code }}]</small>
+                                <span class="people-company-name">
+                                    {{ $user->subsidiary->name }} <small style="font-size: 10.5px; opacity: 0.85;">[{{ $user->subsidiary->code }}]</small>
                                 </span>
                             @elseif($user->company_name)
-                                <span class="pill todo" style="font-weight: 600;">
-                                    🏢 {{ $user->company_name }}
+                                <span class="people-company-name">
+                                    {{ $user->company_name }}
                                 </span>
                             @else
                                 <span class="muted text-sm">—</span>
                             @endif
                         </td>
                         <td class="right">
-                            <div class="inline-actions" style="justify-content: flex-end; gap: 8px;">
+                            <div class="inline-actions people-row-actions" style="justify-content: flex-end; gap: 8px;">
                                 <button class="btn btn-outline btn-xs" type="button" title="Edit User" data-show-dialog="edit-user-{{ $user->id }}">Edit</button>
-                                
+
                                 @if($user->password && !$user->isPmo())
                                     <button class="btn btn-outline btn-xs btn-reset-password" type="button" title="Reset Password" data-user-id="{{ $user->id }}" data-user-name="{{ $user->name }}" style="color:var(--warning);">Reset password</button>
                                 @endif
@@ -138,11 +111,11 @@
                                 <form method="post" action="{{ route('users.update', $user) }}" class="stack mt-16 edit-user-form" data-user-id="{{ $user->id }}">
                                     @csrf
                                     @method('PATCH')
-                                    
+
                                     <label>Full Name <span class="required">*</span>
                                         <input name="name" value="{{ $user->name }}" required maxlength="120">
                                     </label>
-                                    
+
                                     <label>Email Address
                                         <input value="{{ $user->email }}" disabled style="background: var(--surface);">
                                     </label>
@@ -186,7 +159,7 @@
                     </tr>
                 @empty
                     <tr id="empty-users-row">
-                        <td colspan="5" class="empty">No users found. Click <b>+ Add User</b> to get started.</td>
+                        <td colspan="4" class="empty">No users found. Click <b>+ Add User</b> to get started.</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -205,7 +178,7 @@
      ========================================================================= -->
 <dialog id="user-dialog" class="modal" style="max-width: 620px;">
     <div class="modal-head">
-        <h2>Add User</h2>
+        <h2>Add person</h2>
         <button type="button" class="icon-btn" data-close-dialog>×</button>
     </div>
 
@@ -222,12 +195,12 @@
     <!-- Tab 1: Microsoft Azure Live Search & 1-Click Add -->
     <div id="tab-pane-azure">
         <p class="muted text-sm" style="margin-bottom: 12px;">Search your organization's Microsoft Entra ID and add users with a single click.</p>
-        
+
         <div style="position: relative; display: flex; align-items: center; margin-bottom: 14px;">
-            <input 
-                type="text" 
-                id="modal-azure-search" 
-                placeholder="Type name or work email (e.g. Aaron, abishan@gsconsumer.lk)..." 
+            <input
+                type="text"
+                id="modal-azure-search"
+                placeholder="Type name or work email (e.g. Aaron, abishan@gsconsumer.lk)..."
                 autocomplete="off"
                 style="width: 100%; padding-left: 14px; height: 38px; font-size: 13.5px; border-radius: var(--radius); border: 1px solid var(--border);"
             >
@@ -255,7 +228,7 @@
 
         <form id="manual-user-form" method="post" action="{{ route('users.store') }}" class="stack">
             @csrf
-            
+
             <label>Full Name <span class="required">*</span>
                 <input name="name" id="manual_user_name" required maxlength="120" placeholder="e.g. Nimal Perera">
             </label>
@@ -335,61 +308,18 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => { alertBox.style.display = 'none'; }, 5000);
     }
 
-    // ---------------------------------------------------------
-    // 1. Live Instant Table Search (Zero Clicks, instant filter)
-    // ---------------------------------------------------------
+    const filterForm = document.getElementById('people-filter-form');
     const tableSearch = document.getElementById('user-table-search');
-    const rows = document.querySelectorAll('.user-row');
-    const searchCount = document.getElementById('user-search-count');
-
-    function filterTable() {
-        const query = tableSearch ? tableSearch.value.toLowerCase().trim() : '';
-        const activeSubBtn = document.querySelector('.sub-filter-chip.active');
-        const activeSub = activeSubBtn ? activeSubBtn.dataset.subId : '';
-
-        let visibleCount = 0;
-
-        rows.forEach(row => {
-            const name = row.dataset.name || '';
-            const email = row.dataset.email || '';
-            const sub = row.dataset.subId || '';
-
-            const matchText = !query || name.includes(query) || email.includes(query);
-            const matchSub = !activeSub || sub === activeSub;
-
-            if (matchText && matchSub) {
-                row.style.display = '';
-                visibleCount++;
-            } else {
-                row.style.display = 'none';
-            }
-        });
-
-        if (searchCount && query) {
-            searchCount.textContent = visibleCount + ' matches';
-        } else if (searchCount) {
-            searchCount.textContent = '';
-        }
-    }
-
-    if (tableSearch) {
-        tableSearch.addEventListener('input', filterTable);
-    }
-
-    // Subsidiary Filter Chips
-    document.querySelectorAll('.sub-filter-chip').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.sub-filter-chip').forEach(b => {
-                b.classList.remove('active');
-                b.style.background = '#FFFFFF';
-                b.style.color = 'var(--text)';
-            });
-            this.classList.add('active');
-            this.style.background = 'var(--primary)';
-            this.style.color = '#FFFFFF';
-            filterTable();
-        });
+    let searchTimer;
+    tableSearch?.addEventListener('input', () => {
+        clearTimeout(searchTimer);
+        searchTimer = setTimeout(() => { sessionStorage.setItem('people-search-focus','1'); filterForm.requestSubmit(); }, 600);
     });
+    document.getElementById('people-company-filter')?.addEventListener('change', () => { clearTimeout(searchTimer); filterForm.requestSubmit(); });
+    if (sessionStorage.getItem('people-search-focus') === '1') {
+        sessionStorage.removeItem('people-search-focus'); tableSearch.focus();
+        try { tableSearch.setSelectionRange(tableSearch.value.length, tableSearch.value.length); } catch (_) {}
+    }
 
     // ---------------------------------------------------------
     // 2. 1-Click User Delete (Permanent Delete with safe cleanup)
