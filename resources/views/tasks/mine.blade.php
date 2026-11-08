@@ -526,15 +526,6 @@
                                             <a href="{{ route('projects.show', $task->project) }}" class="btn btn-outline btn-xs">
                                                 Details →
                                             </a>
-                                            @if($task->progress < 100 && $task->assignees->isNotEmpty())
-                                                <button type="button" 
-                                                        onclick="openUserRequestUpdateDialog({{ $task->id }}, '{{ addslashes($task->title) }}', {{ json_encode($task->assignees->map(fn($a) => ['id' => $a->id, 'name' => $a->name])) }})" 
-                                                        class="btn btn-outline btn-xs" 
-                                                        style="padding: 2px 7px; font-size: 11.5px; color: #315F58; border-color: #CBD5E1;"
-                                                        title="Request progress update">
-                                                    Update Req
-                                                </button>
-                                            @endif
                                         </div>
                                     </td>
                                 </tr>
@@ -815,44 +806,6 @@
 </div>
 
 <!-- =========================================================================
-     MODAL 2: REQUEST PROGRESS UPDATE POPUP
-     ========================================================================= -->
-<div id="user-request-update-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(2px); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
-    <div style="background: #FFFFFF; border-radius: 8px; width: 100%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); border: 1px solid #CBD5E1; padding: 24px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #22272B;">Request Progress Update</h3>
-            <button type="button" onclick="closeUserRequestUpdateDialog()" style="border: none; background: transparent; font-size: 18px; color: #64748B; cursor: pointer;">✕</button>
-        </div>
-
-        <form id="user-request-update-form" onsubmit="event.preventDefault(); submitUserRequestUpdate();">
-            <input type="hidden" id="user-req-task-id">
-
-            <div style="margin-bottom: 14px;">
-                <label style="display: block; font-size: 12px; font-weight: 650; margin-bottom: 4px; color: #475569;">Task</label>
-                <div id="user-req-task-title" style="font-size: 13.5px; font-weight: 600; color: #22272B; background: #F8FAFC; padding: 8px 12px; border-radius: 6px; border: 1px solid #E2E8F0;"></div>
-            </div>
-
-            <div style="margin-bottom: 14px;">
-                <label for="user-req-target-user" style="display: block; font-size: 12.5px; font-weight: 650; margin-bottom: 4px; color: #22272B;">
-                    Send Request To <span style="color:#DC2626;">*</span>
-                </label>
-                <select id="user-req-target-user" required style="width: 100%; height: 38px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 10px; font-size: 13px; background: #FFFFFF; color: #22272B;"></select>
-            </div>
-
-            <div style="margin-bottom: 18px;">
-                <label for="user-req-message" style="display: block; font-size: 12.5px; font-weight: 650; margin-bottom: 4px; color: #22272B;">Message / Note (Optional)</label>
-                <textarea id="user-req-message" rows="3" placeholder="e.g. Please provide your latest progress status before our PMO sync..." style="width: 100%; border: 1px solid #CBD5E1; border-radius: 6px; padding: 8px 12px; font-size: 13px; resize: vertical;"></textarea>
-            </div>
-
-            <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" onclick="closeUserRequestUpdateDialog()" class="btn btn-outline btn-sm">Cancel</button>
-                <button type="submit" id="btn-submit-user-req" class="btn btn-primary btn-sm" style="font-weight: 650; background: #315F58; color: #FFFFFF;">Send Request</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- =========================================================================
      MODAL 3: CONTROLLED TASK REASSIGNMENT POPUP
      ========================================================================= -->
 <div id="user-reassign-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(2px); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
@@ -995,14 +948,6 @@
                                     <td style="padding:8px 12px;"><span class="status-pill status-${escapeHtml(t.status)}" style="font-size:11px;">${escapeHtml(t.status_label)}</span></td>
                                     <td style="padding:8px 12px;text-align:right;white-space:nowrap;">
                                         <div style="display:inline-flex;gap:4px;">
-                                            ${t.progress < 100 ? `
-                                                <button type="button" 
-                                                        onclick="openUserRequestUpdateDialog(${t.id}, '${escapeHtml(t.title)}', [{id: ${data.employee.id}, name: '${escapeHtml(data.employee.name)}'}])" 
-                                                        class="btn btn-outline btn-xs" 
-                                                        style="font-size:11px;padding:2px 7px;">
-                                                    Req Update
-                                                </button>
-                                            ` : ''}
                                             ${t.can_manage ? `
                                                 <button type="button" 
                                                         onclick="openUserReassignModal(${t.id}, '${escapeHtml(t.title)}', ${data.employee.id}, '${escapeHtml(data.employee.name)}', ${JSON.stringify(t.eligible_members).replace(/"/g, '&quot;')})" 
@@ -1030,80 +975,6 @@
 
     function closeUserWorkloadModal() {
         document.getElementById('user-team-workload-modal').style.display = 'none';
-    }
-
-    /* =========================================================================
-       2. REQUEST PROGRESS UPDATE DIALOG
-       ========================================================================= */
-    function openUserRequestUpdateDialog(taskId, taskTitle, assignees) {
-        document.getElementById('user-req-task-id').value = taskId;
-        document.getElementById('user-req-task-title').textContent = taskTitle;
-        document.getElementById('user-req-message').value = '';
-
-        const select = document.getElementById('user-req-target-user');
-        select.innerHTML = '';
-
-        if (Array.isArray(assignees) && assignees.length > 0) {
-            assignees.forEach(a => {
-                const opt = document.createElement('option');
-                opt.value = a.id;
-                opt.textContent = a.name;
-                select.appendChild(opt);
-            });
-        }
-
-        document.getElementById('user-request-update-modal').style.display = 'flex';
-    }
-
-    function closeUserRequestUpdateDialog() {
-        document.getElementById('user-request-update-modal').style.display = 'none';
-    }
-
-    function submitUserRequestUpdate() {
-        const taskId = document.getElementById('user-req-task-id').value;
-        const targetUserId = document.getElementById('user-req-target-user').value;
-        const message = document.getElementById('user-req-message').value;
-        const btn = document.getElementById('btn-submit-user-req');
-
-        if (!targetUserId) {
-            alert('Please select an assignee.');
-            return;
-        }
-
-        btn.disabled = true;
-        btn.textContent = 'Sending...';
-
-        fetch(`/tasks/${taskId}/request-update`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': csrfToken,
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({
-                target_user_id: targetUserId,
-                message: message
-            })
-        })
-        .then(res => res.json())
-        .then(res => {
-            btn.disabled = false;
-            btn.textContent = 'Send Request';
-
-            if (res.success) {
-                alert(res.message);
-                closeUserRequestUpdateDialog();
-            } else {
-                alert(res.message || 'Failed to send update request.');
-            }
-        })
-        .catch(err => {
-            btn.disabled = false;
-            btn.textContent = 'Send Request';
-            console.error(err);
-            alert('A network or server error occurred.');
-        });
     }
 
     /* =========================================================================

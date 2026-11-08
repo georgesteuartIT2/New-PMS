@@ -239,10 +239,6 @@
                                 <div style="display: inline-flex; gap: 6px; align-items: center;">
                                     @if($task->progress < 100 && $task->assignees->isEmpty())
                                         <a href="{{ route('projects.show', [$task->project_id, 'focus_task' => $task->id]) }}#task-row-{{ $task->id }}" class="btn btn-outline btn-xs" style="height: 30px; font-size: 12px; padding: 0 10px; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; font-weight: 600; color: #315F58; border-color: #315F58;" title="Open task in project workplan to assign person">Assign person</a>
-                                    @elseif($task->progress < 100)
-                                        <button type="button" onclick="openRequestUpdateDialog({{ $task->id }}, '{{ addslashes($task->title) }}', {{ json_encode($task->assignees->map(fn($a) => ['id' => $a->id, 'name' => $a->name])) }})" class="btn btn-outline btn-xs" style="height: 30px; font-size: 12px; padding: 0 8px;" title="Request Progress Update">
-                                            Request update
-                                        </button>
                                     @endif
                                 </div>
                             </td>
@@ -287,42 +283,6 @@
         <div style="padding: 12px 20px; border-top: 1px solid #E5E7EB; background: #F8FAFC; display: flex; justify-content: flex-end; gap: 10px;">
             <button type="button" onclick="closeTaskDetailsModal()" class="btn btn-outline btn-sm">Close</button>
         </div>
-    </div>
-</div>
-
-<!-- =========================================================================
-     MODAL 2: REQUEST UPDATE DIALOG
-     ========================================================================= -->
-<div id="pmo-request-update-modal" role="dialog" aria-modal="true" aria-label="Request task update" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(2px); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
-    <div style="background: #FFFFFF; border-radius: 8px; width: 100%; max-width: 520px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); border: 1px solid #CBD5E1; padding: 24px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-            <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #22272B;">Request Progress Update</h3>
-            <button type="button" onclick="closeRequestUpdateDialog()" style="border: none; background: transparent; font-size: 18px; color: #64748B; cursor: pointer;">✕</button>
-        </div>
-
-        <form id="request-update-form" onsubmit="event.preventDefault(); submitRequestUpdate();">
-            <input type="hidden" id="req-task-id">
-
-            <div style="margin-bottom: 14px;">
-                <label style="display: block; font-size: 12.5px; font-weight: 650; margin-bottom: 4px; color: #22272B;">Task</label>
-                <div id="req-task-title-display" style="font-size: 13.5px; font-weight: 600; color: #315F58; background: #F8FAFC; padding: 8px 12px; border-radius: 6px; border: 1px solid #E2E8F0;"></div>
-            </div>
-
-            <div style="margin-bottom: 14px;">
-                <label for="req-target-user" style="display: block; font-size: 12.5px; font-weight: 650; margin-bottom: 4px; color: #22272B;">Recipient</label>
-                <select id="req-target-user" required style="width: 100%; height: 38px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 10px; font-size: 13px; background: #FFFFFF; color: #22272B;"></select>
-            </div>
-
-            <div style="margin-bottom: 18px;">
-                <label for="req-message" style="display: block; font-size: 12.5px; font-weight: 650; margin-bottom: 4px; color: #22272B;">Optional Note</label>
-                <textarea id="req-message" rows="3" placeholder="Add specific questions or context for the team member..." style="width: 100%; border: 1px solid #CBD5E1; border-radius: 6px; padding: 8px 12px; font-size: 13px; resize: vertical;"></textarea>
-            </div>
-
-            <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                <button type="button" onclick="closeRequestUpdateDialog()" class="btn btn-outline btn-sm">Cancel</button>
-                <button type="submit" id="btn-submit-req" class="btn btn-primary btn-sm" style="font-weight: 650;">Send Update Request</button>
-            </div>
-        </form>
     </div>
 </div>
 
@@ -372,87 +332,6 @@
 
     function closeTaskDetailsModal() {
         document.getElementById('pmo-task-details-backdrop').style.display = 'none';
-    }
-
-    /* Request Update Dialog */
-    function openRequestUpdateDialog(taskId, taskTitle, assignees) {
-        document.getElementById('req-task-id').value = taskId;
-        document.getElementById('req-task-title-display').textContent = taskTitle;
-        document.getElementById('request-update-feedback')?.remove();
-        const targetSelect = document.getElementById('req-target-user');
-        targetSelect.innerHTML = '';
-
-        if (assignees && assignees.length) {
-            assignees.forEach(u => {
-                const opt = document.createElement('option');
-                opt.value = u.id;
-                opt.textContent = `${u.name} (Assigned Task Owner)`;
-                targetSelect.appendChild(opt);
-            });
-        } else {
-            const opt = document.createElement('option');
-            opt.value = '';
-            opt.textContent = 'No assignee on this task';
-            targetSelect.appendChild(opt);
-        }
-
-        document.getElementById('pmo-request-update-modal').style.display = 'flex';
-    }
-
-    function closeRequestUpdateDialog() {
-        document.getElementById('pmo-request-update-modal').style.display = 'none';
-        document.getElementById('req-message').value = '';
-    }
-
-    function showRequestFeedback(message, success=false) {
-        document.getElementById('request-update-feedback')?.remove();
-        const notice=document.createElement('p');notice.id='request-update-feedback';notice.className='alert '+(success?'success':'danger');notice.setAttribute('role',success?'status':'alert');notice.textContent=message;
-        if(success)document.querySelector('.task-monitor-workspace').prepend(notice);
-        else document.getElementById('req-target-user').closest('div').after(notice);
-    }
-    function submitRequestUpdate() {
-        const taskId = document.getElementById('req-task-id').value;
-        const targetUser = document.getElementById('req-target-user').value;
-        const message = document.getElementById('req-message').value.trim();
-        const submitBtn = document.getElementById('btn-submit-req');
-
-        if (!targetUser) {
-            showRequestFeedback('Choose an assigned person to receive this request.');
-            return;
-        }
-
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Sending...';
-
-        fetch(`/pmo/task-monitor/request-update/${taskId}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                target_user_id: targetUser,
-                message: message
-            })
-        })
-        .then(res => res.json())
-        .then(data => {
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Send Update Request';
-            if (data.success) {
-                closeRequestUpdateDialog();
-                showRequestFeedback(data.message || 'Update request sent.', true);
-            } else {
-                showRequestFeedback(data.message || 'Could not send the request. Please try again.');
-            }
-        })
-        .catch(err => {
-            console.error(err);
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Send Update Request';
-            showRequestFeedback('Could not connect. Please try again.');
-        });
     }
 
     /* Cross-Navigation: Employee Workload Modal */
