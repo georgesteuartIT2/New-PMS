@@ -58,3 +58,5 @@
   },true);
   document.addEventListener('input',event=>{if(event.target.matches('input,select,textarea') && event.target.validity.valid)event.target.removeAttribute('aria-invalid');});
 });
+
+document.addEventListener('DOMContentLoaded',()=>{const menu=document.querySelector('.library-other-statuses');if(!menu)return;document.addEventListener('click',event=>{if(!menu.contains(event.target))menu.open=false;});document.addEventListener('keydown',event=>{if(event.key==='Escape'&&menu.open){menu.open=false;menu.querySelector('summary').focus();}});});

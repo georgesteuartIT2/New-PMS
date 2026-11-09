@@ -2,94 +2,12 @@
 (function () {
   'use strict';
 
-  // 1. Task Side Drawer
-  const panel = document.getElementById('task-side-panel');
-  const shade = document.getElementById('task-panel-shade');
-  const panelContent = document.getElementById('task-panel-content');
-  const closeButton = document.getElementById('task-panel-close');
-  let previousFocus = null;
-  let requestController = null;
-
-  function closePanel() {
-    if (!panel) return;
-    requestController?.abort();
-    panel.hidden = true;
-    if (shade) shade.hidden = true;
-    panel.setAttribute('aria-hidden', 'true');
-    document.body.classList.remove('panel-visible');
-    previousFocus?.focus();
-  }
-
-  async function openPanel(url, opener) {
-    if (!panel) {
-      window.location.assign(url.replace('/panel', ''));
-      return;
-    }
-    requestController?.abort();
-    requestController = new AbortController();
-    previousFocus = opener;
-    panel.hidden = false;
-    if (shade) shade.hidden = false;
-    panel.setAttribute('aria-hidden', 'false');
-    document.body.classList.add('panel-visible');
-    panelContent.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--muted); font-size: 13.5px;">Loading task details...</div>';
-    closeButton?.focus();
-
-    try {
-      const response = await fetch(url, {
-        headers: { 'Accept': 'text/html', 'X-Requested-With': 'XMLHttpRequest' },
-        credentials: 'same-origin',
-        signal: requestController.signal
-      });
-      if (!response.ok) {
-        throw new Error(response.status === 403 ? 'You do not have permission to view this task.' : 'Task details could not be loaded.');
-      }
-      panelContent.innerHTML = await response.text();
-      const requestedSection=opener?.dataset.taskPanelSection;
-      if(['assignment','update'].includes(requestedSection)) {
-        const section=panelContent.querySelector('[data-panel-section="'+requestedSection+'"]');
-        if(section){
-          if(section.tagName==='DETAILS')section.open=true;
-          section.scrollIntoView({block:'nearest'});
-          section.querySelector('select,input,button')?.focus();
-        }
-      }
-    } catch (error) {
-      if (error.name !== 'AbortError') {
-        panelContent.innerHTML = `
-          <div style="padding: 20px; color: var(--danger);">
-            <p>${escapeHtml(error.message)}</p>
-            <a href="${url.replace('/panel', '')}" class="btn btn-outline btn-sm" style="margin-top: 10px;">Open task page directly</a>
-          </div>
-        `;
-      }
-    }
-  }
-
-  function escapeHtml(str) {
-    return String(str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m]));
-  }
-
-  document.addEventListener('click', event => {
-    const trigger = event.target.closest('[data-task-panel]');
-    if (trigger) {
-      event.preventDefault();
-      openPanel(trigger.dataset.taskPanel, trigger);
-    }
-  });
-
-  shade?.addEventListener('click', closePanel);
-  closeButton?.addEventListener('click', closePanel);
-  document.addEventListener('keydown', event => {
-    if (event.key === 'Escape') {
-      if (panel && !panel.hidden) closePanel();
-      closeAllDropdowns();
-    }
-  });
-
+  function escapeHtml(str) { return String(str || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
+  document.addEventListener('keydown', event => {if(event.key === 'Escape') closeAllDropdowns();});
   // 2. Dropdown Menus (Add Task, Import/Export, Project Actions)
   function closeAllDropdowns() {
     document.querySelectorAll('.pw-dropdown-menu').forEach(menu => menu.style.display = 'none');
+    document.querySelectorAll('.pw-dropdown-toggle').forEach(button=>button.setAttribute('aria-expanded','false'));
   }
 
   document.addEventListener('click', event => {
@@ -103,11 +21,12 @@
         const isShown = menu.style.display === 'block';
         closeAllDropdowns();
         menu.style.display = isShown ? 'none' : 'block';
+        toggle.setAttribute('aria-expanded',String(!isShown));
       }
       return;
     }
 
-    if (!event.target.closest('.pw-dropdown-menu')) {
+    if (event.target.closest('.pw-dropdown-item') || !event.target.closest('.pw-dropdown-menu')) {
       closeAllDropdowns();
     }
   });
@@ -318,7 +237,7 @@
         bar.classList.add('is-critical');
       }
 
-      bar.dataset.taskPanel = grid.querySelector(`[data-uwt-task-link="${task.id}"]`)?.dataset.taskPanel || '';
+      bar.dataset.taskLocation = grid.querySelector(`[data-uwt-task-link="${task.id}"]`)?.dataset.taskLocation || '';
       bar.title = `${task.title || 'Task'} · ${task.progress}% complete`;
       bar.setAttribute('aria-label', `View ${task.title || 'Task'} details (${task.progress}% complete)`);
       bar.style.left = left + 'px';
@@ -341,7 +260,11 @@
       scaleButtons.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       currentScale = btn.dataset.scale || 'week';
-      renderTimeline();
+      document.addEventListener('task-progress-saved',event=>{
+    for(const updated of event.detail.tasks||[]){const task=tasks.find(item=>Number(item.id)===Number(updated.id));if(task)task.progress=updated.progress;}
+    renderTimeline();
+  });
+  renderTimeline();
     });
   });
 
@@ -350,76 +273,6 @@
   // Highlight critical path toggle
   document.getElementById('highlight-critical')?.addEventListener('change', event => {
     grid.classList.toggle('show-critical', event.target.checked);
-  });
-
-  // 6. Direct Quick Status Selector in the Tasks Table
-  document.addEventListener('change', async event => {
-    const sel = event.target.closest('.quick-status-select');
-    if (!sel) return;
-    const url = sel.dataset.updateUrl;
-    const originalVal = sel.dataset.currentStatus || sel.value;
-    const newVal = sel.value;
-    sel.disabled = true;
-
-    try {
-      const csrf = document.querySelector('input[name="_token"]')?.value || '';
-      const res = await fetch(url, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'X-CSRF-TOKEN': csrf,
-          'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: JSON.stringify({ status: newVal })
-      });
-      if (!res.ok) throw new Error('Status update failed');
-      const data = await res.json();
-      sel.dataset.currentStatus = newVal;
-
-      // Update progress bar & percentage in row
-      const row = sel.closest('tr');
-      if (row && typeof data.progress !== 'undefined') {
-        const pFill = row.querySelector('.task-progress-fill');
-        const pText = row.querySelector('.task-progress-text');
-        if (pFill) pFill.style.width = data.progress + '%';
-        if (pText) pText.textContent = data.progress + '%';
-
-        // Reactively clear or toggle Overdue badges if task completed
-        if (newVal === 'completed' || data.progress === 100 || data.is_overdue === false) {
-          row.classList.remove('is-overdue-task');
-          row.style.background = '';
-          const overdueBadges = row.querySelectorAll('.badge-overdue, .badge-overdue-tag');
-          overdueBadges.forEach(b => b.remove());
-          const dateVal = row.querySelector('.task-date-val');
-          if (dateVal) dateVal.style.color = '#22272B';
-          const timeVal = row.querySelector('.task-time-val');
-          if (timeVal) {
-            timeVal.style.color = '';
-            timeVal.classList.add('muted');
-          }
-          if (pFill) pFill.style.background = '#315F58';
-          if (pText) pText.style.color = '#374151';
-          sel.style.borderColor = '';
-          sel.style.color = '';
-        }
-      }
-
-      // Update top progress KPI strip if present
-      if (typeof data.project_progress !== 'undefined') {
-        const kpiVal = document.querySelector('.project-metric-val');
-        const kpiFill = document.querySelector('.project-metric-progress-fill');
-        if (kpiVal && kpiFill) {
-          kpiVal.textContent = data.project_progress + '%';
-          kpiFill.style.width = data.project_progress + '%';
-        }
-      }
-    } catch (err) {
-      alert('Could not update task status: ' + err.message);
-      sel.value = originalVal;
-    } finally {
-      sel.disabled = false;
-    }
   });
 
   // 7. Bulk Task Editing Modal & Row Modification Tracking
@@ -637,46 +490,4 @@
     }
   });
 
-  // 9. Focus Task Auto-Scroll & Highlight (from PMO Task Monitor / deep links)
-  function handleTaskFocus() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const focusTaskId = urlParams.get('focus_task');
-    let targetRow = null;
-
-    if (focusTaskId) {
-      targetRow = document.getElementById('task-row-' + focusTaskId) || document.querySelector(`[data-task-id="${focusTaskId}"]`);
-    } else if (window.location.hash && window.location.hash.startsWith('#task-row-')) {
-      targetRow = document.querySelector(window.location.hash);
-    }
-
-    if (targetRow) {
-      // Ensure 'tasks' tab is active
-      switchTab('tasks');
-
-      // Expand any parent tasks if targetRow is a nested subtask
-      let parentId = targetRow.dataset.parent;
-      while (parentId) {
-        const parentToggle = document.querySelector(`.uwt-toggle-btn[data-parent-task="${parentId}"]`);
-        if (parentToggle && parentToggle.getAttribute('aria-expanded') === 'false') {
-          parentToggle.click();
-        }
-        const parentRow = document.querySelector(`[data-task-id="${parentId}"]`);
-        parentId = parentRow ? parentRow.dataset.parent : null;
-      }
-
-      // Add focused highlight class
-      targetRow.classList.add('is-focused-task');
-
-      // Smoothly scroll into view
-      setTimeout(() => {
-        targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 180);
-    }
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', handleTaskFocus);
-  } else {
-    handleTaskFocus();
-  }
 })();

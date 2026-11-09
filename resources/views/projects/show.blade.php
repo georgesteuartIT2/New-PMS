@@ -1,6 +1,17 @@
 @extends('layouts.app')
 @section('title', $project->name)
 @section('content')
+@include('projects._delete-dialog')
+@php
+    $projectImportLabel=$project->template ? 'Download project template' : 'Download blank template';
+    $projectImportUrl=route('tasks.export',['project'=>$project,'starter'=>1]);
+@endphp
+<script defer src="{{ asset('js/project-import.js') }}?v={{ filemtime(public_path('js/project-import.js')) }}"></script>
+@if(app(\App\Services\Access::class)->project(auth()->user(),$project,'assign_tasks') && $project->status!=='archived')
+<template id="project-assignee-options">@foreach($project->memberships->pluck('user')->push($project->manager)->filter(fn($person)=>$person && $person->account_status==='active')->unique('id')->sortBy('name') as $person)<option value="{{ $person->id }}">{{ $person->name }}</option>@endforeach</template>
+@endif
+<script defer src="{{ asset('js/task-assignment.js') }}?v={{ filemtime(public_path('js/task-assignment.js')) }}"></script>
+
 
 <div class="project-workspace-v3" id="project-workspace">
 
@@ -51,12 +62,13 @@
 
                     @if($canManage)
                         <a href="{{ route('tasks.export', $project) }}" class="pw-dropdown-item">Export Tasks to Excel</a>
-                        <a href="{{ route('tasks.export', ['project' => $project, 'blank' => 1]) }}" class="pw-dropdown-item">Download Blank Excel Template</a>
+                        <a href="{{ $projectImportUrl }}" class="pw-dropdown-item">{{ $projectImportLabel }}</a>
                     @endif
 
                     @if($canTeam)
                         <button type="button" class="pw-dropdown-item" data-show-dialog="project-closure-dialog" style="text-align: left; width: 100%; background: none; border: none; font-size: inherit; cursor: pointer;">Project Closure & Sign-off</button>
                     @endif
+@if(auth()->user()->isPmo())<button type="button" class="pw-dropdown-item project-delete-action" data-delete-project-url="{{ route('projects.destroy',$project) }}" data-delete-project-name="{{ $project->name }}" data-delete-project-code="{{ $project->code }}">Delete project</button>@endif
                 </div>
             </div>
         </div>
@@ -68,142 +80,10 @@
             $workingDays = max(1, (int) $project->starts_on->diffInWeekdays($project->ends_on) + 1);
             $calendarDays = $project->starts_on->diffInDays($project->ends_on) + 1;
         @endphp
-        <section class="pm-assignment-review-banner" style="margin-bottom: 24px; background: #FFFFFF; border: 1px solid #D8E7E3; border-radius: 10px; box-shadow: 0 4px 16px -2px rgba(49, 95, 88, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.03); overflow: hidden;">
-            <!-- Header Strip (Sleek GS ProjectFlow Corporate Bar) -->
-            <div style="background: linear-gradient(135deg, #244943 0%, #315F58 100%); color: #FFFFFF; padding: 16px 22px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
-                <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 280px; max-width: 680px;">
-                    <div style="display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; background: rgba(255, 255, 255, 0.15); border-radius: 8px; flex-shrink: 0;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="9" cy="7" r="4"></circle>
-                            <polyline points="16 11 18 13 22 9"></polyline>
-                        </svg>
-                    </div>
-                    <div>
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
-                            <h2 style="font-size: 16.5px; font-weight: 700; margin: 0; color: #FFFFFF; letter-spacing: -0.2px;">Project Manager Assignment Request</h2>
-                            <span style="display: inline-flex; align-items: center; gap: 4px; background: rgba(255, 255, 255, 0.16); color: #E8F4EC; font-size: 10.5px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.5px; padding: 1px 7px; border-radius: 4px;">
-                                <span style="width: 5px; height: 5px; border-radius: 50%; background: #4ADE80;"></span> Action Required
-                            </span>
-                        </div>
-                        <p style="font-size: 12.5px; margin: 0; color: #E0EBE8; line-height: 1.4;">You have been designated as Project Manager. Please review the project details, timeline, and task schedule below before responding.</p>
-                    </div>
-                </div>
-
-                <!-- Action Buttons in Banner Header (Aligned cleanly to the right) -->
-                <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-left: auto;">
-                    <button type="button" class="btn" data-show-dialog="decline-project-dialog" style="background: rgba(255, 255, 255, 0.12); color: #FFFFFF; border: 1px solid rgba(255, 255, 255, 0.28); font-weight: 600; font-size: 13px; padding: 7px 15px; border-radius: 6px; cursor: pointer; transition: all 0.15s ease; display: inline-flex; align-items: center; gap: 6px;">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                        Decline Assignment
-                    </button>
-                    <form action="{{ route('projects.respond', $project) }}" method="post" style="display: inline;" onsubmit="return confirm('Are you ready to accept this project assignment? This will activate the schedule plan and lock the initial baseline.');">
-                        @csrf
-                        <input type="hidden" name="decision" value="accept">
-                        <button type="submit" class="btn" style="background: #FFFFFF; color: #234842; border: 1px solid #FFFFFF; font-weight: 700; font-size: 13px; padding: 7px 18px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.14); cursor: pointer; transition: all 0.15s ease; display: inline-flex; align-items: center; gap: 6px;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                            ✓ Accept &amp; Activate Project
-                        </button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Project Details Review Grid (Cohesive Modern Surface) -->
-            <div style="padding: 18px 22px; background: #F8FAFB;">
-                <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.7px; color: #315F58; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                    Project Scope &amp; Creation Details
-                </div>
-
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px;">
-                    <!-- 1. Subsidiary -->
-                    <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px 14px; display: flex; gap: 10px; align-items: flex-start;">
-                        <div style="width: 30px; height: 30px; border-radius: 6px; background: #EBF3F1; color: #315F58; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 7v14M21 7v14M6 11h.01M6 15h.01M10 11h.01M10 15h.01M14 11h.01M14 15h.01M18 11h.01M18 15h.01M9 3h6v4H9z"></path></svg>
-                        </div>
-                        <div style="min-width: 0; flex: 1;">
-                            <div style="font-size: 10.5px; text-transform: uppercase; font-weight: 650; color: #64748B; letter-spacing: 0.3px;">Subsidiary / Division</div>
-                            <strong style="font-size: 13.5px; color: #1E293B; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px;">{{ $project->subsidiary?->name ?? 'General Corporate' }}</strong>
-                            <div style="margin-top: 3px;"><code style="background: #EBF3F1; color: #315F58; font-size: 11px; padding: 1px 5px; border-radius: 4px; font-weight: 600;">{{ $project->code }}</code></div>
-                        </div>
-                    </div>
-
-                    <!-- 2. Timeline -->
-                    <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px 14px; display: flex; gap: 10px; align-items: flex-start;">
-                        <div style="width: 30px; height: 30px; border-radius: 6px; background: #EBF3F1; color: #315F58; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                        </div>
-                        <div style="min-width: 0; flex: 1;">
-                            <div style="font-size: 10.5px; text-transform: uppercase; font-weight: 650; color: #64748B; letter-spacing: 0.3px;">Planned Timeline</div>
-                            <strong style="font-size: 13.5px; color: #1E293B; display: block; margin-top: 2px;">{{ $project->starts_on->format('d M Y') }} – {{ $project->ends_on->format('d M Y') }}</strong>
-                            <div style="font-size: 11.5px; color: #059669; font-weight: 600; margin-top: 3px;">
-                                {{ $workingDays }} Working Days <span style="color: #94A3B8; font-weight: 500;">({{ $calendarDays }}d total)</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 3. Template / Task Plan -->
-                    <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px 14px; display: flex; gap: 10px; align-items: flex-start;">
-                        <div style="width: 30px; height: 30px; border-radius: 6px; background: #EBF3F1; color: #315F58; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
-                        </div>
-                        <div style="min-width: 0; flex: 1;">
-                            <div style="font-size: 10.5px; text-transform: uppercase; font-weight: 650; color: #64748B; letter-spacing: 0.3px;">Schedule Structure</div>
-                            <strong style="font-size: 13.5px; color: #1E293B; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px;">{{ $project->template?->name ?? 'Custom Blank Schedule' }}</strong>
-                            <div style="font-size: 11.5px; color: #315F58; font-weight: 600; margin-top: 3px;">
-                                {{ $totalCount }} {{ Str::plural('Task', $totalCount) }} Prepared
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 4. Initiated By -->
-                    <div style="background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px 14px; display: flex; gap: 10px; align-items: flex-start;">
-                        <div style="width: 30px; height: 30px; border-radius: 6px; background: #EBF3F1; color: #315F58; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                        </div>
-                        <div style="min-width: 0; flex: 1;">
-                            <div style="font-size: 10.5px; text-transform: uppercase; font-weight: 650; color: #64748B; letter-spacing: 0.3px;">Initiated By</div>
-                            <strong style="font-size: 13.5px; color: #1E293B; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px;">{{ $project->creator?->name ?? 'PMO Administration' }}</strong>
-                            <div style="font-size: 11px; color: #64748B; margin-top: 3px;">
-                                {{ $project->created_at->format('d M Y, H:i') }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Description / Scope (if any) -->
-                @if($project->description)
-                    <div style="margin-top: 12px; background: #FFFFFF; border: 1px solid #E2E8F0; border-left: 3px solid #315F58; border-radius: 0 8px 8px 0; padding: 10px 14px;">
-                        <span style="font-size: 10.5px; text-transform: uppercase; font-weight: 700; color: #315F58; letter-spacing: 0.4px; display: block; margin-bottom: 2px;">Project Description &amp; Scope</span>
-                        <div style="font-size: 13px; color: #334155; line-height: 1.5; white-space: pre-line;">{{ $project->description }}</div>
-                    </div>
-                @endif
-
-                <!-- Assigned Team Members -->
-                @if($project->memberships->where('user_id', '!=', $project->pm_user_id)->isNotEmpty())
-                    <div style="margin-top: 12px; background: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 10px 14px;">
-                        <span style="font-size: 10.5px; text-transform: uppercase; font-weight: 700; color: #315F58; letter-spacing: 0.4px; display: block; margin-bottom: 6px;">
-                            Pre-assigned Team Members ({{ $project->memberships->where('user_id', '!=', $project->pm_user_id)->count() }})
-                        </span>
-                        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-                            @foreach($project->memberships->where('user_id', '!=', $project->pm_user_id) as $member)
-                                <div style="display: inline-flex; align-items: center; gap: 6px; background: #F8FAFB; border: 1px solid #E2E8F0; border-radius: 6px; padding: 3px 8px; font-size: 12px;">
-                                    <span style="display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: #EBF3F1; color: #315F58; font-size: 10px; font-weight: 700;">{{ strtoupper(substr($member->user?->name ?? 'U', 0, 1)) }}</span>
-                                    <span style="font-weight: 600; color: #1E293B;">{{ $member->user?->name }}</span>
-                                    <span style="background: #E2E8F0; color: #475569; font-size: 10px; font-weight: 600; padding: 1px 5px; border-radius: 4px;">{{ $member->role?->name }}</span>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-                @endif
-
-                <!-- Bottom Guidance note -->
-                <div style="margin-top: 12px; background: #EBF3F1; border: 1px solid #D8E7E3; border-radius: 6px; padding: 8px 12px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: #234842;">
-                    <svg width="15" height="15" viewBox="0 0 20 20" fill="#315F58" style="flex-shrink: 0;">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                    </svg>
-                    <span>Review the <strong>Tasks</strong>, <strong>Gantt Timeline</strong>, and <strong>Team</strong> tabs below to inspect the full schedule and milestones before confirming your acceptance.</span>
-                </div>
-            </div>
+        <section class="pm-assignment-review-banner approval-review" aria-labelledby="approval-review-title">
+            <header><div><span class="approval-eyebrow">Project manager invitation</span><h2 id="approval-review-title">Review your project assignment</h2><p>Check the tasks, timeline and team below. Accepting activates the project and captures its baseline.</p></div><div class="approval-review-actions"><button type="button" class="btn btn-outline" data-show-dialog="decline-project-dialog">Decline</button><form method="post" action="{{ route('projects.respond',$project) }}" onsubmit="return confirm('Accept this assignment and activate the project?');">@csrf
+            <input type="hidden" name="decision" value="accept"><button type="submit" class="btn btn-primary">Accept project</button></form></div></header>
+            <dl><div><dt>Company</dt><dd>{{ $project->subsidiary?->name ?? 'General Group' }}</dd></div><div><dt>Planned schedule</dt><dd>{{ $project->starts_on->format('d M Y') }} &ndash; {{ $project->ends_on->format('d M Y') }}</dd></div><div><dt>Prepared plan</dt><dd>{{ $project->template?->name ?? 'Blank project' }} <small>{{ $project->tasks()->whereDoesntHave('children')->count() }} executable tasks</small></dd></div><div><dt>Requested by</dt><dd>{{ $project->creator?->name ?? 'PMO' }}<small>{{ $project->created_at->format('d M Y') }}</small></dd></div></dl>
         </section>
     @elseif($project->status === 'declined' && $project->pm_user_id === auth()->id())
         <section class="action-banner" style="margin-bottom: 20px; background: #FEF2F2; border: 1px solid #FECACA; border-left: 5px solid #DC2626; border-radius: 8px; padding: 16px 20px;">
@@ -311,11 +191,12 @@
         <div class="workspace-summary-progress">
             <dt>Progress</dt>
             <dd>
-                <strong>{{ (int)$project->progress }}%</strong>
-                <span class="workspace-progress-track" role="progressbar" aria-label="Project progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ (int)$project->progress }}">
+                <strong data-project-progress-text>{{ (int)$project->progress }}%</strong>
+                <span class="workspace-progress-track" data-project-progress-bar role="progressbar" aria-label="Project progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ (int)$project->progress }}">
                     <span style="width:{{ (int)$project->progress }}%;"></span>
                 </span>
-                <span class="workspace-completed-tasks">{{ $completedCount }} of {{ $totalCount }} tasks complete</span>
+                <span data-project-ready class="project-ready-note" @if((int)$project->progress!==100) hidden @endif>All work complete. Ready for closure review.</span>
+                <span class="workspace-completed-tasks" data-project-completed-count title="Completed tasks without subtasks / all tasks without subtasks">{{ $completedCount }} of {{ $totalCount }} tasks complete</span>
             </dd>
         </div>
     </dl>
@@ -393,12 +274,12 @@
                     @endif
                     <button type="button" class="btn btn-outline" data-show-dialog="bulk-edit-tasks-dialog" id="open-bulk-edit-btn">Bulk edit</button>
                     <div class="pw-dropdown-wrap">
-                        <button type="button" class="btn btn-ghost pw-dropdown-toggle" aria-label="Import and export tasks">
-                            Import / export <span aria-hidden="true">&#8964;</span>
+                        <button type="button" class="btn btn-outline pw-dropdown-toggle workspace-import-toggle" aria-label="Import and export tasks" aria-expanded="false" aria-controls="project-import-menu">
+                            Import / export <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg>
                         </button>
-                        <div class="pw-dropdown-menu align-right">
+                        <div class="pw-dropdown-menu align-right workspace-import-menu" id="project-import-menu">
                             <button type="button" class="pw-dropdown-item" data-show-dialog="import-task-dialog">Import from Excel</button>
-                            <a href="{{ route('tasks.export', ['project' => $project, 'blank' => 1]) }}" class="pw-dropdown-item">Download blank Excel template</a>
+                            <a href="{{ $projectImportUrl }}" class="pw-dropdown-item">{{ $projectImportLabel }}</a>
                             <a href="{{ route('tasks.export', $project) }}" class="pw-dropdown-item">Export tasks to Excel</a>
                         </div>
                     </div>
@@ -453,12 +334,12 @@
                                     $isFocusedTask = (string)request('focus_task') === (string)$task->id;
                                 @endphp
                                 <tr id="task-row-{{ $task->id }}"
-                                    class="project-task-row {{ $isSubtask ? 'is-subtask' : 'is-main-task' }} {{ $isOverdue ? 'is-overdue-task' : '' }} {{ $isFocusedTask ? 'is-focused-task' : '' }}" 
-                                    data-task-id="{{ $task->id }}" 
+                                    class="project-task-row {{ $isSubtask ? 'is-subtask' : 'is-main-task' }} {{ $isOverdue ? 'is-overdue-task' : '' }} {{ $isFocusedTask ? 'is-focused-task' : '' }}"
+                                    data-task-id="{{ $task->id }}"
                                     data-parent="{{ $task->parent_task_id ?? '' }}"
                                     data-is-overdue="{{ $isOverdue ? '1' : '0' }}" data-task-status="{{ $task->status }}" data-task-search-text="{{ $task->title . ' ' . $assignees->pluck('name')->join(' ') }}"
                                     style="border-bottom: 1px solid #F1F5F9; transition: background 0.25s, box-shadow 0.25s; {{ $isOverdue ? 'background: #FFF8F8;' : '' }}">
-                                    
+
                                     <!-- Column 1: Task / Subtask -->
                                     <td style="padding: 12px 16px; {{ $isSubtask ? 'padding-left: 36px;' : '' }}">
                                         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
@@ -468,10 +349,10 @@
                                                     ⌵
                                                 </button>
                                             @endif
-                                            <button type="button" 
-                                                    class="uwt-task-title-link" 
-                                                    data-task-panel="{{ route('tasks.panel', $task) }}" 
-                                                    title="Click to view details"
+                                            <button type="button"
+                                                    class="uwt-task-title-link"
+                                                    data-task-location="{{ route('projects.show', [$task->project_id, 'focus_task'=>$task->id]) }}"
+                                                    title="Focus this task"
                                                     style="font-size: 13.5px; {{ $isSubtask ? 'font-weight: 500; color: #334155;' : 'font-weight: 700; color: #0F172A;' }} text-decoration: none; border: none; background: none; cursor: pointer; text-align: left; padding: 0;">
                                                 {{ $task->title }}
                                             </button>
@@ -494,15 +375,8 @@
                                                 @endif
                                             </div>
                                         @else
-                                            @if($canManage)
-                                                <button type="button" 
-                                                        class="btn btn-outline btn-xs" 
-                                                        data-task-panel="{{ route('tasks.panel', $task) }}" 
-                                                        data-task-panel-section="assignment"
-                                                        style="height: 24px; font-size: 11px; padding: 0 8px; color: #315F58; border-color: #315F58; font-weight: 600;"
-                                                        title="Assign a team member to this task">
-                                                    + Assign
-                                                </button>
+                                            @if(app(\App\Services\Access::class)->project(auth()->user(),$project,'assign_tasks') && $project->status!=='archived')
+                                                <div class="task-quick-assign" data-assign-url="{{ route('tasks.assign',$task) }}"><button type="button" class="btn btn-outline btn-xs" data-assign-open>+ Assign</button><div data-assign-controls hidden><select aria-label="Assign a project member" data-assign-select><option value="">Choose a project member</option></select><button type="button" class="task-assign-cancel" data-assign-cancel aria-label="Cancel assignment">&times;</button></div><small data-assign-feedback role="status"></small></div>
                                             @else
                                                 <span class="muted" style="font-size: 12.5px;">Unassigned</span>
                                             @endif
@@ -543,8 +417,8 @@
 
                                     <!-- Column 6: Status -->
                                     <td style="padding: 12px 16px;">
-                                        @if($canManage || (app(\App\Services\Access::class)->task(auth()->user(), $task, 'update') && $project->status === 'active'))
-                                            <select class="quick-status-select" 
+                                        @if(!$hasChildren && ($canManage || (app(\App\Services\Access::class)->task(auth()->user(), $task, 'update') && $project->status === 'active')))
+                                            <select class="quick-status-select"
                                                     data-task-id="{{ $task->id }}"
                                                     data-update-url="{{ route('tasks.update', $task) }}"
                                                     data-current-status="{{ $task->status }}"
@@ -643,7 +517,7 @@
                                     <div class="uwt-cell-table">
                                         <div class="uwt-wbs-num" style="text-align: center;">{{ $wbsNum }}</div>
                                         <div class="uwt-task-title-cell" style="display: flex; align-items: center; gap: 4px; overflow: hidden;">
-                                            <button type="button" class="uwt-task-title-link" data-task-panel="{{ route('tasks.panel', $task) }}" data-uwt-task-link="{{ $task->id }}" title="{{ $task->title }}" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                                            <button type="button" class="uwt-task-title-link" data-task-location="{{ route('projects.show', [$task->project_id, 'focus_task'=>$task->id]) }}" data-uwt-task-link="{{ $task->id }}" title="{{ $task->title }}" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
                                                 {{ $task->title }}
                                             </button>
                                             @if($isOverdue)
@@ -819,7 +693,7 @@
                                 <tr>
                                     <td><b>{{ $file->original_name }}</b></td>
                                     <td>
-                                        <button type="button" class="text-action" data-task-panel="{{ route('tasks.panel', $file->task) }}">
+                                        <button type="button" class="text-action" data-task-location="{{ route('projects.show', [$file->task->project_id, 'focus_task'=>$file->task->id]) }}">
                                             {{ $file->task?->title ?? 'Task' }}
                                         </button>
                                     </td>
@@ -846,13 +720,13 @@
          ========================================================================= -->
     <div class="pw-tab-panel" id="tab-risks">
         @php
-            $overdueList = $tasks->filter(fn($t) => $t->isOverdue());
+            $overdueList = in_array($project->status,['active','on_hold'],true) ? $tasks->filter(fn($t) => $t->isOverdue()) : collect();
             $openDelaysCount = $delays->where('status', 'open')->count();
             $criticalOverdueCount = $overdueList->filter(fn($t) => in_array($t->id, $health['critical_ids'] ?? [], true))->count();
         @endphp
 
         <!-- 1. Top Risk & Health Summary Cards -->
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px;">
+        <div class="project-risk-summary" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px;">
             <div style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; padding: 14px 18px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
                 <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748B;">Reported Blockers</span>
                 <div style="font-size: 22px; font-weight: 700; color: {{ $openDelaysCount > 0 ? '#DC2626' : '#107C41' }}; margin: 4px 0 2px;">
@@ -895,7 +769,9 @@
             <div style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; padding: 14px 18px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
                 <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748B;">Schedule Health</span>
                 <div style="margin: 6px 0 2px;">
-                    @if($overdueList->count() > 0 || $openDelaysCount > 0)
+                    @if(in_array($project->status,['draft','pending','declined'],true))
+                        <span class="status-pill pill-neutral">Not started</span>
+                    @elseif($overdueList->count() > 0 || $openDelaysCount > 0)
                         <span class="status-pill pill-warning" style="font-size: 13px; font-weight: 700;">At Risk</span>
                     @elseif($project->ends_on->lessThan(now()) && $project->status !== 'completed')
                         <span class="status-pill pill-danger" style="font-size: 13px; font-weight: 700;">Delayed</span>
@@ -911,8 +787,8 @@
         <div class="card" style="padding: 20px; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; margin-bottom: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
                 <div>
-                    <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 4px; color: #22272B;">Schedule Bottlenecks &amp; Overdue Tasks</h2>
-                    <p class="muted" style="font-size: 13px; margin: 0;">Tasks that have exceeded their target deadline and are actively delaying the project.</p>
+                    <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 4px; color: #22272B;">Overdue tasks</h2>
+                    <p class="muted" style="font-size: 13px; margin: 0;">Review overdue work and its impact on the schedule.</p>
                 </div>
                 @if($overdueList->isNotEmpty())
                     <span class="status-pill pill-danger" style="font-size: 12px; font-weight: 700;">
@@ -948,7 +824,7 @@
                                 @endphp
                                 <tr>
                                     <td style="padding: 10px 14px;">
-                                        <button type="button" class="text-action" data-task-panel="{{ route('tasks.panel', $ot) }}" style="text-align: left; background: none; border: none; padding: 0; font-size: 13px; font-weight: 650; color: #22272B; cursor: pointer;">
+                                        <button type="button" class="text-action" data-task-location="{{ route('projects.show', [$ot->project_id, 'focus_task'=>$ot->id]) }}" style="text-align: left; background: none; border: none; padding: 0; font-size: 13px; font-weight: 650; color: #22272B; cursor: pointer;">
                                             <span style="color: #64748B;">{{ $ot->code }}</span> {{ $ot->title }}
                                         </button>
                                         @if($isCrit)
@@ -985,7 +861,7 @@
                                         </div>
                                     </td>
                                     <td style="padding: 10px 14px; text-align: right; white-space: nowrap;">
-                                        <button type="button" class="btn btn-outline btn-xs" data-task-panel="{{ route('tasks.panel', $ot) }}" style="padding: 3px 10px; font-size: 12px;">
+                                        <button type="button" class="btn btn-outline btn-xs" data-task-location="{{ route('projects.show', [$ot->project_id, 'focus_task'=>$ot->id]) }}" style="padding: 3px 10px; font-size: 12px;">
                                             Open Task →
                                         </button>
                                         @if($canManage && !$ot->openDelay)
@@ -1006,8 +882,8 @@
         <div class="card" style="padding: 20px; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; margin-bottom: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
                 <div>
-                    <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 4px; color: #22272B;">Reported Blockers &amp; Impediments Registry</h2>
-                    <p class="muted" style="font-size: 13px; margin: 0;">Formal delay reasons, vendor dependencies, and assigned action owners.</p>
+                    <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 4px; color: #22272B;">Blockers & issues</h2>
+                    <p class="muted" style="font-size: 13px; margin: 0;">Track the issue, its owner and the next action.</p>
                 </div>
                 @if($canManage)
                     <button type="button" class="btn btn-primary btn-sm" onclick="openReportDelayModal()" style="background: #315F58; color: #FFFFFF; font-weight: 600; font-size: 12.5px;">
@@ -1022,11 +898,6 @@
                     <p class="muted" style="font-size: 12.5px; margin: 0 0 14px; max-width: 500px; margin-inline: auto;">
                         If any task is being delayed by vendors, external parties, pending approvals, or technical blockers, log it to track the responsible owner and impact.
                     </p>
-                    @if($canManage)
-                        <button type="button" class="btn btn-outline btn-sm" onclick="openReportDelayModal()">
-                            + Report Blocker Now
-                        </button>
-                    @endif
                 </div>
             @else
                 <div class="table-wrap">
@@ -1046,7 +917,7 @@
                             @foreach($delays as $delay)
                                 <tr>
                                     <td style="padding: 10px 14px;">
-                                        <button type="button" class="text-action" data-task-panel="{{ route('tasks.panel', $delay->task) }}" style="text-align: left; background: none; border: none; padding: 0; font-size: 13px; font-weight: 650; color: #22272B; cursor: pointer;">
+                                        <button type="button" class="text-action" data-task-location="{{ route('projects.show', [$delay->task->project_id, 'focus_task'=>$delay->task->id]) }}" style="text-align: left; background: none; border: none; padding: 0; font-size: 13px; font-weight: 650; color: #22272B; cursor: pointer;">
                                             <span style="color: #64748B;">{{ $delay->task?->code }}</span> {{ $delay->task?->title ?? 'Task' }}
                                         </button>
                                     </td>
@@ -1086,7 +957,7 @@
                                                 </button>
                                             </form>
                                         @endif
-                                        <button type="button" class="btn btn-outline btn-xs" data-task-panel="{{ route('tasks.panel', $delay->task) }}" style="margin-left: 4px;">
+                                        <button type="button" class="btn btn-outline btn-xs" data-task-location="{{ route('projects.show', [$delay->task->project_id, 'focus_task'=>$delay->task->id]) }}" style="margin-left: 4px;">
                                             Details
                                         </button>
                                     </td>
@@ -1102,7 +973,7 @@
         <section class="workspace-subsection" id="project-changes">
             <div class="card" style="padding: 20px; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px;">
                 <div style="margin-bottom: 16px;">
-                    <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 4px; color: #22272B;">Baseline Variance &amp; Schedule Stability</h2>
+                    <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 4px; color: #22272B;">Schedule changes</h2>
                     <p class="muted" style="font-size: 13px; margin: 0;">Compares current projected schedule against approved baseline milestone dates.</p>
                 </div>
 
@@ -1115,7 +986,7 @@
                                     <span class="status-pill pill-success" style="font-size: 11px;">Locked</span>
                                 </div>
                                 <p class="muted" style="margin: 4px 0 0; font-size: 12.5px;">
-                                    Approved and captured on <b>{{ $project->baseline_captured_at?->format('d M Y') }}</b>. 
+                                    Approved and captured on <b>{{ $project->baseline_captured_at?->format('d M Y') }}</b>.
                                     Original target deadline: <b>{{ $project->baseline_ends_on?->format('d M Y') }}</b> · Current target: <b>{{ $project->ends_on->format('d M Y') }}</b>
                                 </p>
                             </div>
@@ -1190,8 +1061,8 @@
     <div class="pw-tab-panel" id="tab-info">
         <div class="card" style="padding: 20px; background: #FFFFFF;">
             <div style="margin-bottom: 18px;">
-                <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 4px;">Project Overview & Configuration</h2>
-                <p class="muted" style="font-size: 13px; margin: 0;">General specifications, subsidiary entity, and closure details.</p>
+                <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 4px;">Project details</h2>
+                <p class="muted" style="font-size: 13px; margin: 0;">Key information and project setup.</p>
             </div>
 
             <div class="info-grid" style="margin-bottom: 20px;">
@@ -1222,14 +1093,14 @@
 
             <div style="border-top: 1px solid var(--border); padding-top: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                 <div>
-                    <b>Project Governance & Closure</b>
+                    <b>Project actions</b>
                     <p class="muted text-sm" style="margin: 2px 0 0;">Complete all deliverables, review sign-offs, and submit for formal closure.</p>
                 </div>
                 <div class="inline-actions">
                     @if(app(\App\Services\Access::class)->project(auth()->user(), $project, 'edit_project') && $project->status !== 'archived')
                         <button type="button" class="btn btn-outline btn-sm" data-show-dialog="project-edit-dialog">Edit Details</button>
                     @endif
-                    @if($canTeam)
+                    @if($canTeam && in_array($project->status,['active','on_hold','completed'],true))
                         <button type="button" class="btn btn-outline btn-sm" data-show-dialog="project-closure-dialog">Closure Sign-off →</button>
                     @endif
                 </div>
@@ -1238,7 +1109,7 @@
         <section class="workspace-subsection" id="project-milestones">
         <div class="card" style="padding: 20px; background: #FFFFFF;">
             <div style="margin-bottom: 16px;">
-                <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 4px;">Project Milestones & Deliverables</h2>
+                <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 4px;">Milestones & deliverables</h2>
                 <p class="muted" style="font-size: 13px; margin: 0;">Major schedule checkpoints and completion deadlines.</p>
             </div>
 
@@ -1279,7 +1150,7 @@
                                     <td style="{{ $mtOverdue ? 'color: #DC2626; font-weight: 600;' : '' }}">{{ $mt->progress }}%</td>
                                     <td><span class="uwt-status-pill status-{{ $mt->status }}">{{ ucwords(str_replace('_',' ',$mt->status)) }}</span></td>
                                     <td class="right">
-                                        <button type="button" class="btn btn-outline btn-sm" data-task-panel="{{ route('tasks.panel', $mt) }}">View</button>
+                                        <button type="button" class="btn btn-outline btn-sm" data-task-location="{{ route('projects.show', [$mt->project_id, 'focus_task'=>$mt->id]) }}">View</button>
                                     </td>
                                 </tr>
                             @endforeach
@@ -1296,16 +1167,7 @@
 <!-- =========================================================================
      SLIDE-OUT TASK DETAILS SIDE PANEL (Accessible Drawer, 0 Page Reload)
      ========================================================================= -->
-<aside class="task-side-panel" id="task-side-panel" aria-labelledby="task-panel-title" aria-hidden="true" hidden>
-    <div class="task-panel-top">
-        <h2 id="task-panel-title">Task Details</h2>
-        <button type="button" class="panel-close" id="task-panel-close" aria-label="Close task details">×</button>
-    </div>
-    <div id="task-panel-content" class="task-panel-content">
-        <p class="muted">Select a task to see its details.</p>
-    </div>
-</aside>
-<div id="task-panel-shade" class="task-panel-shade" hidden></div>
+
 
 <!-- =========================================================================
      COMPACT INLINE DIALOGS (Add Task, Import Tasks, Edit Project, Assign PM)
@@ -1385,7 +1247,7 @@
     <dialog id="bulk-edit-tasks-dialog" class="modal" style="width: 95vw; max-width: 1400px; max-height: 90vh; padding: 0; border: none; border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.25);">
         <form method="post" action="{{ route('tasks.bulk-update', $project) }}" id="bulk-edit-form" style="display: flex; flex-direction: column; height: 100%; max-height: 90vh;">
             @csrf
-            
+
             <!-- Sticky Modal Header -->
             <div class="modal-head" style="padding: 16px 24px; border-bottom: 1px solid #E1E4E8; display: flex; justify-content: space-between; align-items: center; background: #FFFFFF; flex-shrink: 0;">
                 <div>
@@ -1425,10 +1287,10 @@
                                 $assignedId = $task->assignees->first()?->id;
                                 $depIds = $task->dependencies->pluck('id')->all();
                             @endphp
-                            <tr class="bulk-task-row {{ $isSub ? 'is-subtask-row' : '' }}" 
+                            <tr class="bulk-task-row {{ $isSub ? 'is-subtask-row' : '' }}"
                                 data-task-id="{{ $task->id }}"
                                 style="border-bottom: 1px solid #E2E8F0; transition: background 0.15s;">
-                                
+
                                 <!-- 1. Number / Code -->
                                 <td style="padding: 8px 12px; color: #64748B; font-weight: 600; font-size: 11.5px; border-bottom: 1px solid #E2E8F0;">
                                     {{ $wbsNum }}
@@ -1439,10 +1301,10 @@
 
                                 <!-- 2. Task Name -->
                                 <td style="padding: 8px 12px; border-bottom: 1px solid #E2E8F0; {{ $isSub ? 'padding-left: 28px;' : '' }}">
-                                    <input type="text" 
-                                           name="tasks[{{ $task->id }}][title]" 
-                                           value="{{ $task->title }}" 
-                                           required 
+                                    <input type="text"
+                                           name="tasks[{{ $task->id }}][title]"
+                                           value="{{ $task->title }}"
+                                           required
                                            maxlength="200"
                                            class="bulk-input bulk-field-track"
                                            data-field="title"
@@ -1451,7 +1313,7 @@
 
                                 <!-- 3. Assignee -->
                                 <td style="padding: 8px 12px; border-bottom: 1px solid #E2E8F0;">
-                                    <select name="tasks[{{ $task->id }}][assigned_user_id]" 
+                                    <select name="tasks[{{ $task->id }}][assigned_user_id]"
                                             class="bulk-select bulk-assignee-select bulk-field-track"
                                             data-field="assigned_user_id"
                                             style="width: 100%; font-size: 12px; padding: 5px 6px; border: 1px solid #CBD5E1; border-radius: 4px; background: #FFFFFF;">
@@ -1466,10 +1328,10 @@
 
                                 <!-- 4. Start Date -->
                                 <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
-                                    <input type="date" 
-                                           name="tasks[{{ $task->id }}][start_date]" 
-                                           value="{{ $task->starts_at->format('Y-m-d') }}" 
-                                           required 
+                                    <input type="date"
+                                           name="tasks[{{ $task->id }}][start_date]"
+                                           value="{{ $task->starts_at->format('Y-m-d') }}"
+                                           required
                                            class="bulk-input bulk-field-track"
                                            data-field="start_date"
                                            style="width: 100%; font-size: 11.5px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px;">
@@ -1477,10 +1339,10 @@
 
                                 <!-- 5. Start Time -->
                                 <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
-                                    <input type="time" 
-                                           name="tasks[{{ $task->id }}][start_time]" 
-                                           value="{{ $task->starts_at->format('H:i') }}" 
-                                           required 
+                                    <input type="time"
+                                           name="tasks[{{ $task->id }}][start_time]"
+                                           value="{{ $task->starts_at->format('H:i') }}"
+                                           required
                                            class="bulk-input bulk-field-track"
                                            data-field="start_time"
                                            style="width: 100%; font-size: 11.5px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px;">
@@ -1488,10 +1350,10 @@
 
                                 <!-- 6. End Date -->
                                 <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
-                                    <input type="date" 
-                                           name="tasks[{{ $task->id }}][end_date]" 
-                                           value="{{ $task->ends_at->format('Y-m-d') }}" 
-                                           required 
+                                    <input type="date"
+                                           name="tasks[{{ $task->id }}][end_date]"
+                                           value="{{ $task->ends_at->format('Y-m-d') }}"
+                                           required
                                            class="bulk-input bulk-field-track"
                                            data-field="end_date"
                                            style="width: 100%; font-size: 11.5px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px;">
@@ -1499,10 +1361,10 @@
 
                                 <!-- 7. End Time -->
                                 <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
-                                    <input type="time" 
-                                           name="tasks[{{ $task->id }}][end_time]" 
-                                           value="{{ $task->ends_at->format('H:i') }}" 
-                                           required 
+                                    <input type="time"
+                                           name="tasks[{{ $task->id }}][end_time]"
+                                           value="{{ $task->ends_at->format('H:i') }}"
+                                           required
                                            class="bulk-input bulk-field-track"
                                            data-field="end_time"
                                            style="width: 100%; font-size: 11.5px; padding: 5px 4px; border: 1px solid #CBD5E1; border-radius: 4px;">
@@ -1511,12 +1373,12 @@
                                 <!-- 8. Progress -->
                                 <td style="padding: 8px 8px; border-bottom: 1px solid #E2E8F0;">
                                     <div style="display: flex; align-items: center; gap: 4px;">
-                                        <input type="number" 
-                                               name="tasks[{{ $task->id }}][progress]" 
-                                               value="{{ $task->progress }}" 
-                                               min="0" 
-                                               max="100" 
-                                               required 
+                                        <input type="number"
+                                               name="tasks[{{ $task->id }}][progress]"
+                                               value="{{ $task->progress }}"
+                                               min="0"
+                                               max="100"
+                                               required
                                                class="bulk-input bulk-progress-input bulk-field-track"
                                                data-task-id="{{ $task->id }}"
                                                data-field="progress"
@@ -1527,7 +1389,7 @@
 
                                 <!-- 9. Status -->
                                 <td style="padding: 8px 10px; border-bottom: 1px solid #E2E8F0;">
-                                    <select name="tasks[{{ $task->id }}][status]" 
+                                    <select name="tasks[{{ $task->id }}][status]"
                                             class="bulk-select bulk-status-select bulk-field-track"
                                             data-task-id="{{ $task->id }}"
                                             data-field="status"
@@ -1551,7 +1413,7 @@
                                                 </span>
                                             @endforeach
                                         </div>
-                                        <select class="bulk-add-dep-select" 
+                                        <select class="bulk-add-dep-select"
                                                 data-task-id="{{ $task->id }}"
                                                 style="width: 100%; font-size: 11px; padding: 3px 6px; border: 1px dashed #94A3B8; border-radius: 3px; background: #FFFFFF; color: #475569;">
                                             <option value="">+ Add Predecessor...</option>
@@ -1620,27 +1482,16 @@
     @endif
 
     <!-- Import Task Dialog -->
-    <dialog id="import-task-dialog" class="modal" style="max-width: 520px;">
-        <div class="modal-head">
-            <h2>Import Tasks from Excel</h2>
-            <button type="button" class="icon-btn" data-close-dialog>×</button>
-        </div>
-        <p class="muted text-sm mt-8">Download an Excel template, fill in your tasks, and upload below for a review before saving.</p>
-        
-        <div class="inline-actions mt-12 mb-16">
-            <a class="btn btn-outline btn-sm" href="{{ route('tasks.export', ['project' => $project, 'blank' => 1]) }}">Download Blank Template</a>
-            <a class="btn btn-outline btn-sm" href="{{ route('tasks.export', $project) }}">Export Current Tasks</a>
-        </div>
-
-        <form method="post" action="{{ route('tasks.import.preview', $project) }}" enctype="multipart/form-data" class="stack">
+    <dialog id="import-task-dialog" class="modal project-import-dialog" aria-labelledby="project-import-title" aria-describedby="project-import-description" data-import-reopen="{{ $errors->has('file') ? 'true' : 'false' }}">
+        <header class="modal-head"><div><h2 id="project-import-title">Import tasks</h2><p>{{ $project->name }} <span>&middot; {{ $project->code }}</span></p></div><button type="button" class="icon-btn" data-close-dialog aria-label="Close import">&times;</button></header>
+        <p id="project-import-description" class="import-intro">Prepare your spreadsheet, then review the changes before saving.</p>
+        <section class="project-import-source"><div><span>{{ $project->template ? 'Selected project template' : 'Blank project' }}</span><b>{{ $project->template?->name ?? 'Start with an empty task worksheet' }}</b><small>{{ $project->template ? 'Original plan with dates aligned to this project. Current assignments and progress are not copied.' : 'Includes the correct columns and import instructions for this project.' }}</small></div><a href="{{ $projectImportUrl }}" class="btn btn-outline btn-sm">{{ $projectImportLabel }} &darr;</a></section>
+        <form method="post" action="{{ route('tasks.import.preview',$project) }}" enctype="multipart/form-data" class="project-import-form">
             @csrf
-            <label>Excel File (.xlsx, .csv) <span class="required">*</span>
-                <input type="file" name="file" accept=".xlsx,.csv" required>
-            </label>
-            <div class="form-actions mt-16">
-                <button type="button" class="btn btn-ghost" data-close-dialog>Cancel</button>
-                <button class="btn btn-primary" type="submit">Preview Import</button>
-            </div>
+            <label for="project-import-file">Choose Excel or CSV file <span class="required">*</span></label>
+            <div class="project-import-upload"><input id="project-import-file" type="file" name="file" accept=".xlsx,.csv" required aria-describedby="project-import-help project-import-feedback"><small id="project-import-help">.xlsx or .csv &middot; Maximum 2 MB</small></div>
+            <p id="project-import-feedback" class="project-import-feedback" role="status">Matching task codes update existing tasks. Other tasks are kept.</p>
+            <footer class="form-actions"><button type="button" class="btn btn-ghost" data-close-dialog>Cancel</button><button type="submit" class="btn btn-primary">Preview changes &rarr;</button></footer>
         </form>
     </dialog>
 @endif
@@ -1666,7 +1517,7 @@
         <form action="{{ route('projects.respond', $project) }}" method="post" class="stack mt-16">
             @csrf
             <input type="hidden" name="decision" value="decline">
-            
+
             <p class="muted text-sm" style="line-height: 1.5; margin: 0 0 12px 0;">
                 You are declining the Project Manager role for <strong>{{ $project->name }} ({{ $project->code }})</strong>.
                 Please provide a specific reason so the PMO Admin can understand your constraints and reassign the project appropriately.
@@ -1707,7 +1558,7 @@
         </div>
         <form method="post" action="{{ route('projects.manager', $project) }}" class="stack mt-16">
             @csrf
-            
+
             @if($project->status === 'declined' && $declinedInvitation)
                 <div style="background: #FEF2F2; border: 1px solid #FECACA; border-radius: 6px; padding: 10px 14px; font-size: 13px; color: #991B1B; margin-bottom: 12px;">
                     <div style="font-weight: 700;">Previous PM: {{ $declinedInvitation->user?->name ?? $project->manager?->name ?? 'Assigned PM' }} (Declined)</div>

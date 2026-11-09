@@ -1,0 +1,17 @@
+(() => {
+ let active=null,box=null,controller=null;
+ function close(restore=false){controller?.abort();if(active){active.setAttribute('aria-expanded','false');active.removeAttribute('aria-controls');if(restore)active.focus();}box?.remove();box=null;active=null;}
+ function position(){if(!box||!active)return;const r=active.getBoundingClientRect(),width=Math.min(360,innerWidth-24);box.style.width=width+'px';box.style.left=Math.max(12,Math.min(r.left,innerWidth-width-12))+'px';const height=box.getBoundingClientRect().height;const preferred=r.bottom+8+height<innerHeight?r.bottom+8:r.top-height-8;box.style.top=Math.max(12,Math.min(innerHeight-height-12,preferred))+'px';}
+ const text=(tag,value,parent)=>{const node=document.createElement(tag);node.textContent=value;parent.append(node);return node;};
+ document.addEventListener('click',async event=>{
+  const button=event.target.closest('[data-critical-task]');if(!button)return;
+  if(button===active){close();return;}close();active=button;controller=new AbortController();box=document.createElement('section');box.id='critical-explanation-popover';box.className='critical-explanation-popover';box.setAttribute('role','dialog');box.setAttribute('aria-labelledby','critical-explanation-title');
+  const header=document.createElement('header');text('h3','Why is this task critical?',header).id='critical-explanation-title';const dismiss=text('button','×',header);dismiss.type='button';dismiss.setAttribute('aria-label','Close explanation');dismiss.addEventListener('click',()=>close(true));box.append(header);const body=document.createElement('div');body.setAttribute('role','status');body.textContent='Checking the task dependency network...';box.append(body);document.body.append(box);button.setAttribute('aria-expanded','true');button.setAttribute('aria-controls',box.id);position();if(event.detail===0)dismiss.focus({preventScroll:true});
+  const current=box;
+  try{const response=await fetch(button.dataset.criticalTask,{headers:{Accept:'application/json'},signal:controller.signal});if(!response.ok)throw Error(response.status===403?'You do not have access to this task.':'Could not load the explanation. Close and try again.');const data=await response.json();if(box!==current)return;body.replaceChildren();text('b',data.title,body);text('p',data.reason,body);if(data.critical){text('div','Schedule slack: '+data.float_minutes+' working minutes',body).className='critical-slack';for(const [key,label] of [['predecessors','Depends on'],['successors','Next dependent tasks']]){text('h4',label,body);if(!data[key].length)text('p',key==='predecessors'?'No preceding tasks in the calculated network.':'No following tasks in the calculated network.',body);else{const list=document.createElement('ul');data[key].forEach(item=>text('li',(item.code?item.code+' / ':'')+item.title,list));body.append(list);}}text('p',data.impact,body).className='critical-impact';}position();}
+  catch(error){if(error.name!=='AbortError'&&box===current){body.textContent=error.message;position();}}
+ });
+ document.addEventListener('pointerdown',event=>{if(box&&!box.contains(event.target)&&!event.target.closest('[data-critical-task]'))close();});
+ document.addEventListener('keydown',event=>{if(event.key==='Escape'&&box){event.preventDefault();close(true);}});
+ addEventListener('resize',()=>close());document.addEventListener('scroll',event=>{if(box&&!box.contains(event.target))close();},true);
+})();

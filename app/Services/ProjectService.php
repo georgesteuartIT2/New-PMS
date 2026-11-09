@@ -131,20 +131,27 @@ class ProjectService {
   });
  }
  public function recalculate(Project $project):void {
-  $tasks=$project->tasks()->get();$children=$tasks->groupBy(fn($t)=>(string)($t->parent_task_id??0));
-  $leaves=[];$visited=[];
-  $compute=function($task)use(&$compute,&$visited,&$leaves,$children){
-   if(isset($visited[$task->id]))return (int)$task->progress;
-   $visited[$task->id]=true;
-   $kids=$children->get((string)$task->id,collect());
-   if(!$kids->count()){$leaves[]=(int)$task->progress;return (int)$task->progress;}
-   $avg=(int)round($kids->map(fn($k)=>$compute($k))->avg());
-   $task->update(['progress'=>$avg,'status'=>$avg===100?'completed':($avg>0?'in_progress':'todo')]);
-   return $avg;
-  };
-  foreach($tasks as $task)if(!$task->parent_task_id)$compute($task);
-  foreach($tasks as $task)if(!isset($visited[$task->id]))$compute($task);
-  $progress=count($leaves)?(int)round(array_sum($leaves)/count($leaves)):0;
-  $project->update(['progress'=>$progress]);
+  DB::transaction(function()use($project){
+   Project::whereKey($project->id)->lockForUpdate()->firstOrFail();
+   $tasks=$project->tasks()->get();$children=$tasks->groupBy(fn($t)=>(string)($t->parent_task_id??0));$visited=[];
+   $compute=function($task)use(&$compute,&$visited,$children){
+    if(isset($visited[$task->id]))throw new \LogicException('Circular task hierarchy.');
+    $visited[$task->id]=true;$kids=$children->get((string)$task->id,collect());
+    if($kids->isEmpty()){
+     $normalized=$task->normalizeProgressInput(['status'=>$task->status,'progress'=>$task->progress]);
+     $task->forceFill($normalized);if($task->isDirty(['progress','status']))$task->saveQuietly();return ['total'=>1,'done'=>$task->status==='completed'?1:0,'started'=>$task->status!=='todo'||$task->progress>0];
+    }
+    $total=0;$done=0;$started=false;
+    foreach($kids as $child){$result=$compute($child);$total+=$result['total'];$done+=$result['done'];$started=$started||$result['started'];}
+    $progress=$done===$total?100:min(99,(int)round($done/$total*100));
+    $task->forceFill(['progress'=>$progress,'status'=>$done===$total?'completed':($started?'in_progress':'todo')]);if($task->isDirty(['progress','status']))$task->saveQuietly();
+    return compact('total','done','started');
+   };
+   foreach($tasks as $task)if(!$task->parent_task_id || !$tasks->contains('id',$task->parent_task_id))$compute($task);
+   if(count($visited)!==$tasks->count())throw new \LogicException('Circular task hierarchy.');
+   $parentIds=$tasks->pluck('parent_task_id')->filter();$leaves=$tasks->reject(fn($t)=>$parentIds->contains($t->id));
+   $done=$leaves->where('status','completed')->count();$total=$leaves->count();
+   $project->update(['progress'=>$total?($done===$total?100:min(99,(int)round($done/$total*100))):0]);
+  });
  }
 }

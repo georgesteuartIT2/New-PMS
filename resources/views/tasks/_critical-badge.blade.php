@@ -1,0 +1,1 @@
+<button type="button" class="status-pill {{ $criticalClass ?? 'pill-warning' }} critical-explanation-trigger" data-critical-task="{{ route('tasks.critical-explanation',$task) }}" aria-label="Why is {{ $task->title }} critical?" aria-expanded="false">{{ $criticalLabel ?? 'Critical Path' }} <span aria-hidden="true">&#9432;</span></button>

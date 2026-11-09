@@ -7,15 +7,13 @@
     $templateSelectionContext=($selectForProject ?? request()->boolean('select_for_project')) ? array_merge($projectReturnContext,['select_for_project'=>1]) : [];
 @endphp
 @include('templates._selection-context')
+<link rel="stylesheet" href="{{ asset('css/template-library.css') }}?v={{ filemtime(public_path('css/template-library.css')) }}">
 <div class="page-head" style="margin-bottom: 20px;">
     <div>
         <h1 style="font-size: 24px; font-weight: 700; color: #22272B; margin: 0 0 4px;">Templates</h1>
         <p class="muted" style="margin: 0; font-size: 13.5px;">Create and reuse project plans with predefined tasks and schedules.</p>
     </div>
     <div style="display: flex; gap: 10px; align-items: center;">
-        <a class="btn btn-outline" href="{{ route('templates.downloadBlank') }}" title="Download standard Excel import template" style="font-size: 13px; height: 38px;">
-            Excel Sample
-        </a>
         @if($canManage)
             <a class="btn btn-primary" href="{{ route('templates.create',$templateSelectionContext) }}" style="background: #315F58; color: #FFFFFF; font-size: 13px; height: 38px; font-weight: 650;">
                 + Create Template
@@ -29,30 +27,19 @@
 @endif
 
 <!-- Search & Filter Toolbar -->
-<div class="card" style="padding: 12px 16px; margin-bottom: 16px; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px;">
+<div class="card template-library-toolbar" style="padding: 12px 16px; margin-bottom: 16px; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px;">
     <form method="GET" action="{{ route('templates.index',$templateSelectionContext) }}" id="template-filter-form" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
         @foreach($templateSelectionContext as $contextKey=>$contextValue)<input type="hidden" name="{{ $contextKey }}" value="{{ $contextValue }}">@endforeach
         <!-- Search Input -->
         <div style="position: relative; flex: 1; min-width: 240px;">
-            <input 
-                type="text" 
-                name="search" 
-                value="{{ $search }}" 
-                placeholder="Search templates by name, description, or category..." 
+            <input
+                type="text"
+                name="search"
+                value="{{ $search }}"
+                placeholder="Search templates by name..."
                 style="width: 100%; height: 36px; padding-left: 14px; font-size: 13px; background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 6px;"
             >
         </div>
-
-        <!-- Category Filter -->
-        <div style="min-width: 180px;">
-            <select name="category" onchange="this.form.submit()" style="width: 100%; height: 36px; font-size: 13px; background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 6px;">
-                <option value="all" @selected($category === '' || $category === 'all')>All Categories</option>
-                @foreach($categories as $cat)
-                    <option value="{{ $cat }}" @selected($category === $cat)>{{ $cat }}</option>
-                @endforeach
-            </select>
-        </div>
-
         <!-- Status Filter -->
         <div style="min-width: 140px;">
             <select name="status" onchange="this.form.submit()" style="width: 100%; height: 36px; font-size: 13px; background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 6px;">
@@ -72,11 +59,10 @@
 <!-- Template Listing Table -->
 <div class="card" style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; padding: 0; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
     <div class="table-wrap">
-        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <table class="template-library-table" style="width: 100%; border-collapse: collapse; text-align: left;">
             <thead>
                 <tr style="background: #F5F6F7; border-bottom: 1px solid #E5E7EB;">
                     <th style="padding: 12px 18px; font-size: 12px; font-weight: 650; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Template Name</th>
-                    <th style="padding: 12px 16px; font-size: 12px; font-weight: 650; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Category</th>
                     <th style="padding: 12px 16px; font-size: 12px; font-weight: 650; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Duration</th>
                     <th style="padding: 12px 16px; font-size: 12px; font-weight: 650; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Tasks</th>
                     <th style="padding: 12px 16px; font-size: 12px; font-weight: 650; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">Last Updated</th>
@@ -88,12 +74,12 @@
                     @php
                         $subtaskCount = $template->tasks->whereNotNull('parent_code')->count();
                     @endphp
-                    <tr 
+                    <tr
                         class="template-table-row"
-                        style="border-bottom: 1px solid #F1F5F9; transition: background 0.12s ease; cursor: pointer;" 
+                        style="border-bottom: 1px solid #F1F5F9; transition: background 0.12s ease; cursor: pointer;"
                         data-template-id="{{ $template->id }}"
                         onclick="openTemplatePlan({{ $template->id }}, 'view')"
-                        onmouseover="this.style.background='#F8FAFC'" 
+                        onmouseover="this.style.background='#F8FAFC'"
                         onmouseout="this.style.background='transparent'"
                     >
                         <!-- Template Name -->
@@ -106,16 +92,7 @@
                                     <span style="font-size: 11px; background: #F1F5F9; color: #64748B; padding: 1px 6px; border-radius: 4px; border: 1px solid #E2E8F0;">Archived</span>
                                 @endif
                             </div>
-                            <small style="display: block; font-size: 12px; margin-top: 3px; color: #64748B; line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px;">
-                                {{ $template->description ?: 'Standard reusable project plan structure.' }}
-                            </small>
                         </td>
-
-                        <!-- Category -->
-                        <td style="padding: 14px 16px; font-size: 13px; color: #334155;">
-                            {{ $template->category ?: 'General' }}
-                        </td>
-
                         <!-- Duration -->
                         <td style="padding: 14px 16px;">
                             <div style="font-size: 13px; font-weight: 600; color: #22272B;">
@@ -146,22 +123,12 @@
                             <div style="display: inline-flex; align-items: center; gap: 6px; justify-content: flex-end;">
                                 @if($selectForProject ?? false)
                                     @if(!$template->isArchived())<a href="{{ route('projects.create',array_merge($projectReturnContext,['template_id'=>$template->id,'mode'=>'template'])) }}" class="btn btn-primary btn-sm btn-select-template" onclick="event.stopPropagation()">Select template &rarr;</a>@else<span class="muted text-sm">Archived</span>@endif
-                                @elseif(!$template->isArchived() && $canCreateProject)
-                                    <a 
-                                        href="{{ route('projects.create', array_merge($projectReturnContext,['template_id'=>$template->id,'mode'=>'template'])) }}" 
-                                        class="btn btn-primary btn-sm" 
-                                        style="background: #315F58; color: #FFFFFF; font-size: 12px; height: 30px; font-weight: 600; padding: 0 10px;"
-                                        title="Create a new project using this template"
-                                        onclick="event.stopPropagation()"
-                                    >
-                                        Use
-                                    </a>
                                 @endif
 
                                 @if($canManage && !($selectForProject ?? false))
-                                    <button 
-                                        type="button" 
-                                        class="btn btn-outline btn-sm btn-edit-template-popup" 
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline btn-sm btn-edit-template-popup"
                                         onclick="event.stopPropagation(); openTemplatePlan({{ $template->id }}, 'edit')"
                                         style="font-size: 12px; height: 30px; padding: 0 10px;"
                                         title="Edit this template in Task Plan popup"
@@ -171,10 +138,10 @@
 
                                     <!-- More Actions Dropdown -->
                                     <div style="position: relative; display: inline-block;">
-                                        <button 
-                                            type="button" 
-                                            class="btn btn-ghost btn-sm" 
-                                            onclick="toggleTemplateMenu(this, event)" 
+                                        <button
+                                            type="button"
+                                            class="btn btn-ghost btn-sm"
+                                            onclick="toggleTemplateMenu(this, event)"
                                             style="height: 30px; width: 30px; padding: 0; display: inline-flex; align-items: center; justify-content: center; font-size: 16px; color: #64748B;"
                                             title="More actions"
                                         >
@@ -213,7 +180,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" style="padding: 40px 20px; text-align: center; color: #64748B;">
+                        <td colspan="5" style="padding: 40px 20px; text-align: center; color: #64748B;">
                             <div style="font-size: 14px; font-weight: 600; margin-bottom: 6px; color: #22272B;">No templates found</div>
                             <div style="font-size: 12.5px; margin-bottom: 14px;">Try adjusting your search criteria or create a new template.</div>
                             @if($canManage)

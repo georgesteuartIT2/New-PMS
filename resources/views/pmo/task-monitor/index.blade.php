@@ -21,6 +21,7 @@
     @endif
 
     @php
+        $monitorRoute = request()->routeIs('monitoring.index') ? 'monitoring.index' : 'pmo.task-monitor';
         $currentFilter = $filters['filter'] ?? 'all';
         $summaryLinks = [
             'all' => ['label'=>'Total Tasks', 'count'=>$summary['total_tasks'] ?? 0],
@@ -38,19 +39,14 @@
             'due_soon' => ['label' => 'Due Soon (7d)', 'count' => $summary['due_soon_tasks'] ?? 0, 'badge' => 'warning'],
             'needs_update' => ['label' => 'Needs Update', 'count' => $summary['needs_update_tasks'] ?? 0, 'badge' => 'neutral'],
         ];
-        $extraFiltersActive = !empty($filters['subsidiary_id']) || !empty($filters['status']) || !array_key_exists($currentFilter, $summaryLinks);
+        $filterTabs['open'] = ['label'=>'Open', 'count'=>$summary['open_tasks'] ?? 0];
+        $filterTabs['completed'] = ['label'=>'Completed', 'count'=>$summary['completed_tasks'] ?? 0];
+        $extraFiltersActive = !empty($filters['subsidiary_id']) || !empty($filters['status']);
         $hasFilters = !empty($filters['q']) || !empty($filters['project_id']) || !empty($filters['user_id']) || $extraFiltersActive || $currentFilter !== 'all';
     @endphp
-    <nav class="task-summary-links" aria-label="Task summaries">
-        @foreach($summaryLinks as $key => $item)
-            <a href="{{ route(auth()->user()->isPmo() ? 'pmo.task-monitor' : 'pmo.task-monitor', array_merge(request()->except('page'), ['filter'=>$key])) }}" class="{{ $currentFilter === $key ? 'active' : '' }} {{ $key === 'overdue' && $item['count'] ? 'has-overdue' : '' }}" @if($currentFilter === $key) aria-current="true" @endif>
-                <span>{{ $item['label'] }}</span><strong>{{ $item['count'] }}</strong>
-            </a>
-        @endforeach
-    </nav>
-    <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">
+    <nav class="monitor-focus-tabs" aria-label="Task views">
         @foreach($filterTabs as $fKey => $fTab)
-            <a href="{{ route('pmo.task-monitor', array_merge(request()->except('page'), ['filter' => $fKey])) }}" class="btn btn-sm" style="height: 30px; font-size: 12px; border-radius: 16px; border: 1px solid {{ $currentFilter === $fKey ? '#315F58' : '#CBD5E1' }}; background: {{ $currentFilter === $fKey ? '#315F58' : '#FFFFFF' }}; color: {{ $currentFilter === $fKey ? '#FFFFFF' : '#22272B' }}; font-weight: {{ $currentFilter === $fKey ? '650' : '500' }}; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+            <a href="{{ route($monitorRoute, array_merge(request()->except('page'), ['filter' => $fKey])) }}" class="btn btn-sm {{ $currentFilter === $fKey ? 'is-active' : '' }}" @if($currentFilter === $fKey) aria-current="page" @endif style="height: 30px; font-size: 12px; border-radius: 16px; border: 1px solid {{ $currentFilter === $fKey ? '#315F58' : '#CBD5E1' }}; background: {{ $currentFilter === $fKey ? '#315F58' : '#FFFFFF' }}; color: {{ $currentFilter === $fKey ? '#FFFFFF' : '#22272B' }}; font-weight: {{ $currentFilter === $fKey ? '650' : '500' }}; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
                 <span>{{ $fTab['label'] }}</span>
                 @if(($fTab['count'] ?? 0) > 0)
                     <span style="font-size: 11px; padding: 1px 6px; border-radius: 10px; background: {{ $currentFilter === $fKey ? 'rgba(255,255,255,0.25)' : '#F1F5F9' }}; color: {{ $currentFilter === $fKey ? '#FFFFFF' : '#475569' }};">
@@ -59,10 +55,11 @@
                 @endif
             </a>
         @endforeach
-    </div>
+    </nav>
 
-    <form method="get" action="{{ route('pmo.task-monitor') }}" id="task-filter-form" class="task-monitor-filters">
+    <form method="get" action="{{ route($monitorRoute) }}" id="task-filter-form" class="task-monitor-filters">
         @if(request()->routeIs('monitoring.index'))<input type="hidden" name="tab" value="tasks">@endif
+        <input type="hidden" name="filter" value="{{ $currentFilter }}">
         <div class="task-filter-primary">
             <label class="task-monitor-search">
                 <span class="task-monitor-sr-only">Search tasks, projects or people</span>
@@ -89,20 +86,13 @@
             </label>
 
             <button type="submit" class="btn btn-outline btn-sm">Search</button>
-            @if($hasFilters)<a href="{{ route(auth()->user()->isPmo() ? 'monitoring.index' : 'pmo.task-monitor') }}" class="task-filter-clear">Clear</a>@endif
+            @if($hasFilters)<a href="{{ route($monitorRoute) }}" class="task-filter-clear">Clear</a>@endif
         </div>
         <div class="task-filter-secondary">
             <details class="task-more-filters" @if($extraFiltersActive) open @endif>
-                <summary>More filters @if($extraFiltersActive)<span class="task-extra-count">{{ (int)!empty($filters['subsidiary_id']) + (int)!empty($filters['status']) + (int)!array_key_exists($currentFilter, $summaryLinks) }}</span>@endif</summary>
+                <summary>More filters @if($extraFiltersActive)<span class="task-extra-count">{{ (int)!empty($filters['subsidiary_id']) + (int)!empty($filters['status']) }}</span>@endif</summary>
                 <div class="task-extra-fields">
-            <label>
-                Task focus
-                <select name="filter" onchange="this.form.requestSubmit()">
-                    @foreach(['all'=>'All tasks','open'=>'Open','completed'=>'Completed','overdue'=>'Overdue','unassigned'=>'Unassigned','critical'=>'Critical path','blocked'=>'Blocked','due_soon'=>'Due in 7 days','needs_update'=>'Needs update'] as $value=>$label)
-                        <option value="{{ $value }}" @selected($currentFilter === $value)>{{ $label }}</option>
-                    @endforeach
-                </select>
-            </label>
+
                     <label>Subsidiary
                         <select name="subsidiary_id" onchange="this.form.requestSubmit()">
                             <option value="">All subsidiaries</option>
@@ -219,9 +209,7 @@
                                         Overdue
                                     </span>
                                 @elseif($task->schedule_health === 'Critical Path')
-                                    <span class="status-pill pill-warning" style="font-size: 11.5px; padding: 2px 8px; font-weight: 650;">
-                                        Critical Path
-                                    </span>
+                                    @include('tasks._critical-badge')
                                 @elseif($task->schedule_health === 'Completed')
                                     <span class="status-pill pill-success" style="font-size: 11.5px; padding: 2px 8px;">
                                         Completed
@@ -458,7 +446,7 @@
         }
     });
 </script>
-@include('tasks._drawer')
+
 <script defer src="{{ asset('js/project-workspace.js') }}?v={{ filemtime(public_path('js/project-workspace.js')) }}"></script>
 @endsection
 

@@ -152,13 +152,8 @@ class TaskBulkController
                 $startsAt = Carbon::parse($row['start_date'] . ' ' . $startTime);
                 $endsAt = Carbon::parse($row['end_date'] . ' ' . $endTime);
 
-                $status = $row['status'];
-                $progress = (int)$row['progress'];
-                if ($status === 'completed') {
-                    $progress = 100;
-                } elseif ($progress === 100) {
-                    $status = 'completed';
-                }
+                $normalized=$task->normalizeProgressInput(['status'=>$row['status'],'progress'=>(int)$row['progress']]);
+                $status=$normalized['status'];$progress=$normalized['progress'];
 
                 $task->update([
                     'title' => $row['title'],

@@ -8,8 +8,8 @@ class ProjectController {
  public function index(Request $request,Access $access){
   $user = $request->user();
   $query=Project::with(['manager','subsidiary','memberships.role'])->withCount([
-      'tasks',
-      'tasks as completed_tasks_count'=>fn($q)=>$q->where('status','completed'),
+      'tasks'=>fn($q)=>$q->whereDoesntHave('children'),
+      'tasks as completed_tasks_count'=>fn($q)=>$q->where('status','completed')->whereDoesntHave('children'),
       'tasks as overdue_tasks_count'=>fn($q)=>$q->where('progress','<',100)->where('ends_at','<',now()),
       'tasks as open_delays_count'=>fn($q)=>$q->whereHas('openDelay'),
   ]);
@@ -50,27 +50,16 @@ class ProjectController {
   $pendingCount = (clone $baseQuery)->where('status','pending')->count();
   $declinedCount = (clone $baseQuery)->where('status','declined')->count();
   $draftCount = $user->isPmo() ? (clone $baseQuery)->where('status','draft')->count() : 0;
-  $attentionCount = (clone $baseQuery)->where(function($q) use ($user) {
-      if ($user->isPmo()) {
-          $q->whereIn('status',['pending','declined','draft'])
-            ->orWhere(fn($inner)=>$inner->whereIn('status',['active','on_hold'])->whereHas('tasks',fn($t)=>$t->where('progress','<',100)->where('ends_at','<',now())));
-      } else {
-          $q->whereIn('status',['pending','declined'])
-            ->orWhere(fn($inner)=>$inner->whereIn('status',['active','on_hold'])->whereHas('tasks',fn($t)=>$t->where('progress','<',100)->where('ends_at','<',now())));
-      }
-  })->count();
-
-  if($request->boolean('attention')){
-   $query->where(function($q) use ($user) {
-    if ($user->isPmo()) {
-        $q->whereIn('status',['pending','declined','draft'])
-          ->orWhere(fn($active)=>$active->whereIn('status',['active','on_hold'])->whereHas('tasks',fn($task)=>$task->where('progress','<',100)->where('ends_at','<',now())));
-    } else {
-        $q->whereIn('status',['pending','declined'])
-          ->orWhere(fn($active)=>$active->whereIn('status',['active','on_hold'])->whereHas('tasks',fn($task)=>$task->where('progress','<',100)->where('ends_at','<',now())));
-    }
-   });
-  }
+  $needsAttention = function($q) use ($user) {
+      $q->whereIn('status', $user->isPmo() ? ['pending','declined','draft'] : ['pending','declined'])
+        ->orWhere(fn($active) => $active->whereIn('status',['active','on_hold'])->where(function($delivery) {
+            $delivery->whereDate('ends_on','<',today())
+                ->orWhereHas('tasks',fn($task)=>$task->where('progress','<',100)->where('ends_at','<',now()))
+                ->orWhereHas('tasks',fn($task)=>$task->whereHas('openDelay'));
+        }));
+  };
+  $attentionCount = (clone $baseQuery)->where($needsAttention)->count();
+  if($request->boolean('attention')) $query->where($needsAttention);
   if($request->filled('q')){ 
    $search=trim($request->input('q')); 
    $query->where(fn($q)=>$q->where('name','like','%'.$search.'%')->orWhere('code','like','%'.$search.'%')->orWhereHas('manager',fn($m)=>$m->where('name','like','%'.$search.'%'))); 
@@ -88,7 +77,7 @@ class ProjectController {
 
   $paginated->getCollection()->transform(function($p) use ($now) {
       $deadline = $p->ends_on->copy()->endOfDay();
-      $isPastDeadline = $deadline->lessThan($now) && !in_array($p->status, ['completed', 'archived'], true);
+      $isPastDeadline = $deadline->lessThan($now) && in_array($p->status, ['active', 'on_hold'], true);
       $delayDays = $isPastDeadline ? max(1, (int) $deadline->diffInWeekdays($now)) : 0;
 
       $p->is_delayed = $isPastDeadline;
@@ -257,8 +246,8 @@ class ProjectController {
 
   if ($canViewAllTasks) {
       $tasks = $project->tasks()->with(['assignees', 'children', 'openDelay.actionOwner', 'attachments', 'comments', 'dependencies:id,code,title'])->orderBy('sort_order')->orderBy('id')->get();
-      $completedCount = $project->tasks()->where('status', 'completed')->count();
-      $totalCount = $project->tasks()->count();
+      $completedCount = $project->tasks()->whereDoesntHave('children')->where('status', 'completed')->count();
+      $totalCount = $project->tasks()->whereDoesntHave('children')->count();
   } else {
       // Scoped tasks for Team Members: strictly only tasks assigned to this user
       $tasks = $project->tasks()
@@ -412,6 +401,18 @@ class ProjectController {
   abort_unless(User::whereKey($data['user_id'])->where('account_status','active')->where('system_role','user')->exists(),422);
   ProjectMembership::updateOrCreate(['project_id'=>$project->id,'user_id'=>$data['user_id']],['project_role_id'=>$role->id]);
   return back()->with('success','Project member added.');
+ }
+ public function destroy(Request $request,Project $project){
+  abort_unless($request->user()->isPmo(),403);
+  $request->validate(['confirm_delete'=>'required|accepted']);
+  DB::transaction(function()use($project){
+   $project=Project::whereKey($project->id)->lockForUpdate()->firstOrFail();
+   $paths=\App\Models\TaskAttachment::whereIn('task_id',$project->tasks()->select('id'))->pluck('path')->all();
+   Audit::record('project.deleted',$project,['name'=>$project->name,'code'=>$project->code]);
+   $project->delete();
+   DB::afterCommit(function()use($paths){if($paths)\Illuminate\Support\Facades\Storage::disk('local')->delete($paths);});
+  });
+  return redirect()->route('projects.index')->with('success','Project deleted.');
  }
  public function removeMember(Request $request,Project $project,User $user,Access $access){
   abort_unless($access->project($request->user(),$project,'manage_team'),403);

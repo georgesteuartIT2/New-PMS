@@ -1,12 +1,13 @@
 @extends('layouts.app')
 @section('title', 'Projects')
 @section('content')
+@include('projects._delete-dialog')
 
 <!-- Page Header matching mockup -->
 <div class="page-head">
     <div>
         <h1>{{ auth()->user()->isPmo() ? 'Projects' : 'My Projects' }}</h1>
-        <p class="muted">{{ auth()->user()->isPmo() ? 'A clear view of projects, tasks and progress across the company.' : 'Projects you are involved in.' }}</p>
+        <p class="muted">{{ auth()->user()->isPmo() ? 'Track delivery, manage your team and keep projects moving.' : 'Projects you are involved in.' }}</p>
     </div>
     <div class="inline-actions">
         @if(auth()->user()->isPmo())
@@ -31,7 +32,7 @@
 <nav class="project-library-summary" aria-label="Filter projects">
     @foreach($projectSummary as $summaryItem)
         <a href="{{ route('projects.index', $summaryItem['query']) }}" class="{{ $summaryItem['active'] ? 'active' : '' }}" @if($summaryItem['active']) aria-current="true" @endif>
-            <span>{{ $summaryItem['label'] }}</span><strong>{{ $summaryItem['count'] }}</strong>
+            <span>{{ $summaryItem['label'] }}</span><strong title="Number of projects">{{ $summaryItem['count'] }}</strong>
         </a>
     @endforeach
 </nav>
@@ -58,20 +59,19 @@
         </select>
     @endif
 
-    <select name="status" class="projects-filter-select" onchange="this.form.submit()">
-        <option value="">All Statuses</option>
-        @foreach(['active'=>'Active', 'pending'=>'Awaiting PM approval', 'draft'=>'Draft', 'on_hold'=>'On Hold', 'completed'=>'Completed', 'declined'=>'Declined', 'archived'=>'Archived'] as $val => $label)
-            @if(!auth()->user()->isPmo() && $val === 'draft') @continue @endif
-            <option value="{{ $val }}" @selected(request('status') === $val)>{{ $label }}</option>
+    @if(request()->filled('status'))<input type="hidden" name="status" value="{{ request('status') }}">@endif
+    <details class="library-other-statuses"><summary>{{ ['on_hold'=>'On hold','completed'=>'Completed','declined'=>'Declined','archived'=>'Archived'][request('status')] ?? 'Other statuses' }} <span aria-hidden="true">&#8964;</span></summary><div class="library-status-options">
+        @foreach(['on_hold'=>'On hold','completed'=>'Completed','declined'=>'Declined','archived'=>'Archived'] as $value=>$label)
+            <a href="{{ route('projects.index',array_merge(request()->except('page','attention','status'),['status'=>$value])) }}" @if(request('status')===$value) aria-current="page" @endif>{{ $label }}</a>
         @endforeach
-    </select>
+    </div></details>
 
     @if(request()->filled('q') || request()->filled('status') || request()->filled('subsidiary_id') || request()->filled('scope') || request()->boolean('attention'))
         <a href="{{ route('projects.index') }}" class="btn btn-ghost btn-sm">Clear filters</a>
     @endif
     @if(request()->boolean('attention'))
         <input type="hidden" name="attention" value="1">
-        <span class="filter-context">Showing projects needing attention</span>
+        <span class="filter-context">Showing projects with overdue work, blockers or pending setup/approval</span>
     @endif
     <div class="view-toggle-group">
         <button type="button" class="view-toggle-btn active" id="view-btn-list" aria-label="List view" aria-pressed="true" title="List view" onclick="switchProjectsView('list')">
@@ -99,7 +99,7 @@
                     <th>Progress</th>
                     <th>Due</th>
                     <th>Status</th>
-                    <th class="right"><span class="library-sr-only">Actions</span></th>
+                    <th class="right">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -139,7 +139,7 @@
                         <td>
                             @if(auth()->user()->isPmo())
                                 @if($project->manager)
-                                    <span class="pm-name">{{ $project->manager->name }}</span>
+                                    <div class="library-manager"><span class="library-manager-avatar" aria-hidden="true">{{ mb_strtoupper(mb_substr($project->manager->name,0,1)) }}</span><span class="pm-name">{{ $project->manager->name }}</span></div>
                                     @if($project->status === 'declined')
                                         <small class="block text-xs" style="color: #DC2626; font-weight: 600;">(Declined)</small>
                                     @elseif($project->status === 'pending')
@@ -158,8 +158,8 @@
                         <td>
                             @if($canViewTasks)
                                 <div class="progress-col-wrap">
-                                    <span class="progress-pct-val">{{ $project->progress }}%</span>
-                                    <small class="project-completion">{{ $project->completed_tasks_count ?? 0 }} / {{ $project->tasks_count ?? 0 }} tasks</small><div class="progress-track-wide">
+                                    @if($project->status==='draft')<span class="library-draft-plan">Plan prepared</span>@else<span class="progress-pct-val">{{ $project->progress }}%</span>@endif
+                                    <small class="project-completion">{{ $project->status==='draft' ? ($project->tasks_count ?? 0).' planned tasks' : ($project->completed_tasks_count ?? 0).' / '.($project->tasks_count ?? 0).' tasks' }}</small><div class="progress-track-wide" @if($project->status==='draft') hidden @endif>
                                         <div class="progress-fill" style="width: {{ $project->progress }}%;"></div>
                                     </div>
                                 </div>
@@ -168,7 +168,7 @@
                             @endif
                         </td>
                         <td>
-                            <span class="deadline-val">{{ $project->ends_on->format('d M Y') }}</span>
+                            <span class="deadline-val">{{ $project->ends_on->format('d M Y') }}</span>@if($project->status==='draft')<small class="library-planned-date">Planned due date</small>@endif
                         </td>
                         <td>
                             <div class="project-health-cell">
@@ -213,7 +213,7 @@
                                 @endif
 
                                 @if($project->status==='draft' && (auth()->user()->isPmo() || ($project->created_by===auth()->id() && app(\App\Services\Access::class)->hasCompanyPermission(auth()->user(),'projects.create'))))
-                                    <a href="{{ route('projects.create',['draft'=>$project->id]) }}" class="btn btn-primary btn-xs project-draft-create">Create project</a>
+                                    <a href="{{ route('projects.create',['draft'=>$project->id]) }}" class="btn btn-outline btn-xs project-draft-create">Continue draft</a>
                                 @elseif(auth()->user()->isPmo() && $project->status === 'declined')
                                     <a href="{{ route('projects.show', [$project, 'reassign' => 1]) }}" class="btn btn-primary btn-xs" style="background: #DC2626; border-color: #DC2626; font-weight: 600;">Reassign PM</a>
                                 @elseif(auth()->user()->isPmo() && $project->status === 'draft' && !$project->pm_user_id)
@@ -228,15 +228,12 @@
                                 <div style="position: relative;">
                                     <button type="button" class="btn-dots" onclick="toggleProjectMenu(event, 'proj-menu-{{ $project->id }}')" aria-label="More project actions" aria-haspopup="true" aria-expanded="false">⋮</button>
                                     <div class="actions-dropdown-panel" id="proj-menu-{{ $project->id }}">
-                                        <a href="{{ route('projects.show', $project) }}" class="dropdown-item">View Project</a>
-                                        <button type="button" class="dropdown-item" onclick="openDelayAnalysis({{ $project->id }})">Delay Analysis</button>
+                                        <a href="{{ route('projects.show', $project) }}" class="dropdown-item">View project</a>
                                         @if(auth()->user()->isPmo() || (isset($access) && $access->project(auth()->user(), $project, 'edit_project')))
-                                            <a href="{{ route('projects.edit', $project) }}" class="dropdown-item" data-project-editor-url="{{ route('projects.edit', [$project, 'popup'=>1]) }}">Edit Project</a>
+                                            <a href="{{ route('projects.edit', $project) }}" class="dropdown-item" data-project-editor-url="{{ route('projects.edit', [$project, 'popup'=>1]) }}">Edit project</a>
                                         @endif
-                                        @if($canViewTasks)
-                                            <a href="{{ route('projects.show', $project) }}#gantt" class="dropdown-item">Gantt Chart</a>
-                                        @endif
-                                        <a href="{{ route('projects.show', $project) }}#team" class="dropdown-item">Team Members</a>
+                                        <button type="button" class="dropdown-item" onclick="openDelayAnalysis({{ $project->id }})">Project analysis</button>
+@if(auth()->user()->isPmo())<button type="button" class="dropdown-item project-delete-action" data-delete-project-url="{{ route('projects.destroy',$project) }}" data-delete-project-name="{{ $project->name }}" data-delete-project-code="{{ $project->code }}">Delete project</button>@endif
                                     </div>
                                 </div>
                             </div>

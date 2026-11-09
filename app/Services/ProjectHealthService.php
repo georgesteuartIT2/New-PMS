@@ -117,6 +117,7 @@ class ProjectHealthService
             'critical_ids' => $criticalIds,
             'critical_tasks' => $criticalTasks,
             'cpm_tasks' => $network['tasks'] ?? [],
+            'dependency_nodes' => $nodes,
             'cpm_reliable' => $reliable,
             'cpm_warning' => $invalidNetwork ? 'Review the task dependency network: a cycle or invalid dependency exists.' :
                 ($invalidLinks ? 'Some dependencies refer to missing or inaccessible tasks. Review those links.' :

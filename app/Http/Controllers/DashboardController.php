@@ -23,8 +23,8 @@ class DashboardController
             $teamMetrics = $teamMonitor->getTeamSummaryMetrics($user);
 
             $allProjects = Project::with('manager', 'subsidiary')->withCount([
-                'tasks',
-                'tasks as completed_tasks_count' => fn($q) => $q->where('status', 'completed')
+                'tasks'=>fn($q)=>$q->whereDoesntHave('children'),
+                'tasks as completed_tasks_count' => fn($q) => $q->where('status', 'completed')->whereDoesntHave('children')
             ])->latest()->get();
 
             $totalProjects = $allProjects->count();
@@ -269,8 +269,8 @@ class DashboardController
         // Non-PMO user (My Workspace Dashboard)
         $userProjects = Project::with(['manager', 'subsidiary', 'memberships.role'])
             ->withCount([
-                'tasks',
-                'tasks as completed_tasks_count' => fn($q) => $q->where('status', 'completed'),
+                'tasks'=>fn($q)=>$q->whereDoesntHave('children'),
+                'tasks as completed_tasks_count' => fn($q) => $q->where('status', 'completed')->whereDoesntHave('children'),
             ])
             ->where('status', '!=', 'draft')
             ->where(function ($query) use ($user) {
@@ -301,23 +301,12 @@ class DashboardController
             ->whereHas('project', fn($q) => $q->where('status', '!=', 'draft'))
             ->get();
 
+        $approvalQueue = Project::where('status','pending')->where('pm_user_id',$user->id)
+            ->whereHas('invitations',fn($q)=>$q->where('user_id',$user->id)->where('status','pending'))
+            ->with('subsidiary','creator')->withCount(['tasks'=>fn($q)=>$q->whereDoesntHave('children')])
+            ->oldest()->paginate(5,['*'],'approvals_page')->withQueryString()->fragment('project-approvals');
         // Needs My Attention items aggregation
         $attentionItems = collect();
-
-        // 1. PM invitations awaiting acceptance
-        foreach ($pendingInvitations as $inv) {
-            $attentionItems->push([
-                'type' => 'invitation',
-                'title' => $inv->project?->name ?? 'Project',
-                'project_name' => $inv->project?->code,
-                'issue' => 'Project Manager invitation awaiting acceptance',
-                'deadline' => $inv->project?->starts_on ? $inv->project->starts_on->format('d M Y') : 'Immediate',
-                'is_invitation' => true,
-                'project_id' => $inv->project_id,
-                'action_label' => 'Accept / Decline',
-                'action_url' => route('projects.show', $inv->project_id),
-            ]);
-        }
 
         // 2. Overdue assigned tasks
         foreach ($userTasks->filter(fn($t) => $t->ends_at->isPast()) as $task) {
@@ -450,6 +439,7 @@ class DashboardController
 
         return view('dashboard', [
             'isPmo' => false,
+            'approvalQueue' => $approvalQueue,
             'dueTodayCount' => $userTasks->filter(fn($task) => $task->ends_at?->isToday())->count(),
             'myOverdueCount' => $userTasks->filter(fn($task) => $task->ends_at && $task->ends_at->isPast())->count(),
             'projects' => $userProjects,

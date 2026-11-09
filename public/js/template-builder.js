@@ -604,7 +604,7 @@
                     this.dom.btnUse.style.display = 'inline-block';
                     this.dom.btnUse.textContent = this.unsavedChanges ? 'Save & Continue with Template →' : 'Continue with Template →';
                     this.dom.btnUse.href = '#';
-                } else if (isView && this.canCreateProject && this.template.id && this.template.status!=='archived') {
+                } else if (isView && isProjectSelection && this.canCreateProject && this.template.id && this.template.status!=='archived') {
                     this.dom.btnUse.style.display = 'inline-block';
                     this.dom.btnUse.textContent = isProjectSelection ? 'Continue with Template →' : 'Use Template';
                     this.dom.btnUse.href = this.projectCreateUrl(this.template.id);
@@ -670,6 +670,10 @@
                 return;
             }
 
+            if (this.mode === 'create') {
+                this.dom.detailsDrawer.innerHTML = `<div><label for="stp_drawer_name">Template name</label><input id="stp_drawer_name" value="${this.escapeHtml(this.template.name || '')}" onchange="SmartTaskPlan.onDetailsChange('name', this.value)"></div><div><label for="stp_drawer_duration">Estimated duration (Working days)</label><input type="number" id="stp_drawer_duration" min="1" max="3650" step="1" value="${this.template.estimated_duration}" onchange="if(this.checkValidity()) SmartTaskPlan.onDetailsChange('duration', this.value)"><small>Days / excludes Saturdays and Sundays</small></div><div><label for="stp_drawer_start_date">Reference start date</label><input type="date" id="stp_drawer_start_date" value="${this.template.reference_start_date}" onchange="SmartTaskPlan.onDetailsChange('start_date', this.value)"></div>`;
+                return;
+            }
             this.dom.detailsDrawer.innerHTML = `
                 <div>
                     <label>Template Name</label>

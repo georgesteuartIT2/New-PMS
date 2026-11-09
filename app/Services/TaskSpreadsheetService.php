@@ -11,20 +11,27 @@ use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 use Carbon\Carbon;
 class TaskSpreadsheetService {
  public const COLUMNS=['task_code','parent_task_code','task_name','start_date','end_date','start_time','end_time','assigned_user_email','status','progress','priority','depends_on'];
- public function export(Project $project,bool $blank=false):string {
+ public function export(Project $project,bool $blank=false,bool $fromTemplate=false):string {
   $book=new Spreadsheet();$sheet=$book->getActiveSheet();
   foreach(self::COLUMNS as $col=>$label)$sheet->setCellValueExplicit([$col+1,1],$label,DataType::TYPE_STRING);
   $row=2;
-  if(!$blank){foreach($project->tasks()->with('parent','assignees','dependencies')->orderBy('sort_order')->get() as $task){
+  if($fromTemplate && $project->template){
+   $template=$project->template->load('tasks');$schedule=app(TemplateScheduleService::class);
+   foreach($template->tasks->sortBy('sort_order') as $task){
+    [$start,$end]=$schedule->mapTaskDates($template,$task,Carbon::parse($project->starts_on));
+    $values=[$task->code,$task->parent_code,$task->title,$start->format('Y-m-d'),$end->format('Y-m-d'),$start->format('H:i'),$end->format('H:i'),'','todo',0,$task->priority?:'medium',$task->dependency_code];
+    foreach($values as $i=>$value)$sheet->setCellValueExplicit([$i+1,$row],(string)($value??''),DataType::TYPE_STRING);$row++;
+   }
+  }elseif(!$blank){foreach($project->tasks()->with('parent','assignees','dependencies')->orderBy('sort_order')->get() as $task){
    $values=[$task->code,$task->parent?->code,$task->title,$task->starts_at->format('Y-m-d'),$task->ends_at->format('Y-m-d'),$task->starts_at->format('H:i'),$task->ends_at->format('H:i'),$task->assignees->first()?->email,$task->status,$task->progress,$task->priority,$task->dependencies->pluck('code')->implode(',')];
    foreach($values as $i=>$value)$sheet->setCellValueExplicit([$i+1,$row],(string)($value??''),DataType::TYPE_STRING);
    $row++;
   }}
-  $sheet->freezePane('A2');$sheet->getStyle('A1:L1')->getFont()->setBold(true);
+  $sheet->setTitle('Tasks');$sheet->freezePane('A2');$sheet->getStyle('A1:L1')->getFont()->setBold(true)->getColor()->setARGB('FFFFFFFF');$sheet->getStyle('A1:L1')->getFill()->setFillType('solid')->getStartColor()->setARGB('FF315F58');$sheet->setAutoFilter('A1:L'.max(1,$row-1));
   $guide=$book->createSheet();$guide->setTitle('Instructions');
   $guideRows=[
    ['GS ProjectFlow - Task Import Guide','Enter data in the first worksheet. Do not rename the column headings.'],
-   ['task_code','A stable unique code, e.g. T001'],['parent_task_code','Leave blank for main tasks, or enter another task_code for a subtask'],
+   ['Project',$project->code.' - '.$project->name],['Source',$fromTemplate && $project->template ? 'Template: '.$project->template->name.'; dates shifted to this project; assignments and progress are not copied.' : ($blank?'Blank task worksheet':'Current project tasks')],['task_code','A stable unique code, e.g. T001'],['parent_task_code','Leave blank for main tasks, or enter another task_code for a subtask'],
    ['task_name','A short description, required'],['start_date / end_date','Use YYYY-MM-DD, e.g. 2026-11-10'],
    ['start_time / end_time','Use 24-hour HH:MM, e.g. 09:00 and 17:00'],
    ['assigned_user_email','Must be an active member of this project, or leave blank'],

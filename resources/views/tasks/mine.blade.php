@@ -1,11 +1,15 @@
 @extends('layouts.app')
 @section('title', ($view ?? '') === 'managed' && ($tab ?? '') === 'team' ? 'Team Monitor' : ((($view ?? '') === 'managed') ? 'Task Monitor' : 'My Tasks'))
 @section('content')
+@php
+    $isTeamPage = request()->routeIs('team-monitor');
+@endphp
+<link rel="stylesheet" href="{{ asset('css/personal-workspace.css') }}?v={{ filemtime(public_path('css/personal-workspace.css')) }}">
 
 <!-- =========================================================================
      SCREEN: USER WORKSPACE – MY TASKS, TASK MONITOR & TEAM MONITOR
      ========================================================================= -->
-<div style="padding-bottom: 60px;">
+<div class="personal-workspace" data-workspace-view="{{ $isTeamPage ? 'team' : $view }}" style="padding-bottom: 28px;">
     <!-- Breadcrumbs -->
     @unless(auth()->user()->isPmo())
     <div class="breadcrumb-trail" style="margin-bottom: 14px;">
@@ -16,7 +20,7 @@
         @elseif(($view ?? '') === 'managed')
             <a href="{{ route('tasks.mine') }}">My Tasks</a>
             <span class="crumb-sep">›</span>
-            <span>Task Monitor</span>
+            <span>Managed tasks</span>
         @else
             <span>My Tasks</span>
         @endif
@@ -30,7 +34,7 @@
                 <h1 style="font-size: 24px; font-weight: 700; color: #22272B; margin: 0 0 4px;">Team Monitor</h1>
                 <p class="muted" style="margin: 0; font-size: 13.5px;">Monitor project team members, workload distribution, and task allocations.</p>
             @elseif(($view ?? '') === 'managed')
-                <h1 style="font-size: 24px; font-weight: 700; color: #22272B; margin: 0 0 4px;">Task Monitor</h1>
+                <h1 style="font-size: 24px; font-weight: 700; color: #22272B; margin: 0 0 4px;">Managed tasks</h1>
                 <p class="muted" style="margin: 0; font-size: 13.5px;">Monitor active tasks across projects you manage.</p>
             @else
                 <div class="task-heading-line"><h1 style="font-size: 24px; font-weight: 700; color: #22272B; margin: 0 0 4px;">My Tasks</h1></div>
@@ -38,9 +42,9 @@
             @endif
         </div>
 
-        @if($hasMonitoredProjects && !auth()->user()->isPmo())
-            <!-- Top Segmented Control (Assigned to Me vs Managed by Me) -->
-            <div style="display: inline-flex; background: #F1F5F9; padding: 3px; border-radius: 8px; border: 1px solid #E2E8F0;">
+        @if($hasMonitoredProjects && !auth()->user()->isPmo() && !$isTeamPage)
+            <!-- Task ownership scope -->
+            <div class="personal-view-switch" style="display: inline-flex; background: #F1F5F9; padding: 3px; border-radius: 8px; border: 1px solid #E2E8F0;">
                 <a href="{{ route('tasks.mine', ['view' => 'assigned']) }}"
                    style="padding: 6px 18px; font-size: 13px; font-weight: 650; text-decoration: none; border-radius: 6px; transition: all 0.15s ease; {{ $view === 'assigned' ? 'background: #315F58; color: #FFFFFF; box-shadow: 0 1px 2px rgba(0,0,0,0.06);' : 'color: #475569;' }}">
                     Assigned to Me
@@ -90,7 +94,7 @@
         </div>
 
         <!-- Search and Project Filter Toolbar -->
-        <form method="get" action="{{ route('tasks.mine') }}" class="projects-toolbar-wrap" style="margin-bottom: 16px;">
+        <form method="get" action="{{ route($isTeamPage ? 'team-monitor' : 'tasks.mine') }}" class="projects-toolbar-wrap" style="margin-bottom: 16px;">
             <input type="hidden" name="view" value="assigned">
             <input type="hidden" name="filter" value="{{ $filters['filter'] ?? 'open' }}">
 
@@ -138,7 +142,7 @@
                                 <!-- Task Name & Code -->
                                 <td>
                                     <div class="project-title-cell {{ $isSubtask ? 'pl-16' : '' }}">
-                                        <button type="button" class="monitor-task-title" data-task-panel="{{ route('tasks.panel',$task) }}">{{ $task->title }}</button>
+                                        <button type="button" class="monitor-task-title" data-task-location="{{ route('projects.show', [$task->project_id, 'focus_task'=>$task->id]) }}">{{ $task->title }}</button>
                                         <span class="project-code-sub">
                                             {{ $task->code }}
                                             @if($isSubtask)
@@ -219,7 +223,7 @@
 
                                 <!-- Action Button (Redirects directly to project) -->
                                 <td class="right">
-                                    <button type="button" class="btn btn-outline btn-xs" data-task-panel="{{ route('tasks.panel',$task) }}" data-task-panel-section="update">Update task</button>
+                                    <button type="button" class="btn btn-outline btn-xs" data-task-location="{{ route('projects.show', [$task->project_id, 'focus_task'=>$task->id]) }}" data-task-panel-section="update">Update task</button>
                                 </td>
                             </tr>
                         @empty
@@ -258,10 +262,11 @@
         <!-- =========================================================================
              VIEW 2: MANAGED BY ME (PROJECT TASK MONITOR & TEAM MONITOR)
              ========================================================================= -->
-        <!-- Project Selector and Sub-Tab Navigation Bar -->
-        <div class="card" style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+        @if($isTeamPage)
+        <!-- Project selector -->
+        <div class="card personal-project-scope" style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
             <!-- Project Scope Selector -->
-            <form method="get" action="{{ route('tasks.mine') }}" style="display: flex; align-items: center; gap: 10px; margin: 0;">
+            <form method="get" action="{{ route($isTeamPage ? 'team-monitor' : 'tasks.mine') }}" style="display: flex; align-items: center; gap: 10px; margin: 0;">
                 <input type="hidden" name="view" value="managed">
                 <input type="hidden" name="tab" value="{{ $tab }}">
                 <label for="project-scope-select" style="font-size: 13px; font-weight: 650; color: #475569; white-space: nowrap;">
@@ -275,56 +280,18 @@
                 </select>
             </form>
 
-            <!-- Sub-Tabs: [ Task Monitor ] and [ Team Monitor ] -->
-            <div style="display: flex; gap: 6px; background: #F1F5F9; padding: 3px; border-radius: 6px; border: 1px solid #E2E8F0;">
-                <a href="{{ route('tasks.mine', ['view' => 'managed', 'tab' => 'tasks', 'project_id' => $projectId]) }}"
-                   style="padding: 6px 16px; font-size: 12.5px; font-weight: 650; text-decoration: none; border-radius: 5px; {{ $tab === 'tasks' ? 'background: #FFFFFF; color: #315F58; box-shadow: 0 1px 2px rgba(0,0,0,0.06);' : 'color: #64748B;' }}">
-                    Task Monitor
-                </a>
-                <a href="{{ route('tasks.mine', ['view' => 'managed', 'tab' => 'team', 'project_id' => $projectId]) }}"
-                   style="padding: 6px 16px; font-size: 12.5px; font-weight: 650; text-decoration: none; border-radius: 5px; {{ $tab === 'team' ? 'background: #FFFFFF; color: #315F58; box-shadow: 0 1px 2px rgba(0,0,0,0.06);' : 'color: #64748B;' }}">
-                    Team Monitor
-                </a>
-            </div>
+
         </div>
 
+        @endif
         @if($tab === 'tasks')
             <!-- ---------------------------------------------------------------------
                  SUB-TAB A: TASK MONITOR
                  --------------------------------------------------------------------- -->
-            <!-- 5 Summary Metrics Cards -->
-            <div class="kpi-row" style="grid-template-columns: repeat(5, minmax(0, 1fr)); margin-bottom: 20px;">
-                <div class="kpi-card" style="background: #FFFFFF; border-color: #E5E7EB;">
-                    <span class="kpi-label">Total Tasks</span>
-                    <div class="kpi-value" style="color: #22272B;">{{ $taskMetrics['total_tasks'] ?? 0 }}</div>
-                    <span class="kpi-sub">In monitored scope</span>
-                </div>
-                <div class="kpi-card" style="background: #FFFFFF; border-color: #E5E7EB;">
-                    <span class="kpi-label">Open Tasks</span>
-                    <div class="kpi-value" style="color: #315F58;">{{ $taskMetrics['open_tasks'] ?? 0 }}</div>
-                    <span class="kpi-sub">Active executable tasks</span>
-                </div>
-                <div class="kpi-card {{ ($taskMetrics['overdue_tasks'] ?? 0) > 0 ? 'kpi-card-danger' : '' }}" style="border-color: {{ ($taskMetrics['overdue_tasks'] ?? 0) > 0 ? '#DC2626' : '#E5E7EB' }};">
-                    <span class="kpi-label">Overdue Tasks</span>
-                    <div class="kpi-value {{ ($taskMetrics['overdue_tasks'] ?? 0) > 0 ? 'text-danger' : '' }}">{{ $taskMetrics['overdue_tasks'] ?? 0 }}</div>
-                    <span class="kpi-sub">Passed deadline</span>
-                </div>
-                <div class="kpi-card {{ ($taskMetrics['critical_tasks'] ?? 0) > 0 ? 'kpi-card-danger' : '' }}" style="border-color: {{ ($taskMetrics['critical_tasks'] ?? 0) > 0 ? '#DC2626' : '#E5E7EB' }};">
-                    <span class="kpi-label">Critical Tasks</span>
-                    <div class="kpi-value {{ ($taskMetrics['critical_tasks'] ?? 0) > 0 ? 'text-danger' : '' }}">{{ $taskMetrics['critical_tasks'] ?? 0 }}</div>
-                    <span class="kpi-sub">Zero float critical path</span>
-                </div>
-                <div class="kpi-card {{ ($taskMetrics['unassigned_tasks'] ?? 0) > 0 ? 'kpi-card-warning' : '' }}" style="border-color: {{ ($taskMetrics['unassigned_tasks'] ?? 0) > 0 ? '#D97706' : '#E5E7EB' }};">
-                    <span class="kpi-label">Unassigned Tasks</span>
-                    <div class="kpi-value {{ ($taskMetrics['unassigned_tasks'] ?? 0) > 0 ? 'text-warning' : '' }}">{{ $taskMetrics['unassigned_tasks'] ?? 0 }}</div>
-                    <span class="kpi-sub">Require resource assignment</span>
-                </div>
-            </div>
-
             <!-- Quick Filter Buttons & Toolbar -->
-            <div class="card" style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; padding: 16px 18px; margin-bottom: 20px;">
-                <!-- Quick Filter Pills -->
-                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid #F1F5F9;">
+            <div class="card managed-task-filters" style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; padding: 16px 18px; margin-bottom: 20px;">
+                <!-- One focus row replaces duplicate KPI cards -->
+                <nav class="managed-focus-tabs" aria-label="Managed task views">
                     @php
                         $activeF = $filters['filter'] ?? 'all';
                         $pillLinks = [
@@ -339,32 +306,34 @@
                         ];
                     @endphp
                     @foreach($pillLinks as $k => $lbl)
-                        <a href="{{ route('tasks.mine', array_merge(request()->query(), ['view' => 'managed', 'tab' => 'tasks', 'filter' => $k])) }}"
-                           style="padding: 5px 12px; font-size: 12px; font-weight: 600; text-decoration: none; border-radius: 6px; transition: all 0.15s ease; {{ $activeF === $k ? 'background: #315F58; color: #FFFFFF;' : 'background: #F8FAFC; color: #475569; border: 1px solid #E2E8F0;' }}">
+                        <a href="{{ route('tasks.mine', array_merge(request()->query(), ['view' => 'managed', 'tab' => 'tasks', 'filter' => $k, 'page'=>null])) }}"
+                           class="managed-focus-link {{ $activeF === $k ? 'is-active' : '' }}" @if($activeF === $k) aria-current="page" @endif style="padding: 5px 12px; font-size: 12px; font-weight: 600; text-decoration: none; border-radius: 6px; transition: all 0.15s ease; {{ $activeF === $k ? 'background: #315F58; color: #FFFFFF;' : 'background: #F8FAFC; color: #475569; border: 1px solid #E2E8F0;' }}">
                             {{ $lbl }}
+                            @php
+                                $metricKey = $k === 'all' ? 'total_tasks' : $k.'_tasks';
+                            @endphp
+                            @if(isset($taskMetrics[$metricKey]))<span>{{ $taskMetrics[$metricKey] }}</span>@endif
                         </a>
                     @endforeach
-                </div>
+                </nav>
 
                 <!-- Detailed Filter Row -->
-                <form method="get" action="{{ route('tasks.mine') }}" style="display: grid; grid-template-columns: 2fr 1.2fr 1.2fr auto; gap: 12px; align-items: end; margin: 0;">
+                <form id="managed-task-filter-form" method="get" action="{{ route($isTeamPage ? 'team-monitor' : 'tasks.mine') }}" style="display: grid; grid-template-columns: 2fr 1.2fr 1.2fr auto; gap: 12px; align-items: end; margin: 0;">
                     <input type="hidden" name="view" value="managed">
                     <input type="hidden" name="tab" value="tasks">
                     <input type="hidden" name="filter" value="{{ $filters['filter'] ?? 'all' }}">
-                    @if($projectId)
-                        <input type="hidden" name="project_id" value="{{ $projectId }}">
-                    @endif
+                    <div class="managed-project-control"><label for="managed-project-filter">Project</label><select id="managed-project-filter" name="project_id" onchange="this.form.requestSubmit()"><option value="">All managed projects ({{ $monitoredProjects->count() }})</option>@foreach($monitoredProjects as $managedProject)<option value="{{ $managedProject->id }}" @selected($projectId==$managedProject->id)>{{ $managedProject->name }}</option>@endforeach</select></div>
 
                     <!-- Search Input -->
                     <div>
                         <label style="display: block; font-size: 12px; font-weight: 650; color: #475569; margin-bottom: 4px;">Search Tasks</label>
-                        <input type="text" name="q" value="{{ $filters['q'] ?? '' }}" placeholder="Search by task title, code, assignee, project..." style="width: 100%; height: 38px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 12px; font-size: 13px;">
+                        <input type="text" name="q" value="{{ $filters['q'] ?? '' }}" placeholder="Task name, code or person..." style="width: 100%; height: 38px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 12px; font-size: 13px;">
                     </div>
 
                     <!-- Assignee Filter -->
                     <div>
                         <label style="display: block; font-size: 12px; font-weight: 650; color: #475569; margin-bottom: 4px;">Assignee</label>
-                        <select name="user_id" style="width: 100%; height: 38px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 10px; font-size: 12.5px;">
+                        <select name="user_id" onchange="this.form.requestSubmit()" style="width: 100%; height: 38px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 10px; font-size: 12.5px;">
                             <option value="">All Assignees</option>
                             @foreach($assignees as $u)
                                 <option value="{{ $u->id }}" @selected(($filters['user_id'] ?? '') == $u->id)>{{ $u->name }}</option>
@@ -375,7 +344,7 @@
                     <!-- Status Filter -->
                     <div>
                         <label style="display: block; font-size: 12px; font-weight: 650; color: #475569; margin-bottom: 4px;">Status</label>
-                        <select name="status" style="width: 100%; height: 38px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 10px; font-size: 12.5px;">
+                        <select name="status" onchange="this.form.requestSubmit()" style="width: 100%; height: 38px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 10px; font-size: 12.5px;">
                             <option value="">All Statuses</option>
                             @foreach(['todo' => 'To Do', 'in_progress' => 'In Progress', 'on_hold' => 'On Hold', 'completed' => 'Completed'] as $v => $l)
                                 <option value="{{ $v }}" @selected(($filters['status'] ?? '') === $v)>{{ $l }}</option>
@@ -398,7 +367,7 @@
             <!-- Task Monitor Table Card -->
             <div class="projects-table-card">
                 <div class="table-wrap">
-                    <table class="projects-table">
+                    <table class="projects-table managed-task-table">
                         <thead>
                             <tr>
                                 <th>TASK & PROJECT</th>
@@ -508,16 +477,15 @@
                                             $hKey = $health['key'] ?? 'on_track';
                                             $hLabel = $health['label'] ?? 'On Track';
                                             $pillClass = match($hKey) {
-                                                'critical_overdue', 'critical', 'overdue' => 'pill-danger',
+                                                'critical_overdue', 'overdue' => 'pill-danger',
+                                                'critical' => 'pill-warning',
                                                 'blocked' => 'pill-warning',
                                                 'at_risk' => 'pill-warning',
                                                 'completed' => 'pill-neutral',
                                                 default => 'pill-success',
                                             };
                                         @endphp
-                                        <span class="status-pill {{ $pillClass }}" style="font-size: 11.5px; padding: 2px 8px; white-space: nowrap;">
-                                            {{ $hLabel }}
-                                        </span>
+                                        @if($isCritical && $hKey!=='completed')@include('tasks._critical-badge',['criticalClass'=>$pillClass,'criticalLabel'=>$hLabel])@else<span class="status-pill {{ $pillClass }}">{{ $hLabel }}</span>@endif
                                     </td>
 
                                     <!-- Actions -->
@@ -591,7 +559,7 @@
 
             <!-- Team Filter & Search Toolbar -->
             <div class="card" style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; padding: 16px 18px; margin-bottom: 20px;">
-                <form method="get" action="{{ route('tasks.mine') }}" style="display: grid; grid-template-columns: 2fr 1.5fr auto auto; gap: 12px; align-items: end; margin: 0;">
+                <form method="get" action="{{ route($isTeamPage ? 'team-monitor' : 'tasks.mine') }}" style="display: grid; grid-template-columns: 2fr 1.5fr auto auto; gap: 12px; align-items: end; margin: 0;">
                     <input type="hidden" name="view" value="managed">
                     <input type="hidden" name="tab" value="team">
                     @if($projectId)
@@ -633,7 +601,7 @@
                         <button type="submit" class="btn btn-primary btn-sm" style="height: 38px; padding: 0 14px; background: #315F58; color: #FFFFFF; font-weight: 600;">
                             Filter
                         </button>
-                        <a href="{{ route('tasks.mine', ['view' => 'managed', 'tab' => 'team', 'project_id' => $projectId]) }}" class="btn btn-outline btn-sm" style="height: 38px; line-height: 36px; padding: 0 12px; color: #64748B;">
+                        <a href="{{ route('team-monitor', ['project_id' => $projectId]) }}" class="btn btn-outline btn-sm" style="height: 38px; line-height: 36px; padding: 0 12px; color: #64748B;">
                             Reset
                         </a>
                     </div>
@@ -1054,6 +1022,6 @@
 </script>
 @endpush
 
-@include('tasks._drawer')
+
 <script defer src="{{ asset('js/project-workspace.js') }}?v={{ filemtime(public_path('js/project-workspace.js')) }}"></script>
 @endsection

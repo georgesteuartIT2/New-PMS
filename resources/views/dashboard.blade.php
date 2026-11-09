@@ -25,6 +25,15 @@
     <nav class="home-summary" aria-label="Workspace summary">
         @foreach($homeMetrics as $metric)<a href="{{ $metric['url'] }}"><span>{{ $metric['label'] }}</span><strong class="{{ !empty($metric['warning']) && $metric['value']>0 ? 'text-danger' : '' }}">{{ $metric['value'] }}</strong><span class="home-summary-arrow" aria-hidden="true">&rarr;</span></a>@endforeach
     </nav>
+    @if(!$isPmo && $approvalQueue->total()>0)
+    <section class="approval-queue" id="project-approvals" aria-labelledby="approval-queue-title">
+        <header><div><span class="approval-eyebrow">Awaiting your decision</span><h2 id="approval-queue-title">Project approvals <span>{{ $approvalQueue->total() }}</span></h2><p>Review the scope and team before accepting a project.</p></div><span class="approval-queue-count">{{ $approvalQueue->firstItem() }}&ndash;{{ $approvalQueue->lastItem() }} of {{ $approvalQueue->total() }}</span></header>
+        @foreach($approvalQueue as $approval)
+        <article class="approval-queue-row"><div><a href="{{ route('projects.show',$approval) }}">{{ $approval->name }}</a><small>{{ $approval->code }} &middot; {{ $approval->subsidiary?->name ?? 'General Group' }}</small></div><div class="approval-queue-schedule"><span>{{ $approval->starts_on->format('d M') }} &ndash; {{ $approval->ends_on->format('d M Y') }}</span><small>{{ $approval->tasks_count }} planned tasks &middot; From {{ $approval->creator?->name ?? 'PMO' }}</small></div><a class="btn btn-outline btn-sm" href="{{ route('projects.show',$approval) }}">Review request &rarr;</a></article>
+        @endforeach
+        @if($approvalQueue->hasPages())<footer class="approval-pagination" aria-label="Approval pages">@if($approvalQueue->onFirstPage())<span class="btn btn-outline btn-sm" aria-disabled="true">&larr; Previous</span>@else<a class="btn btn-outline btn-sm" href="{{ $approvalQueue->previousPageUrl() }}">&larr; Previous</a>@endif<span>Page {{ $approvalQueue->currentPage() }} of {{ $approvalQueue->lastPage() }}</span>@if($approvalQueue->hasMorePages())<a class="btn btn-outline btn-sm" href="{{ $approvalQueue->nextPageUrl() }}">Next &rarr;</a>@else<span class="btn btn-outline btn-sm" aria-disabled="true">Next &rarr;</span>@endif</footer>@endif
+    </section>
+    @endif
     <div class="home-grid">
         <div class="home-main">
             <section class="home-panel" aria-labelledby="my-attention">
@@ -55,7 +64,7 @@
         <aside class="home-side" aria-label="Upcoming work and shortcuts">
             <section class="home-panel"><header class="home-panel-head"><div><h2 id="upcoming-work">{{ $isPmo ? 'Upcoming deadlines' : 'Coming up next' }}</h2><p>Next scheduled task deadlines.</p></div><a class="text-action" href="{{ route('calendar.index') }}">Calendar &rarr;</a></header><div class="home-upcoming">
                 @forelse($homeWork->take(5) as $task)
-                    <button type="button" class="home-upcoming-item" data-task-panel="{{ route('tasks.panel',$task) }}"><span class="home-date"><strong>{{ $task->ends_at->format('d') }}</strong><small>{{ $task->ends_at->format('M') }}</small></span><span class="home-upcoming-copy"><b>{{ $task->title }}</b><small>{{ $task->project?->name }}</small><span class="{{ $task->isOverdue() ? 'text-danger' : 'muted' }}">{{ $task->isOverdue() ? 'Overdue' : $task->ends_at->diffForHumans() }}</span></span><span aria-hidden="true">&rsaquo;</span></button>
+                    <button type="button" class="home-upcoming-item" data-task-location="{{ route('projects.show', [$task->project_id, 'focus_task'=>$task->id]) }}"><span class="home-date"><strong>{{ $task->ends_at->format('d') }}</strong><small>{{ $task->ends_at->format('M') }}</small></span><span class="home-upcoming-copy"><b>{{ $task->title }}</b><small>{{ $task->project?->name }}</small><span class="{{ $task->isOverdue() ? 'text-danger' : 'muted' }}">{{ $task->isOverdue() ? 'Overdue' : $task->ends_at->diffForHumans() }}</span></span><span aria-hidden="true">&rsaquo;</span></button>
                 @empty<div class="home-empty home-empty-small"><b>No upcoming deadlines</b><p>Your scheduled work will appear here.</p></div>@endforelse
             </div></section>
             @if($isPmo)
@@ -77,6 +86,6 @@
         </aside>
     </div>
 </div>
-@include('tasks._drawer')
+
 <script defer src="{{ asset('js/project-workspace.js') }}?v={{ filemtime(public_path('js/project-workspace.js')) }}"></script>
 @endsection

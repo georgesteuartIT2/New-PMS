@@ -29,6 +29,10 @@
     <script defer src="{{ asset('js/system.js') }}?v={{ filemtime(public_path('js/system.js')) }}"></script>
     <script defer src="{{ asset('js/app.js') }}"></script>
     <script defer src="{{ asset('js/usability.js') }}"></script>
+    <script defer src="{{ asset('js/task-navigation.js') }}?v={{ filemtime(public_path('js/task-navigation.js')) }}"></script>
+    <script defer src="{{ asset('js/task-progress.js') }}?v={{ filemtime(public_path('js/task-progress.js')) }}"></script>
+    <link rel="stylesheet" href="{{ asset('css/critical-explanation.css') }}?v={{ filemtime(public_path('css/critical-explanation.css')) }}">
+    <script defer src="{{ asset('js/critical-explanation.js') }}?v={{ filemtime(public_path('js/critical-explanation.js')) }}"></script>
 </head>
 <body data-page="{{ request()->route()?->getName() }}">
     <a class="skip-link" href="#main-content">Skip to content</a>
@@ -99,9 +103,11 @@
                 </button>
 
                 <!-- Search Bar -->
+                @unless(request()->routeIs('projects.index'))
                 <form method="get" action="{{ route('projects.index') }}" class="global-search-wrap">
                     <input type="text" name="q" class="global-search-input" aria-label="Search projects" placeholder="Search projects by name or code..." value="{{ request('q') }}">
                 </form>
+                @endunless
 
                 <!-- Actions & Profile Chip -->
                 <div class="top-actions">

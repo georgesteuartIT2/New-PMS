@@ -56,6 +56,7 @@ Route::middleware(['auth','account.active'])->group(function(){
   Route::post('/projects/{project}/tasks/bulk-update',[\App\Http\Controllers\TaskBulkController::class,'update'])->name('tasks.bulk-update');
   Route::get('/tasks/my',[TaskController::class,'mine'])->name('tasks.mine');
   Route::get('/tasks/team-member/{user}/details',[TaskController::class,'teamMemberDetails'])->name('tasks.team-member.details');
+  Route::get('/tasks/{task}/critical-explanation',[TaskController::class,'criticalExplanation'])->name('tasks.critical-explanation');
   Route::get('/tasks/{task}/panel',[TaskController::class,'panel'])->name('tasks.panel');
   Route::get('/tasks/{task}',[TaskController::class,'show'])->name('tasks.show');
   Route::patch('/tasks/{task}',[TaskController::class,'update'])->name('tasks.update');
@@ -92,14 +93,10 @@ Route::middleware(['auth','account.active'])->group(function(){
   Route::get('/pmo/team-monitor', [\App\Http\Controllers\TeamMonitorController::class, 'index'])->name('pmo.team-monitor');
   Route::get('/pmo/team-monitor/employee/{user}', [\App\Http\Controllers\TeamMonitorController::class, 'employeeDetails'])->name('pmo.team-monitor.employee');
   Route::post('/pmo/team-monitor/reassign', [\App\Http\Controllers\TeamMonitorController::class, 'reassign'])->name('pmo.team-monitor.reassign');
-  Route::get('/team-monitor', function (\Illuminate\Http\Request $request) {
-      if ($request->user()->isPmo()) {
-          return redirect()->route('pmo.team-monitor');
-      }
-      return redirect()->route('tasks.mine', ['view' => 'managed', 'tab' => 'team']);
-  })->name('team-monitor');
+  Route::get('/team-monitor', [TaskController::class,'team'])->name('team-monitor');
 
   Route::middleware('pmo')->group(function(){
+   Route::delete('/projects/{project}',[ProjectController::class,'destroy'])->name('projects.destroy');
    Route::view('/administration','administration.index')->name('administration.index');
    Route::post('/projects/{project}/manager',[ProjectController::class,'assignPm'])->name('projects.manager');
    Route::get('/projects/{project}/permissions',[RoleController::class,'index'])->name('roles.index');

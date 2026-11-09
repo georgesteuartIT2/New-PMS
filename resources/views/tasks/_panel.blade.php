@@ -18,7 +18,7 @@
     <div><small>End time</small><b style="{{ $task->isOverdue() ? 'color: #DC2626; font-weight: 700;' : '' }}">{{ $task->ends_at->format('h:i A') }}</b></div>
 </div>
 
-@if($canUpdate)
+@if($canUpdate && !$task->children()->exists())
     <form method="post" action="{{ route('tasks.update', $task) }}" class="panel-section panel-update" data-panel-section="update">
         @csrf
         @method('PATCH')

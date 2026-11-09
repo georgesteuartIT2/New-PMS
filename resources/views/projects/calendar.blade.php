@@ -137,7 +137,7 @@
                         @php
                             $isOverdue = $task->isOverdue();
                         @endphp
-                        <a href="{{ route('tasks.show', $task) }}" data-task-panel="{{ route('tasks.panel', $task) }}" class="cal-item cal-item-task {{ $isOverdue ? 'is-overdue' : '' }}"
+                        <a href="{{ route('tasks.show', $task) }}" data-task-location="{{ route('projects.show', [$task->project_id, 'focus_task'=>$task->id]) }}" class="cal-item cal-item-task {{ $isOverdue ? 'is-overdue' : '' }}"
                            title="Task: {{ $task->title }} - Progress: {{ $task->progress }}%">
                             @if($isOverdue)
                                 <span style="color: #DC2626; font-weight: 700;">[Overdue]</span>
@@ -161,7 +161,7 @@
 
 <!-- Include Shared Meeting Scheduling & View Modals -->
 @include('calendar._meeting_modals')
-@include('tasks._drawer')
+
 
 <script src="{{ asset('js/calendar-meetings.js') }}"></script>
 @endsection

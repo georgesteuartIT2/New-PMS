@@ -9,8 +9,18 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\{DB, Storage};
 
 class TaskController {
+    public function team(Request $request, UserTaskMonitoringService $monitoringService)
+    {
+        if ($request->user()->isPmo()) return redirect()->route('pmo.team-monitor', $request->except('view','tab'));
+        $request->merge(['view'=>'managed','tab'=>'team']);
+        return $this->mine($request, $monitoringService);
+    }
+
     public function mine(Request $request, UserTaskMonitoringService $monitoringService)
     {
+        if (!$request->routeIs('team-monitor') && $request->input('view') === 'managed' && $request->input('tab') === 'team') {
+            return redirect()->route('team-monitor', $request->except('view','tab'));
+        }
         $user = $request->user();
         $monitoredProjects = $monitoringService->getMonitoredProjects($user);
         $hasMonitoredProjects = $monitoredProjects->isNotEmpty();
@@ -148,7 +158,7 @@ class TaskController {
  public function show(Task $task,Request $request,Access $access){
   abort_unless($access->task($request->user(),$task),403);
   if (!app()->runningUnitTests()) {
-      return redirect()->route('projects.show', $task->project);
+      return redirect()->route('projects.show', [$task->project_id, 'focus_task'=>$task->id]);
   }
   $candidateTasks = $task->project->tasks()
       ->where('id', '!=', $task->id)
@@ -163,6 +173,17 @@ class TaskController {
       'canUpload'=>$access->task($request->user(),$task,'upload') && $task->project->status==='active',
       'delayReasons'=>\App\Http\Controllers\TaskDelayController::REASONS,
   ]);
+ }
+ public function criticalExplanation(Task $task,Request $request,Access $access,\App\Services\ProjectHealthService $healthService){
+  abort_unless($access->task($request->user(),$task,'view'),403);
+  $health=$healthService->assess($task->project);$critical=in_array($task->id,$health['critical_ids'],true);
+  if(!$critical)return response()->json(['critical'=>false,'title'=>$task->title,'reason'=>'This task is not currently on a reliable critical path. Refresh the task list for the latest schedule.']);
+  $nodes=$health['dependency_nodes'];$before=$nodes[$task->id]['predecessors']??[];
+  $after=array_keys(array_filter($nodes,fn($node)=>in_array($task->id,$node['predecessors'],true)));
+  $linked=$task->project->tasks()->whereIn('id',array_unique(array_merge($before,$after)))->get()->keyBy('id');
+  $names=function($ids)use($linked,$request,$access){return collect($ids)->map(function($id)use($linked,$request,$access){$item=$linked->get($id);return $item && $access->task($request->user(),$item,'view')?['code'=>$item->code,'title'=>$item->title]:['code'=>null,'title'=>'Restricted task'];})->values();};
+  $reason= !$before && !$after ? 'This task itself is a longest path through the task network.' : (!$before ? 'This task starts a critical dependency chain. Later tasks depend on it.' : (!$after ? 'This task finishes a critical dependency chain and determines the calculated completion.' : 'This task connects earlier and later work on a critical dependency chain.'));
+  return response()->json(['critical'=>true,'title'=>$task->title,'reason'=>$reason,'float_minutes'=>$health['cpm_tasks'][$task->id]['float_minutes'],'predecessors'=>$names($before),'successors'=>$names($after),'impact'=>'There is no spare working time in this calculated network. A delay can move its completion if the remaining plan stays unchanged.']);
  }
  public function panel(Task $task,Request $request,Access $access){
   abort_unless($access->task($request->user(),$task,'view'),403);
@@ -207,19 +228,25 @@ class TaskController {
       'status'=>'required|in:todo,in_progress,on_hold,completed',
       'progress'=>'nullable|integer|min:0|max:100'
   ]);
-  if (!isset($data['progress'])) {
-      $data['progress'] = $data['status'] === 'completed' ? 100 : ($data['status'] === 'todo' ? 0 : $task->progress);
-  }
-  if($data['status']==='completed')$data['progress']=100;
-  if($data['progress']===100)$data['status']='completed';
-  $task->update($data);$service->recalculate($task->project);Audit::record('task.progress_updated',$task,$data);
+  abort_if($task->children()->exists(),422,'Parent progress is calculated from its subtasks. Update a subtask instead.');
+  DB::transaction(function()use($task,$data,$service){
+      Project::whereKey($task->project_id)->lockForUpdate()->firstOrFail();$task->refresh();
+      $values=$task->normalizeProgressInput($data);$task->update($values);$service->recalculate($task->project);Audit::record('task.progress_updated',$task,$values);
+  });
   if ($request->wantsJson() || $request->ajax()) {
+      $task->refresh();
+      $visible=$task->project->tasks()->get()->filter(fn($item)=>$access->task($request->user(),$item,'view'));
+      $countQuery=$task->project->tasks()->whereDoesntHave('children');
+      if(!$request->user()->isPmo() && $task->project->pm_user_id!==$request->user()->id && !$access->project($request->user(),$task->project,'view_tasks'))$countQuery->whereHas('assignees',fn($q)=>$q->where('users.id',$request->user()->id));
       return response()->json([
           'success' => true,
           'status' => $task->status,
           'progress' => $task->progress,
           'is_overdue' => $task->isOverdue(),
-          'project_progress' => $task->project->fresh()->progress
+          'project_progress' => $task->project->fresh()->progress,
+          'completed_tasks' => (clone $countQuery)->where('status','completed')->count(),
+          'total_tasks' => (clone $countQuery)->count(),
+          'tasks' => $visible->map(fn($item)=>['id'=>$item->id,'status'=>$item->status,'progress'=>$item->progress,'is_overdue'=>$item->isOverdue()])->values()
       ]);
   }
   return back()->with('success','Task updated.');
@@ -248,12 +275,7 @@ class TaskController {
       'assigned_user_id'=>'nullable|exists:users,id',
       'parent_task_id'=>'nullable|integer|exists:tasks,id'
   ]);
-  if(isset($data['status']) && $data['status']==='completed'){
-      $data['progress'] = 100;
-  }
-  if(isset($data['progress']) && $data['progress']===100){
-      $data['status'] = 'completed';
-  }
+  $data=$task->normalizeProgressInput($data);
   if(array_key_exists('assigned_user_id', $data)){
       if($data['assigned_user_id']){
           $task->assignees()->sync([$data['assigned_user_id']]);
@@ -277,9 +299,12 @@ class TaskController {
  }
  public function assign(Request $request,Task $task,Access $access){
   abort_unless($access->project($request->user(),$task->project,'assign_tasks'),403);
-  $data=$request->validate(['user_id'=>'required|exists:users,id']);
-  abort_unless($task->project->pm_user_id==(int)$data['user_id']||$task->project->memberships()->where('user_id',$data['user_id'])->exists(),422,'Add the user to this project first.');
-  $task->assignees()->syncWithoutDetaching([$data['user_id']]);
+  abort_if($task->project->status==='archived',403);
+  $data=$request->validate(['user_id'=>['required','integer',\Illuminate\Validation\Rule::exists('users','id')->where('account_status','active')]]);
+  abort_unless($task->project->pm_user_id==(int)$data['user_id']||$task->project->memberships()->where('user_id',$data['user_id'])->exists(),422,'Add this person to the project team first.');
+  $task->assignees()->syncWithoutDetaching([(int)$data['user_id']]);
+  Audit::record('task.assigned',$task,['user_id'=>(int)$data['user_id']]);
+  if($request->wantsJson())return response()->json(['success'=>true,'assignees'=>$task->assignees()->orderBy('name')->get(['users.id','users.name'])]);
   return back()->with('success','Task assigned.');
  }
  public function upload(Request $request,Task $task,Access $access){

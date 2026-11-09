@@ -7,8 +7,11 @@ class TaskImportController {
  private function permit(Request $request,Project $project,Access $access):void {abort_unless($access->canManageTask($request->user(),$project),403);abort_if($project->status==='archived',403);}
  public function export(Request $request,Project $project,Access $access,TaskSpreadsheetService $spreadsheets){
   $this->permit($request,$project,$access);
-  $file=$spreadsheets->export($project,$request->boolean('blank'));
-  return response()->download($file,$project->code.'-tasks.xlsx')->deleteFileAfterSend(true);
+  $starter=$request->boolean('starter');$fromTemplate=$starter && $project->template!==null;
+  $blank=$request->boolean('blank') || ($starter && !$fromTemplate);
+  $file=$spreadsheets->export($project,$blank,$fromTemplate);
+  $suffix=$starter?($fromTemplate?'-project-template.xlsx':'-blank-template.xlsx'):'-tasks.xlsx';
+  return response()->download($file,$project->code.$suffix)->deleteFileAfterSend(true);
  }
  public function preview(Request $request,Project $project,Access $access,TaskSpreadsheetService $spreadsheets){
   $this->permit($request,$project,$access);

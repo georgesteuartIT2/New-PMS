@@ -7,6 +7,23 @@ class Task extends Model {
      'baseline_starts_at','baseline_ends_at','status','progress','last_progress_updated_at',
      'priority','estimated_hours','sort_order','created_by'
  ];
+ protected static function booted(): void {
+  static::saving(function (Task $task) {
+   $values=[];foreach(['status','progress'] as $key)if($task->isDirty($key))$values[$key]=$task->getAttribute($key);
+   if($values)$task->forceFill($task->normalizeProgressInput($values));
+  });
+ }
+ public function normalizeProgressInput(array $values): array {
+  if(!array_key_exists('status',$values) && !array_key_exists('progress',$values))return $values;
+  $status=$values['status']??$this->status??'todo';$progress=(int)($values['progress']??$this->progress??0);
+  if($status==='todo')$progress=0;
+  elseif($status==='completed')$progress=100;
+  elseif($progress>=100){
+   if(array_key_exists('status',$values) && $this->getRawOriginal('status')==='completed')$progress=0;
+   else {$status='completed';$progress=100;}
+  }
+  $values['status']=$status;$values['progress']=max(0,min(100,$progress));return $values;
+ }
  protected function casts(): array{
      return [
          'starts_at'=>'datetime',
