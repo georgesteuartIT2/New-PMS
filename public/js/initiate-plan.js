@@ -1,0 +1,14 @@
+document.addEventListener('DOMContentLoaded', () => {
+ const form=document.getElementById('initiate-project-form');if(!form)return;
+ const mode=form.elements.plan_mode,selected=form.elements.project_template_id,blank=form.elements.blank_plan,summary=document.getElementById('starting-plan-summary');
+ const flow=form.dataset.flow||crypto.randomUUID(),key='initiate-project-'+flow;
+ const names=['name','description','subsidiary_id','assignment_type','assignee_id','plan_mode','project_template_id','starts_on','ends_on','blank_plan'];
+ function keep(){const data={};for(const name of names)data[name]=form.elements[name]?.value||'';const option=form.elements.assignee_id.selectedOptions[0];data.person=option?{id:option.value,label:option.textContent}:null;sessionStorage.setItem(key,JSON.stringify(data));}
+ if(!window.INITIATE_HAS_OLD){try{const data=JSON.parse(sessionStorage.getItem(key)||'null');if(data){if(data.person?.id&&!Array.from(form.elements.assignee_id.options).some(o=>o.value===data.person.id))form.elements.assignee_id.add(new Option(data.person.label,data.person.id));for(const name of names)if(data[name]!==undefined)form.elements[name].value=data[name];}}catch{}}
+ if(window.INITIATE_TEMPLATE){mode.value='template';selected.value=window.INITIATE_TEMPLATE;}
+ function refresh(){mode.dispatchEvent(new Event('change'));document.getElementById('initiate-plan-options').open=mode.value!=='none';const option=selected.selectedOptions[0];summary.textContent=mode.value==='template'&&selected.value?'Selected: '+option.textContent:blank.value?'Blank task plan prepared':'';}
+ document.getElementById('browse-starting-template').addEventListener('click',()=>{try{keep();const url=new URL(form.dataset.library,location.href);url.searchParams.set('select_for_project','1');url.searchParams.set('project_flow',flow);location.assign(url);}catch{summary.textContent='Browser storage is unavailable. Enable it to keep your project details.';}});
+ Object.assign(window.SmartTaskPlan,{roles:window.INITIATE_ROLES||[],canManage:true,canCreateProject:false,localPlanSave(payload){blank.value=JSON.stringify(payload);summary.textContent=payload.tasks.length+' tasks prepared';keep();}});
+ document.getElementById('edit-blank-plan').addEventListener('click',()=>{let data;try{data=JSON.parse(blank.value);}catch{}if(data){window.SmartTaskPlan.openEdit(data,data.tasks);}else window.SmartTaskPlan.openCreate({name:form.elements.name.value||'Project task plan',estimated_duration:1,reference_start_date:form.elements.starts_on.value,working_hours:'09:00 - 17:00'});});
+ form.addEventListener('submit',()=>{try{sessionStorage.removeItem(key);}catch{}});refresh();
+});

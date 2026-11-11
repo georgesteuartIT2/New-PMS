@@ -26,6 +26,7 @@ Route::middleware(['auth','account.active'])->group(function(){
   Route::get('/projects/{project}/plan-templates',[\App\Http\Controllers\ProjectWorkflowController::class,'templates'])->name('projects.plan.templates');
   Route::get('/projects/{project}/plan-templates/{template}',[\App\Http\Controllers\ProjectWorkflowController::class,'templatePreview'])->name('projects.plan.template-preview');
   Route::get('/projects/{project}/plan-setup',[\App\Http\Controllers\ProjectWorkflowController::class,'setup'])->name('projects.plan.setup');
+  Route::post('/projects/{project}/plan-options',[\App\Http\Controllers\ProjectWorkflowController::class,'saveOptions'])->name('projects.plan.options');
   Route::post('/projects/{project}/plan-setup',[\App\Http\Controllers\ProjectWorkflowController::class,'initialize'])->name('projects.plan.initialize');
   Route::post('/projects/{project}/publish-plan',[\App\Http\Controllers\ProjectWorkflowController::class,'publish'])->name('projects.plan.publish');
   Route::get('/projects/create',[ProjectController::class,'create'])->name('projects.create');

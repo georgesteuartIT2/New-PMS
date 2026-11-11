@@ -290,7 +290,7 @@ class ProjectController {
   $pmCandidates = User::where('account_status','active')->where('system_role','!=','pmo')->with('subsidiary')->orderBy('name')->get();
 
   return view('projects.show',[
-      'project'=>$project->load('manager','subsidiary','memberships.user','memberships.role','template','creator'),
+      'project'=>$project->load('owner','manager','subsidiary','memberships.user','memberships.role','template','creator'),
       'tasks'=>$tasks,
       'numbers'=>TaskTree::numbers($tasks),
       'health'=>$health,
@@ -343,6 +343,7 @@ class ProjectController {
    abort_unless($access->project($request->user(),$project,'manage_team'),403);
    foreach($extra['members']??[] as $member){
     abort_if((int)$member['user_id']===$project->pm_user_id,422,'The project manager must be changed through the manager assignment workflow.');
+     abort_if($project->owner_user_id && (int)$member['user_id']===(int)$project->owner_user_id,422,'The project owner is managed through the project governance workflow.');
     $existing=$project->memberships()->where('user_id',$member['user_id'])->exists();
     abort_unless(User::whereKey($member['user_id'])->where('system_role','user')->when(!$existing,fn($q)=>$q->where('account_status','active'))->exists(),422,'Choose an active project user.');
    }
@@ -357,7 +358,7 @@ class ProjectController {
     $removed=$project->memberships()->pluck('user_id')->merge($assigned)->unique()->diff($kept)->all();
     $project->memberships()->whereNotIn('user_id',$kept)->delete();
     DB::table('task_assignments')->whereIn('task_id',$project->tasks()->select('id'))->whereIn('user_id',$removed)->delete();
-    foreach($members->reject(fn($member)=>$project->approval_stage && (int)$member['user_id']===(int)$project->owner_user_id) as $member)ProjectMembership::updateOrCreate(['project_id'=>$project->id,'user_id'=>$member['user_id']],['project_role_id'=>$member['project_role_id']]);
+    foreach($members->reject(fn($member)=>$project->owner_user_id && (int)$member['user_id']===(int)$project->owner_user_id) as $member)ProjectMembership::updateOrCreate(['project_id'=>$project->id,'user_id'=>$member['user_id']],['project_role_id'=>$member['project_role_id']]);
    }
    if($newPm)app(ProjectService::class)->assignManager($project,$newPm);
    Audit::record('project.updated',$project);

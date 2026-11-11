@@ -275,4 +275,117 @@ class OwnerApprovalWorkflowTest extends TestCase
         $this->actingAs($pm)->get(route('templates.create', ['select_for_project' => 1, 'plan_project' => $p->id]))->assertForbidden();
         $this->actingAs($pm)->postJson(route('templates.store'), $payload)->assertForbidden();
     }
+
+    public function test_edit_project_dialog_matches_governance_workflow(): void
+    {
+        [$pmo, $owner, $project] = $this->initiate();
+        $pm = $this->person();
+        $role = \App\Models\ProjectRole::where('slug', '!=', 'pm')->first();
+
+        // 1. Stage: Owner Review
+        $editOwnerStage = $this->actingAs($pmo)->get(route('projects.edit', [$project, 'popup' => 1]))->assertOk();
+        $editOwnerStage->assertSee($owner->name)
+            ->assertSee('Project Owner')
+            ->assertSee('Owner review')
+            ->assertSee('Awaiting Owner approval');
+
+        // Owner approves and assigns PM
+        $this->actingAs($owner)->post(route('projects.owner.respond', $project), ['decision' => 'accept', 'pm_user_id' => $pm->id])->assertRedirect();
+
+        // 2. Stage: PM Review
+        $editPmStage = $this->actingAs($pmo)->get(route('projects.edit', [$project, 'popup' => 1]))->assertOk();
+        $editPmStage->assertSee($owner->name)
+            ->assertSee($pm->name)
+            ->assertSee('PM review')
+            ->assertSee('Awaiting PM acceptance');
+
+        // PM accepts assignment
+        $this->actingAs($pm)->post(route('projects.respond', $project), ['decision' => 'accept'])->assertRedirect();
+        $this->actingAs($pm)->post(route('projects.plan.initialize', $project), [
+            'mode' => 'blank',
+            'starts_on' => '2026-11-15',
+            'ends_on' => '2026-11-30',
+            'planned_budget' => '180000',
+        ])->assertRedirect();
+
+        // 3. Stage: Planning Stage
+        $editPlanning = $this->actingAs($pm)->get(route('projects.edit', [$project, 'popup' => 1]))->assertOk();
+        $editPlanning->assertSee($owner->name)
+            ->assertSee('Project Owner')
+            ->assertSee($pm->name)
+            ->assertSee('Project Manager')
+            ->assertSee('Planning stage')
+            ->assertSee('Planning (Unpublished)')
+            ->assertSee('Save & notify team', false);
+
+        // PM edits project details during planning - status stays 'active'
+        $this->actingAs($pm)->putJson(route('projects.update', $project), [
+            'name' => 'Renamed Planning Project',
+            'description' => 'Updated scope during planning',
+            'starts_on' => '2026-11-15',
+            'ends_on' => '2026-11-30',
+            'status' => 'active',
+            'planned_budget' => '200000.00',
+        ])->assertOk();
+        $this->assertSame('Renamed Planning Project', $project->fresh()->name);
+        $this->assertSame('200000.00', (string) $project->fresh()->planned_budget);
+
+        // Disallow adding Project Owner as a generic team member
+        if ($role) {
+            $this->actingAs($pm)->putJson(route('projects.update', $project), [
+                'name' => 'Renamed Planning Project',
+                'starts_on' => '2026-11-15',
+                'ends_on' => '2026-11-30',
+                'status' => 'active',
+                'edit_team' => 1,
+                'members' => [
+                    ['user_id' => $owner->id, 'project_role_id' => $role->id],
+                ],
+            ])->assertStatus(422);
+        }
+    }
+
+    public function test_optional_pmo_plan_and_roles_survive_acceptance_without_duplicate_tasks_or_early_mail(): void
+    {
+        [$pmo,$pm,$unused,$sub]=$this->initiate('pm');
+        $member=$this->person();$other=$this->person();
+        $role=ProjectRole::create(['name'=>'Delivery contributor','slug'=>'delivery-contributor']);
+        $template=ProjectTemplate::create(['name'=>'Optional starting plan','status'=>'active','created_by'=>$pmo->id,'estimated_duration'=>2,'duration_unit'=>'working_days','working_hours'=>'09:00 - 17:00']);
+        TemplateTask::create(['project_template_id'=>$template->id,'code'=>'A','title'=>'Prepared task','duration_days'=>2,'sort_order'=>1]);
+        $this->actingAs($pmo)->post(route('projects.initiate'),['name'=>'Prepared delivery','subsidiary_id'=>$sub->id,'assignment_type'=>'pm','assignee_id'=>$pm->id,'plan_mode'=>'template','project_template_id'=>$template->id,'starts_on'=>'2026-11-12','ends_on'=>'2026-11-30','members'=>[['user_id'=>$member->id,'project_role_id'=>$role->id]]])->assertRedirect();
+        $p=Project::latest('id')->first();$this->assertTrue((bool)$p->plan_initialized);$this->assertSame(1,$p->tasks()->count());
+        $this->assertDatabaseHas('project_memberships',['project_id'=>$p->id,'user_id'=>$member->id,'project_role_id'=>$role->id]);
+        Notification::assertNotSentTo($member,ProjectActivatedNotification::class);
+        $this->actingAs($pm)->postJson(route('projects.respond',$p),['decision'=>'accept'])->assertOk();
+        $page=$this->get(route('projects.plan.setup',$p))->assertOk()->assertSee('Review prepared plan')->assertSee('Project roles');
+        $this->snapshot('workflow-optional-plan',$page->getContent());
+        $payload=['planned_budget'=>10000,'members'=>[['user_id'=>$other->id,'project_role_id'=>$role->id]]];
+        $this->actingAs($member)->post(route('projects.plan.options',$p),$payload)->assertForbidden();
+        $this->actingAs($pm)->post(route('projects.plan.options',$p),$payload)->assertRedirect();
+        $this->post(route('projects.plan.options',$p),$payload)->assertRedirect();
+        $this->assertSame(1,$p->tasks()->count());$this->assertSame(1,ProjectMembership::where('project_id',$p->id)->where('user_id',$other->id)->count());
+        $this->assertEquals(10000,$p->fresh()->planned_budget);Notification::assertNotSentTo($other,ProjectActivatedNotification::class);
+    }
+
+    public function test_optional_roles_are_validated_and_blank_plan_remains_optional(): void
+    {
+        [$pmo,$pm,$p]=$this->initiate('pm');$this->assertFalse((bool)$p->plan_initialized);
+        $this->actingAs($pm)->postJson(route('projects.respond',$p),['decision'=>'accept'])->assertOk();
+        $member=$this->person();$reserved=ProjectRole::where('slug','pm')->first();
+        $this->postJson(route('projects.plan.initialize',$p),['mode'=>'blank','starts_on'=>'2026-11-12','ends_on'=>'2026-11-30','members'=>[['user_id'=>$member->id,'project_role_id'=>$reserved->id]]])->assertUnprocessable();
+        $this->assertFalse((bool)$p->fresh()->plan_initialized);
+        $this->post(route('projects.plan.initialize',$p),['mode'=>'blank','starts_on'=>'2026-11-12','ends_on'=>'2026-11-30'])->assertRedirect();
+        $this->assertTrue((bool)$p->fresh()->plan_initialized);$this->assertSame(0,$p->tasks()->count());
+    }
+
+    public function test_optional_blank_editor_tasks_are_saved_only_in_project_and_cycles_are_rejected(): void
+    {
+        [$pmo,$pm,$unused,$sub]=$this->initiate('pm');
+        $task=['code'=>'1','title'=>'Manual kickoff','duration_days'=>1,'start_date'=>'2026-11-12','end_date'=>'2026-11-12','start_time'=>'09:00','end_time'=>'17:00'];
+        $data=['name'=>'Blank edited project','subsidiary_id'=>$sub->id,'assignment_type'=>'pm','assignee_id'=>$pm->id,'plan_mode'=>'blank','starts_on'=>'2026-11-12','ends_on'=>'2026-11-30','blank_plan'=>json_encode(['reference_start_date'=>'2026-11-12','tasks'=>[$task]])];
+        $this->actingAs($pmo)->post(route('projects.initiate'),$data)->assertRedirect();
+        $p=Project::latest('id')->first();$this->assertNull($p->project_template_id);$this->assertSame('Manual kickoff',$p->tasks()->first()->title);$this->assertSame(0,ProjectTemplate::count());
+        $task['dependency_code']='1';$data['blank_plan']=json_encode(['tasks'=>[$task]]);$before=Project::count();
+        $this->postJson(route('projects.initiate'),$data)->assertUnprocessable();$this->assertSame($before,Project::count());
+    }
 }

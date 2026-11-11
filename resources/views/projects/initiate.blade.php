@@ -1,20 +1,34 @@
 @extends('layouts.app')
 @section('title','New project')
 @section('content')
-<link rel="stylesheet" href="{{ asset('css/project-workflow.css') }}">
-<div class="flow-page">
+<link rel="stylesheet" href="{{ asset('css/project-workflow.css') }}?v={{ filemtime(public_path('css/project-workflow.css')) }}">
+<div class="flow-page project-initiate-page">
 <a class="text-action" href="{{ route('projects.index') }}">&larr; Projects</a>
-<header class="flow-heading"><h1>New project</h1><p>Start with the essentials. Your project lead will prepare the plan after accepting.</p></header>
+<header class="flow-heading initiate-heading"><div><h1>New project</h1><p>Add the essentials and choose who reviews the project first.</p></div><span class="initiate-required-note">* Required fields</span></header>
 @if($errors->any())<div class="alert alert-danger" role="alert">{{ $errors->first() }}</div>@endif
-<form method="post" action="{{ route('projects.initiate') }}" class="flow-card flow-form">@csrf
-<h2>Project details</h2>
+<form method="post" action="{{ route('projects.initiate') }}" id="initiate-project-form" data-flow="{{ request('project_flow') }}" data-library="{{ route('templates.index') }}" class="flow-card flow-form">@csrf
+<section class="initiate-section" aria-labelledby="initiate-details-title"><header class="initiate-section-heading"><h2 id="initiate-details-title">Project details</h2><p>Your project code is generated automatically.</p></header><div class="initiate-details-grid">
 <label>Project name <span>*</span><input name="name" required maxlength="160" value="{{ old('name') }}" placeholder="e.g. Finance system rollout" autofocus></label>
 <label>Subsidiary <span>*</span><select name="subsidiary_id" required id="flow-subsidiary"><option value="">Choose a subsidiary</option>@foreach($subsidiaries as $sub)<option value="{{ $sub->id }}" data-preview="{{ $sub->previewProjectCode() }}" @selected(old('subsidiary_id')==$sub->id)>{{ $sub->name }}</option>@endforeach</select><small>Project code: <b id="flow-code">Assigned automatically on save</b></small></label>
-<label>Description<textarea name="description" rows="3" maxlength="3000" placeholder="What should this project deliver?">{{ old('description') }}</textarea></label>
-<div class="flow-divider"></div><h2>Who should review first?</h2>
+</div><label class="initiate-description">Description <em>Optional</em><textarea name="description" rows="3" maxlength="3000" placeholder="What should this project deliver?">{{ old('description') }}</textarea></label>
+</section><section class="initiate-section initiate-reviewer" aria-labelledby="initiate-reviewer-title"><header class="initiate-section-heading"><h2 id="initiate-reviewer-title">Who should review first?</h2><p>Choose an Owner to appoint a PM, or send the request directly to a PM.</p></header>
 <fieldset class="flow-choices"><legend class="workspace-sr-only">First reviewer</legend><label><input type="radio" name="assignment_type" value="owner" @checked(old('assignment_type','owner')==='owner')><span><b>Project Owner</b><small>Reviews the project and chooses a manager.</small></span></label><label><input type="radio" name="assignment_type" value="pm" @checked(old('assignment_type')==='pm')><span><b>Project Manager</b><small>Accepts the request and prepares the plan.</small></span></label></fieldset>
 <label>Assign person <span>*</span><select name="assignee_id" required data-directory-picker data-directory-project=""><option value="">Choose a person</option>@foreach($users as $person)<option value="{{ $person->id }}" @selected(old('assignee_id')==$person->id)>{{ $person->name }} ({{ $person->email }})</option>@endforeach</select><small>Search system users or add a person from Microsoft.</small></label>
-<footer class="flow-footer"><a href="{{ route('projects.index') }}" class="btn btn-outline">Cancel</a><button class="btn btn-primary" type="submit">Create &amp; send request</button></footer>
+</section><section class="flow-optional-setup" aria-labelledby="optional-setup-title"><header class="flow-optional-header"><div><h2 id="optional-setup-title">Plan &amp; people <span>Optional</span></h2><p>Set these up now or leave them for the PM.</p></div></header>
+<details class="flow-optional-section" id="initiate-plan-options" @if(old('plan_mode','none')!=='none') open @endif><summary><span>Task plan <small>Blank or template</small></span></summary>
+
+<label class="initiate-starting-plan">Starting plan<select name="plan_mode" id="initiate-plan-mode"><option value="none" @selected(old('plan_mode','none')==='none')>Let the PM prepare the plan later</option><option value="blank" @selected(old('plan_mode')==='blank')>Blank plan</option><option value="template" @selected(old('plan_mode')==='template')>Use a template</option></select></label>
+<fieldset id="initiate-plan-fields" class="flow-plan-fields" disabled>
+<div class="flow-role-actions"><button type="button" id="browse-starting-template" class="btn btn-outline">Select template &rarr;</button><button type="button" id="edit-blank-plan" class="btn btn-outline">Prepare blank plan</button><span id="starting-plan-summary" class="flow-option-hint"></span></div><input type="hidden" name="blank_plan" id="blank-plan-data" value="{{ old('blank_plan') }}"><label id="initiate-template-field" hidden><span class="workspace-sr-only">Project template</span><select name="project_template_id" id="initiate-template-id" hidden><option value="">Choose a template</option>@foreach($templates as $template)<option value="{{ $template->id }}" @selected(old('project_template_id')==$template->id)>{{ $template->name }} &middot; {{ $template->tasks_count }} tasks</option>@endforeach</select><small>Template tasks are copied into this project.</small></label>
+<div class="flow-grid"><label>Start date <span>*</span><input type="date" name="starts_on" value="{{ old('starts_on',today()->format('Y-m-d')) }}"></label><label>Target finish <span>*</span><input type="date" name="ends_on" value="{{ old('ends_on',today()->addWeekdays(10)->format('Y-m-d')) }}"></label></div>
+<p class="flow-option-hint">The PM can review this plan after accepting. Team emails are sent only when the plan is published.</p></fieldset></details>
+@include('projects._optional-roles')
+</section>
+<footer class="flow-footer initiate-footer"><p>The selected person will receive an approval request.</p><div><a href="{{ route('projects.index') }}" class="btn btn-outline">Cancel</a><button class="btn btn-primary" type="submit">Create &amp; send request</button></div></footer>
 </form></div>
+@include('templates.partials.task-plan-modal')
+<script>window.INITIATE_ROLES=@json($roles->values());window.INITIATE_TEMPLATE=@json(request('template_id'));window.INITIATE_HAS_OLD=@json(session()->hasOldInput());</script>
+<script defer src="{{ asset('js/initiate-plan.js') }}?v={{ filemtime(public_path('js/initiate-plan.js')) }}"></script>
 <script>const sub=document.getElementById('flow-subsidiary');function preview(){document.getElementById('flow-code').textContent=sub.selectedOptions[0]?.dataset.preview||'Assigned automatically on save';}sub.addEventListener('change',preview);preview();</script>
+<script>const planMode=document.getElementById('initiate-plan-mode');function optionalPlan(){const on=planMode.value!=='none',templated=planMode.value==='template';document.getElementById('initiate-plan-fields').disabled=!on;document.getElementById('initiate-template-field').hidden=!templated;document.getElementById('browse-starting-template').hidden=!templated;document.getElementById('edit-blank-plan').hidden=templated;const select=document.getElementById('initiate-template-id');select.disabled=!templated;select.required=templated;document.querySelectorAll('#initiate-plan-fields input[type=date]').forEach(input=>input.required=on);}planMode.addEventListener('change',optionalPlan);optionalPlan();</script>
 @endsection

@@ -129,7 +129,9 @@ class RoleDirectoryController
     public function quickStore(Request $request, Access $access)
     {
         $user = $request->user();
-        $canManage = $user->isPmo() || $access->hasCompanyPermission($user, 'roles.manage') || $access->hasCompanyPermission($user, 'projects.create');
+        $project=$request->filled('project_id')?Project::find($request->integer('project_id')):null;
+        $planLead=$project && $user->isActive() && $user->system_role==='user' && $project->approval_stage==='planning' && $project->status==='active' && in_array($user->id,[(int)$project->pm_user_id,(int)$project->owner_user_id],true);
+        $canManage = $planLead || $user->isPmo() || $access->hasCompanyPermission($user, 'roles.manage') || $access->hasCompanyPermission($user, 'projects.create');
         abort_unless($canManage, 403, 'Permission to create project roles required.');
 
         $data = $request->validate([

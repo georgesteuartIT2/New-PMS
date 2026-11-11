@@ -1,6 +1,7 @@
 (() => {
  const dialog = document.getElementById('plan-start-dialog'), form = document.getElementById('plan-setup-form');
  if (!dialog || !form) return;
+ if(form.dataset.planStarted==='1'){dialog.showModal();return;}
  const mode = document.getElementById('plan-mode'), template = document.getElementById('plan-template-id'), error = document.getElementById('plan-template-error');
  const blank = form.querySelector('[data-plan-mode="blank"]'), choose = form.querySelector('[data-choose-template]');
 

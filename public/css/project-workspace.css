@@ -190,6 +190,11 @@
 #project-edit-dialog .project-subsidiary-chip { display:inline-flex; align-items:center; gap:5px; padding:3px 9px; font-size:11.5px; font-weight:600; color:#1E534B; background:#EDF4F1; border:1px solid #D1E3DC; border-radius:6px; box-shadow:0 1px 2px rgba(0,0,0,0.03); }
 #project-edit-dialog .project-subsidiary-chip svg { color:#315F58; flex-shrink:0; }
 #project-edit-dialog #project-editor-subtitle { color:#64748B; font-size:12.5px; margin:2px 0 0; line-height:1.5; font-weight:450; }
+#project-edit-dialog .project-stage-chip { display:inline-flex; align-items:center; gap:5px; padding:3px 9px; font-size:11px; font-weight:600; border-radius:6px; letter-spacing:.2px; }
+#project-edit-dialog .project-stage-chip.stage-planning { background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; }
+#project-edit-dialog .project-stage-chip.stage-review { background:#FFFBEB; color:#92400E; border:1px solid #FDE68A; }
+#project-edit-dialog .project-stage-chip.stage-declined { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA; }
+#project-edit-dialog .project-editor-leadership-item { min-width:0; }
 
 
 

@@ -70,7 +70,7 @@ class ProjectCreateSmartFlowTest extends TestCase
         $response->assertSee('data-directory-picker', false);
         $response->assertSee('Create &amp; send request', false);
         $response->assertDontSee('window.TEMPLATES_CACHE', false);
-        $response->assertDontSee('Agile Sprint Template');
+        $response->assertSee('Agile Sprint Template')->assertSee('Let the PM prepare the plan later');
     }
 
     public function test_templates_index_in_project_selection_mode_shows_banner_and_continue_actions(): void

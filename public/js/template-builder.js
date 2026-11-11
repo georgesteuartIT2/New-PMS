@@ -34,6 +34,7 @@
 
         init(config = {}) {
             this.roles = config.roles || [];
+            this.localPlanSave = config.localPlanSave || null;
             this.canManage = !!config.canManage;
             this.canCreateProject = !!config.canCreateProject;
 
@@ -1393,7 +1394,7 @@
             const isProjectSelection = isSelect || window.location.search.includes('select_for_project') || window.location.pathname.includes('/projects/create');
 
             if (this.dom.btnSave) {
-                if (isSelect || (isEditable && isProjectSelection)) {
+                if (this.localPlanSave || isSelect || (isEditable && isProjectSelection)) {
                     this.dom.btnSave.style.display = 'inline-block';
                     this.dom.btnSave.textContent = 'Save and continue';
                     this.dom.btnSave.style.background = '#315F58';
@@ -1887,6 +1888,7 @@
                 }))
             };
 
+            if (this.localPlanSave) { this.localPlanSave(payload); this.close(); return; }
             const url = this.template.id ? `/templates/${this.template.id}` : '/templates';
             const method = this.template.id ? 'PUT' : 'POST';
 
