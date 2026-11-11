@@ -25,7 +25,7 @@ class TaskMonitorController
     public function index(Request $request)
     {
         $user = $request->user();
-        if (!$user->isPmo() && !$this->hasMonitoringAccess($user)) {
+        if (!$user->canViewPortfolio() && !$this->hasMonitoringAccess($user)) {
             abort(403, 'Unauthorized. Company-wide task monitoring requires PMO Administrator authority.');
         }
 
@@ -34,6 +34,7 @@ class TaskMonitorController
             'project_id' => $request->input('project_id'),
             'subsidiary_id' => $request->input('subsidiary_id'),
             'user_id' => $request->input('user_id'),
+            'active_only' => $request->boolean('active_only'),
             'status' => $request->input('status'),
             'q' => $request->input('q'),
         ];
@@ -50,7 +51,7 @@ class TaskMonitorController
         }
 
         $projectsQuery = Project::query()->orderBy('name');
-        if ($user->isPmo()) {
+        if ($user->canViewPortfolio()) {
             $projectsQuery->whereIn('status', ['active', 'on_hold', 'draft']);
         } else {
             $projectsQuery->whereIn('status', ['active', 'on_hold'])
@@ -77,7 +78,7 @@ class TaskMonitorController
     public function requestUpdate(Request $request, Task $task)
     {
         $user = $request->user();
-        if (!$user->isPmo() && !$this->access->canManageTask($user, $task->project)) {
+        if (!$user->canViewPortfolio() && !$this->access->canManageTask($user, $task->project)) {
             abort(403, 'Unauthorized to request updates on this task.');
         }
 
@@ -125,7 +126,7 @@ class TaskMonitorController
     public function export(Request $request): StreamedResponse
     {
         $user = $request->user();
-        if (!$user->isPmo() && !$this->hasMonitoringAccess($user)) {
+        if (!$user->canViewPortfolio() && !$this->hasMonitoringAccess($user)) {
             abort(403, 'Unauthorized to export task monitoring data.');
         }
 
@@ -134,6 +135,7 @@ class TaskMonitorController
             'project_id' => $request->input('project_id'),
             'subsidiary_id' => $request->input('subsidiary_id'),
             'user_id' => $request->input('user_id'),
+            'active_only' => $request->boolean('active_only'),
             'status' => $request->input('status'),
             'q' => $request->input('q'),
         ];

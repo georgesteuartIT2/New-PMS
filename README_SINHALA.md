@@ -64,7 +64,7 @@ Setup Email feature එකක් **නැහැ**. User manually create කර�
 New terminal:
 
 ```powershell
-php artisan queue:work
+php artisan queue:work --queue=project-notifications,default
 ```
 
 `MAIL_MAILER=log` නම් test emails `storage/logs/laravel.log` ඇතුළේ පේනවා. Real email සඳහා SMTP configure කරන්න.
@@ -77,7 +77,7 @@ php artisan queue:work
 - `Missing application key`: `php artisan key:generate` run කරන්න.
 - `Table not found`: `php artisan migrate --seed` run කරන්න.
 - Azure login fail: Tenant, redirect URI, app registration, Graph permissions check කරන්න.
-- Notifications නොඑනවා නම්: `php artisan queue:work` run කරන්න.
+- Notifications නොඑනවා නම්: `php artisan queue:work --queue=project-notifications,default` run කරන්න.
 
 Application boot වූ පසු:
 

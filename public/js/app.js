@@ -94,3 +94,5 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btn) btn.closest('.team-picker-row')?.remove();
     });
 });
+
+document.addEventListener('click',event=>{const button=event.target.closest('[data-password-eye]');if(!button)return;const input=document.getElementById(button.dataset.passwordEye);if(!input)return;const show=input.type==='password';input.type=show?'text':'password';button.setAttribute('aria-label',show?'Hide password':'Show password');button.setAttribute('aria-pressed',String(show));button.querySelector('[data-eye-show]').hidden=show;button.querySelector('[data-eye-hide]').hidden=!show;});

@@ -22,6 +22,7 @@
                     <label for="project_name">Project name <span class="required">*</span><input id="project_name" name="name" value="{{ old('name', $projectDefaults['name'] ?? '') }}" required maxlength="160" placeholder="e.g. ERP system migration" autofocus></label>
                     <label for="subsidiary_select">Subsidiary <span class="required">*</span><select name="subsidiary_id" id="subsidiary_select" required>@forelse($subsidiaries as $sub)<option value="{{ $sub->id }}" data-code="{{ $sub->code }}" data-preview="{{ $sub->previewProjectCode() }}" data-existing-code="{{ $draftProject && (int)$draftProject->subsidiary_id===$sub->id ? $draftProject->code : '' }}" @selected((int)old('subsidiary_id',$projectDefaults['subsidiary_id'] ?? $defaultSubsidiary?->id)===$sub->id)>{{ $sub->name }}</option>@empty<option value="">No active subsidiaries</option>@endforelse</select><small class="pc-code">Project code <code id="project_code_preview">{{ $draftProject && (int)$draftProject->subsidiary_id===$createSubsidiary?->id ? $draftProject->code : ($createSubsidiary?->previewProjectCode() ?? 'Assigned on save') }}</code><span id="project-code-hint">{{ $draftProject ? 'Saved draft' : 'Auto-generated' }}</span></small></label>
                 </div>
+                <label>Planned budget (LKR) <span class="pc-optional">Optional</span><input type="number" name="planned_budget" min="0" max="9999999999999.99" step="0.01" placeholder="e.g. 500000" value="{{ old('planned_budget', $projectDefaults['planned_budget'] ?? '') }}"><span class="pc-field-hint">Leave blank if the budget is not set yet.</span></label>
                 <label for="project_description">Description <span class="pc-optional">Optional</span><textarea name="description" id="project_description" rows="2" maxlength="3000" placeholder="What should this project deliver?">{{ old('description', $projectDefaults['description'] ?? '') }}</textarea></label>
             </div>
         </section>
@@ -29,8 +30,8 @@
             <header class="pc-section-label"><span class="pc-section-number">02</span><div><h2 id="pc-plan-title">Plan &amp; dates</h2><p>Start fresh or reuse a task plan.</p></div></header>
             <div class="pc-section-fields">
                 <fieldset class="pc-plan-choice"><legend class="workspace-sr-only">Project setup</legend>
-                    <label class="project-type-card {{ $createMode==='blank'?'active':'' }}" id="card-mode-blank"><input type="radio" name="mode" value="blank" data-mode="blank" @checked($createMode==='blank')><span><b>Blank project</b><small>Add or import tasks later.</small></span></label>
-                    <label class="project-type-card {{ $createMode==='template'?'active':'' }}" id="card-mode-template"><input type="radio" name="mode" value="template" data-mode="template" @checked($createMode==='template')><span><b>Use a template</b><small>Start with a prepared task plan.</small></span></label>
+                    <label class="project-type-card {{ $createMode==='blank'?'active':'' }}" id="card-mode-blank"><input type="radio" name="mode" value="blank" data-mode="blank" @checked($createMode==='blank')><span><b>Blank Project</b><small>Add or import tasks later.</small></span></label>
+                    <label class="project-type-card {{ $createMode==='template'?'active':'' }}" id="card-mode-template"><input type="radio" name="mode" value="template" data-mode="template" @checked($createMode==='template')><span><b>Use Template</b><small>Start with a prepared task plan.</small></span></label>
                 </fieldset>
                 <div id="template-selector-box" class="pc-template" @if($createMode!=='template') style="display:none" @endif>
                     <div id="template-dropdown-wrap"><button type="button" class="btn btn-outline pc-template-library-button" id="btn-browse-templates">Select template <span aria-hidden="true">&rarr;</span></button><p class="pc-field-hint">Choose a saved template or create a new one in the library.</p></div><label class="pc-template-value-label" hidden>Project template<select name="project_template_id" id="project_template_id" tabindex="-1"><option value="">Choose a template</option>@foreach($templates as $template)@php $sched=$template->schedule(); @endphp<option value="{{ $template->id }}" data-name="{{ $template->name }}" data-category="{{ $template->category }}" data-desc="{{ $template->description }}" data-days="{{ $sched['working_days'] }}" data-tasks="{{ $sched['task_count'] }}" data-hours="{{ $template->working_hours ?: '09:00 - 17:00' }}" data-summary="{{ $sched['summary'] }}" @selected($chosenTemplate==$template->id)>{{ $template->name }}</option>@endforeach</select></label>
@@ -47,20 +48,20 @@
             </div>
         </section>
         <section class="pc-section pc-people" aria-labelledby="pc-people-title">
-            <header class="pc-section-label"><span class="pc-section-number">03</span><div><h2 id="pc-people-title">People</h2><p>Choose a manager and the people involved.</p></div></header>
+            <header class="pc-section-label"><span class="pc-section-number">03</span><div><h2 id="pc-people-title">Project Team</h2><p>Choose a manager and the people involved.</p></div></header>
             <div class="pc-section-fields">
                 <p class="pc-directory-note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M15 4a4 4 0 0 1 0 8M20 21v-2a4 4 0 0 0-3-3.9"/><circle cx="9" cy="7" r="4"/></svg><span>Search existing people or Microsoft Azure. <b>Add &amp; select</b> saves a new Azure person to the system.</span></p>
                 <div id="create-people-feedback" class="pc-picker-feedback" role="status" hidden></div>
                 <div class="pc-field-grid pc-people-grid">
                     <div class="pc-person-field">
-                        <label for="pm-search-input">Project manager <span class="pc-optional">Required for approval</span></label>
+                        <label for="pm-search-input">Project Manager (PM) <span class="pc-optional">Required for approval</span></label>
                         <div id="pm-search-wrap" class="pc-picker"><input type="search" id="pm-search-input" placeholder="Search by name or email" autocomplete="off" aria-describedby="pm_help_text"><span id="pm-search-spinner" class="pc-picker-spinner" style="display:none">Searching Azure&hellip;</span><div id="pm-search-dropdown" class="user-picker-dropdown" style="display:none"></div></div>
                         <div id="pm-selected-box" class="pc-selected-person" style="display:none"><span class="avatar" id="pm-selected-avatar"></span><div><b id="pm-selected-name"></b><small id="pm-selected-subtext"></small></div><button type="button" class="btn btn-ghost btn-sm" id="btn-pm-change">Change</button></div>
                         <input type="hidden" name="pm_user_id" id="pm_user_id" value="{{ old('pm_user_id', $projectDefaults['pm_user_id'] ?? null) }}">
                         <small id="pm_help_text" class="pc-field-hint">The manager accepts the project before work starts.</small>
                     </div>
                     <div class="pc-person-field">
-                        <div class="pc-label-line"><label for="team-search-input">Team members <span class="pc-optional">Optional</span></label><span id="team-members-badge" class="pc-member-count">0 members</span></div>
+                        <div class="pc-label-line"><label for="team-search-input">Team Members <span class="pc-optional">Optional</span></label><span id="team-members-badge" class="pc-member-count">0 members</span></div>
                         <div class="pc-picker"><input type="search" id="team-search-input" placeholder="Search to add people" autocomplete="off"><span id="team-search-spinner" class="pc-picker-spinner" style="display:none">Searching Azure&hellip;</span><div id="team-search-dropdown" class="user-picker-dropdown" style="display:none"></div></div>
                         <div id="assigned-team-list" class="pc-team-list"></div><p id="team-empty-state" class="pc-field-hint">You can assign the team now or add people later.</p>
                     </div>
@@ -75,6 +76,42 @@
                         <div class="role-matrix-row" data-role-id="{{ $govRole->id }}" data-role-index="{{ $govIndex }}"><label for="gov-search-{{ $govIndex }}">{{ $label }}</label><div class="gov-role-picker pc-picker"><div class="gov-selected-card pc-selected-person" style="display:none"><span class="avatar gov-avatar"></span><span class="gov-name"></span><button type="button" class="btn btn-ghost btn-sm btn-clear-gov" aria-label="Remove {{ strtolower($label) }}">&times;</button></div><div class="gov-search-wrap"><input type="search" id="gov-search-{{ $govIndex }}" class="gov-search-input" placeholder="Search by name or email" autocomplete="off"><div class="gov-dropdown user-picker-dropdown" style="display:none"></div></div><input type="hidden" name="members[{{ $govIndex }}][user_id]" class="gov-hidden-user-id" value=""><input type="hidden" name="members[{{ $govIndex }}][project_role_id]" value="{{ $govRole->id }}"></div></div>
                         @endif
                     @endforeach
+
+                    <!-- Existing Custom Roles -->
+                    @foreach($roles->where('is_system', false) as $customRole)
+                        @php $customGovIndex=200+$loop->index; @endphp
+                        <div class="role-matrix-row custom-role-row" data-role-id="{{ $customRole->id }}" data-role-index="{{ $customGovIndex }}">
+                            <label for="gov-search-{{ $customGovIndex }}">
+                                {{ $customRole->name }}
+                                <span class="pill" style="font-size: 10px; background: #EEF2F6; color: #475569; margin-left: 4px;">Custom</span>
+                            </label>
+                            <div class="gov-role-picker pc-picker">
+                                <div class="gov-selected-card pc-selected-person" style="display:none">
+                                    <span class="avatar gov-avatar"></span>
+                                    <span class="gov-name"></span>
+                                    <button type="button" class="btn btn-ghost btn-sm btn-clear-gov" aria-label="Remove {{ strtolower($customRole->name) }}">&times;</button>
+                                </div>
+                                <div class="gov-search-wrap">
+                                    <input type="search" id="gov-search-{{ $customGovIndex }}" class="gov-search-input" placeholder="Search by name or email" autocomplete="off">
+                                    <div class="gov-dropdown user-picker-dropdown" style="display:none"></div>
+                                </div>
+                                <input type="hidden" name="members[{{ $customGovIndex }}][user_id]" class="gov-hidden-user-id" value="">
+                                <input type="hidden" name="members[{{ $customGovIndex }}][project_role_id]" value="{{ $customRole->id }}">
+                            </div>
+                        </div>
+                    @endforeach
+
+                    <!-- Container for dynamically added roles created during this session -->
+                    <div id="dynamically-added-roles"></div>
+
+                    <!-- 1-Click Action to Add/Create Custom Project Role -->
+                    <div class="pc-add-role-strip" style="display: flex; align-items: center; justify-content: space-between; padding-top: 10px; border-top: 1px dashed #CBD5E1; margin-top: 8px;">
+                        <span class="muted" style="font-size: 12px;">Need a tailored role for this project (e.g. Tech Lead, QA, Business Analyst)?</span>
+                        <button type="button" class="btn btn-outline btn-sm" id="btn-open-custom-role-modal" style="display: inline-flex; align-items: center; gap: 5px; font-weight: 600; font-size: 12px; border-radius: 6px; padding: 5px 12px; background: #FFFFFF; border-color: #315F58; color: #315F58; cursor: pointer;">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            + Add Custom Role
+                        </button>
+                    </div>
                     </div>
                 </details>
             </div>
@@ -84,6 +121,74 @@
 </div>
 <!-- Shared Smart Task Plan Modal for Previewing Template Plan -->
 @include('templates.partials.task-plan-modal')
+
+<!-- 1-Click Custom Project Role Modal -->
+<div id="custom-role-modal" role="dialog" aria-modal="true" aria-labelledby="custom-role-title" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45); z-index: 1000; align-items: center; justify-content: center; padding: 16px;">
+    <div style="background: #FFFFFF; border-radius: 10px; max-width: 580px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.18); border: 1px solid #E2E8F0; padding: 22px;">
+        <!-- Modal Header -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; border-bottom: 1px solid #F1F5F9; padding-bottom: 12px;">
+            <div>
+                <h3 id="custom-role-title" style="margin: 0 0 4px; font-size: 16px; font-weight: 700; color: #0F172A;">Add Custom Project Role</h3>
+                <p style="margin: 0; font-size: 12px; color: #64748B;">Define a role, select permissions, and optionally assign a team member in minimal clicks.</p>
+            </div>
+            <button type="button" id="btn-close-cr-modal" style="background: transparent; border: none; font-size: 18px; color: #94A3B8; cursor: pointer; padding: 2px 6px; line-height: 1;" aria-label="Close">&times;</button>
+        </div>
+
+        <div id="cr-modal-error" style="display: none; padding: 8px 12px; background: #FEE2E2; border: 1px solid #FECACA; color: #DC2626; border-radius: 6px; font-size: 12px; margin-bottom: 12px;"></div>
+
+        <!-- Role Name Input -->
+        <div style="margin-bottom: 16px;">
+            <label for="cr-role-name" style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 5px;">
+                Role Name <span style="color: #DC2626;">*</span>
+            </label>
+            <input type="text" id="cr-role-name" placeholder="e.g. QA Lead, Solutions Architect, Client Representative"
+                   style="width: 100%; height: 38px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 12px; font-size: 13px; box-sizing: border-box;">
+        </div>
+
+        <section class="custom-role-permissions"><h4>Permissions</h4><p>Check the actions this role can perform.</p>
+            @php
+                $customRoleGroups=app(\App\Services\Access::class)->catalogGrouped();
+                if(!auth()->user()->isPmo() && !app(\App\Services\Access::class)->hasCompanyPermission(auth()->user(),'roles.manage'))unset($customRoleGroups['company']);
+            @endphp
+            @include('roles._permission-list',['permissionGroups'=>$customRoleGroups,'selectedPermissions'=>['project.view'],'lockedPermissions'=>['project.view'],'permissionInputClass'=>'cr-perm-check','permissionInputName'=>'','permissionCountId'=>'cr-selected-count'])
+        </section>
+        <!-- Assign User Directly (Optional, 1-Click Search) -->
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; font-size: 12px; font-weight: 600; color: #334155; margin-bottom: 5px;">
+                Assign Person to this Role <span style="font-weight: 400; color: #64748B;">(Optional, or assign later)</span>
+            </label>
+            <div id="cr-user-picker" class="pc-picker" style="position: relative;">
+                <!-- Selected User Chip -->
+                <div id="cr-selected-user-card" class="pc-selected-person" style="display: none; background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 6px; padding: 6px 10px; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                        <span class="avatar avatar-sm" id="cr-selected-user-avatar" style="background: #315F58; color: #FFFFFF; font-size: 11px; font-weight: 700;">U</span>
+                        <div style="min-width: 0;">
+                            <b id="cr-selected-user-name" style="font-size: 12.5px; color: #0F172A; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></b>
+                            <small id="cr-selected-user-email" class="muted" style="font-size: 11px; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></small>
+                        </div>
+                    </div>
+                    <button type="button" id="btn-clear-cr-user" class="btn btn-ghost btn-sm" style="color: #DC2626; padding: 2px 6px; font-size: 13px;">✕</button>
+                </div>
+
+                <!-- Search Input Wrap -->
+                <div id="cr-user-search-wrap">
+                    <input type="search" id="cr-user-search-input" placeholder="Search by name or email to assign now..." autocomplete="off"
+                           style="width: 100%; height: 38px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 12px; font-size: 12.5px; box-sizing: border-box;">
+                    <div id="cr-user-dropdown" class="user-picker-dropdown" style="display: none;"></div>
+                </div>
+                <input type="hidden" id="cr-selected-user-id" value="">
+            </div>
+        </div>
+
+        <!-- Modal Actions -->
+        <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #F1F5F9; padding-top: 14px;">
+            <button type="button" id="btn-cancel-cr-modal" class="btn btn-ghost btn-sm">Cancel</button>
+            <button type="button" id="btn-submit-cr-modal" class="btn btn-primary btn-sm" style="background: #315F58; color: #FFFFFF; padding: 0 18px; font-weight: 600;">
+                Create &amp; Add Role
+            </button>
+        </div>
+    </div>
+</div>
 
 <style>
 .user-picker-dropdown {
@@ -173,7 +278,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function saveProjectDraft() {
         if(!/^[0-9a-f-]{36}$/i.test(projectFlow))projectFlow=crypto.randomUUID();
         const values=new FormData(createForm),state={};
-        for(const name of ['name','description','subsidiary_id','starts_on','ends_on','pm_user_id','mode','project_template_id'])state[name]=values.get(name)||'';
+        for(const name of ['name','planned_budget','description','subsidiary_id','starts_on','ends_on','pm_user_id','mode','project_template_id'])state[name]=values.get(name)||'';
         const members={};
         for(const [name,value]of values){const match=name.match(/^members\[(\d+)\]\[(user_id|project_role_id)\]$/);if(match){members[match[1]] ||= {};members[match[1]][match[2]]=value;}}
         state.members=Object.values(members).filter(member=>member.user_id && member.project_role_id);
@@ -184,7 +289,7 @@ document.addEventListener('DOMContentLoaded', function() {
         try{
             restoredProjectState=JSON.parse(sessionStorage.getItem(flowKey(projectFlow))||'null');
             if(restoredProjectState){
-                for(const name of ['name','description','subsidiary_id','starts_on','ends_on','pm_user_id']){const input=createForm.elements.namedItem(name);if(input)input.value=restoredProjectState[name]||'';}
+                for(const name of ['name','planned_budget','description','subsidiary_id','starts_on','ends_on','pm_user_id']){const input=createForm.elements.namedItem(name);if(input)input.value=restoredProjectState[name]||'';}
                 if(!@json((bool)request('template_id'))){
                     const mode=createForm.querySelector('input[name="mode"][value="'+(restoredProjectState.mode==='template'?'template':'blank')+'"]');if(mode)mode.checked=true;
                     const selected=document.getElementById('project_template_id');if(selected)selected.value=restoredProjectState.project_template_id||'';
@@ -796,9 +901,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // -------------------------------------------------------------------------
-    // 6. GOVERNANCE ROLES PICKERS (Sponsor, Owner, Steering Committee)
+    // 6. GOVERNANCE ROLES PICKERS (Sponsor, Owner, Steering Committee & Custom Roles)
     // -------------------------------------------------------------------------
-    document.querySelectorAll('.gov-role-picker').forEach(picker => {
+    function initGovRolePicker(picker) {
         const searchInput = picker.querySelector('.gov-search-input');
         const dropdown = picker.querySelector('.gov-dropdown');
         const hiddenUserId = picker.querySelector('.gov-hidden-user-id');
@@ -830,7 +935,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         function renderGovDropdown(localUsers, azureUsers, complete=false) {
             if (localUsers.length === 0 && azureUsers.length === 0) {
-                dropdown.innerHTML = `<div class="muted text-sm" style="padding: 10px; text-align: center;">${complete ? 'No people found. Try another name or email.' : searchInput.value.trim().length<2 ? 'Type at least 2 characters to search Azure.' : 'Searching Microsoft Azure?'}</div>`;
+                dropdown.innerHTML = `<div class="muted text-sm" style="padding: 10px; text-align: center;">${complete ? 'No people found. Try another name or email.' : searchInput.value.trim().length<2 ? 'Type at least 2 characters to search Azure.' : 'Searching Microsoft Azure…'}</div>`;
                 dropdown.style.display = 'block';
                 return;
             }
@@ -901,9 +1006,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 queryUsers(this.value, renderGovDropdown, null);
             });
         }
-        const savedRole = Object.values(restoredProjectState?.members || @json(old('members', $projectDefaults['members'] ?? []))).find(member=>Number(member.project_role_id)===Number(picker.closest('[data-role-id]').dataset.roleId));
+        const savedRole = Object.values(restoredProjectState?.members || @json(old('members', $projectDefaults['members'] ?? []))).find(member=>Number(member.project_role_id)===Number(picker.closest('[data-role-id]')?.dataset?.roleId));
         const savedPerson=savedRole && window.LOCAL_USERS.find(person=>person.id===Number(savedRole.user_id));
         if(savedPerson)setGovUser(savedPerson);
+
+        return { setGovUser };
+    }
+
+    document.querySelectorAll('.gov-role-picker').forEach(picker => {
+        initGovRolePicker(picker);
     });
 
     function updateGovAssignedCounter() {
@@ -915,6 +1026,247 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // -------------------------------------------------------------------------
+    // 7. CUSTOM PROJECT ROLE MODAL & QUICK CREATION (1-Click Presets & Instant Assign)
+    // -------------------------------------------------------------------------
+    const crModal = document.getElementById('custom-role-modal');
+    const btnOpenCrModal = document.getElementById('btn-open-custom-role-modal');
+    const btnCloseCrModal = document.getElementById('btn-close-cr-modal');
+    const btnCancelCrModal = document.getElementById('btn-cancel-cr-modal');
+    const btnSubmitCrModal = document.getElementById('btn-submit-cr-modal');
+    const crRoleNameInput = document.getElementById('cr-role-name');
+    const crErrorBox = document.getElementById('cr-modal-error');
+    const crUserSearchInput = document.getElementById('cr-user-search-input');
+    const crUserDropdown = document.getElementById('cr-user-dropdown');
+    const crSelectedUserCard = document.getElementById('cr-selected-user-card');
+    const crUserSearchWrap = document.getElementById('cr-user-search-wrap');
+    const crSelectedUserAvatar = document.getElementById('cr-selected-user-avatar');
+    const crSelectedUserName = document.getElementById('cr-selected-user-name');
+    const crSelectedUserEmail = document.getElementById('cr-selected-user-email');
+    const crSelectedUserId = document.getElementById('cr-selected-user-id');
+    const btnClearCrUser = document.getElementById('btn-clear-cr-user');
+    const crPermChecks = document.querySelectorAll('.cr-perm-check');
+    const crSelectedCountEl = document.getElementById('cr-selected-count');
+
+    let dynamicRoleCounter = 300;
+    let crSelectedPerson = null;
+
+    function openCrModal() {
+        if (!crModal) return;
+        crErrorBox.style.display = 'none';
+        crRoleNameInput.value = '';
+        crPermChecks.forEach(box=>{box.checked=box.value==='project.view';box.dispatchEvent(new Event('change',{bubbles:true}));});
+        const permissionSearch=crModal.querySelector('[data-permission-search]');if(permissionSearch){permissionSearch.value='';permissionSearch.dispatchEvent(new Event('input',{bubbles:true}));}
+        setCrModalUser(null);
+        crModal.style.display = 'flex';
+        crRoleNameInput.focus();
+    }
+
+    function closeCrModal() {
+        if (crModal) crModal.style.display = 'none';
+        btnOpenCrModal?.focus();
+        if (crUserDropdown) crUserDropdown.style.display = 'none';
+    }
+
+    if (btnOpenCrModal) btnOpenCrModal.addEventListener('click', openCrModal);
+    if (btnCloseCrModal) btnCloseCrModal.addEventListener('click', closeCrModal);
+    if (btnCancelCrModal) btnCancelCrModal.addEventListener('click', closeCrModal);
+
+    function setCrModalUser(user) {
+        crSelectedPerson = user;
+        if (!user) {
+            crSelectedUserId.value = '';
+            crSelectedUserCard.style.display = 'none';
+            crUserSearchWrap.style.display = 'block';
+            crUserSearchInput.value = '';
+        } else {
+            crSelectedUserId.value = user.id;
+            crSelectedUserAvatar.textContent = (user.name ? user.name.charAt(0) : 'U').toUpperCase();
+            crSelectedUserName.textContent = user.name;
+            crSelectedUserEmail.textContent = user.email;
+            crSelectedUserCard.style.display = 'flex';
+            crUserSearchWrap.style.display = 'none';
+            if (crUserDropdown) crUserDropdown.style.display = 'none';
+        }
+    }
+
+    if (btnClearCrUser) btnClearCrUser.addEventListener('click', () => setCrModalUser(null));
+
+    function renderCrUserDropdown(localUsers, azureUsers, complete=false) {
+        if (!crUserDropdown) return;
+        if (localUsers.length === 0 && azureUsers.length === 0) {
+            crUserDropdown.innerHTML = `<div class="muted text-sm" style="padding: 10px; text-align: center;">${complete ? 'No people found.' : 'Searching…'}</div>`;
+            crUserDropdown.style.display = 'block';
+            return;
+        }
+
+        let html = '';
+        if (localUsers.length > 0) {
+            html += `<div class="user-dropdown-section-title">Local Users</div>`;
+            localUsers.forEach(u => {
+                html += `
+                    <div class="user-search-item" data-action="cr-user-local" data-id="${u.id}">
+                        <div>
+                            <b style="font-size: 12.5px; color: #22272B;">${escapeHtml(u.name)}</b>
+                            <small class="muted" style="font-size: 11px; display: block;">${escapeHtml(u.email)}</small>
+                        </div>
+                        <span class="pill" style="font-size: 10px;">Select</span>
+                    </div>
+                `;
+            });
+        }
+
+        if (azureUsers.length > 0) {
+            html += `<div class="user-dropdown-section-title" style="background:#F0F9FF;color:#0369A1;">Azure Directory</div>`;
+            azureUsers.forEach(u => {
+                html += `
+                    <div class="user-search-item azure-item" data-action="cr-user-azure" data-azure-id="${u.id}">
+                        <div>
+                            <b style="font-size: 12.5px; color: #0F172A;">${escapeHtml(u.displayName)}</b>
+                            <small class="muted" style="font-size: 11px; display: block;">${escapeHtml(u.email)}</small>
+                        </div>
+                        <span class="pill" style="font-size: 10px; background:#E0F2FE; color:#0369A1;">Add & select</span>
+                    </div>
+                `;
+            });
+        }
+
+        crUserDropdown.innerHTML = html;
+        crUserDropdown.style.display = 'block';
+
+        crUserDropdown.querySelectorAll('[data-action="cr-user-local"]').forEach(el => {
+            el.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const id = parseInt(this.dataset.id);
+                const u = window.LOCAL_USERS.find(user => user.id === id);
+                if (u) setCrModalUser(u);
+            });
+        });
+
+        crUserDropdown.querySelectorAll('[data-action="cr-user-azure"]').forEach(el => {
+            el.addEventListener('click', async function(e) {
+                e.stopPropagation();
+                const azureId = this.dataset.azureId;
+                const pill = this.querySelector('.pill');
+                try {
+                    const newUser = await addAzureUserToSystem(azureId, pill);
+                    setCrModalUser(newUser);
+                } catch (err) {
+                    showPeopleFeedback(err.message, true);
+                }
+            });
+        });
+    }
+
+    if (crUserSearchInput) {
+        crUserSearchInput.addEventListener('focus', function() {
+            queryUsers(this.value, renderCrUserDropdown, null);
+        });
+        crUserSearchInput.addEventListener('input', function() {
+            queryUsers(this.value, renderCrUserDropdown, null);
+        });
+    }
+
+    // Submit Create Role via AJAX
+    if (btnSubmitCrModal) {
+        btnSubmitCrModal.addEventListener('click', async function() {
+            const name = crRoleNameInput.value.trim();
+            if (!name) {
+                crErrorBox.textContent = 'Please enter a role name.';
+                crErrorBox.style.display = 'block';
+                crRoleNameInput.focus();
+                return;
+            }
+
+            const selectedPerms = [...crPermChecks].filter(c => c.checked).map(c => c.value);
+            btnSubmitCrModal.disabled = true;
+            btnSubmitCrModal.textContent = 'Creating…';
+            crErrorBox.style.display = 'none';
+
+            try {
+                const resp = await fetch("{{ route('roles.quick') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        permissions: selectedPerms
+                    })
+                });
+
+                const data = await resp.json();
+                if (!resp.ok || !data.success) {
+                    throw new Error(data.message || 'Failed to create role.');
+                }
+
+                const role = data.role;
+                const newIndex = ++dynamicRoleCounter;
+
+                // Create new row in Additional project roles
+                const dynContainer = document.getElementById('dynamically-added-roles');
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'role-matrix-row custom-role-row';
+                rowDiv.dataset.roleId = role.id;
+                rowDiv.dataset.roleIndex = newIndex;
+
+                rowDiv.innerHTML = `
+                    <label for="gov-search-${newIndex}" style="display: flex; align-items: center; justify-content: space-between;">
+                        <span>
+                            ${escapeHtml(role.name)}
+                            <span class="pill" style="font-size: 10px; background: #EEF2F6; color: #475569; margin-left: 4px;">Custom</span>
+                        </span>
+                        <button type="button" class="btn-remove-custom-row" title="Remove role" style="border: none; background: transparent; color: #DC2626; cursor: pointer; padding: 2px 6px; font-size: 14px; line-height: 1;">✕</button>
+                    </label>
+                    <div class="gov-role-picker pc-picker">
+                        <div class="gov-selected-card pc-selected-person" style="display:none">
+                            <span class="avatar gov-avatar"></span>
+                            <span class="gov-name"></span>
+                            <button type="button" class="btn btn-ghost btn-sm btn-clear-gov" aria-label="Remove person">&times;</button>
+                        </div>
+                        <div class="gov-search-wrap">
+                            <input type="search" id="gov-search-${newIndex}" class="gov-search-input" placeholder="Search by name or email" autocomplete="off">
+                            <div class="gov-dropdown user-picker-dropdown" style="display:none"></div>
+                        </div>
+                        <input type="hidden" name="members[${newIndex}][user_id]" class="gov-hidden-user-id" value="">
+                        <input type="hidden" name="members[${newIndex}][project_role_id]" value="${role.id}">
+                    </div>
+                `;
+
+                dynContainer.appendChild(rowDiv);
+                const picker = rowDiv.querySelector('.gov-role-picker');
+                const pickerCtrl = initGovRolePicker(picker);
+
+                // If a person was selected in the modal, assign them immediately!
+                if (crSelectedPerson) {
+                    pickerCtrl.setGovUser(crSelectedPerson);
+                }
+
+                // Bind remove row button
+                rowDiv.querySelector('.btn-remove-custom-row')?.addEventListener('click', () => {
+                    rowDiv.remove();
+                    updateGovAssignedCounter();
+                });
+
+                // Ensure the details section is open
+                const govSection = document.getElementById('governance-roles-section');
+                if (govSection) govSection.open = true;
+
+                updateGovAssignedCounter();
+                closeCrModal();
+                showPeopleFeedback(`Role '${role.name}' created and added to project.`);
+            } catch (err) {
+                crErrorBox.textContent = err.message;
+                crErrorBox.style.display = 'block';
+            } finally {
+                btnSubmitCrModal.disabled = false;
+                btnSubmitCrModal.textContent = 'Create & Add Role';
+            }
+        });
+    }
+
     // Global Click-Outside handler for all dropdowns
     document.addEventListener('click', function(e) {
         if (!e.target.closest('#pm-search-wrap')) {
@@ -922,6 +1274,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         if (!e.target.closest('#team-search-dropdown') && !e.target.closest('#team-search-input')) {
             if (teamSearchDropdown) teamSearchDropdown.style.display = 'none';
+        }
+        if (!e.target.closest('#cr-user-picker')) {
+            if (crUserDropdown) crUserDropdown.style.display = 'none';
         }
         document.querySelectorAll('.gov-role-picker').forEach(p => {
             if (!p.contains(e.target)) {
@@ -992,4 +1347,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endpush
+<link rel="stylesheet" href="{{ asset('css/permissions.css') }}?v={{ filemtime(public_path('css/permissions.css')) }}">
+<script defer src="{{ asset('js/permission-picker.js') }}?v={{ filemtime(public_path('js/permission-picker.js')) }}"></script>
 @endsection

@@ -33,6 +33,8 @@
     <script defer src="{{ asset('js/task-progress.js') }}?v={{ filemtime(public_path('js/task-progress.js')) }}"></script>
     <link rel="stylesheet" href="{{ asset('css/critical-explanation.css') }}?v={{ filemtime(public_path('css/critical-explanation.css')) }}">
     <script defer src="{{ asset('js/critical-explanation.js') }}?v={{ filemtime(public_path('js/critical-explanation.js')) }}"></script>
+    <link rel="stylesheet" href="{{ asset('css/app-dialog.css') }}?v={{ filemtime(public_path('css/app-dialog.css')) }}">
+    <script src="{{ asset('js/app-dialog.js') }}?v={{ filemtime(public_path('js/app-dialog.js')) }}"></script>
 </head>
 <body data-page="{{ request()->route()?->getName() }}">
     <a class="skip-link" href="#main-content">Skip to content</a>
@@ -40,7 +42,13 @@
         <!-- Sidebar Navigation (Clean Typography, No Icons) -->
         <aside class="sidebar" id="sidebar">
             <a class="brand" href="{{ route('dashboard') }}">
-                <span class="brand-mark">GS</span>
+                <span class="brand-mark" style="display: inline-flex; align-items: center; justify-content: center;">
+                    <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                        <polyline points="2 12 12 17 22 12"></polyline>
+                        <polyline points="2 17 12 22 22 17"></polyline>
+                    </svg>
+                </span>
                 <div>
                     <b>GS ProjectFlow</b>
                     <small>Project workspace</small>
@@ -48,7 +56,7 @@
             </a>
 
             @php
-                $navigationIsPmo = auth()->user()->isPmo();
+                $navigationIsPmo = auth()->user()->canViewPortfolio();
                 if ($navigationIsPmo) {
                     $navigationItems = [
                         ['label' => 'Dashboard', 'url' => route('dashboard'), 'active' => request()->routeIs('dashboard'), 'icon' => 'M3 10.5 12 3l9 7.5V21h-6v-7H9v7H3z'],
@@ -58,13 +66,28 @@
                         ['label' => 'Team Monitor', 'url' => route('pmo.team-monitor'), 'active' => request()->routeIs('pmo.team-monitor*', 'team-monitor*'), 'icon' => 'M4 19V9M10 19V5M16 19v-7M22 21H2'],
                         ['label' => 'Calendar', 'url' => route('calendar.index'), 'active' => request()->routeIs('calendar.*'), 'icon' => 'M8 3v4M16 3v4M3 10h18M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z'],
                         ['label' => 'People', 'url' => route('users.index'), 'active' => request()->routeIs('users.*'), 'icon' => 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8'],
-                        ['label' => 'Administration', 'url' => route('administration.index'), 'active' => request()->routeIs('administration.*', 'role-directory.*', 'subsidiaries.*', 'activity.*', 'settings.system'), 'icon' => 'M4 7h16M4 17h16M8 4v6M16 14v6', 'administration' => true],
+                        ['label' => 'Activity log', 'url' => route('activity.index'), 'active' => request()->routeIs('activity.*'), 'icon' => 'M9 5H5v16h14V5h-4M9 3h6v4H9zM8 12h8M8 16h5'],
                     ];
+                    if (auth()->user()->isPmo()) {
+                        $navigationItems[] = [
+                            'label' => 'Settings',
+                            'url' => route('settings.system'),
+                            'active' => request()->routeIs('settings.*'),
+                            'icon' => 'M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z',
+                        ];
+                        $navigationItems[] = [
+                            'label' => 'Administration',
+                            'url' => route('administration.index'),
+                            'active' => request()->routeIs('administration.*', 'role-directory.*', 'subsidiaries.*'),
+                            'icon' => 'M4 7h16M4 17h16M8 4v6M16 14v6',
+                            'administration' => true,
+                        ];
+                    }
                 } else {
                     $navigationItems = [
                         ['label' => 'My Workspace', 'url' => route('dashboard'), 'active' => request()->routeIs('dashboard'), 'icon' => 'M3 10.5 12 3l9 7.5V21h-6v-7H9v7H3z'],
                         ['label' => 'My Projects', 'url' => route('projects.index'), 'active' => request()->routeIs('projects.*', 'gantt.project', 'roles.*'), 'icon' => 'M3 7V5a1 1 0 0 1 1-1h6l2 3h8a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7z'],
-                        ['label' => 'My Tasks', 'url' => route('tasks.mine'), 'active' => request()->routeIs('tasks.*'), 'icon' => 'M9 6h12M9 12h12M9 18h12M3 6l1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2'],
+                        ['label' => 'All Tasks', 'url' => route('tasks.mine'), 'active' => request()->routeIs('tasks.*'), 'icon' => 'M9 6h12M9 12h12M9 18h12M3 6l1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2'],
                         ['label' => 'Team Monitor', 'url' => route('team-monitor'), 'active' => request()->routeIs('team-monitor*'), 'icon' => 'M4 19V9M10 19V5M16 19v-7M22 21H2'],
                         ['label' => 'Calendar', 'url' => route('calendar.index'), 'active' => request()->routeIs('calendar.*'), 'icon' => 'M8 3v4M16 3v4M3 10h18M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z'],
                     ];
@@ -84,7 +107,7 @@
                     <span class="avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
                     <div class="user-mini">
                         <b>{{ auth()->user()->name }}</b>
-                        <small>{{ auth()->user()->isPmo() ? 'PMO Admin' : 'User' }}</small>
+                        <small>{{ auth()->user()->systemRoleLabel() }}</small>
                     </div>
                 </a>
             </div>
@@ -103,11 +126,9 @@
                 </button>
 
                 <!-- Search Bar -->
-                @unless(request()->routeIs('projects.index'))
                 <form method="get" action="{{ route('projects.index') }}" class="global-search-wrap">
                     <input type="text" name="q" class="global-search-input" aria-label="Search projects" placeholder="Search projects by name or code..." value="{{ request('q') }}">
                 </form>
-                @endunless
 
                 <!-- Actions & Profile Chip -->
                 <div class="top-actions">
@@ -123,19 +144,13 @@
                             <span class="avatar">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</span>
                             <div class="user-chip-info">
                                 <b>{{ auth()->user()->name }}</b>
-                                <small>{{ auth()->user()->isPmo() ? 'PMO Admin' : 'User' }}</small>
+                                <small>{{ auth()->user()->systemRoleLabel() }}</small>
                             </div>
                             <span class="dropdown-caret"></span>
                         </button>
 
                         <div class="dropdown-panel" id="user-profile-panel">
                             <a href="{{ route('profile.show') }}" class="dropdown-item">My Account</a>
-                            <a href="{{ route('notifications.index') }}" class="dropdown-item">Notifications</a>
-                            @if(auth()->user()->isPmo())
-                                <a href="{{ route('activity.index') }}" class="dropdown-item">Activity Log</a>
-                                <a href="{{ route('reports.index') }}" class="dropdown-item">Reports</a>
-                                <a href="{{ route('settings.system') }}" class="dropdown-item">Settings</a>
-                            @endif
                             <div class="dropdown-divider"></div>
                             <form method="post" action="{{ route('logout') }}">
                                 @csrf
@@ -161,6 +176,7 @@
                     </div>
                 @endif
 
+                @if(auth()->user()->isAdminViewer())<div class="viewer-notice"><span>Admin Viewer</span> Read-only portfolio access</div>@endif
                 @include('layouts._section-nav')
                 @yield('content')
 
@@ -171,5 +187,6 @@
         </main>
     </div>
     @stack('scripts')
+<script id="directory-picker-config" defer src="{{ asset('js/directory-picker.js') }}?v={{ filemtime(public_path('js/directory-picker.js')) }}" data-search-url="{{ route('users.azure') }}" data-add-url="{{ route('users.azure.add') }}"></script>
 </body>
 </html>

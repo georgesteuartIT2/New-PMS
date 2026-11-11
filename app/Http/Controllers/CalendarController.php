@@ -31,7 +31,7 @@ class CalendarController
         $selectedProjectId = $request->query('project_id');
 
         // 3. User Accessible Projects
-        if ($user->isPmo()) {
+        if ($user->canViewPortfolio()) {
             $schedulableProjects = Project::where('status', '!=', 'archived')->orderBy('name')->get();
             $accessibleProjectIds = $schedulableProjects->pluck('id');
         } else {
@@ -56,7 +56,7 @@ class CalendarController
                 ->whereDate('starts_at', '<=', $endOfMonth->copy()->addDays(7));
 
             // Scoped for non-PMO / non-PM team members to tasks assigned to them
-            if (!$user->isPmo()) {
+            if (!$user->canViewPortfolio()) {
                 $pmIds = $user->pmProjects()->pluck('id')->all();
                 $taskQuery->where(function ($q) use ($user, $pmIds) {
                     $q->whereIn('project_id', $pmIds)
@@ -76,7 +76,7 @@ class CalendarController
                 ->whereDate('ends_at', '>=', $startOfMonth->copy()->subDays(7))
                 ->whereDate('starts_at', '<=', $endOfMonth->copy()->addDays(7));
 
-            if (!$user->isPmo()) {
+            if (!$user->canViewPortfolio()) {
                 $meetingQuery->where(function ($q) use ($user) {
                     $q->where('created_by', $user->id)
                       ->orWhereHas('attendees', fn ($a) => $a->where('users.id', $user->id));
@@ -137,7 +137,7 @@ class CalendarController
             'selectedProjectId' => $selectedProjectId,
             'schedulableProjects' => $schedulableProjects,
             'projectMembersMap' => $projectMembersMap,
-            'canSchedule' => $user->isPmo() || $schedulableProjects->isNotEmpty(),
+            'canSchedule' => !$user->isAdminViewer() && ($user->isPmo() || $schedulableProjects->isNotEmpty()),
             'totalTasksCount' => $tasks->count(),
             'totalMeetingsCount' => $meetings->count(),
         ]);

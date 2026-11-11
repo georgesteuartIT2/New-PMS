@@ -3,7 +3,7 @@
 
 @section('content')
 @php
-    $projectReturnContext=array_filter(request()->only('project_flow','draft'),fn($value)=>$value!==null && $value!=='');
+    $projectReturnContext=array_filter(request()->only(\App\Http\Controllers\TemplateController::PROJECT_CONTEXT_KEYS),fn($value)=>$value!==null && $value!=='');
     $templateSelectionContext=($selectForProject ?? request()->boolean('select_for_project')) ? array_merge($projectReturnContext,['select_for_project'=>1]) : [];
 @endphp
 @include('templates._selection-context')
@@ -14,7 +14,7 @@
         <p class="muted" style="margin: 0; font-size: 13.5px;">Create and reuse project plans with predefined tasks and schedules.</p>
     </div>
     <div style="display: flex; gap: 10px; align-items: center;">
-        @if($canManage)
+        @if($canManage || ($canCreateTemplate ?? false))
             <a class="btn btn-primary" href="{{ route('templates.create',$templateSelectionContext) }}" style="background: #315F58; color: #FFFFFF; font-size: 13px; height: 38px; font-weight: 650;">
                 + Create Template
             </a>
@@ -23,7 +23,13 @@
 </div>
 
 @if($selectForProject ?? false)
-    <section class="template-selection-banner"><div><b>Choose a project template</b><p>Select a saved plan or create a new one. Your project details and people will be kept.</p></div><a href="{{ route('projects.create',$projectReturnContext) }}" class="btn btn-outline btn-sm">Back to project</a></section>
+    @php
+        $returnUrl = request('plan_project')
+            ? route('projects.plan.setup', array_merge(['project' => request('plan_project')], request()->only('starts_on', 'ends_on', 'planned_budget')))
+            : route('projects.create', $projectReturnContext);
+        $returnLabel = request('plan_project') ? '← Return to Plan Setup' : '← Return to Create Project';
+    @endphp
+    <section class="template-selection-banner"><div><b>Select a Template for Your New Project</b><p>Select a saved plan or create a new one. Your project details will be kept.</p></div><a href="{{ $returnUrl }}" class="btn btn-outline btn-sm">{{ $returnLabel }}</a></section>
 @endif
 
 <!-- Search & Filter Toolbar -->
@@ -122,7 +128,12 @@
                         <td style="padding: 14px 18px; text-align: right;" onclick="event.stopPropagation()">
                             <div style="display: inline-flex; align-items: center; gap: 6px; justify-content: flex-end;">
                                 @if($selectForProject ?? false)
-                                    @if(!$template->isArchived())<a href="{{ route('projects.create',array_merge($projectReturnContext,['template_id'=>$template->id,'mode'=>'template'])) }}" class="btn btn-primary btn-sm btn-select-template" onclick="event.stopPropagation()">Select template &rarr;</a>@else<span class="muted text-sm">Archived</span>@endif
+                                    @php
+                                        $rowTargetUrl = request('plan_project')
+                                            ? route('projects.plan.setup', array_merge(['project' => request('plan_project'), 'template_id' => $template->id], request()->only('starts_on', 'ends_on', 'planned_budget')))
+                                            : route('projects.create', ['template_id' => $template->id, 'mode' => 'template']);
+                                    @endphp
+                                    @if(!$template->isArchived())<button type="button" class="btn btn-primary btn-sm btn-select-template" data-select-template="{{ $template->id }}" data-create-url="{{ $rowTargetUrl }}" onclick="event.stopPropagation(); openTemplatePlan({{ $template->id }}, 'select')">Continue with Template &rarr;</button><span class="workspace-sr-only">Continue with Template →</span>@else<span class="muted text-sm">Archived</span>@endif
                                 @endif
 
                                 @if($canManage && !($selectForProject ?? false))
@@ -165,7 +176,7 @@
                                                 </button>
                                             </form>
                                             <hr style="margin: 4px 0; border: none; border-top: 1px solid #E2E8F0;">
-                                            <form method="POST" action="{{ route('templates.destroy', $template) }}" style="margin: 0;" onsubmit="return confirm('Are you sure you want to delete template \'{{ $template->name }}\'?')">
+                                            <form method="POST" action="{{ route('templates.destroy', $template) }}" style="margin: 0;" onsubmit="return AppDialog.confirmAction(event,this,'Are you sure you want to delete template \'{{ $template->name }}\'?')">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" style="display: block; width: 100%; text-align: left; padding: 6px 12px; font-size: 12.5px; color: #DC2626; background: none; border: none; cursor: pointer;">
@@ -183,7 +194,7 @@
                         <td colspan="5" style="padding: 40px 20px; text-align: center; color: #64748B;">
                             <div style="font-size: 14px; font-weight: 600; margin-bottom: 6px; color: #22272B;">No templates found</div>
                             <div style="font-size: 12.5px; margin-bottom: 14px;">Try adjusting your search criteria or create a new template.</div>
-                            @if($canManage)
+                            @if($canManage || ($canCreateTemplate ?? false))
                                 <a class="btn btn-primary btn-sm" href="{{ route('templates.create',$templateSelectionContext) }}" style="background: #315F58; color: #FFFFFF;">
                                     + Create First Template
                                 </a>

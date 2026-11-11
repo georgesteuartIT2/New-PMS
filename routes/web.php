@@ -15,19 +15,36 @@ Route::middleware(['auth','account.active'])->group(function(){
  Route::post('/logout',[AuthController::class,'logout'])->name('logout');
  Route::get('/change-password',[AuthController::class,'passwordForm'])->name('password.change');
  Route::post('/change-password',[AuthController::class,'changePassword'])->name('password.update');
- Route::middleware('password.changed')->group(function(){
+ Route::middleware(['password.changed','viewer.readonly'])->group(function(){
   Route::get('/dashboard',[DashboardController::class,'index'])->name('dashboard');
   Route::get('/projects',[ProjectController::class,'index'])->name('projects.index');
   Route::get('/projects/template-schedule',[ProjectController::class,'templateSchedule'])->name('projects.template.schedule');
   Route::get('/reports',[\App\Http\Controllers\ReportsController::class,'index'])->name('reports.index');
+  Route::post('/projects/initiate',[\App\Http\Controllers\ProjectWorkflowController::class,'store'])->name('projects.initiate');
+  Route::post('/projects/{project}/owner-response',[\App\Http\Controllers\ProjectWorkflowController::class,'ownerRespond'])->name('projects.owner.respond');
+  Route::post('/projects/{project}/workflow-reassign',[\App\Http\Controllers\ProjectWorkflowController::class,'reassign'])->name('projects.workflow.reassign');
+  Route::get('/projects/{project}/plan-templates',[\App\Http\Controllers\ProjectWorkflowController::class,'templates'])->name('projects.plan.templates');
+  Route::get('/projects/{project}/plan-templates/{template}',[\App\Http\Controllers\ProjectWorkflowController::class,'templatePreview'])->name('projects.plan.template-preview');
+  Route::get('/projects/{project}/plan-setup',[\App\Http\Controllers\ProjectWorkflowController::class,'setup'])->name('projects.plan.setup');
+  Route::post('/projects/{project}/plan-setup',[\App\Http\Controllers\ProjectWorkflowController::class,'initialize'])->name('projects.plan.initialize');
+  Route::post('/projects/{project}/publish-plan',[\App\Http\Controllers\ProjectWorkflowController::class,'publish'])->name('projects.plan.publish');
   Route::get('/projects/create',[ProjectController::class,'create'])->name('projects.create');
   Route::post('/projects',[ProjectController::class,'store'])->name('projects.store');
   Route::post('/projects/{project}/draft',[ProjectController::class,'saveDraft'])->name('projects.draft.save');
+  Route::post('/roles/quick',[\App\Http\Controllers\RoleDirectoryController::class,'quickStore'])->name('roles.quick');
   Route::get('/users/azure/search',[UserController::class,'azure'])->name('users.azure');
   Route::post('/users/azure/add',[UserController::class,'addAzure'])->name('users.azure.add');
   Route::get('/templates',[TemplateController::class,'index'])->name('templates.index');
+  Route::get('/templates/create',[TemplateController::class,'create'])->name('templates.create');
+  Route::post('/templates',[TemplateController::class,'store'])->name('templates.store');
+  Route::match(['get', 'post'], '/templates/download-blank-excel', [TemplateController::class, 'downloadBlank'])->name('templates.downloadBlank');
+  Route::post('/templates/import-preview',[TemplateController::class,'importPreview'])->name('templates.importPreview');
   Route::get('/templates/{template}',[TemplateController::class,'show'])->whereNumber('template')->name('templates.show');
   Route::get('/templates/{template}/tasks-json',[TemplateController::class,'tasksJson'])->whereNumber('template')->name('templates.tasksJson');
+  Route::get('/projects/{project}/expenses/{expense}/receipt',[\App\Http\Controllers\ProjectBudgetController::class,'receipt'])->name('projects.expenses.receipt');
+  Route::patch('/projects/{project}/budget',[\App\Http\Controllers\ProjectBudgetController::class,'update'])->name('projects.budget.update');
+  Route::post('/projects/{project}/expenses',[\App\Http\Controllers\ProjectBudgetController::class,'store'])->name('projects.expenses.store');
+  Route::delete('/projects/{project}/expenses/{expense}',[\App\Http\Controllers\ProjectBudgetController::class,'destroy'])->name('projects.expenses.destroy');
   Route::get('/projects/{project}',[ProjectController::class,'show'])->name('projects.show');
   Route::get('/projects/{project}/delay-analysis',[\App\Http\Controllers\ProjectDelayAnalysisController::class,'show'])->name('projects.delay-analysis');
   Route::get('/projects/{project}/delay-investigation',[\App\Http\Controllers\ProjectDelayInvestigationController::class,'show'])->name('projects.delay-investigation');
@@ -47,6 +64,7 @@ Route::middleware(['auth','account.active'])->group(function(){
   Route::patch('/profile',[\App\Http\Controllers\SettingsController::class,'updateProfile'])->name('profile.update');
   Route::patch('/profile/password',[\App\Http\Controllers\SettingsController::class,'updatePassword'])->name('profile.password');
   Route::put('/projects/{project}',[ProjectController::class,'update'])->name('projects.update');
+  Route::get('/projects/{project}/approval-review',[ProjectController::class,'approvalReview'])->name('projects.approval-review');
   Route::post('/projects/{project}/respond',[ProjectController::class,'respond'])->name('projects.respond');
   Route::post('/projects/{project}/baseline',[ProjectController::class,'captureBaseline'])->name('projects.baseline');
   Route::post('/projects/{project}/members',[ProjectController::class,'addMember'])->name('projects.members.store');
@@ -65,7 +83,9 @@ Route::middleware(['auth','account.active'])->group(function(){
   Route::post('/tasks/{task}/request-update',[TaskController::class,'requestUpdate'])->name('tasks.request-update');
   Route::post('/tasks/{task}/reassign',[TaskController::class,'reassign'])->name('tasks.reassign');
   Route::post('/tasks/{task}/delays',[\App\Http\Controllers\TaskDelayController::class,'store'])->name('tasks.delays.store');
+  Route::post('/task-delays/{delay}/read',[\App\Http\Controllers\TaskDelayController::class,'read'])->name('tasks.delays.read');
   Route::patch('/task-delays/{delay}/resolve',[\App\Http\Controllers\TaskDelayController::class,'resolve'])->name('tasks.delays.resolve');
+  Route::post('/tasks/{task}/pm-assign',[TaskController::class,'pmAssign'])->name('tasks.pm-assign');
   Route::post('/tasks/{task}/assign',[TaskController::class,'assign'])->name('tasks.assign');
   Route::post('/tasks/{task}/attachments',[TaskController::class,'upload'])->name('tasks.upload');
   Route::delete('/attachments/{attachment}',[\App\Http\Controllers\TaskExtrasController::class,'removeFile'])->name('attachments.delete');
@@ -103,6 +123,8 @@ Route::middleware(['auth','account.active'])->group(function(){
    Route::put('/projects/{project}/permissions',[RoleController::class,'update'])->name('roles.update');
    Route::get('/users',[UserController::class,'index'])->name('users.index');
    Route::get('/users/{user}',[\App\Http\Controllers\UserDetailsController::class,'show'])->whereNumber('user')->name('users.show');
+   Route::put('/settings/email',[\App\Http\Controllers\SettingsController::class,'updateEmail'])->name('settings.email.update');
+   Route::post('/settings/email/test',[\App\Http\Controllers\SettingsController::class,'testEmail'])->middleware('throttle:5,1')->name('settings.email.test');
    Route::get('/settings',[\App\Http\Controllers\SettingsController::class,'system'])->name('settings.system');
    Route::get('/roles',[\App\Http\Controllers\RoleDirectoryController::class,'index'])->name('role-directory.index');
    Route::post('/roles',[\App\Http\Controllers\RoleDirectoryController::class,'store'])->name('role-directory.store');
@@ -117,10 +139,6 @@ Route::middleware(['auth','account.active'])->group(function(){
    Route::delete('/users/{user}',[UserController::class,'destroy'])->name('users.destroy');
    Route::post('/users/{user}/temporary-password',[UserController::class,'resetPassword'])->name('users.reset');
    Route::post('/users/azure/link',[UserLinkController::class,'link'])->name('users.azure.link');
-   Route::get('/templates/create',[TemplateController::class,'create'])->name('templates.create');
-   Route::post('/templates',[TemplateController::class,'store'])->name('templates.store');
-   Route::match(['get', 'post'], '/templates/download-blank-excel', [TemplateController::class, 'downloadBlank'])->name('templates.downloadBlank');
-   Route::post('/templates/import-preview',[TemplateController::class,'importPreview'])->name('templates.importPreview');
    Route::get('/templates/{template}/edit',[TemplateController::class,'edit'])->name('templates.edit');
    Route::put('/templates/{template}',[TemplateController::class,'update'])->name('templates.update');
    Route::post('/templates/{template}/duplicate',[TemplateController::class,'duplicate'])->name('templates.duplicate');

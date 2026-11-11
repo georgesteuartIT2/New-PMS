@@ -6,7 +6,7 @@
 <div class="page-head">
     <div>
         <h1>Roles & Permissions</h1>
-        <p class="muted">System roles are PMO Admin and User. Set the responsibilities a User can have in each project here.</p>
+        <p class="muted">Choose a project role and check what its members can do.</p>
     </div>
     <div class="inline-actions">
         <button type="button" class="btn btn-primary" onclick="toggleNewRoleForm()">+ New Role</button>
@@ -14,28 +14,32 @@
 </div>
 
 <!-- Inline New Role Form (Expands upon click, no disruptive modals) -->
-<div id="new-role-card" class="card" style="display: none; margin-bottom: 24px; border: 1px solid #315F58; background: #FAFDFB;">
+<div id="new-role-card" class="card" style="display: {{ old('_create_role') ? 'block' : 'none' }}; margin-bottom: 24px; border: 1px solid #315F58; background: #FAFDFB;">
     <div class="card-head" style="margin-bottom: 16px;">
         <div>
             <h2 style="font-size: 16px; margin: 0;">Create Custom Project Role</h2>
-            <p class="muted" style="margin: 2px 0 0 0; font-size: 13px;">Define a new custom role. You can assign default permissions immediately after creating it.</p>
+            <p class="muted" style="margin: 2px 0 0 0; font-size: 13px;">Give the role a name and choose its permissions before creating it.</p>
         </div>
         <button type="button" class="btn btn-outline btn-xs" onclick="toggleNewRoleForm()">Cancel</button>
     </div>
     <form method="post" action="{{ route('role-directory.store') }}">
         @csrf
+        <input type="hidden" name="_create_role" value="1">
         <div style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
             <label style="flex: 1; min-width: 260px; font-size: 13px; font-weight: 500;">
                 Role Name <span style="color: var(--danger);">*</span>
-                <input type="text" name="name" required placeholder="e.g. Quality Assurance Lead" style="margin-top: 6px; width: 100%;">
+                <input type="text" name="name" value="{{ old('_create_role') ? old('name') : '' }}" required placeholder="e.g. Quality Assurance Lead" style="margin-top: 6px; width: 100%;">
             </label>
-            <button type="submit" class="btn btn-primary" style="height: 38px;">Create Role</button>
+
         </div>
+        @include('roles._permission-list',['permissionGroups'=>$groupedCatalog,'selectedPermissions'=>old('_create_role') ? old('permissions',[]) : ['project.view'],'lockedPermissions'=>[],'permissionInputName'=>'permissions[]','permissionInputClass'=>'','permissionCountId'=>null])
+        <div class="new-role-submit"><button type="submit" class="btn btn-primary">Create role</button></div>
     </form>
 </div>
 
 <!-- Main RBAC Two-Column Layout -->
-<div class="rbac-grid">
+@if($errors->any() && !old('_create_role'))<div class="alert danger" role="alert"><b>Changes were not saved.</b><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
+<div class="rbac-grid role-directory-grid">
     <!-- Left Column: Searchable Roles List -->
     <aside class="rbac-sidebar card">
         <div class="rbac-sidebar-head">
@@ -88,7 +92,7 @@
                     </div>
                     <p class="muted" style="font-size: 13px; margin: 0;">
                         @if($selectedRole->is_system)
-                            Built-in role identifier is protected. Permissions are fully configurable by PMO administrators.
+                            Built-in role identifier is protected. Choose the actions this project role can perform.
                         @else
                             Custom role. You can rename this role and configure its default permissions policy.
                         @endif
@@ -96,7 +100,7 @@
                 </div>
 
                 @unless($selectedRole->is_system)
-                    <form method="post" action="{{ route('role-directory.delete', $selectedRole) }}" onsubmit="return confirm('Are you sure you want to delete this custom role? This cannot be undone.');">
+                    <form method="post" action="{{ route('role-directory.delete', $selectedRole) }}" onsubmit="return AppDialog.confirmAction(event,this,'Are you sure you want to delete this custom role? This cannot be undone.');">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-outline btn-xs" style="color: var(--danger); border-color: #FECACA;">Delete Role</button>
@@ -110,12 +114,13 @@
                     <div>
                         <b>Active Impact:</b> Affects <b>{{ $affectedUsersCount }}</b> {{ $affectedUsersCount === 1 ? 'user' : 'users' }} across <b>{{ $affectedProjectsCount }}</b> {{ $affectedProjectsCount === 1 ? 'project' : 'projects' }}.
                     </div>
-                    <span class="muted" style="font-size: 12px;">Changes take effect immediately upon saving.</span>
+                    <span class="muted" style="font-size: 12px;">Applies after saving. Other roles and project overrides may also grant access.</span>
                 </div>
             </div>
 
             <!-- Permissions Editor Form -->
-            <form method="post" action="{{ route('role-directory.update', $selectedRole) }}">
+            <form method="post" action="{{ route('role-directory.update', $selectedRole) }}" data-role-policy-form>
+                <input type="hidden" name="_permissions_present" value="1">
                 @csrf
                 @method('PUT')
 
@@ -128,61 +133,7 @@
                     </div>
                 @endunless
 
-                <!-- 4 Grouped Categories -->
-                @php
-                    $rolePerms = $selectedRole->default_permissions ?? [];
-                @endphp
-
-                @foreach($groupedCatalog as $categoryKey => $group)
-                    <div class="permission-category-block" style="margin-bottom: 28px; border-top: 1px solid #E5E7EB; padding-top: 20px;">
-                        <div class="category-block-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px;">
-                            <div>
-                                <h3 style="font-size: 15px; font-weight: 600; margin: 0 0 2px 0; color: #111827;">{{ $group['meta']['title'] }}</h3>
-                                <p class="muted" style="font-size: 12px; margin: 0;">{{ $group['meta']['description'] }}</p>
-                            </div>
-                            <div class="category-toggle-links" style="font-size: 11px;">
-                                <button type="button" class="text-link-action" onclick="toggleCategoryGroup('{{ $categoryKey }}', true)">Select All</button>
-                                <span class="muted" style="margin: 0 4px;">·</span>
-                                <button type="button" class="text-link-action" onclick="toggleCategoryGroup('{{ $categoryKey }}', false)">Deselect All</button>
-                            </div>
-                        </div>
-
-                        <div class="permission-items-grid">
-                            @foreach($group['permissions'] as $permKey => $permInfo)
-                                @php
-                                    $aliasKey = \App\Services\Access::ALIASES[$permKey] ?? null;
-                                    $isChecked = in_array($permKey, $rolePerms, true) || ($aliasKey && in_array($aliasKey, $rolePerms, true));
-                                    // Check legacy reverse alias
-                                    if (!$isChecked) {
-                                        foreach(\App\Services\Access::ALIASES as $legacy => $canonical) {
-                                            if ($canonical === $permKey && in_array($legacy, $rolePerms, true)) {
-                                                $isChecked = true;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                @endphp
-                                <label class="permission-checkbox-card {{ $isChecked ? 'checked' : '' }}">
-                                    <div class="checkbox-col">
-                                        <input type="checkbox" 
-                                               name="permissions[]" 
-                                               value="{{ $permKey }}" 
-                                               class="perm-box group-{{ $categoryKey }}" 
-                                               @checked($isChecked)
-                                               onchange="this.closest('.permission-checkbox-card').classList.toggle('checked', this.checked)">
-                                    </div>
-                                    <div class="perm-body-col">
-                                        <div class="perm-name-row">
-                                            <span class="perm-name">{{ $permInfo['name'] }}</span>
-                                            <code class="perm-code-badge">{{ $permKey }}</code>
-                                        </div>
-                                        <p class="perm-desc">{{ $permInfo['description'] }}</p>
-                                    </div>
-                                </label>
-                            @endforeach
-                        </div>
-                    </div>
-                @endforeach
+                @include('roles._permission-list',['permissionGroups'=>$groupedCatalog,'selectedPermissions'=>!old('_create_role') ? (old('_permissions_present') ? old('permissions',[]) : ($selectedRole->default_permissions??[])) : ($selectedRole->default_permissions??[]),'lockedPermissions'=>[],'permissionInputName'=>'permissions[]','permissionInputClass'=>'perm-box','permissionCountId'=>null])
 
                 <!-- Single Primary Save Action -->
                 <div class="editor-bottom-bar" style="position: sticky; bottom: 0; background: #FFFFFF; padding: 16px 0; border-top: 1px solid #E5E7EB; display: flex; justify-content: space-between; align-items: center; z-index: 5;">
@@ -201,6 +152,7 @@
     </main>
 </div>
 
+<details class="role-access-preview" @if($effectivePreview) open @endif><summary>Check a person's project access</summary>
 <!-- Effective Permissions Preview Section -->
 <section class="card" style="margin-top: 32px;">
     <div class="card-head" style="margin-bottom: 20px;">
@@ -293,6 +245,7 @@
     @endif
 </section>
 
+</details>
 <!-- Scoped Styling for Clean SaaS RBAC -->
 <style>
 .rbac-grid {
@@ -466,13 +419,8 @@ function filterRolesLive(val) {
     });
 }
 
-function toggleCategoryGroup(groupClass, check) {
-    const boxes = document.querySelectorAll('.perm-box.group-' + groupClass);
-    boxes.forEach(b => {
-        b.checked = check;
-        b.closest('.permission-checkbox-card').classList.toggle('checked', check);
-    });
-}
 </script>
 
+<link rel="stylesheet" href="{{ asset('css/permissions.css') }}?v={{ filemtime(public_path('css/permissions.css')) }}">
+<script defer src="{{ asset('js/permission-picker.js') }}?v={{ filemtime(public_path('js/permission-picker.js')) }}"></script>
 @endsection

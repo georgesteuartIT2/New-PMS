@@ -1,151 +1,160 @@
 @extends('layouts.app')
-@section('title', 'Task Monitor')
+@section('title','Task Monitor')
 @section('content')
-<div class="task-monitor-workspace">
-    @if(request()->routeIs('monitoring.index'))
-        @include('monitoring._header')
-    @else
-    <header class="task-monitor-header">
+<link rel="stylesheet" href="{{ asset('css/task-workspace.css') }}?v={{ filemtime(public_path('css/task-workspace.css')) }}">
+@php
+    $monitorRoute=request()->routeIs('monitoring.index')?'monitoring.index':'pmo.task-monitor';
+    $currentFilter=$filters['filter']??'all';
+    $taskViews=['all'=>['All Tasks','total_tasks'],'overdue'=>['Overdue','overdue_tasks'],'critical'=>['Critical Path','critical_tasks'],'due_soon'=>['Due soon','due_soon_tasks'],'unassigned'=>['Unassigned','unassigned_tasks'],'completed'=>['Completed','completed_tasks']];
+    if(($summary['blocked_tasks']??0)>0)$taskViews['blocked']=['Blocked','blocked_tasks'];
+    if(($summary['needs_update_tasks']??0)>0)$taskViews['needs_update']=['Needs update','needs_update_tasks'];
+    $hasFilters=!empty($filters['q']) || !empty($filters['project_id']) || !empty($filters['user_id']) || !empty($filters['status']) || !empty($filters['subsidiary_id']);
+@endphp
+<div class="task-monitor-workspace task-workspace" style="padding-bottom: 24px;">
+    <!-- Compact Executive Header -->
+    <header class="tw-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 12px;">
         <div>
-            <div class="task-heading-line">
-                <h1>Task Monitor</h1>
-                @include('layouts._task-scope')
-            </div>
-            <p class="muted">Monitor tasks across all company projects.</p>
+            <h1 style="font-size: 20px; font-weight: 700; color: #0F172A; letter-spacing: -0.4px; margin: 0; line-height: 1.2;">Task Monitor</h1>
+            <p class="muted" style="margin: 2px 0 0; font-size: 12px; color: #64748B;">Monitor tasks across all company projects.</p>
         </div>
-        <div style="display: flex; gap: 8px;">
-            <a href="{{ route('pmo.task-monitor.export', request()->query()) }}" class="btn btn-outline btn-sm">Export CSV</a>
-            <a href="{{ route('pmo.team-monitor') }}" class="btn btn-outline btn-sm">Team Monitor →</a>
-        </div>
+        <a href="{{ route('pmo.task-monitor.export',request()->query()) }}" class="btn btn-outline" style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; height: 32px; padding: 0 11px; border-radius: 6px; border: 1px solid var(--border); background: #FFFFFF; color: #334155; text-decoration: none;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Export CSV</span>
+        </a>
     </header>
-    @endif
 
-    @php
-        $monitorRoute = request()->routeIs('monitoring.index') ? 'monitoring.index' : 'pmo.task-monitor';
-        $currentFilter = $filters['filter'] ?? 'all';
-        $summaryLinks = [
-            'all' => ['label'=>'Total Tasks', 'count'=>$summary['total_tasks'] ?? 0],
-            'open' => ['label'=>'Open Tasks', 'count'=>$summary['open_tasks'] ?? 0],
-            'overdue' => ['label'=>'Overdue Tasks', 'count'=>$summary['overdue_tasks'] ?? 0],
-            'unassigned' => ['label'=>'Unassigned Tasks', 'count'=>$summary['unassigned_tasks'] ?? 0],
-            'completed' => ['label'=>'Completed Tasks', 'count'=>$summary['completed_tasks'] ?? 0],
-        ];
-        $filterTabs = [
-            'all' => ['label' => 'All Tasks', 'count' => $summary['total_tasks'] ?? 0],
-            'overdue' => ['label' => 'Overdue', 'count' => $summary['overdue_tasks'] ?? 0, 'badge' => 'danger'],
-            'critical' => ['label' => 'Critical Path', 'count' => $summary['critical_tasks'] ?? 0, 'badge' => 'warning'],
-            'blocked' => ['label' => 'Blocked', 'count' => $summary['blocked_tasks'] ?? 0, 'badge' => 'danger'],
-            'unassigned' => ['label' => 'Unassigned', 'count' => $summary['unassigned_tasks'] ?? 0, 'badge' => 'neutral'],
-            'due_soon' => ['label' => 'Due Soon (7d)', 'count' => $summary['due_soon_tasks'] ?? 0, 'badge' => 'warning'],
-            'needs_update' => ['label' => 'Needs Update', 'count' => $summary['needs_update_tasks'] ?? 0, 'badge' => 'neutral'],
-        ];
-        $filterTabs['open'] = ['label'=>'Open', 'count'=>$summary['open_tasks'] ?? 0];
-        $filterTabs['completed'] = ['label'=>'Completed', 'count'=>$summary['completed_tasks'] ?? 0];
-        $extraFiltersActive = !empty($filters['subsidiary_id']) || !empty($filters['status']);
-        $hasFilters = !empty($filters['q']) || !empty($filters['project_id']) || !empty($filters['user_id']) || $extraFiltersActive || $currentFilter !== 'all';
-    @endphp
-    <nav class="monitor-focus-tabs" aria-label="Task views">
-        @foreach($filterTabs as $fKey => $fTab)
-            <a href="{{ route($monitorRoute, array_merge(request()->except('page'), ['filter' => $fKey])) }}" class="btn btn-sm {{ $currentFilter === $fKey ? 'is-active' : '' }}" @if($currentFilter === $fKey) aria-current="page" @endif style="height: 30px; font-size: 12px; border-radius: 16px; border: 1px solid {{ $currentFilter === $fKey ? '#315F58' : '#CBD5E1' }}; background: {{ $currentFilter === $fKey ? '#315F58' : '#FFFFFF' }}; color: {{ $currentFilter === $fKey ? '#FFFFFF' : '#22272B' }}; font-weight: {{ $currentFilter === $fKey ? '650' : '500' }}; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
-                <span>{{ $fTab['label'] }}</span>
-                @if(($fTab['count'] ?? 0) > 0)
-                    <span style="font-size: 11px; padding: 1px 6px; border-radius: 10px; background: {{ $currentFilter === $fKey ? 'rgba(255,255,255,0.25)' : '#F1F5F9' }}; color: {{ $currentFilter === $fKey ? '#FFFFFF' : '#475569' }};">
-                        {{ $fTab['count'] }}
+    <!-- Accessible Screen-Reader Summary (No duplicate visual bar) -->
+    <div class="workspace-sr-only" aria-label="Task metrics summary">
+        <span>Total Tasks: {{ $summary['total_tasks'] ?? 0 }}</span>
+        <span>Open Tasks: {{ $summary['open_tasks'] ?? 0 }}</span>
+        <span>Overdue Tasks: {{ $summary['overdue_tasks'] ?? 0 }}</span>
+        <span>Unassigned Tasks: {{ $summary['unassigned_tasks'] ?? 0 }}</span>
+        <span>Completed Tasks: {{ $summary['completed_tasks'] ?? 0 }}</span>
+    </div>
+
+    <!-- Unified Filter Card -->
+    <section class="card monitor-controls" aria-label="Task filters" style="padding: 0; overflow: hidden; border-radius: 8px; border: 1px solid var(--border); background: #FFFFFF; box-shadow: 0 1px 2px rgba(0,0,0,0.02); margin-bottom: 14px;">
+        <!-- Clean Compact Tab Nav -->
+        <nav class="tw-views" aria-label="Filter tasks" style="display: flex; gap: 18px; padding: 0 16px; border-bottom: 1px solid var(--border); background: #FAFBFC; align-items: center; overflow-x: auto; margin-bottom: 0;">
+            @foreach($taskViews as $key=>$item)
+                @php
+                    $isActive = $currentFilter === $key;
+                    $badgeVal = $summary[$item[1]] ?? 0;
+                    $isDanger = ($key === 'overdue' || $key === 'blocked') && $badgeVal > 0;
+                @endphp
+                <a href="{{ route($monitorRoute,array_merge(request()->except('page','filter'),['filter'=>$key])) }}" class="{{ $isActive ? 'is-active' : '' }}" @if($isActive) aria-current="page" @endif style="display: inline-flex; align-items: center; gap: 6px; padding: 9px 0; font-size: 12.5px; font-weight: {{ $isActive ? '650' : '500' }}; text-decoration: none; border-bottom: 2px solid {{ $isActive ? ($isDanger ? '#DC2626' : 'var(--primary)') : 'transparent' }}; color: {{ $isActive ? ($isDanger ? '#DC2626' : 'var(--primary)') : '#64748B' }}; white-space: nowrap;">
+                    <span>{{ $item[0] }}</span>
+                    <span class="pill" style="font-size: 10.5px; padding: 1px 6px; border-radius: 10px; background: {{ $isDanger ? '#FEE2E2' : ($isActive ? '#E8F0EE' : '#F1F5F9') }}; color: {{ $isDanger ? '#DC2626' : ($isActive ? 'var(--primary)' : '#64748B') }}; font-weight: 650;">
+                        {{ $badgeVal }}
                     </span>
-                @endif
-            </a>
-        @endforeach
-    </nav>
+                </a>
+            @endforeach
+        </nav>
 
-    <form method="get" action="{{ route($monitorRoute) }}" id="task-filter-form" class="task-monitor-filters">
-        @if(request()->routeIs('monitoring.index'))<input type="hidden" name="tab" value="tasks">@endif
-        <input type="hidden" name="filter" value="{{ $currentFilter }}">
-        <div class="task-filter-primary">
-            <label class="task-monitor-search">
-                <span class="task-monitor-sr-only">Search tasks, projects or people</span>
-                <input type="search" name="q" value="{{ $filters['q'] ?? '' }}" placeholder="Search tasks, projects or people...">
-            </label>
-            <label>
-                <span class="task-monitor-sr-only">Project</span>
-                <select name="project_id" onchange="this.form.requestSubmit()">
-                    <option value="">All projects</option>
-                    @foreach($projects as $p)
-                        <option value="{{ $p->id }}" @selected(($filters['project_id'] ?? '') == $p->id)>{{ $p->name }}</option>
-                    @endforeach
-                </select>
-            </label>
-            <label>
-                <span class="task-monitor-sr-only">Assignee</span>
-                <select name="user_id" onchange="this.form.requestSubmit()">
-                    <option value="">Anyone</option>
-                    <option value="unassigned" @selected(($filters['user_id'] ?? '') === 'unassigned')>Unassigned</option>
-                    @foreach($assignees as $u)
-                        <option value="{{ $u->id }}" @selected(($filters['user_id'] ?? '') == $u->id)>{{ $u->name }}</option>
-                    @endforeach
-                </select>
-            </label>
+        <!-- Compact Toolbar Form -->
+        <form method="get" action="{{ route($monitorRoute) }}" class="tw-filters" id="task-filter-form" style="padding: 10px 16px; margin-bottom: 0; background: #FFFFFF;">
+            @if(request()->routeIs('monitoring.index'))<input type="hidden" name="tab" value="tasks">@endif
+            <input type="hidden" name="filter" value="{{ $currentFilter }}">
+            @if(!empty($filters['active_only']))<input type="hidden" name="active_only" value="1">@endif
 
-            <button type="submit" class="btn btn-outline btn-sm">Search</button>
-            @if($hasFilters)<a href="{{ route($monitorRoute) }}" class="task-filter-clear">Clear</a>@endif
-        </div>
-        <div class="task-filter-secondary">
-            <details class="task-more-filters" @if($extraFiltersActive) open @endif>
-                <summary>More filters @if($extraFiltersActive)<span class="task-extra-count">{{ (int)!empty($filters['subsidiary_id']) + (int)!empty($filters['status']) }}</span>@endif</summary>
-                <div class="task-extra-fields">
-
-                    <label>Subsidiary
-                        <select name="subsidiary_id" onchange="this.form.requestSubmit()">
-                            <option value="">All subsidiaries</option>
-                            @foreach($subsidiaries as $s)
-                                <option value="{{ $s->id }}" @selected(($filters['subsidiary_id'] ?? '') == $s->id)>{{ $s->name }}</option>
-                            @endforeach
-                        </select>
-                    </label>
-                    <label>Status
-                        <select name="status" onchange="this.form.requestSubmit()">
-                            <option value="">Any status</option>
-                            @foreach(['todo'=>'To do','in_progress'=>'In progress','on_hold'=>'On hold','completed'=>'Completed'] as $value=>$label)
-                                <option value="{{ $value }}" @selected(($filters['status'] ?? '') === $value)>{{ $label }}</option>
-                            @endforeach
-                        </select>
-                    </label>
+            <div class="monitor-toolbar-row">
+                <div class="monitor-toolbar-search" style="position:relative;display:flex;align-items:center;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position: absolute; left: 12px; pointer-events: none;">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <label class="workspace-sr-only" for="task-search-input">Search tasks, projects or people</label>
+                    <input type="search" id="task-search-input" name="q" value="{{ $filters['q']??'' }}" placeholder="Search tasks, projects or people..." autocomplete="off" style="width: 100%; height: 35px; border-radius: 7px; border: 1px solid var(--border); padding: 0 12px 0 34px; font-size: 12.5px; outline: none; transition: all 0.15s ease;">
                 </div>
-            </details>
-            <span class="task-results-count" role="status">{{ $tasks->total() }} {{ Str::plural('task', $tasks->total()) }}</span>
-        </div>
-    </form>
+
+                <label style="margin: 0;">
+                    <span class="workspace-sr-only">Project</span>
+                    <select name="project_id" class="custom-select" onchange="this.form.requestSubmit()" style="height: 35px; min-width: 170px; font-size: 12px; padding: 0 32px 0 12px;">
+                        <option value="">All projects</option>
+                        @foreach($projects as $project)
+                            <option value="{{ $project->id }}" @selected(($filters['project_id']??'')==$project->id)>{{ $project->name }}</option>
+                        @endforeach
+                    </select>
+                </label>
+
+                    <button type="button" class="filter-panel-toggle" aria-controls="task-extra-filters" aria-expanded="{{ (!empty($filters['user_id']) || !empty($filters['status']) || !empty($filters['subsidiary_id']))?'true':'false' }}" onclick="const panel=document.getElementById('task-extra-filters');panel.open=!panel.open;this.setAttribute('aria-expanded',String(panel.open));"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2" fill="white"/><circle cx="15" cy="17" r="2" fill="white"/></svg><span>More filters</span>@if(collect(['user_id','status','subsidiary_id'])->filter(fn($key)=>!empty($filters[$key]))->count())<span class="filter-panel-count">{{ collect(['user_id','status','subsidiary_id'])->filter(fn($key)=>!empty($filters[$key]))->count() }}</span>@endif<svg class="filter-panel-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+                <button type="submit" class="btn btn-primary btn-sm" style="height: 35px; padding: 0 15px; font-size: 12px; font-weight: 600; border-radius: 7px;">Search</button>
+
+                @if($hasFilters)
+                    <a class="tw-clear text-action" href="{{ route($monitorRoute,['filter'=>$currentFilter]) }}" style="font-size: 12px; font-weight: 600; color: var(--primary);">Clear</a>
+                @endif
+
+                <span class="tw-result-count" style="font-size: 11.5px; font-weight: 600; color: var(--muted); margin-left: auto;">
+                    {{ $tasks->total() }} {{ Str::plural('task',$tasks->total()) }}
+                </span>
+            </div>
+
+            <!-- More Filters Expandable Details -->
+            @php
+                $hasExtraFilters = !empty($filters['user_id']) || !empty($filters['status']) || !empty($filters['subsidiary_id']);
+            @endphp
+            <div class="monitor-extra-wrap">
+                <details id="task-extra-filters" class="tw-more" @if($hasExtraFilters) open @endif style="font-size: 11.5px;">
+                    <summary hidden>Additional filters</summary>
+<div class="filter-panel-caption"><span>Refine your results</span><a href="{{ route('pmo.task-monitor',request()->except(['user_id','status','subsidiary_id','page'])) }}">Reset extra filters</a></div>                    <div class="tw-extra" style="display: flex; gap: 12px; flex-wrap: wrap; padding-top: 8px;">
+                        <label style="font-size: 11px; font-weight: 600; color: #64748B; display: flex; flex-direction: column; gap: 3px;">
+                            <span>Assignee</span>
+                            <select name="user_id" class="custom-select custom-select-sm" onchange="this.form.requestSubmit()" style="height: 32px; min-width: 150px; font-size: 12px;">
+                                <option value="">Anyone</option>
+                                <option value="unassigned" @selected(($filters['user_id']??'')==='unassigned')>Unassigned</option>
+                                @foreach($assignees as $person)
+                                    <option value="{{ $person->id }}" @selected(($filters['user_id']??'')==$person->id)>{{ $person->name }}</option>
+                                @endforeach
+                            </select>
+                        </label>
+
+                        <label style="font-size: 11px; font-weight: 600; color: #64748B; display: flex; flex-direction: column; gap: 3px;">
+                            <span>Status</span>
+                            <select name="status" class="custom-select custom-select-sm" onchange="this.form.requestSubmit()" style="height: 32px; min-width: 130px; font-size: 12px;">
+                                <option value="">Any status</option>
+                                @foreach(['todo'=>'To do','in_progress'=>'In progress','on_hold'=>'On hold','completed'=>'Completed'] as $key=>$label)
+                                    <option value="{{ $key }}" @selected(($filters['status']??'')===$key)>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </label>
+
+                        <label style="font-size: 11px; font-weight: 600; color: #64748B; display: flex; flex-direction: column; gap: 3px;">
+                            <span>Subsidiary</span>
+                            <select name="subsidiary_id" class="custom-select custom-select-sm" onchange="this.form.requestSubmit()" style="height: 32px; min-width: 150px; font-size: 12px;">
+                                <option value="">All subsidiaries</option>
+                                @foreach($subsidiaries as $company)
+                                    <option value="{{ $company->id }}" @selected(($filters['subsidiary_id']??'')==$company->id)>{{ $company->name }}</option>
+                                @endforeach
+                            </select>
+                        </label>
+                    </div>
+                </details>
+            </div>
+        </form>
+    </section>
+
     <!-- Task Monitor Table -->
-    <div class="card" style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+    <div class="card tw-table-surface" style="background: #FFFFFF; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
         <div class="table-wrap">
-            <table class="clean-table monitor-task-records" style="width: 100%; border-collapse: collapse;">
+            <table class="clean-table monitor-task-records tw-table tw-monitor-table" style="width: 100%; border-collapse: collapse;">
                 <thead>
-                    <tr style="background: #F5F6F7; border-bottom: 1px solid #E5E7EB;">
-                        <th style="padding: 12px 16px; font-size: 12px; font-weight: 700; color: #22272B; text-align: left;">Project / Task</th>
-                        <th style="padding: 12px 14px; font-size: 12px; font-weight: 700; color: #22272B; text-align: left;">Assigned To</th>
-                        <th style="padding: 12px 14px;">Due</th>
-                        <th style="padding: 12px 14px; font-size: 12px; font-weight: 700; color: #22272B; text-align: left; width: 130px;">Progress</th>
-                        <th style="padding: 12px 14px; font-size: 12px; font-weight: 700; color: #22272B; text-align: left;">Status</th>
-                        <th style="padding: 12px 16px; font-size: 12px; font-weight: 700; color: #22272B; text-align: right;">Actions</th>
+                    <tr style="background: #FAFBFC; border-bottom: 1px solid var(--border);">
+                        <th style="padding: 10px 16px; font-size: 11px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; text-align: left;">Task / Project</th>
+                        <th style="padding: 10px 14px; font-size: 11px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; text-align: left;">Assigned To</th>
+                        <th style="padding: 10px 14px; font-size: 11px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; text-align: left;">Due</th>
+                        <th style="padding: 10px 14px; font-size: 11px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; text-align: left; width: 120px;">Progress</th>
+                        <th style="padding: 10px 14px; font-size: 11px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; text-align: left;">Status</th>
+                        <th style="padding: 10px 16px; font-size: 11px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; text-align: right;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($tasks as $task)
                         <tr style="border-bottom: 1px solid #F1F5F9; transition: background 0.15s;" onmouseover="this.style.background='#F8FAFC'" onmouseout="this.style.background='#FFFFFF'">
-                            <!-- Project / Task -->
-                            <td style="padding: 12px 16px;">
-                                <div style="font-size: 11.5px; color: #64748B; font-weight: 500; margin-bottom: 2px;">
-                                    <a href="{{ route('projects.show', $task->project_id) }}" style="color: #64748B; text-decoration: none;">
-                                        {{ $task->project?->name ?? 'Untitled Project' }}
-                                    </a>
-                                </div>
-                                <div style="font-size: 13.5px; font-weight: 650; color: #22272B;">
-                                    <a href="{{ route('projects.show', [$task->project_id, 'focus_task' => $task->id]) }}#task-row-{{ $task->id }}" style="color: #22272B; text-decoration: none; font-weight: 650;" title="View task in project workplan">
-                                        <span style="color: #64748B; font-weight: 600; margin-right: 4px;">{{ $task->code }}</span>
-                                        <span>{{ $task->title }}</span>
-                                    </a>
-                                </div>
-                            </td>
-
+                            <td><a class="tw-task-name" href="{{ route('projects.show',[$task->project_id,'focus_task'=>$task->id]) }}">{{ $task->title }}</a><div class="tw-task-context"><span>{{ $task->display_number }}</span><span aria-hidden="true">&middot;</span><a href="{{ route('projects.show',$task->project_id) }}">{{ $task->project?->name ?? 'Project' }}</a></div></td>
                             <!-- Assigned To (Clickable to open Employee Workload) -->
                             <td style="padding: 12px 14px;">
                                 @if($task->assignees->isNotEmpty())
@@ -225,7 +234,7 @@
                             <!-- Actions -->
                             <td style="padding: 12px 16px; text-align: right; white-space: nowrap;">
                                 <div style="display: inline-flex; gap: 6px; align-items: center;">
-                                    @if($task->progress < 100 && $task->assignees->isEmpty())
+                                    @if(!auth()->user()->isAdminViewer() && $task->progress < 100 && $task->assignees->isEmpty())
                                         <a href="{{ route('projects.show', [$task->project_id, 'focus_task' => $task->id]) }}#task-row-{{ $task->id }}" class="btn btn-outline btn-xs" style="height: 30px; font-size: 12px; padding: 0 10px; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; font-weight: 600; color: #315F58; border-color: #315F58;" title="Open task in project workplan to assign person">Assign person</a>
                                     @endif
                                 </div>

@@ -415,25 +415,13 @@
   });
 
   // Cancel with unsaved changes confirmation
-  function handleBulkClose(event) {
-    const modifiedCount = bulkDialog?.querySelectorAll('.bulk-task-row.row-modified').length || 0;
-    if (modifiedCount > 0) {
-      if (!confirm(`You have unsaved changes across ${modifiedCount} task(s). Discard all changes?`)) {
-        event.preventDefault();
-        event.stopPropagation();
-        return false;
-      }
-    }
-    return true;
+  async function handleBulkClose(event) {
+    const modifiedCount=bulkDialog?.querySelectorAll('.bulk-task-row.row-modified').length||0;
+    if(!modifiedCount)return;
+    event.preventDefault();event.stopImmediatePropagation();
+    if(await AppDialog.confirm('You have unsaved changes across '+modifiedCount+' task(s). Discard all changes?'))bulkDialog.close();
   }
-
-  document.getElementById('bulk-edit-cancel-btn')?.addEventListener('click', event => {
-    if (!handleBulkClose(event)) return;
-  });
-
-  document.getElementById('bulk-edit-x-btn')?.addEventListener('click', event => {
-    if (!handleBulkClose(event)) return;
-  });
+  for(const id of ['bulk-edit-cancel-btn','bulk-edit-x-btn'])document.getElementById(id)?.addEventListener('click',handleBulkClose,true);
 
   // 8. Quick Add Project Member Inline AJAX
   const quickMemberDialog = document.getElementById('quick-add-member-dialog');

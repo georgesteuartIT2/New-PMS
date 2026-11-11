@@ -1,17 +1,16 @@
 @extends('layouts.app')
 @section('title', 'People')
 @section('content')
-<!-- Screen 9: Users Management (Clean, Low-Click, Subsidiary Column & Delete) -->
-<div class="page-head">
+<!-- Screen 9: Users Management (Clean, Low-Click, Subsidiary Column & Protected Administration) -->
+<div class="page-head" style="margin-bottom: 20px;">
     <div>
-        <h1>People</h1>
-        <p class="muted">Manage your team and system access in one place.</p>
+        <h1 style="letter-spacing: -0.5px;">People</h1>
+        <p class="muted" style="margin-top: 4px;">Manage your organization's directory, access roles, and project permissions.</p>
     </div>
     <div class="inline-actions">
-
-        <button class="btn btn-primary" data-show-dialog="user-dialog" style="display: inline-flex; align-items: center; gap: 8px;">
+        @if(auth()->user()->isPmo())<button class="btn btn-primary" data-show-dialog="user-dialog" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600;">
             <span style="font-size: 16px; line-height: 1;">+</span> Add person
-        </button>
+        </button>@endif
     </div>
 </div>
 
@@ -20,7 +19,7 @@
 
 <!-- Flash Temporary Password Alert (if generated) -->
 @if(session('temp_password'))
-    <div class="card" id="temp-password-banner" style="background: var(--primary-light); border-color: var(--primary-subtle); margin-bottom: 24px; position: relative;">
+    <div class="card" id="temp-password-banner" style="background: var(--primary-light); border-color: var(--primary-subtle); margin-bottom: 24px; position: relative; border-radius: 10px; padding: 18px 22px;">
         <button type="button" class="icon-btn" onclick="document.getElementById('temp-password-banner').style.display='none'" style="position: absolute; right: 12px; top: 12px;">×</button>
         <div class="card-head" style="margin-bottom: 8px;">
             <b>One-time temporary password generated</b>
@@ -28,138 +27,240 @@
         </div>
         <p class="text-sm">User: <b>{{ session('temp_user') }}</b></p>
         <div style="display: flex; gap: 10px; align-items: center; margin: 12px 0;">
-            <code id="temp-secret" style="background: #FFFFFF; padding: 8px 14px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 14px; font-weight: 600;">{{ session('temp_password') }}</code>
+            <code id="temp-secret" style="background: #FFFFFF; padding: 8px 14px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 14px; font-weight: 600; font-family: monospace;">{{ session('temp_password') }}</code>
             <button class="btn btn-outline btn-sm" type="button" data-copy="temp-secret">Copy Password</button>
         </div>
         <small class="muted">Share securely with the user. The user will be required to change their password on first sign-in.</small>
     </div>
 @endif
 
+<!-- Metric Summary Cards -->
+<div class="users-kpi-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-bottom: 22px;">
+    <div class="card" style="padding: 16px 20px; display: flex; align-items: center; gap: 14px; border: 1px solid var(--border); border-radius: 10px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
+        <div style="width: 44px; height: 44px; border-radius: 10px; background: #EEF2F6; color: #334155; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">
+            👥
+        </div>
+        <div>
+            <div style="font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted);">Total People</div>
+            <div id="total-users-counter" style="font-size: 22px; font-weight: 700; color: var(--text); line-height: 1.2; margin-top: 2px;">{{ $totalUsersCount ?? $users->total() }}</div>
+        </div>
+    </div>
+    <div class="card" style="padding: 16px 20px; display: flex; align-items: center; gap: 14px; border: 1px solid var(--border); border-radius: 10px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
+        <div style="width: 44px; height: 44px; border-radius: 10px; background: #DCFCE7; color: #166534; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">
+            ✓
+        </div>
+        <div>
+            <div style="font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted);">Active Accounts</div>
+            <div style="font-size: 22px; font-weight: 700; color: #166534; line-height: 1.2; margin-top: 2px;">{{ $activeUsersCount ?? $users->total() }}</div>
+        </div>
+    </div>
+    <div class="card" style="padding: 16px 20px; display: flex; align-items: center; gap: 14px; border: 1px solid var(--border); border-radius: 10px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
+        <div style="width: 44px; height: 44px; border-radius: 10px; background: #E8F0EE; color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">
+            🛡️
+        </div>
+        <div>
+            <div style="font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted);">PMO Administrators</div>
+            <div style="font-size: 22px; font-weight: 700; color: var(--primary); line-height: 1.2; margin-top: 2px;">{{ $pmoAdminCount }}</div>
+        </div>
+    </div>
+    <div class="card" style="padding: 16px 20px; display: flex; align-items: center; gap: 14px; border: 1px solid var(--border); border-radius: 10px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
+        <div style="width: 44px; height: 44px; border-radius: 10px; background: #F1F5F9; color: #475569; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">
+            🏢
+        </div>
+        <div>
+            <div style="font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted);">Subsidiaries</div>
+            <div style="font-size: 22px; font-weight: 700; color: var(--text); line-height: 1.2; margin-top: 2px;">{{ $subsidiaries->count() }}</div>
+        </div>
+    </div>
+</div>
+
 <!-- Users Filter & Table Card -->
-<div class="card people-directory" style="padding: 0; overflow: hidden;">
-    <form method="get" action="{{ route('users.index') }}" class="people-toolbar" id="people-filter-form" role="search">
-        <div class="people-search"><label class="workspace-sr-only" for="user-table-search">Search people by name or email</label><input type="search" name="q" id="user-table-search" placeholder="Search name or email..." value="{{ $q }}" autocomplete="off"><span id="user-search-count" class="workspace-sr-only"></span></div>
-        <label class="people-company"><span class="workspace-sr-only">Company</span><select name="subsidiary_id" id="people-company-filter"><option value="">All companies</option>@foreach($subsidiaries as $sub)<option value="{{ $sub->id }}" @selected($subId == $sub->id)>{{ $sub->name }}</option>@endforeach</select></label>
-        <span class="people-result-count" role="status">{{ $users->total() }} {{ $users->total() === 1 ? 'person' : 'people' }}</span>
-        @if($q !== '' || $subId)<a class="text-action" href="{{ route('users.index') }}">Clear</a>@endif
+<div class="card people-directory" style="padding: 0; overflow: hidden; border-radius: 10px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+    <form method="get" action="{{ route('users.index') }}" class="people-toolbar" id="people-filter-form" role="search" style="padding: 14px 20px; background: #FAFBFC; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <div class="people-search" style="flex: 1; min-width: 240px; position: relative;">
+            <label class="workspace-sr-only" for="user-table-search">Search people by name or email</label>
+            <input type="search" name="q" id="user-table-search" placeholder="Search people by name or email..." value="{{ $q }}" autocomplete="off" style="width: 100%; height: 38px; border-radius: 8px; border: 1px solid var(--border); padding: 8px 12px; font-size: 13.5px;">
+            <span id="user-search-count" class="workspace-sr-only"></span>
+        </div>
+        <label class="people-company" style="margin: 0;">
+            <span class="workspace-sr-only">Company</span>
+            <select name="subsidiary_id" id="people-company-filter" style="height: 38px; border-radius: 8px; border: 1px solid var(--border); padding: 0 12px; font-size: 13px; background: #FFFFFF;">
+                <option value="">All subsidiaries</option>
+                @foreach($subsidiaries as $sub)
+                    <option value="{{ $sub->id }}" @selected($subId == $sub->id)>{{ $sub->name }}</option>
+                @endforeach
+            </select>
+        </label>
+        <span class="people-result-count" role="status" style="font-size: 12.5px; font-weight: 550; color: var(--muted); padding: 4px 8px;">
+            {{ $users->total() }} {{ $users->total() === 1 ? 'person' : 'people' }}
+        </span>
+        @if($q !== '' || $subId)
+            <a class="text-action" href="{{ route('users.index') }}" style="font-size: 12.5px; font-weight: 600; color: var(--primary);">Clear</a>
+        @endif
     </form>
 
-    <!-- Users Table (With SUBSIDIARY column & DELETE action) -->
+    <!-- Users Table (With Status column, Safe Delete & No Reset Button) -->
     <div class="table-wrap">
-        <table id="users-table">
+        <table id="users-table" style="width: 100%; border-collapse: collapse;">
             <thead>
-                <tr>
-                    <th>Person</th>
-                    <th>System Role</th>
-                    <th>Subsidiary</th>
-                    <th class="right">Actions</th>
+                <tr style="background: #FFFFFF; border-bottom: 1px solid var(--border); text-align: left;">
+                    <th style="padding: 12px 18px; font-size: 12px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">Person</th>
+                    <th style="padding: 12px 18px; font-size: 12px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">System Role</th>
+                    <th style="padding: 12px 18px; font-size: 12px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">Subsidiary</th>
+                    <th style="padding: 12px 18px; font-size: 12px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">Account Status</th>
+                    <th class="right" style="padding: 12px 18px; font-size: 12px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; text-align: right;">Actions</th>
                 </tr>
             </thead>
             <tbody id="users-tbody">
                 @forelse($users as $user)
-                    <tr id="user-row-{{ $user->id }}" class="user-row" data-name="{{ strtolower($user->name) }}" data-email="{{ strtolower($user->email) }}" data-sub-id="{{ $user->subsidiary_id ?? '' }}">
-                        <td>
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <span class="avatar avatar-sm">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
+                    <tr id="user-row-{{ $user->id }}" class="user-row" data-name="{{ strtolower($user->name) }}" data-email="{{ strtolower($user->email) }}" data-sub-id="{{ $user->subsidiary_id ?? '' }}" style="border-bottom: 1px solid var(--border); transition: background-color 0.15s ease;">
+                        <td style="padding: 12px 18px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <span class="avatar avatar-sm" style="width: 36px; height: 36px; border-radius: 8px; font-size: 13px; font-weight: 650; background: #E8F0EE; color: var(--primary); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                    {{ strtoupper(substr($user->name, 0, 1)) }}
+                                </span>
                                 <div>
-                                    <a class="strong-link" href="{{ route('users.show', $user) }}" style="font-weight: 650; font-size: 13.5px;">
-                                        {{ $user->name }}
-                                    </a>
-                                    <span class="people-email">{{ $user->email }}</span>
+                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                        <a class="strong-link" href="{{ route('users.show', $user) }}" style="font-weight: 650; font-size: 13.5px; color: var(--text); text-decoration: none;">
+                                            {{ $user->name }}
+                                        </a>
+                                        @if($user->socialAccounts && $user->socialAccounts->isNotEmpty())
+                                            <span title="Synced with Microsoft Entra ID" style="display: inline-flex; align-items: center; font-size: 10px; background: #EFF6FF; color: #1D4ED8; border: 1px solid #BFDBFE; border-radius: 4px; padding: 1px 5px; font-weight: 600;">Azure SSO</span>
+                                        @endif
+                                    </div>
+                                    <span class="people-email" style="display: block; font-size: 12px; color: var(--muted); margin-top: 1px;">{{ $user->email }}</span>
                                 </div>
                             </div>
                         </td>
-                        <td>
+                        <td style="padding: 12px 18px;">
                             @if($user->isPmo())
-                                <span class="pill" style="background: #E8F0EE; color: var(--primary); font-weight: 700;">PMO Admin</span>
+                                <span class="pill" style="display: inline-flex; align-items: center; gap: 5px; background: #E8F0EE; color: var(--primary); font-weight: 700; border: 1px solid #C8DDD2; padding: 3px 10px; border-radius: 12px; font-size: 11.5px;">
+                                    🛡️ PMO Admin
+                                </span>
+                            @elseif($user->isAdminViewer())
+                                <span class="pill" style="display: inline-flex; align-items: center; gap: 5px; background: #F1F5F9; color: #475569; border: 1px solid #CBD5E1; padding: 3px 10px; border-radius: 12px; font-size: 11.5px; font-weight: 600;">
+                                    👁️ Admin Viewer
+                                </span>
                             @else
-                                <span class="pill" style="background: var(--surface); color: var(--text); border: 1px solid var(--border);">User</span>
+                                <span class="pill" style="display: inline-flex; align-items: center; gap: 5px; background: #F8FAFC; color: #64748B; border: 1px solid #E2E8F0; padding: 3px 10px; border-radius: 12px; font-size: 11.5px; font-weight: 600;">
+                                    User
+                                </span>
                             @endif
                         </td>
-                        <td>
+                        <td style="padding: 12px 18px;">
                             @if($user->subsidiary)
-                                <span class="people-company-name">
-                                    {{ $user->subsidiary->name }} <small style="font-size: 10.5px; opacity: 0.85;">[{{ $user->subsidiary->code }}]</small>
+                                <span class="people-company-name" style="font-size: 13px; font-weight: 550; color: var(--text);">
+                                    {{ $user->subsidiary->name }} <small style="font-size: 11px; color: var(--muted); font-weight: 500;">[{{ $user->subsidiary->code }}]</small>
                                 </span>
                             @elseif($user->company_name)
-                                <span class="people-company-name">
+                                <span class="people-company-name" style="font-size: 13px; font-weight: 550; color: var(--text);">
                                     {{ $user->company_name }}
                                 </span>
                             @else
-                                <span class="muted text-sm">—</span>
+                                <span class="muted text-sm" style="color: var(--muted);">—</span>
                             @endif
                         </td>
-                        <td class="right">
-                            <div class="inline-actions people-row-actions" style="justify-content: flex-end; gap: 8px;">
-                                <button class="btn btn-outline btn-xs" type="button" title="Edit User" data-show-dialog="edit-user-{{ $user->id }}">Edit</button>
+                        <td style="padding: 12px 18px;">
+                            @if($user->account_status === 'active')
+                                <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #166534;">
+                                    <span style="width: 7px; height: 7px; border-radius: 50%; background: #22C55E; box-shadow: 0 0 0 2px #DCFCE7;"></span>
+                                    Active
+                                </span>
+                            @else
+                                <span style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 550; color: #991B1B;">
+                                    <span style="width: 7px; height: 7px; border-radius: 50%; background: #EF4444; box-shadow: 0 0 0 2px #FEE2E2;"></span>
+                                    Inactive
+                                </span>
+                            @endif
+                        </td>
+                        <td class="right" style="padding: 12px 18px; text-align: right;">
+                            @if(auth()->user()->isPmo())
+                                @php
+                                    $isSelf = $user->id === auth()->id();
+                                    $isPrimaryAdmin = $user->id === 1;
+                                    $isLastPmo = $user->isPmo() && ($pmoAdminCount <= 1);
+                                    $canDelete = !$isSelf && !$isPrimaryAdmin && !$isLastPmo;
+                                @endphp
+                                <div class="inline-actions people-row-actions" style="justify-content: flex-end; gap: 8px; align-items: center;">
+                                    <button class="btn btn-outline btn-xs" type="button" title="Edit User" data-show-dialog="edit-user-{{ $user->id }}">Edit</button>
 
-                                @if($user->password && !$user->isPmo())
-                                    <button class="btn btn-outline btn-xs btn-reset-password" type="button" title="Reset Password" data-user-id="{{ $user->id }}" data-user-name="{{ $user->name }}" style="color:var(--warning);">Reset password</button>
-                                @endif
-
-                                @if($user->id !== 1 && $user->id !== auth()->id())
-                                    <button class="btn btn-ghost btn-xs btn-delete-user" type="button" title="Delete User" data-user-id="{{ $user->id }}" data-user-name="{{ $user->name }}" style="color:var(--danger);">Delete</button>
-                                @endif
-                            </div>
-
-                            <!-- Edit User Dialog -->
-                            <dialog id="edit-user-{{ $user->id }}" class="modal">
-                                <div class="modal-head">
-                                    <h2>Edit User: {{ $user->name }}</h2>
-                                    <button type="button" class="icon-btn" data-close-dialog>×</button>
-                                </div>
-                                <form method="post" action="{{ route('users.update', $user) }}" class="stack mt-16 edit-user-form" data-user-id="{{ $user->id }}">
-                                    @csrf
-                                    @method('PATCH')
-
-                                    <label>Full Name <span class="required">*</span>
-                                        <input name="name" value="{{ $user->name }}" required maxlength="120">
-                                    </label>
-
-                                    <label>Email Address
-                                        <input value="{{ $user->email }}" disabled style="background: var(--surface);">
-                                    </label>
-
-                                    <!-- Role Selection (User or PMO) -->
-                                    <label>System Role <span class="required">*</span>
-                                        <select name="system_role" {{ ($user->id === 1 || $user->id === auth()->id()) ? 'disabled' : '' }}>
-                                            <option value="user" @selected($user->system_role === 'user')>User (Project Manager / Team Member)</option>
-                                            <option value="pmo" @selected($user->system_role === 'pmo')>PMO Admin (System Administrator)</option>
-                                        </select>
-                                    </label>
-
-                                    <!-- Subsidiary Selection -->
-                                    @if(count($subsidiaries))
-                                        <label>Subsidiary / Company
-                                            <select name="subsidiary_id">
-                                                <option value="">-- None / General Group --</option>
-                                                @foreach($subsidiaries as $s)
-                                                    <option value="{{ $s->id }}" @selected($user->subsidiary_id == $s->id)>
-                                                        {{ $s->name }} [{{ $s->code }}]
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        </label>
+                                    @if($canDelete)
+                                        <button class="btn btn-ghost btn-xs btn-delete-user" type="button" title="Delete User" data-user-id="{{ $user->id }}" data-user-name="{{ $user->name }}" style="color:var(--danger); font-weight:600;">Delete</button>
+                                    @elseif($isLastPmo)
+                                        <span class="pill" style="font-size: 10px; font-weight: 700; background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; padding: 2px 7px;" title="Cannot delete: The system must keep at least one active PMO Administrator.">Last PMO Admin</span>
+                                    @elseif($isSelf)
+                                        <span class="pill" style="font-size: 10px; background: #F1F5F9; color: #64748B; border: 1px solid #E2E8F0; padding: 2px 7px;" title="Currently signed in">You</span>
+                                    @elseif($isPrimaryAdmin)
+                                        <span class="pill" style="font-size: 10px; background: #F1F5F9; color: #64748B; border: 1px solid #E2E8F0; padding: 2px 7px;" title="Primary Root Administrator">Primary Admin</span>
                                     @endif
+                                </div>
 
-                                    <label>Account Status
-                                        <select name="account_status" {{ ($user->id === 1) ? 'disabled' : '' }}>
-                                            <option value="active" @selected($user->account_status === 'active')>Enabled (Active)</option>
-                                            <option value="inactive" @selected($user->account_status === 'inactive')>Disabled (Inactive)</option>
-                                        </select>
-                                    </label>
-
-                                    <div class="form-actions mt-16">
-                                        <button type="button" class="btn btn-ghost" data-close-dialog>Cancel</button>
-                                        <button class="btn btn-primary" type="submit">Save Changes</button>
+                                <!-- Edit User Dialog -->
+                                <dialog id="edit-user-{{ $user->id }}" class="modal">
+                                    <div class="modal-head">
+                                        <h2>Edit User: {{ $user->name }}</h2>
+                                        <button type="button" class="icon-btn" data-close-dialog>×</button>
                                     </div>
-                                </form>
-                            </dialog>
+                                    <form method="post" action="{{ route('users.update', $user) }}" class="stack mt-16 edit-user-form" data-user-id="{{ $user->id }}">
+                                        @csrf
+                                        @method('PATCH')
+
+                                        <label>Full Name <span class="required">*</span>
+                                            <input name="name" value="{{ $user->name }}" required maxlength="120">
+                                        </label>
+
+                                        <label>Email Address
+                                            <input value="{{ $user->email }}" disabled style="background: var(--surface);">
+                                        </label>
+
+                                        <!-- Role Selection (User or PMO or Admin Viewer) -->
+                                        <label>System Role <span class="required">*</span>
+                                            <select name="system_role" {{ ($user->id === 1 || $user->id === auth()->id() || $isLastPmo) ? 'disabled' : '' }}>
+                                                <option value="user" @selected($user->system_role === 'user')>User (Project Manager / Team Member)</option>
+                                                <option value="pmo" @selected($user->system_role === 'pmo')>PMO Admin (System Administrator)</option>
+                                                <option value="admin_viewer" @selected($user->system_role === 'admin_viewer')>Admin Viewer (Read only)</option>
+                                            </select>
+                                            @if($isLastPmo)
+                                                <small style="color: #B45309; font-weight: 550; display: block; margin-top: 4px;">⚠️ Cannot demote the only PMO Administrator. Promote another user to PMO Administrator first.</small>
+                                            @endif
+                                        </label>
+
+                                        <!-- Subsidiary Selection -->
+                                        @if(count($subsidiaries))
+                                            <label>Subsidiary / Company
+                                                <select name="subsidiary_id">
+                                                    <option value="">-- None / General Group --</option>
+                                                    @foreach($subsidiaries as $s)
+                                                        <option value="{{ $s->id }}" @selected($user->subsidiary_id == $s->id)>
+                                                            {{ $s->name }} [{{ $s->code }}]
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </label>
+                                        @endif
+
+                                        <label>Account Status
+                                            <select name="account_status" {{ ($user->id === 1 || $isLastPmo) ? 'disabled' : '' }}>
+                                                <option value="active" @selected($user->account_status === 'active')>Enabled (Active)</option>
+                                                <option value="inactive" @selected($user->account_status === 'inactive')>Disabled (Inactive)</option>
+                                            </select>
+                                            @if($isLastPmo)
+                                                <small style="color: #B45309; font-weight: 550; display: block; margin-top: 4px;">⚠️ Cannot deactivate the only PMO Administrator.</small>
+                                            @endif
+                                        </label>
+
+                                        <div class="form-actions mt-16">
+                                            <button type="button" class="btn btn-ghost" data-close-dialog>Cancel</button>
+                                            <button class="btn btn-primary" type="submit">Save Changes</button>
+                                        </div>
+                                    </form>
+                                </dialog>
+                            @endif
                         </td>
                     </tr>
                 @empty
                     <tr id="empty-users-row">
-                        <td colspan="4" class="empty">No users found. Click <b>+ Add User</b> to get started.</td>
+                        <td colspan="5" class="empty" style="text-align: center; padding: 36px 16px; color: var(--muted);">No users found. Click <b>+ Add person</b> to get started.</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -176,6 +277,7 @@
 <!-- =========================================================================
      Unified "+ Add User" Dialog (2 Tabs: ☁ Microsoft Azure & ✍ Manual Create)
      ========================================================================= -->
+@if(auth()->user()->isPmo())
 <dialog id="user-dialog" class="modal" style="max-width: 620px;">
     <div class="modal-head">
         <h2>Add person</h2>
@@ -242,6 +344,7 @@
                 <select name="system_role" id="manual_user_role">
                     <option value="user" selected>User (Project Manager / Team Member)</option>
                     <option value="pmo">PMO Admin (Full System Administrator)</option>
+                    <option value="admin_viewer">Admin Viewer (Read only)</option>
                 </select>
                 <small class="muted block mt-4">PMO Admin has full configuration access. Standard Users can manage projects and tasks assigned to them.</small>
             </label>
@@ -322,14 +425,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ---------------------------------------------------------
-    // 2. 1-Click User Delete (Permanent Delete with safe cleanup)
+    // 1-Click User Delete (Permanent Delete with safe cleanup)
     // ---------------------------------------------------------
     document.querySelectorAll('.btn-delete-user').forEach(btn => {
         btn.addEventListener('click', async function() {
             const userId = this.dataset.userId;
             const userName = this.dataset.userName || 'User';
 
-            if (!confirm(`Are you sure you want to permanently delete user "${userName}"?\n\nThis will remove their project access, task assignments, and memberships.`)) {
+            if (!await AppDialog.confirm(`Are you sure you want to permanently delete user "${userName}"?\n\nThis will remove their project access, task assignments, and memberships.`)) {
                 return;
             }
 
@@ -371,40 +474,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // ---------------------------------------------------------
-    // 3. 1-Click Temporary Password Reset
-    // ---------------------------------------------------------
-    document.querySelectorAll('.btn-reset-password').forEach(btn => {
-        btn.addEventListener('click', async function() {
-            const userId = this.dataset.userId;
-            const userName = this.dataset.userName || 'User';
-
-            if (!confirm(`Generate a new temporary password for ${userName}?`)) return;
-
-            btn.disabled = true;
-
-            try {
-                const res = await fetch(`/users/${userId}/temporary-password`, {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken
-                    }
-                });
-
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.message || 'Password reset failed.');
-
-                alert(`Temporary password generated for ${userName}:\n\n${data.temp_password}\n\nCopy this password now. The user will be required to change it on login.`);
-            } catch (err) {
-                showAlert(err.message, 'danger');
-            } finally {
-                btn.disabled = false;
-            }
-        });
-    });
-
-    // ---------------------------------------------------------
-    // 4. Modal Tab 1: Live Azure Search inside "+ Add User"
+    // Modal Tab 1: Live Azure Search inside "+ Add User"
     // ---------------------------------------------------------
     const modalAzureSearch = document.getElementById('modal-azure-search');
     const modalAzureSpinner = document.getElementById('modal-azure-spinner');
@@ -422,7 +492,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (modalAzureList) modalAzureList.style.display = 'none';
                 if (modalAzureEmpty) {
                     modalAzureEmpty.style.display = 'block';
-                    modalAzureEmpty.textContent = '🔍 Type a name or email above to search Microsoft Entra ID.';
+                    modalAzureEmpty.textContent = 'Type a name or email above to search Microsoft Entra ID.';
                 }
                 return;
             }
@@ -523,7 +593,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ---------------------------------------------------------
-    // 5. Modal Tab 2: Manual User Creation with Role
+    // Modal Tab 2: Manual User Creation with Role
     // ---------------------------------------------------------
     const btnSaveManual = document.getElementById('btn-save-manual-user');
     if (btnSaveManual) {
@@ -589,4 +659,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endpush
+@endif
 @endsection

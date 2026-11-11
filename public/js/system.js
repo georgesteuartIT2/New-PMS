@@ -1,4 +1,4 @@
-﻿document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
   // Add readable mobile labels only to simple record tables; specialist grids keep their own layout.
   document.querySelectorAll('table').forEach(table => {
     if(table.closest('dialog,.timeline-container,.gantt-container,.stp-modal,.calendar-grid') || table.matches('.project-tasks-full-table,.projects-table,.bulk-edit-table,.monitor-task-records') || table.querySelector('thead [colspan],thead [rowspan]'))return;
@@ -47,9 +47,51 @@
     input.addEventListener('search',()=>input.dispatchEvent(new Event('input',{bubbles:true})));
   });
   document.querySelectorAll('[data-add-mode]').forEach(button=>button.addEventListener('click',()=>{
-    const options=document.querySelector('#add-task-dialog .task-plan-options');
-    if(options)options.open=button.dataset.addMode==='sub';
+    const dialog=document.getElementById('add-task-dialog');
+    const options=dialog?.querySelector('.task-plan-options');
+    const parentSelect=dialog?.querySelector('#add-task-parent-select');
+    const titleEl=dialog?.querySelector('.modal-head h2');
+    const isSub=button.dataset.addMode==='sub';
+    if(options)options.open=isSub;
+    if(titleEl)titleEl.textContent=isSub?'Add Subtask':'Add Task';
+    if(isSub && parentSelect && !parentSelect.value && parentSelect.options.length>1){
+      parentSelect.selectedIndex=1;
+    } else if(!isSub && parentSelect){
+      parentSelect.value='';
+    }
   }));
+
+  document.addEventListener('click', event => {
+    const btn = event.target.closest('.btn-row-add-subtask');
+    if (!btn) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const parentId = btn.dataset.parentId;
+    const parentTitle = btn.dataset.parentTitle || '';
+    const parentNum = btn.dataset.parentNum || '';
+    const dialog = document.getElementById('add-task-dialog');
+    if (!dialog) return;
+    const parentSelect = dialog.querySelector('#add-task-parent-select');
+    if (parentSelect && parentId) {
+      parentSelect.value = parentId;
+    }
+    const details = dialog.querySelector('.task-plan-options');
+    if (details) details.open = true;
+    const titleEl = dialog.querySelector('.modal-head h2');
+    if (titleEl) {
+      titleEl.textContent = 'Add Subtask under ' + (parentNum ? parentNum + ' ' : '') + parentTitle;
+    }
+    if (typeof dialog.showModal === 'function') {
+      dialog.showModal();
+    } else {
+      dialog.style.display = 'block';
+    }
+    const nameInput = dialog.querySelector('input[name="title"]');
+    if (nameInput) {
+      nameInput.value = '';
+      setTimeout(() => nameInput.focus(), 60);
+    }
+  });
   // An invalid field inside collapsed optional settings must be visible and reachable.
   document.addEventListener('invalid',event=>{
     let parent=event.target.parentElement;
@@ -60,3 +102,5 @@
 });
 
 document.addEventListener('DOMContentLoaded',()=>{const menu=document.querySelector('.library-other-statuses');if(!menu)return;document.addEventListener('click',event=>{if(!menu.contains(event.target))menu.open=false;});document.addEventListener('keydown',event=>{if(event.key==='Escape'&&menu.open){menu.open=false;menu.querySelector('summary').focus();}});});
+
+document.addEventListener('DOMContentLoaded',()=>{const issue=document.querySelector('.focused-reported-issue');if(issue)setTimeout(()=>issue.scrollIntoView({block:'center',behavior:'smooth'}),250);});

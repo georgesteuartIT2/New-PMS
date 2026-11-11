@@ -45,12 +45,38 @@ class UserTaskMonitoringService
                     || $this->access->project($user, $project, 'project.team_view');
             });
 
+        $pmProjects=$pmProjects->filter(fn($project)=>$this->access->project($user,$project,'tasks.view_all'));
         return $pmProjects->merge($memberProjects)->unique('id')->sortBy('name')->values();
     }
 
     /**
      * Get summary metrics for tasks assigned to the user.
      */
+    public function personalWorkspace(User $user,array $filters,int $perPage=20):array
+    {
+        $monitored=$this->getMonitoredProjects($user);$ids=$monitored->pluck('id')->all();
+        $base=Task::with(['project:id,code,name,status,pm_user_id,owner_user_id,approval_stage,plan_initialized','parent:id,code,title','assignees:id,name,email','openDelay.actionOwner:id,name'])
+            ->whereDoesntHave('children')->whereHas('project',fn($q)=>$q->whereIn('status',['active','on_hold','completed']))
+            ->where(function($q)use($user,$ids){$q->whereHas('assignees',fn($a)=>$a->where('users.id',$user->id))->orWhereIn('project_id',$ids);});
+        $base->whereHas('project',fn($q)=>$q->whereNull('approval_stage')->orWhere('approval_stage','!=','planning')->orWhere('pm_user_id',$user->id)->orWhere('owner_user_id',$user->id));
+        $attention=$filters['attention']??null;
+        if(in_array($attention,['my_overdue','follow_up','managed_overdue','needs_owner'],true)){
+            // Include follow-up owners only where project task access is already granted.
+            $base->whereIn('tasks.id',app(PersonalAttentionService::class)->query($user,$attention)->select('tasks.id'));
+        }
+        $scope=$filters['scope']??'all';
+        if($scope==='assigned')$base->whereHas('assignees',fn($q)=>$q->where('users.id',$user->id));
+        if($scope==='managed')$base->whereIn('project_id',$ids);
+        $projectIds=(clone $base)->reorder()->pluck('project_id')->unique()->all();
+        $projects=Project::whereIn('id',$projectIds)->orderBy('name')->get(['id','code','name']);
+        $assignees=User::whereHas('assignedTasks',fn($q)=>$q->whereIn('tasks.id',(clone $base)->select('tasks.id')))->orderBy('name')->get(['id','name']);
+        if(!empty($filters['project_id']))$base->where('project_id',$filters['project_id']);
+        $metrics=$this->taskMonitoringService->getSummaryMetrics($user,null,clone $base);
+        $tasks=$this->taskMonitoringService->getFilteredTasks($user,$filters,$perPage,null,clone $base);
+        $tasks->getCollection()->each(function($task)use($user,$ids){if((int)$task->project->pm_user_id===$user->id)$task->project->loadMissing('memberships.user','manager');$task->is_my_task=$task->assignees->contains('id',$user->id);$task->is_monitored_task=in_array($task->project_id,$ids,true);});
+        return compact('tasks','metrics','projects','assignees','monitored');
+    }
+
     public function getAssignedMetrics(User $user, ?Carbon $asOf = null): array
     {
         $asOf ??= now();
@@ -79,7 +105,7 @@ class UserTaskMonitoringService
     {
         $asOf ??= now();
         $query = Task::with([
-            'project:id,code,name,status',
+            'project:id,code,name,status,pm_user_id,owner_user_id,approval_stage,plan_initialized',
             'parent:id,code,title',
             'assignees:id,name',
         ])
@@ -194,7 +220,7 @@ class UserTaskMonitoringService
         $criticalIds = $this->taskMonitoringService->getCriticalTaskIds($user);
 
         $query = Task::with([
-            'project:id,code,name,status,subsidiary_id',
+            'project:id,code,name,status,subsidiary_id,pm_user_id,owner_user_id,approval_stage,plan_initialized',
             'parent:id,code,title',
             'assignees:id,name,email,job_title',
             'openDelay.actionOwner:id,name',
@@ -544,7 +570,7 @@ class UserTaskMonitoringService
 
         // Tasks assigned to this employee within actor's scope
         $tasks = Task::with([
-            'project:id,code,name,status,pm_user_id',
+            'project:id,code,name,status,pm_user_id,owner_user_id,approval_stage,plan_initialized',
             'project.memberships.user:id,name',
         ])
         ->whereIn('project_id', $scopedProjectIds)

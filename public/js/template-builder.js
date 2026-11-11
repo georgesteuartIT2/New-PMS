@@ -132,9 +132,9 @@
             return this.dom.backdrop && this.dom.backdrop.classList.contains('active');
         },
 
-        attemptClose() {
+        async attemptClose() {
             if (this.unsavedChanges) {
-                if (!confirm('You have unsaved changes in this template task plan. Discard changes?')) {
+                if (!await AppDialog.confirm('You have unsaved changes in this template task plan. Discard changes?')) {
                     return;
                 }
             }
@@ -475,7 +475,7 @@
 
         /* Open Modal in Select Mode (For Project Creation Flow) */
         openSelect(templateData, tasksData = null) {
-            this.mode = 'select';
+            this.mode = this.canManage ? 'select' : 'view';
             this.viewType = 'table';
             this.template = Object.assign({}, templateData);
             this.tasks = tasksData ? JSON.parse(JSON.stringify(tasksData)) : [];
@@ -555,6 +555,7 @@
         },
 
         renderHeader() {
+            if(this.dom.modal)this.dom.modal.dataset.mode=this.mode;
             if (this.dom.title) {
                 this.dom.title.textContent = this.template.name || 'Untitled Template';
             }
@@ -601,8 +602,8 @@
 
             if (this.dom.btnUse) {
                 if (isSelect) {
-                    this.dom.btnUse.style.display = 'inline-block';
-                    this.dom.btnUse.textContent = this.unsavedChanges ? 'Save & Continue with Template →' : 'Continue with Template →';
+                    this.dom.btnUse.style.display = 'none';
+                    this.dom.btnUse.textContent = 'Save and continue';
                     this.dom.btnUse.href = '#';
                 } else if (isView && isProjectSelection && this.canCreateProject && this.template.id && this.template.status!=='archived') {
                     this.dom.btnUse.style.display = 'inline-block';
@@ -633,28 +634,21 @@
 
             if (!isEditable) {
                 this.dom.toolbar.style.display = 'none';
+                const summary=this.dom.modal?.querySelector('.stp-summary-bar>div');
+                if(summary && this.dom.summaryCounts)summary.prepend(this.dom.summaryCounts);
                 return;
             }
 
             this.dom.toolbar.style.display = 'flex';
             this.dom.toolbar.innerHTML = `
-                <div class="stp-toolbar-left" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                    <button type="button" class="btn btn-primary btn-sm" onclick="SmartTaskPlan.addTaskAtEnd()" style="background: #315F58; color: #FFFFFF; font-weight: 650; height: 32px; font-size: 12px; padding: 0 14px; border: 1px solid #315F58;">
-                        + Add Task
-                    </button>
-                    <button type="button" class="btn btn-outline btn-sm" onclick="SmartTaskPlan.downloadExcel()" style="height: 32px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;">
-                        <span>📥</span> Download Excel
-                    </button>
-                    <button type="button" class="btn btn-outline btn-sm" onclick="SmartTaskPlan.triggerExcelUpload()" style="height: 32px; font-size: 12px; display: inline-flex; align-items: center; gap: 6px;">
-                        <span>📤</span> Upload Excel
-                    </button>
+                <div class="stp-toolbar-left">
+                    <button type="button" class="btn btn-primary btn-sm" onclick="SmartTaskPlan.addTaskAtEnd()">+ Add task</button>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="SmartTaskPlan.triggerExcelUpload()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 16V3m-5 5 5-5 5 5M4 15v5h16v-5"/></svg>Upload Excel</button>
+                    <button type="button" class="btn btn-ghost btn-sm" onclick="SmartTaskPlan.downloadExcel()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 3v13m-5-5 5 5 5-5M4 16v4h16v-4"/></svg>Download Excel</button>
                 </div>
-                <div class="stp-toolbar-right" style="display: flex; gap: 10px; align-items: center;">
-                    <span style="font-size: 11.5px; color: #64748B; font-weight: 500;">
-                        ${isSelect ? 'Table View · Preview & customize tasks before continuing with template' : 'Table View · Edit tasks, duration, roles & subtasks directly'}
-                    </span>
-                </div>
+                <div class="stp-toolbar-meta" aria-label="Task count"></div>
             `;
+            if(this.dom.summaryCounts)this.dom.toolbar.querySelector('.stp-toolbar-meta').append(this.dom.summaryCounts);
         },
 
         switchView(type) {
@@ -771,7 +765,7 @@
             const subtasks = taskCount - mainTasks;
 
             if (this.dom.summaryCounts) {
-                this.dom.summaryCounts.textContent = `${taskCount} Tasks (${mainTasks} Main, ${subtasks} Subtasks)`;
+                this.dom.summaryCounts.textContent = `${taskCount} tasks \u00b7 ${mainTasks} main${subtasks ? ` \u00b7 ${subtasks} subtasks` : ''}`;
             }
 
             if (this.dom.periodsCountBadge) {
@@ -1030,12 +1024,12 @@
             this.renderToolbar();
         },
 
-        promptRenamePeriod(periodId) {
+        async promptRenamePeriod(periodId) {
             const p = this.periods.find(item => item.id === periodId);
             if (!p) return;
 
             const current = p.label || '';
-            const newLabel = prompt(`Enter descriptive label for ${p.system_label} (e.g. Requirements Gathering):`, current);
+            const newLabel = await AppDialog.prompt(`Enter descriptive label for ${p.system_label} (e.g. Requirements Gathering):`, current);
             if (newLabel !== null) {
                 const trimmed = newLabel.trim();
                 this.template.planning_periods = this.template.planning_periods || {};
@@ -1120,7 +1114,7 @@
                                 <option value="">— None —</option>
                                 ${this.tasks.slice(0, idx).map(pt => `
                                     <option value="${pt.code}" ${t.dependency_code === pt.code ? 'selected' : ''}>
-                                        #${pt.code} ${this.escapeHtml(pt.title.length > 15 ? pt.title.substring(0, 15) + '...' : pt.title)}
+                                        #${pt.code} ${this.escapeHtml(pt.title || '')}
                                     </option>
                                 `).join('')}
                             </select>
@@ -1152,6 +1146,24 @@
                         ` : ''}
                     </td>
                 `;
+                tr.classList.toggle('stp-subtask-row',isSubtask);
+                const labels=['Task number','Task name','Start date','Finish date','Duration in working days','Depends on','Suggested role','Task actions'];
+                [...tr.cells].forEach((cell,column)=>{
+                    cell.dataset.label=labels[column];
+                    cell.querySelectorAll('input,select').forEach(control=>{
+                        const label=control.type==='time'?(column===2?'Start time':'Finish time'):labels[column];
+                        control.setAttribute('aria-label',label+' for task '+(t.code || idx+1));
+                        if(control.tagName==='SELECT')control.title=control.selectedOptions[0]?.textContent.trim() || label;
+                    });
+                });
+                tr.cells[1].querySelector('input')?.classList.add('stp-task-name-input');
+                for(const column of [2,3])tr.cells[column].querySelector('div')?.classList.add('stp-datetime');
+                const actions=tr.cells[7].querySelectorAll('button');
+                const titles=['Add subtask','Add task below','Delete task'];
+                actions.forEach((button,index)=>{button.classList.add('stp-row-action');button.setAttribute('aria-label',titles[index]+' '+(t.code || idx+1));});
+                if(actions[0])actions[0].textContent='+ Subtask';
+                if(actions[1]){actions[1].textContent='+';actions[1].classList.add('stp-row-insert');}
+                if(actions[2]){actions[2].classList.add('stp-row-delete');actions[2].innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7m4-7v7"/></svg>';}
                 tbody.appendChild(tr);
             });
         },
@@ -1371,7 +1383,7 @@
 
         renderFooter() {
             if (this.dom.unsavedText) {
-                this.dom.unsavedText.textContent = this.unsavedChanges ? '⚠ Unsaved changes' : 'All changes saved';
+                this.dom.unsavedText.textContent = this.unsavedChanges ? 'Unsaved changes' : (this.mode==='create' ? 'Draft - not saved yet' : 'No unsaved changes');
                 this.dom.unsavedText.style.color = this.unsavedChanges ? '#D97706' : '#64748B';
                 this.dom.unsavedText.style.fontWeight = this.unsavedChanges ? '650' : '400';
             }
@@ -1383,7 +1395,7 @@
             if (this.dom.btnSave) {
                 if (isSelect || (isEditable && isProjectSelection)) {
                     this.dom.btnSave.style.display = 'inline-block';
-                    this.dom.btnSave.textContent = this.unsavedChanges ? 'Save & Continue with Template →' : 'Continue with Template →';
+                    this.dom.btnSave.textContent = 'Save and continue';
                     this.dom.btnSave.style.background = '#315F58';
                     this.dom.btnSave.style.color = '#FFFFFF';
                     this.dom.btnSave.style.fontWeight = '650';
@@ -1553,7 +1565,7 @@
             this.render();
         },
 
-        deleteTask(index) {
+        async deleteTask(index) {
             const task = this.tasks[index];
             if (!task) return;
 
@@ -1563,7 +1575,7 @@
                 ? `Delete task "${task.title}" and its ${subtasks.length} subtask(s)?`
                 : `Delete task "${task.title}"?`;
 
-            if (confirm(msg)) {
+            if (await AppDialog.confirm(msg)) {
                 if (isParent) {
                     this.tasks = this.tasks.filter(t => t.code !== task.code && t.parent_code !== task.code);
                 } else {
@@ -1811,8 +1823,16 @@
         },
 
         projectCreateUrl(templateId=null) {
-            const url=new URL('/projects/create',window.location.href);
             const context=window.PROJECT_TEMPLATE_CONTEXT||{};
+            if (context.plan_project) {
+                const url = new URL('/projects/' + encodeURIComponent(context.plan_project) + '/plan-setup', window.location.href);
+                for (const key of ['starts_on', 'ends_on', 'planned_budget']) {
+                    if (context[key]) url.searchParams.set(key, context[key]);
+                }
+                if (templateId) url.searchParams.set('template_id', templateId);
+                return url.pathname + url.search;
+            }
+            const url=new URL('/projects/create',window.location.href);
             for(const key of ['project_flow','draft'])if(context[key])url.searchParams.set(key,context[key]);
             if(templateId)url.searchParams.set('template_id',templateId);
             url.searchParams.set('mode','template');return url.pathname+url.search;

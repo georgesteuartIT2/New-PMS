@@ -232,7 +232,7 @@
             <!-- Meeting Action Buttons -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 14px; border-top: 1px solid #E2E8F0;">
                 <div id="view-meeting-manage-actions" style="display: flex; gap: 8px;">
-                    <form id="delete-meeting-form" method="post" action="" onsubmit="return confirm('Cancel and delete this meeting? It will also be removed from Microsoft Outlook Calendar.')">
+                    <form id="delete-meeting-form" method="post" action="" onsubmit="return AppDialog.confirmAction(event,this,'Cancel and delete this meeting? It will also be removed from Microsoft Outlook Calendar.')">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-danger-outline btn-sm" style="font-weight: 600; color: #DC2626; border-color: #FCA5A5;">

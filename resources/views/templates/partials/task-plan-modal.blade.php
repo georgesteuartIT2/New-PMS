@@ -1,3 +1,4 @@
+<link rel="stylesheet" href="{{ asset('css/task-plan-dialog.css') }}?v={{ filemtime(public_path('css/task-plan-dialog.css')) }}">
 <!-- Smart Task Plan Modal Component -->
 <div id="smart-task-plan-backdrop" class="smart-task-plan-backdrop" role="dialog" aria-modal="true" aria-labelledby="stp-modal-title">
     <div id="smart-task-plan-modal" class="smart-task-plan-dialog">
@@ -10,7 +11,7 @@
                 </h2>
                 <div style="display: flex; align-items: center; gap: 10px; margin-top: 3px; flex-wrap: wrap;">
                     <span id="stp-template-title" style="font-weight: 650; font-size: 13.5px; color: #22272B;"></span>
-                    <span style="color: #CBD5E1;">•</span>
+                    <span class="stp-meta-separator" aria-hidden="true" style="color: #CBD5E1;">•</span>
                     <span id="stp-schedule-badge" class="stp-subtitle" style="font-size: 12px; font-weight: 550; color: #475569;"></span>
                 </div>
             </div>
@@ -40,6 +41,9 @@
         <!-- Optional Collapsible Details Drawer (in Edit Mode) -->
         <div id="stp-details-drawer" class="stp-details-drawer" style="display: none;"></div>
 
+        @if(request()->boolean('select_for_project'))
+        <p class="stp-selection-note">{{ ($canManage ?? false) ? 'Review or edit this saved template, then save and continue to your project. Saved edits update the reusable template.' : 'Review the template, then continue to your project.' }}</p>
+        @endif
         <!-- Edit Mode Toolbar -->
         <div id="stp-toolbar" class="stp-toolbar" style="display: none;"></div>
 
@@ -66,17 +70,17 @@
         <div class="stp-body">
             <!-- Flat Table View Container -->
             <div id="stp-table-wrap" style="padding: 10px 18px 24px;">
-                <table class="stp-table">
+                <table class="stp-table"><caption class="stp-sr-only">Task plan. Edit task names, dates, duration, dependencies and suggested project roles.</caption>
                     <thead>
                         <tr>
                             <th style="width: 48px; text-align: center;">#</th>
                             <th style="min-width: 240px;">Task Name</th>
-                            <th style="width: 220px;">Start Date & Time</th>
-                            <th style="width: 220px;">End Date & Time</th>
-                            <th style="width: 75px; text-align: center;">Duration</th>
-                            <th style="width: 145px;">Predecessor</th>
-                            <th style="width: 160px;">Suggested Role</th>
-                            <th style="width: 135px; text-align: right;">Actions</th>
+                            <th style="width: 220px;">Starts</th>
+                            <th style="width: 220px;">Finishes</th>
+                            <th style="width: 75px; text-align: center;">Days</th>
+                            <th style="width: 145px;">Depends on</th>
+                            <th style="width: 160px;">Suggested role</th>
+                            <th style="width: 135px; text-align: right;"><span class="stp-sr-only">Task actions</span></th>
                         </tr>
                     </thead>
                     <tbody id="stp-table-body">

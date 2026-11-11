@@ -6,6 +6,14 @@
     const feedback = dialog.querySelector('[data-editor-feedback]');
     const start = form.elements.namedItem('starts_on'), end = form.elements.namedItem('ends_on');
     start.addEventListener('change', () => { end.min = start.value; });
+    const teamSnapshot=()=>JSON.stringify([...dialog.querySelectorAll('[data-editor-member]')].map(row=>[row.querySelector('[data-member-user]').value,row.querySelector('[data-member-role]').value]).sort());
+    const originalTeam=teamSnapshot();
+    const originalPm=dialog.querySelector('[name="pm_user_id"]')?.value;
+    const confirmTeam=()=>new Promise(resolve=>{
+      const popup=document.createElement('dialog');popup.className='team-confirm-dialog';
+      popup.innerHTML='<h2>Save team changes?</h2><p>People and roles will be updated. Removed people will also lose their task assignments and project access. A new manager will receive an approval request.</p><div><button type="button" class="btn btn-outline" data-cancel>Keep editing</button><button type="button" class="btn btn-primary" data-confirm>Confirm changes</button></div>';
+      document.body.append(popup);let settled=false;const finish=value=>{if(settled)return;settled=true;popup.close();popup.remove();resolve(value);};popup.querySelector('[data-cancel]').onclick=()=>finish(false);popup.querySelector('[data-confirm]').onclick=()=>finish(true);popup.addEventListener('cancel',e=>{e.preventDefault();finish(false);});popup.showModal();popup.querySelector('[data-cancel]').focus();
+    });
     let nextIndex = dialog.querySelectorAll('[data-editor-member]').length;
     const members = dialog.querySelector('[data-editor-members]');
     dialog.addEventListener('click', event => {
@@ -26,6 +34,7 @@
       const data=new FormData(form);
       const ids=data.getAll('edit_team').length ? [...dialog.querySelectorAll('[data-member-user]')].map(select=>select.value) : [];
       if(new Set(ids).size!==ids.length){feedback.textContent='Each person can only appear once. Choose their project role.';return;}
+      if((teamSnapshot()!==originalTeam || dialog.querySelector('[name="pm_user_id"]')?.value!==originalPm) && !await confirmTeam())return;
       submit.disabled=true;feedback.textContent='Saving changes…';
       try {
         const response=await fetch(form.action,{method:'POST',body:data,headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'}});

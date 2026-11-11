@@ -48,6 +48,8 @@ class Access {
         'project.closure_request' => ['category' => 'project', 'name' => 'Request Project Closure', 'description' => 'Submit a project for formal PMO closure review upon completion.'],
         'project.closure_approve' => ['category' => 'project', 'name' => 'Approve Project Closure', 'description' => 'Final authorization to formally close and archive the project.'],
 
+        'project.budget_view' => ['category'=>'project','name'=>'View Project Budget','description'=>'View planned budget, actual spending and expense records.'],
+        'project.budget_manage' => ['category'=>'project','name'=>'Manage Project Budget','description'=>'Set the planned budget and record or correct expenses.'],
         // Task Permissions
         'tasks.view_assigned' => ['category' => 'task', 'name' => 'View Assigned Tasks', 'description' => 'View tasks specifically assigned to the user.'],
         'tasks.view_all' => ['category' => 'task', 'name' => 'View All Tasks in Assigned Project', 'description' => 'View all tasks across the entire project plan regardless of assignment.'],
@@ -154,6 +156,7 @@ class Access {
      */
     public function hasCompanyPermission(User $user, string $permission): bool {
         if (!$user->isActive()) return false;
+        if ($user->isAdminViewer()) return in_array($this->normalize($permission), ['projects.view_all','reports.portfolio'],true);
         if ($user->isPmo()) return true;
 
         $canonical = $this->normalize($permission);
@@ -240,6 +243,7 @@ class Access {
      */
     public function project(User $user, Project $project, string $permission = 'project.view'): bool {
         if (!$user->isActive()) return false;
+        if ($user->isAdminViewer()) return in_array($this->normalize($permission), ['project.view','tasks.view_all','tasks.view_assigned','project.gantt_view','project.reports_view'],true);
         if ($user->isPmo()) return true;
 
         // Draft projects are strictly visible ONLY to PMO Admin
@@ -249,6 +253,11 @@ class Access {
 
         $canonical = $this->normalize($permission);
         $matching = $this->matchingKeys($permission);
+        if($project->approval_stage && $user->system_role==='user' && in_array($user->id,[$project->owner_user_id,$project->pm_user_id],true)){
+            $read=['project.view','tasks.view_all','tasks.view_assigned','project.gantt_view','project.reports_view','project.budget_view'];
+            if($project->status==='archived' || in_array($project->status,['pending','declined'],true))return in_array($canonical,$read,true);
+            return isset(self::CATALOG[$canonical]) && self::CATALOG[$canonical]['category']!=='company';
+        }
 
         // Project lifecycle checks
         $isPm = ($project->pm_user_id === $user->id);
@@ -285,9 +294,11 @@ class Access {
                 }
             }
 
-            // Default PM capabilities within assigned project
-            return true;
+            // An existing PM role is authoritative, including an empty policy.
+            return $pmRole === null;
         }
+
+        if($project->approval_stage==='planning')return false;
 
         // For non-PM members: must be an active project lifecycle
         if (!in_array($project->status, ['active', 'on_hold', 'completed', 'archived'], true)) {
@@ -323,9 +334,7 @@ class Access {
 
             // 2. Default role permissions:
             // Team Member role alone has restricted project-wide access (assigned tasks only)
-            if ($role->slug === 'team') {
-                continue;
-            }
+
 
             // Check role default permissions
             if (!empty($role->default_permissions)) {
@@ -350,6 +359,8 @@ class Access {
         $project = $task->project;
         if (!$project || !$user->isActive()) return false;
 
+        if ($user->isAdminViewer()) return in_array($permission,['view','download'],true);
+
         // PMO Admin has global access
         if ($user->isPmo()) {
             return $project->status !== 'archived' || in_array($permission, ['view', 'download'], true);
@@ -360,40 +371,25 @@ class Access {
             return false;
         }
 
-        // Project Manager of this project
-        if ($project->pm_user_id === $user->id) {
-            if (!in_array($project->status, ['active', 'on_hold', 'completed', 'archived'], true)) {
-                return in_array($permission, ['view', 'download'], true) && in_array($project->status, ['pending', 'declined'], true);
-            }
-            return $project->status !== 'archived' || in_array($permission, ['view', 'download'], true);
-        }
-
-        if (!in_array($project->status, ['active', 'on_hold', 'completed'], true)) {
-            return false;
-        }
-
-        // Full task management permissions on this project
-        if ($this->canManageTask($user, $project)) {
-            return true;
-        }
-
-        // Project-wide task viewing permissions (e.g. Sponsor, Owner, Steering, or Team member with tasks.view_all override)
-        if ($this->project($user, $project, 'tasks.view_all') && in_array($permission, ['view', 'download'], true)) {
-            return true;
-        }
-
-        // Check if user is an assignee of this task
-        $isAssigned = $task->assignees()->where('users.id', $user->id)->exists();
-        if ($isAssigned) {
-            if (in_array($permission, ['view', 'download'], true)) {
-                return true;
-            }
-            if (in_array($permission, ['update', 'upload', 'comment', 'delay'], true)) {
-                return $project->status === 'active';
-            }
-        }
-
-        return false;
+        if(in_array($project->status,['pending','declined'],true))return ($project->pm_user_id===$user->id || ($project->approval_stage && $project->owner_user_id===$user->id)) && in_array($permission,['view','download'],true);
+        if(!in_array($project->status,['active','on_hold','completed','archived'],true))return false;
+        if($project->approval_stage==='planning' && !in_array($user->id,[$project->pm_user_id,$project->owner_user_id],true))return false;
+        $assigned=$task->assignees()->where('users.id',$user->id)->exists();
+        $has=fn($key)=>$this->project($user,$project,$key);
+        $view=$has('tasks.view_all') || ($assigned && $has('tasks.view_assigned'));
+        // Legacy direct assignees without a project role retain their assigned-task access.
+        $legacy=$assigned && !$this->memberships($user,$project)->count() && $project->pm_user_id!==$user->id;
+        if($permission==='view')return $view || $legacy;
+        if($permission==='download')return ($view || $legacy) && ($has('tasks.download_attachments') || $legacy);
+        if($project->status==='archived')return false;
+        $edit=$has('tasks.edit_all') || ($assigned && $has('tasks.edit_assigned')) || $legacy;
+        return match($permission){
+            'update'=>$edit && ($has('tasks.update_status') || $has('tasks.update_progress') || $legacy),
+            'upload'=>($view || $legacy) && ($has('tasks.upload_attachments') || $legacy),
+            'comment'=>($view || $legacy) && ($has('tasks.add_comments') || $legacy),
+            'delay'=>($view || $legacy) && ($has('tasks.report_delays') || $legacy),
+            default=>false,
+        };
     }
 
     public function canManageTask(User $user, Project $project): bool {
@@ -406,97 +402,11 @@ class Access {
      * Calculate effective permissions breakdown for a selected user and project
      */
     public function getEffectivePermissions(User $user, Project $project): array {
-        $roles = $this->roleLabels($user, $project);
-        $isPmo = $user->isPmo();
-        $isPm = ($project->pm_user_id === $user->id);
-        $memberships = $this->memberships($user, $project);
-
-        $results = [];
-
-        foreach (self::CATALOG as $key => $info) {
-            $matching = $this->matchingKeys($key);
-            $allowed = false;
-            $source = 'Denied';
-
-            if ($isPmo) {
-                $allowed = true;
-                $source = 'PMO Administrator (Full Authority)';
-            } else {
-                // Check direct user permission
-                $direct = UserPermission::where('user_id', $user->id)->whereIn('permission', $matching)->first();
-                if ($direct !== null) {
-                    $allowed = (bool) $direct->allowed;
-                    $source = $allowed ? 'User Direct Grant' : 'User Direct Restriction';
-                } elseif ($info['category'] === 'company') {
-                    $allowed = $this->hasCompanyPermission($user, $key);
-                    $source = $allowed ? 'Role Default Policy (Company-wide)' : 'Not Granted';
-                } else {
-                    // Check project-level permissions
-                    if ($isPm) {
-                        $pmRole = ProjectRole::where('slug', 'pm')->first();
-                        $override = $pmRole ? ProjectRolePermission::where('project_id', $project->id)
-                            ->where('project_role_id', $pmRole->id)
-                            ->whereIn('permission', $matching)
-                            ->first() : null;
-
-                        if ($override !== null) {
-                            $allowed = (bool) $override->allowed;
-                            $source = $allowed ? 'Project Override: Granted for PM' : 'Project Override: Denied for PM';
-                        } else {
-                            $allowed = true;
-                            $source = 'Role Default (Project Manager)';
-                        }
-                    } else {
-                        // Check memberships and overrides
-                        foreach ($memberships as $m) {
-                            $r = $m->role;
-                            if (!$r) continue;
-
-                            $override = ProjectRolePermission::where('project_id', $project->id)
-                                ->where('project_role_id', $m->project_role_id)
-                                ->whereIn('permission', $matching)
-                                ->first();
-
-                            if ($override !== null) {
-                                if ($override->allowed) {
-                                    $allowed = true;
-                                    $source = "Project Override: Granted for {$r->name}";
-                                    break;
-                                } else {
-                                    $source = "Project Override: Denied for {$r->name}";
-                                }
-                            } elseif ($r->slug !== 'team' && !empty($r->default_permissions)) {
-                                foreach ($matching as $mk) {
-                                    if (in_array($mk, $r->default_permissions, true)) {
-                                        $allowed = true;
-                                        $source = "Role Default: {$r->name}";
-                                        break 2;
-                                    }
-                                }
-                            }
-                        }
-
-                        if (!$allowed && (empty($source) || $source === 'Denied')) {
-                            $source = $memberships->isEmpty() ? 'No Project Membership' : 'Not Granted in Role Policy';
-                        }
-                    }
-                }
-            }
-
-            $results[$info['category']][] = [
-                'key' => $key,
-                'name' => $info['name'],
-                'description' => $info['description'],
-                'allowed' => $allowed,
-                'source' => $source,
-            ];
+        $results=[];
+        foreach(self::CATALOG as $key=>$info){
+            $allowed=$info['category']==='company'?$this->hasCompanyPermission($user,$key):$this->project($user,$project,$key);
+            $results[$info['category']][]=['key'=>$key,'name'=>$info['name'],'description'=>$info['description'],'allowed'=>$allowed,'source'=>$user->isPmo()?'PMO Administrator':($user->isAdminViewer()?'Admin Viewer (read-only)':($allowed?'Effective role policy / project override':'Not granted by effective policy'))];
         }
-
-        return [
-            'user' => $user,
-            'project' => $project,
-            'roles' => $roles,
-            'permissions' => $results,
-        ];
+        return ['user'=>$user,'project'=>$project,'roles'=>$this->roleLabels($user,$project),'permissions'=>$results];
     }
 }

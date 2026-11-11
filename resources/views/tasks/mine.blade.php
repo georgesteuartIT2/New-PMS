@@ -3,6 +3,8 @@
 @section('content')
 @php
     $isTeamPage = request()->routeIs('team-monitor');
+    if(isset($assignedTasks))\App\Services\TaskTree::attachNumbers($assignedTasks->getCollection());
+    if(isset($managedTasks))\App\Services\TaskTree::attachNumbers($managedTasks->getCollection());
 @endphp
 <link rel="stylesheet" href="{{ asset('css/personal-workspace.css') }}?v={{ filemtime(public_path('css/personal-workspace.css')) }}">
 
@@ -144,7 +146,7 @@
                                     <div class="project-title-cell {{ $isSubtask ? 'pl-16' : '' }}">
                                         <button type="button" class="monitor-task-title" data-task-location="{{ route('projects.show', [$task->project_id, 'focus_task'=>$task->id]) }}">{{ $task->title }}</button>
                                         <span class="project-code-sub">
-                                            {{ $task->code }}
+                                            {{ $task->display_number }}
                                             @if($isSubtask)
                                                 · <small style="color: var(--muted);">Subtask of {{ $task->parent?->title }}</small>
                                             @endif
@@ -186,7 +188,7 @@
                                             default => 'pill-warning',
                                         };
                                     @endphp
-                                    <span class="status-pill {{ $priorityClass }}" style="font-size: 11px; padding: 2px 7px;">
+                                    <span class="status-pill {{ $priorityClass }}" style="font-size: 11px; padding: 2px 8px; background: #FFFFFF;">
                                         {{ ucfirst($task->priority) }}
                                     </span>
                                 </td>
@@ -263,6 +265,7 @@
              VIEW 2: MANAGED BY ME (PROJECT TASK MONITOR & TEAM MONITOR)
              ========================================================================= -->
         @if($isTeamPage)
+        @if(!$isTeamPage)
         <!-- Project selector -->
         <div class="card personal-project-scope" style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
             <!-- Project Scope Selector -->
@@ -284,6 +287,7 @@
         </div>
 
         @endif
+        @endif
         @if($tab === 'tasks')
             <!-- ---------------------------------------------------------------------
                  SUB-TAB A: TASK MONITOR
@@ -295,7 +299,7 @@
                     @php
                         $activeF = $filters['filter'] ?? 'all';
                         $pillLinks = [
-                            'all' => 'All Tasks',
+                            'all' => 'Total Tasks',
                             'overdue' => 'Overdue',
                             'critical' => 'Critical Path',
                             'blocked' => 'Blocked',
@@ -400,7 +404,7 @@
                                                 {{ $task->title }}
                                             </a>
                                             <span class="project-code-sub">
-                                                <span style="color: #64748B; font-weight: 600;">{{ $task->code }}</span>
+                                                <span style="color: #64748B; font-weight: 600;">{{ $task->display_number }}</span>
                                                 · <a href="{{ route('projects.show', $task->project) }}" style="color: #315F58; font-weight: 600; text-decoration: none;">{{ $task->project->name }}</a>
                                             </span>
                                         </div>
@@ -557,56 +561,16 @@
                 </div>
             </div>
 
-            <!-- Team Filter & Search Toolbar -->
-            <div class="card" style="background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; padding: 16px 18px; margin-bottom: 20px;">
-                <form method="get" action="{{ route($isTeamPage ? 'team-monitor' : 'tasks.mine') }}" style="display: grid; grid-template-columns: 2fr 1.5fr auto auto; gap: 12px; align-items: end; margin: 0;">
-                    <input type="hidden" name="view" value="managed">
-                    <input type="hidden" name="tab" value="team">
-                    @if($projectId)
-                        <input type="hidden" name="project_id" value="{{ $projectId }}">
-                    @endif
-
-                    <!-- Search Input -->
-                    <div>
-                        <label style="display: block; font-size: 12px; font-weight: 650; color: #475569; margin-bottom: 4px;">Search Employee</label>
-                        <input type="text" name="q" value="{{ $filters['q'] ?? '' }}" placeholder="Search employee name, title, or email..." style="width: 100%; height: 38px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 12px; font-size: 13px;">
-                    </div>
-
-                    <!-- Workload Condition -->
-                    <div>
-                        <label style="display: block; font-size: 12px; font-weight: 650; color: #475569; margin-bottom: 4px;">Workload Condition</label>
-                        <select name="workload" style="width: 100%; height: 38px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 10px; font-size: 12.5px;">
-                            <option value="">All Workload</option>
-                            <option value="over_capacity" @selected(($filters['workload'] ?? '') === 'over_capacity')>High / Over Capacity</option>
-                            <option value="near_capacity" @selected(($filters['workload'] ?? '') === 'near_capacity')>Optimal / Near Capacity</option>
-                            <option value="within_capacity" @selected(($filters['workload'] ?? '') === 'within_capacity')>Light / Within Capacity</option>
-                            <option value="available" @selected(($filters['workload'] ?? '') === 'available')>Available (0 tasks)</option>
-                        </select>
-                    </div>
-
-                    <!-- Quick Checkboxes -->
-                    <div style="display: flex; gap: 14px; padding-bottom: 8px;">
-                        <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: #334155; cursor: pointer;">
-                            <input type="checkbox" name="has_overdue" value="1" @checked(!empty($filters['has_overdue']))>
-                            Has Overdue
-                        </label>
-                        <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: #334155; cursor: pointer;">
-                            <input type="checkbox" name="has_critical" value="1" @checked(!empty($filters['has_critical']))>
-                            Has Critical
-                        </label>
-                    </div>
-
-                    <!-- Buttons -->
-                    <div style="display: flex; gap: 8px;">
-                        <button type="submit" class="btn btn-primary btn-sm" style="height: 38px; padding: 0 14px; background: #315F58; color: #FFFFFF; font-weight: 600;">
-                            Filter
-                        </button>
-                        <a href="{{ route('team-monitor', ['project_id' => $projectId]) }}" class="btn btn-outline btn-sm" style="height: 38px; line-height: 36px; padding: 0 12px; color: #64748B;">
-                            Reset
-                        </a>
-                    </div>
+            <section class="personal-team-filter" aria-label="Team filters">
+                <form method="get" action="{{ route('team-monitor') }}">
+                    <label class="ptf-search">Search people<input type="search" name="q" value="{{ $filters['q']??'' }}" placeholder="Name, email or job title..."></label>
+                    <label>Project<select name="project_id" onchange="this.form.requestSubmit()"><option value="">All managed projects</option>@foreach($monitoredProjects as $p)<option value="{{ $p->id }}" @selected($projectId==$p->id)>{{ $p->name }}</option>@endforeach</select></label>
+                    <label>Workload<select name="workload" onchange="this.form.requestSubmit()"><option value="">Any workload</option>@foreach(['over_capacity'=>'High / over capacity','near_capacity'=>'Optimal / near capacity','within_capacity'=>'Light / within capacity','available'=>'Available'] as $key=>$label)<option value="{{ $key }}" @selected(($filters['workload']??'')===$key)>{{ $label }}</option>@endforeach</select></label>
+                    <button class="btn btn-primary" type="submit">Search</button>
+                    @if(!empty($filters['q']) || $projectId || !empty($filters['workload']) || !empty($filters['has_overdue']) || !empty($filters['has_critical']))<a href="{{ route('team-monitor') }}" class="ptf-clear">Clear</a>@endif
+                    <div class="ptf-quick"><span>Show people with</span><label><input type="checkbox" name="has_overdue" value="1" @checked(!empty($filters['has_overdue'])) onchange="this.form.requestSubmit()">Overdue tasks</label><label><input type="checkbox" name="has_critical" value="1" @checked(!empty($filters['has_critical'])) onchange="this.form.requestSubmit()">Critical tasks</label></div>
                 </form>
-            </div>
+            </section>
 
             <!-- Team Members Table Card -->
             <div class="projects-table-card">

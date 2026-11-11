@@ -32,15 +32,17 @@ class UserController {
 
         $subsidiaries = Subsidiary::withCount('users')->where('status', 'active')->orderBy('name')->get();
         $totalUsersCount = User::count();
+        $activeUsersCount = User::where('account_status', 'active')->count();
+        $pmoAdminCount = User::where('system_role', 'pmo')->count();
 
-        return view('users.index', compact('users', 'subsidiaries', 'totalUsersCount', 'q', 'subId'));
+        return view('users.index', compact('users', 'subsidiaries', 'totalUsersCount', 'activeUsersCount', 'pmoAdminCount', 'q', 'subId'));
     }
 
     public function store(Request $request) {
         $data = $request->validate([
             'name' => 'required|string|max:120',
             'email' => 'required|email|max:255|unique:users,email',
-            'system_role' => 'nullable|in:user,pmo',
+            'system_role' => 'nullable|in:user,pmo,admin_viewer',
             'subsidiary_id' => 'nullable|exists:subsidiaries,id',
         ]);
 
@@ -83,7 +85,7 @@ class UserController {
         $data = $request->validate([
             'name' => 'required|string|max:120',
             'email' => 'required|email|max:255|unique:users,email',
-            'system_role' => 'nullable|in:user,pmo',
+            'system_role' => 'nullable|in:user,pmo,admin_viewer',
             'subsidiary_id' => 'nullable|exists:subsidiaries,id',
         ]);
 
@@ -115,10 +117,20 @@ class UserController {
         abort_if($user->id === 1 && $request->input('account_status') === 'inactive', 403);
         $data = $request->validate([
             'name' => 'sometimes|required|string|max:120',
-            'system_role' => 'nullable|in:user,pmo',
+            'system_role' => 'nullable|in:user,pmo,admin_viewer',
             'account_status' => 'sometimes|required|in:active,inactive',
             'subsidiary_id' => 'nullable|exists:subsidiaries,id',
         ]);
+
+        if ($user->isPmo() && isset($data['system_role']) && $data['system_role'] !== 'pmo') {
+            $pmoCount = User::where('system_role', 'pmo')->count();
+            abort_if($pmoCount <= 1, 403, 'Cannot change role: at least one PMO Administrator must remain in the system.');
+        }
+
+        if ($user->isPmo() && isset($data['account_status']) && $data['account_status'] === 'inactive') {
+            $activePmoCount = User::where('system_role', 'pmo')->where('account_status', 'active')->count();
+            abort_if($activePmoCount <= 1, 403, 'Cannot deactivate the last active PMO Administrator.');
+        }
 
         $user->update($data);
         Audit::record('user.updated', $user);
@@ -162,6 +174,11 @@ class UserController {
     public function destroy(Request $request, User $user) {
         abort_if($user->id === 1 || $user->id === $request->user()->id, 403, 'Cannot delete the primary administrator or your own account.');
 
+        if ($user->isPmo()) {
+            $pmoCount = User::where('system_role', 'pmo')->count();
+            abort_if($pmoCount <= 1, 403, 'Cannot delete the last remaining PMO Administrator account. The system must always have at least one PMO Administrator.');
+        }
+
         DB::transaction(function () use ($user, $request) {
             $actorId = $request->user()->id;
 
@@ -196,7 +213,7 @@ class UserController {
 
     public function azure(Request $request, AzureGraphService $graph) {
         $actor = $request->user();
-        abort_unless($actor && ($actor->isPmo() || app(\App\Services\Access::class)->hasCompanyPermission($actor, 'projects.create') || app(\App\Services\Access::class)->hasCompanyPermission($actor, 'users.manage')), 403, 'Permission denied.');
+        abort_unless($this->canUseDirectory($request), 403, 'Permission denied.');
 
         $results = [];
         $error = null;
@@ -249,7 +266,7 @@ class UserController {
 
     public function addAzure(Request $request, AzureGraphService $graph) {
         $actor = $request->user();
-        abort_unless($actor && ($actor->isPmo() || app(\App\Services\Access::class)->hasCompanyPermission($actor, 'projects.create') || app(\App\Services\Access::class)->hasCompanyPermission($actor, 'users.manage')), 403, 'Permission denied.');
+        abort_unless($this->canUseDirectory($request), 403, 'Permission denied.');
 
         $data = $request->validate(['azure_id' => 'required|uuid']);
 
@@ -335,5 +352,13 @@ class UserController {
         }
 
         return back()->with('success', $msg);
+    }
+    private function canUseDirectory(Request $request): bool {
+        $actor=$request->user();
+        if(!$actor)return false;
+        $access=app(\App\Services\Access::class);
+        if($actor->isPmo() || $access->hasCompanyPermission($actor,'projects.create') || $access->hasCompanyPermission($actor,'users.manage'))return true;
+        $project=\App\Models\Project::find((int)$request->input('directory_project_id'));
+        return $project && $project->status!=='archived' && (($project->approval_stage && (int)$project->owner_user_id===$actor->id && $actor->isActive()) || $access->project($actor,$project,'manage_team'));
     }
 }

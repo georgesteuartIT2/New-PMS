@@ -19,6 +19,7 @@ class TaskUpdateRequestNotification extends Notification implements ShouldQueue
         public ?string $message = null
     ) {}
 
+    public function viaConnections(): array { return ['database'=>'sync']; }
     public function via(object $notifiable): array
     {
         return ['database', 'mail'];
@@ -30,7 +31,9 @@ class TaskUpdateRequestNotification extends Notification implements ShouldQueue
         return [
             'title' => 'Progress Update Requested',
             'message' => "{$this->requester->name} requested a progress update on task '{$this->task->title}' in {$this->task->project->name}{$note}",
-            'url' => route('projects.show', $this->task->project_id, false),
+            'url' => route('projects.show', [$this->task->project_id,'focus_task'=>$this->task->id], false),
+            'project_name' => $this->task->project->name,
+            'action_label' => 'Open task',
             'task_id' => $this->task->id,
             'requester_id' => $this->requester->id,
         ];

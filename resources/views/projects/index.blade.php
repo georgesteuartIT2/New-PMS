@@ -6,8 +6,8 @@
 <!-- Page Header matching mockup -->
 <div class="page-head">
     <div>
-        <h1>{{ auth()->user()->isPmo() ? 'Projects' : 'My Projects' }}</h1>
-        <p class="muted">{{ auth()->user()->isPmo() ? 'Track delivery, manage your team and keep projects moving.' : 'Projects you are involved in.' }}</p>
+        <h1>{{ auth()->user()->canViewPortfolio() ? 'Projects' : 'My Projects' }}</h1>
+        <p class="muted">{{ auth()->user()->canViewPortfolio() ? 'Track delivery, manage your team and keep projects moving.' : 'Projects you are involved in.' }}</p>
     </div>
     <div class="inline-actions">
         @if(auth()->user()->isPmo())
@@ -22,10 +22,10 @@
     $projectSummary = [
         ['label'=>'All projects', 'count'=>$totalCount, 'query'=>request()->except('page','status','attention'), 'active'=>!request()->filled('status') && !request()->boolean('attention')],
         ['label'=>'Active', 'count'=>$activeCount, 'query'=>array_merge(request()->except('page','attention'), ['status'=>'active']), 'active'=>request('status')==='active' && !request()->boolean('attention')],
-        ['label'=>auth()->user()->isPmo() ? 'Awaiting PM approval' : 'Pending action', 'count'=>$pendingCount, 'query'=>array_merge(request()->except('page','attention'), ['status'=>'pending']), 'active'=>request('status')==='pending' && !request()->boolean('attention')],
+        ['label'=>auth()->user()->canViewPortfolio() ? 'Awaiting approval' : 'Pending action', 'count'=>$pendingCount, 'query'=>array_merge(request()->except('page','attention'), ['status'=>'pending']), 'active'=>request('status')==='pending' && !request()->boolean('attention')],
         ['label'=>'Needs attention', 'count'=>$attentionCount, 'query'=>array_merge(request()->except('page','status'), ['attention'=>1]), 'active'=>request()->boolean('attention')],
     ];
-    if(auth()->user()->isPmo()) {
+    if(auth()->user()->canViewPortfolio()) {
         $projectSummary[] = ['label'=>'Drafts', 'count'=>$draftCount ?? 0, 'query'=>array_merge(request()->except('page','attention'), ['status'=>'draft']), 'active'=>request('status')==='draft' && !request()->boolean('attention')];
     }
 @endphp
@@ -39,10 +39,10 @@
 <!-- Search and Filter Bar -->
 <form method="get" action="{{ route('projects.index') }}" id="projects-filter-form" class="projects-toolbar-wrap">
     <div class="projects-search-input-wrap">
-        <input type="text" name="q" id="projects-search-input" class="projects-search-input" placeholder="{{ auth()->user()->isPmo() ? 'Search by project name, code or manager...' : 'Search your projects by name or code...' }}" value="{{ request('q') }}" autocomplete="off">
+        <input type="text" name="q" id="projects-search-input" class="projects-search-input" placeholder="{{ auth()->user()->canViewPortfolio() ? 'Search by project name, code or manager...' : 'Search your projects by name or code...' }}" value="{{ request('q') }}" autocomplete="off">
     </div>
 
-    @if(auth()->user()->isPmo())
+    @if(auth()->user()->canViewPortfolio())
         <select name="subsidiary_id" class="projects-filter-select" onchange="this.form.submit()">
             <option value="">All Subsidiaries</option>
             @foreach($subsidiaries as $sub)
@@ -94,9 +94,10 @@
             <thead>
                 <tr>
                     <th>Project</th>
-                    <th>{{ auth()->user()->isPmo() ? 'Project manager' : 'My role' }}</th>
+                    <th>{{ auth()->user()->canViewPortfolio() ? 'Project manager' : 'My role' }}</th>
 
                     <th>Progress</th>
+                    <th>Budget <span class="budget-currency-label">LKR</span></th>
                     <th>Due</th>
                     <th>Status</th>
                     <th class="right">Actions</th>
@@ -108,8 +109,8 @@
                         $userRoles = isset($access) ? $access->roleLabels(auth()->user(), $project) : ['Member'];
                         $isPm = $project->pm_user_id === auth()->id();
                         $canViewTasks = auth()->user()->isPmo() || $isPm || (isset($access) && $access->project(auth()->user(), $project, 'view_tasks'));
-                        $isDelayed = (bool) ($project->is_delayed ?? false);
-                        $isAtRisk = (bool) ($project->is_at_risk ?? false);
+                        $isDelayed = $project->approval_stage!=='planning' && (bool) ($project->is_delayed ?? false);
+                        $isAtRisk = $project->approval_stage!=='planning' && (bool) ($project->is_at_risk ?? false);
                         $delayDays = (int) ($project->delay_working_days ?? 0);
                         $overdueCount = (int) ($project->overdue_tasks_count ?? 0);
                     @endphp
@@ -137,14 +138,9 @@
                             </div>
                         </td>
                         <td>
-                            @if(auth()->user()->isPmo())
+                            @if(auth()->user()->canViewPortfolio())
                                 @if($project->manager)
                                     <div class="library-manager"><span class="library-manager-avatar" aria-hidden="true">{{ mb_strtoupper(mb_substr($project->manager->name,0,1)) }}</span><span class="pm-name">{{ $project->manager->name }}</span></div>
-                                    @if($project->status === 'declined')
-                                        <small class="block text-xs" style="color: #DC2626; font-weight: 600;">(Declined)</small>
-                                    @elseif($project->status === 'pending')
-                                        <small class="block text-xs" style="color: #D97706; font-weight: 500;">(Awaiting Response)</small>
-                                    @endif
                                 @else
                                     <span class="pm-unassigned">Not assigned</span>
                                 @endif
@@ -168,14 +164,33 @@
                             @endif
                         </td>
                         <td>
-                            <span class="deadline-val">{{ $project->ends_on->format('d M Y') }}</span>@if($project->status==='draft')<small class="library-planned-date">Planned due date</small>@endif
+                            @if($project->canViewBudget(auth()->user()))
+                                @php
+                                    $spent=(float)$project->actual_cost;
+                                    $planned=$project->planned_budget;
+                                    $money=fn($amount)=>number_format($amount, fmod((float)$amount,1.0)==0.0?0:2);
+                                @endphp
+                                @if($planned===null && $spent==0)
+                                    <span class="budget-not-set">Not set</span>
+                                @else
+                                    <div class="budget-compact" aria-label="Budget in LKR">
+                                        <div class="budget-compact-spent" title="Spent: LKR {{ number_format($spent,2) }}"><strong>{{ $money($spent) }}</strong><span>spent</span></div>
+                                        <small class="budget-compact-plan" title="{{ $planned===null?'Planned budget not set':'Planned: LKR '.number_format($planned,2) }}">{{ $planned===null?'Budget not set':'of '.$money($planned).' planned' }}</small>
+                                        @if($planned!==null && $spent>$planned)<small class="budget-overrun" title="Over budget by LKR {{ number_format($spent-$planned,2) }}">Over by {{ $money($spent-$planned) }}</small>@endif
+                                    </div>
+                                @endif
+                            @else<span class="muted">&mdash;</span>@endif
+                        </td>
+                        <td>
+                            <span class="deadline-val">{{ $project->approval_stage && !$project->plan_initialized ? 'Not scheduled' : $project->ends_on->format('d M Y') }}</span>@if($project->status==='draft')<small class="library-planned-date">Planned due date</small>@endif
                         </td>
                         <td>
                             <div class="project-health-cell">
-                                @if($project->status === 'declined')
-                                    <span class="status-pill status-declined" style="background: #FEE2E2; color: #991B1B; font-weight: 600;">PM Declined</span>
+                                @if($project->approval_stage==='planning')<span class="status-pill pill-neutral">Preparing plan</span>
+                                @elseif($project->status === 'declined')
+                                    <span class="status-pill status-declined" style="background: #FEE2E2; color: #991B1B; font-weight: 600;">{{ $project->approval_stage==='owner_declined'?'Owner Declined':'PM Declined' }}</span>
                                 @elseif($project->status === 'pending')
-                                    <span class="status-pill status-pending" style="background: #FEF3C7; color: #92400E; font-weight: 600;">Awaiting PM approval</span>
+                                    <span class="status-pill status-pending" style="background: #FEF3C7; color: #92400E; font-weight: 600;">{{ $project->approval_stage==='owner'?'Awaiting Owner approval':'Awaiting PM approval' }}</span>
                                 @elseif($project->status === 'draft')
                                     <span class="status-pill status-draft" style="background: #F1F5F9; color: #475569; font-weight: 600;">Draft</span>
                                 @else
@@ -195,7 +210,7 @@
                                     @if($overdueCount > 0)
                                         <span class="overdue-count-pill warning">{{ $overdueCount }} Overdue {{ $overdueCount === 1 ? 'Task' : 'Tasks' }}</span>
                                     @endif
-                                @elseif($project->status === 'active' && ($project->tasks_count ?? 0) > 0)
+                                @elseif($project->approval_stage!=='planning' && $project->status === 'active' && ($project->tasks_count ?? 0) > 0)
                                     <span class="status-pill pill-success" style="font-size: 11px; padding: 1px 7px;">On Track</span>
                                 @endif
                             </div>
@@ -215,13 +230,12 @@
                                 @if($project->status==='draft' && (auth()->user()->isPmo() || ($project->created_by===auth()->id() && app(\App\Services\Access::class)->hasCompanyPermission(auth()->user(),'projects.create'))))
                                     <a href="{{ route('projects.create',['draft'=>$project->id]) }}" class="btn btn-outline btn-xs project-draft-create">Continue draft</a>
                                 @elseif(auth()->user()->isPmo() && $project->status === 'declined')
-                                    <a href="{{ route('projects.show', [$project, 'reassign' => 1]) }}" class="btn btn-primary btn-xs" style="background: #DC2626; border-color: #DC2626; font-weight: 600;">Reassign PM</a>
+                                    <a href="{{ route('projects.show', [$project, 'reassign' => 1]) }}" class="btn btn-primary btn-xs" style="background: #DC2626; border-color: #DC2626; font-weight: 600;">{{ $project->approval_stage ? 'Reassign' : 'Reassign PM' }}</a>
                                 @elseif(auth()->user()->isPmo() && $project->status === 'draft' && !$project->pm_user_id)
                                     <a href="{{ route('projects.show', [$project, 'reassign' => 1]) }}" class="btn btn-outline btn-xs">Assign PM</a>
                                 @elseif($project->status === 'pending' && $isPm)
                                     <a href="{{ route('projects.show', $project) }}" class="btn btn-primary btn-xs">Review & Respond</a>
-                                @elseif(auth()->user()->isPmo() && $project->status === 'pending')
-                                    <a href="{{ route('projects.show', [$project, 'reassign' => 1]) }}" class="btn btn-outline btn-xs">Reassign PM</a>
+
                                 @endif
 
                                 <!-- 3-Dots Dropdown Trigger -->
@@ -241,7 +255,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="empty-state">
+                        <td colspan="7" class="empty-state">
                             No projects found matching the filter criteria.
                         </td>
                     </tr>
@@ -255,8 +269,8 @@
 <div id="projects-grid-container" class="projects-grid-view" style="display: none;">
     @forelse($projects as $project)
         @php
-            $isDelayed = (bool) ($project->is_delayed ?? false);
-            $isAtRisk = (bool) ($project->is_at_risk ?? false);
+            $isDelayed = $project->approval_stage!=='planning' && (bool) ($project->is_delayed ?? false);
+            $isAtRisk = $project->approval_stage!=='planning' && (bool) ($project->is_at_risk ?? false);
             $delayDays = (int) ($project->delay_working_days ?? 0);
             $overdueCount = (int) ($project->overdue_tasks_count ?? 0);
         @endphp
@@ -274,10 +288,11 @@
                     <small>{{ $project->code }} @if($project->subsidiary) · {{ $project->subsidiary->name }} @endif</small>
                 </div>
                 <div style="text-align: right;">
-                    @if($project->status === 'declined')
-                        <span class="status-pill status-declined" style="background: #FEE2E2; color: #991B1B; font-weight: 600;">PM Declined</span>
+                    @if($project->approval_stage==='planning')<span class="status-pill pill-neutral">Preparing plan</span>
+                                @elseif($project->status === 'declined')
+                        <span class="status-pill status-declined" style="background: #FEE2E2; color: #991B1B; font-weight: 600;">{{ $project->approval_stage==='owner_declined'?'Owner Declined':'PM Declined' }}</span>
                     @elseif($project->status === 'pending')
-                        <span class="status-pill status-pending" style="background: #FEF3C7; color: #92400E; font-weight: 600;">Awaiting PM approval</span>
+                        <span class="status-pill status-pending" style="background: #FEF3C7; color: #92400E; font-weight: 600;">{{ $project->approval_stage==='owner'?'Awaiting Owner approval':'Awaiting PM approval' }}</span>
                     @else
                         <span class="status-pill status-{{ $project->status }}">{{ ucwords(str_replace('_', ' ', $project->status)) }}</span>
                     @endif
@@ -379,7 +394,7 @@
             <div class="dam-header-left">
                 <h2 id="dam-modal-title" class="dam-title" style="display: flex; align-items: center; gap: 8px;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#315F58" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                    <span>Project Delay Investigation</span>
+                    <span>Project schedule review</span>
                 </h2>
                 <div class="dam-subtitle">
                     <span id="dam-project-name" style="font-weight: 600; color: #1E293B;">Loading project...</span> &nbsp;·&nbsp;
@@ -398,7 +413,7 @@
             <!-- Loading State -->
             <div id="dam-loading" style="padding: 56px 16px; text-align: center;">
                 <div style="font-size: 14px; color: #475569; font-weight: 500;">
-                    Investigating project schedule, task dependencies, critical path, and delay records...
+                    Loading the project schedule and unfinished tasks...
                 </div>
             </div>
 
@@ -410,45 +425,53 @@
                     <div class="pdi-card-head">
                         <div class="pdi-section-title">
                             <span class="pdi-title-icon">?</span>
-                            <span>Why Is This Project Delayed?</span>
+                            <span>What needs attention?</span>
                         </div>
-                        <span id="pdi-explanation-status-pill" class="pdi-micro-pill">Automated Evidence Diagnosis</span>
+                        <span id="pdi-explanation-status-pill" class="pdi-micro-pill">Schedule review</span>
                     </div>
-                    <div id="pdi-why-delayed-box" class="pdi-explanation-box">
+                    <div class="pdi-plain-summary"><div><span>Task to check first</span><strong id="pdi-first-task">Loading...</strong></div><div><span>Reported reason</span><p id="pdi-plain-reason">No reason has been reported yet.</p></div><a id="pdi-next-task-link" class="btn btn-primary" href="#">Review task &rarr;</a></div>
+                    <details class="pdi-explanation-details"><summary>Read the schedule explanation</summary><div id="pdi-why-delayed-box" class="pdi-explanation-box">
                         <p id="pdi-why-delayed-text" class="pdi-explanation-text">
-                            Analyzing project schedule data...
+                            Checking the current schedule...
                         </p>
-                    </div>
+                    </div></details>
                 </div>
 
                 <!-- SECTION B: Project Schedule Impact -->
                 <div class="pdi-card pdi-section-b">
-                    <div class="pdi-section-heading">Project Schedule Impact</div>
+                    <div class="pdi-section-heading">When will this project finish?</div>
+                    <p id="pdi-finish-summary" class="pdi-finish-summary"></p>
                     <div class="pdi-impact-grid">
                         <div class="pdi-impact-col">
-                            <div class="pdi-impact-label">Approved Deadline</div>
+                            <div class="pdi-impact-label">Planned finish</div>
                             <div class="pdi-impact-val" id="dam-approved-deadline">—</div>
-                            <div class="pdi-impact-sub">Authorized project finish date</div>
+                            <div class="pdi-impact-sub">The agreed project end date</div>
                         </div>
                         <div class="pdi-impact-col">
-                            <div class="pdi-impact-label">Forecast Completion</div>
+                            <div class="pdi-impact-label">Estimated finish</div>
                             <div class="pdi-impact-val" id="dam-forecast-completion">—</div>
-                            <div class="pdi-impact-sub">Recalculated schedule projection</div>
+                            <div class="pdi-impact-sub">Estimate based on the current task plan</div>
                         </div>
                         <div class="pdi-impact-col">
-                            <div class="pdi-impact-label">Schedule Variance</div>
+                            <div class="pdi-impact-label">Expected delay</div>
                             <div class="pdi-impact-val text-danger" id="dam-schedule-variance">—</div>
-                            <div class="pdi-impact-sub">Difference in working days</div>
+                            <div class="pdi-impact-sub">Working days later than planned</div>
                         </div>
                     </div>
                 </div>
+
+                <section class="pdi-card pdi-delay-drivers" aria-labelledby="pdi-drivers-heading">
+                    <h3 id="pdi-drivers-heading">Which tasks are affecting this estimate?</h3>
+                    <div id="pdi-delay-drivers"></div>
+                    <p class="pdi-driver-note">Task delays are not added together: some tasks run at the same time. The finish date follows the full task plan. Saturdays and Sundays are excluded from working-day counts.</p>
+                </section>
 
                 <!-- SECTION C: Critical Path & Affected Dependencies -->
                 <div class="pdi-card pdi-section-c">
                     <div class="pdi-card-head">
                         <div>
-                            <div class="pdi-section-heading" style="margin-bottom: 2px;">Critical Path &amp; Affected Dependencies</div>
-                            <div class="pdi-section-desc">Sequence of tasks that dictates the earliest possible project completion date.</div>
+                            <div class="pdi-section-heading" style="margin-bottom: 2px;">Tasks that affect the finish date</div>
+                            <div class="pdi-section-desc">These tasks depend on each other. A delay here can move the project finish date.</div>
                         </div>
                         <button type="button" class="btn btn-ghost btn-xs pdi-toggle-details-btn" id="pdi-toggle-schedule-details-btn" onclick="toggleScheduleDetails()">
                             Show Schedule Details ▼
@@ -502,7 +525,7 @@
                                 <span class="pdi-count-badge badge-delayed" id="pdi-delayed-count-badge">0</span>
                             </div>
                             <div class="pdi-section-desc">
-                                All tasks whose actual completion or forecast finish exceeds the approved planned finish (both critical &amp; non-critical).
+                                Tasks that finished late or are now expected to finish later than planned.
                             </div>
                         </div>
 
@@ -1637,7 +1660,7 @@ function populateDelayModal(res) {
     // Health Badge in header
     const healthBadge = document.getElementById('dam-health-badge');
     const badgeLabel = inv.header?.health_badge || health.label || 'On Track';
-    healthBadge.textContent = badgeLabel;
+    healthBadge.textContent = ({'Forecast Late':'May finish late','Delayed':'Behind schedule','At Risk':'Needs attention','On Track':'On schedule'})[badgeLabel] || badgeLabel;
     healthBadge.className = 'dam-health-pill ' + (
         (health.is_delayed || inv.header?.health_state === 'delayed' || inv.header?.health_state === 'forecast_late') ? 'pill-delayed' :
         (health.is_at_risk || inv.header?.health_state === 'at_risk') ? 'pill-warning' :
@@ -1647,19 +1670,28 @@ function populateDelayModal(res) {
     // SECTION A: Why Is This Project Delayed?
     const whyDelayedText = inv.section_a?.explanation || summary.diagnostic_summary || 'Analyzing schedule data...';
     document.getElementById('pdi-why-delayed-text').textContent = whyDelayedText;
+    const candidates=inv.section_d?.tasks || res.delayed_section?.tasks || [];
+    const overdueCandidates=inv.section_e?.tasks || res.overdue_section?.tasks || [];
+    const focus=candidates.find(t=>t.is_critical && t.is_overdue) || candidates.find(t=>t.has_delay_report) || overdueCandidates[0] || candidates[0];
+    document.getElementById('pdi-first-task').textContent=focus ? (focus.title || focus.name || 'Review the unfinished tasks below') : 'No delayed tasks identified';
+    document.getElementById('pdi-plain-reason').textContent=(focus?.has_delay_report && focus?.reported_root_cause) || 'No reason has been reported yet. A missed deadline alone does not explain why the work is late.';
+    const nextLink=document.getElementById('pdi-next-task-link');
+    nextLink.href=focus?.id ? new URL((proj.show_url || inv.header?.open_project_url || '#'),location.origin).pathname+'?focus_task='+encodeURIComponent(focus.id)+'#tasks' : (proj.show_url || '#');
+    nextLink.textContent=focus?.id?'Review task \u2192':'Open project \u2192';
+
 
     const explanationPill = document.getElementById('pdi-explanation-status-pill');
     if (explanationPill) {
         if (health.is_delayed || inv.header?.health_state === 'delayed' || inv.header?.health_state === 'forecast_late') {
-            explanationPill.textContent = 'Critical Delay Detected';
+            explanationPill.textContent = 'Finish date may move';
             explanationPill.style.background = '#FEE2E2';
             explanationPill.style.color = '#991B1B';
         } else if (health.is_at_risk || inv.header?.health_state === 'at_risk') {
-            explanationPill.textContent = 'Schedule Risk Warning';
+            explanationPill.textContent = 'Needs attention';
             explanationPill.style.background = '#FEF3C7';
             explanationPill.style.color = '#92400E';
         } else {
-            explanationPill.textContent = 'Schedule On Track';
+            explanationPill.textContent = 'On schedule';
             explanationPill.style.background = '#E8F5E9';
             explanationPill.style.color = '#166534';
         }
@@ -1676,6 +1708,33 @@ function populateDelayModal(res) {
     } else {
         schedVar.className = 'pdi-impact-val';
     }
+
+    const plannedFinish=summary.approved_deadline || proj.approved_deadline;
+    const estimatedFinish=summary.forecast_deadline || inv.section_b?.forecast_completion;
+    const workingDelay=Number(inv.section_b?.variance_working_days || 0);
+    document.getElementById('pdi-finish-summary').textContent=workingDelay>0
+        ? 'The current plan estimates completion on '+estimatedFinish+' instead of '+plannedFinish+' ('+workingDelay+' working '+(workingDelay===1?'day':'days')+' later). This is an estimate, not a changed approved deadline.'
+        : 'Compare the agreed deadline with the current estimate below. The approved deadline stays unchanged.';
+    const drivers=candidates.filter(t=>!t.is_completed && t.is_critical && (t.is_overdue || Number(t.delay_days)>0));
+    const driverBox=document.getElementById('pdi-delay-drivers');
+    driverBox.replaceChildren();
+    if(!cpm.reliable || !drivers.length){
+        const note=document.createElement('p');
+        note.textContent=!cpm.reliable ? 'The task links are incomplete, so the system cannot reliably identify which task is moving the finish date. Review the task dates and dependencies.' : 'No individual delayed task has been identified as the cause of this finish estimate. Review the task schedule before assigning a cause.';
+        driverBox.append(note);
+    } else drivers.forEach(t=>{
+        const row=document.createElement('article');row.className='pdi-driver-row';
+        const body=document.createElement('div');
+        const title=document.createElement('strong');title.textContent=t.title || t.name;body.append(title);
+        const detail=document.createElement('p');
+        detail.textContent=t.is_overdue ? 'Unfinished; planned to finish '+t.planned_end+'. Overdue by '+t.delay_days+' working '+(Number(t.delay_days)===1?'day.':'days.') : 'Planned finish: '+t.planned_end+'. Current task estimate: '+t.forecast_end+'.';body.append(detail);
+        const successors=t.blocked_successors || [];
+        const impact=document.createElement('p');impact.textContent=successors.length ? 'Next dependent work: '+successors.map(x=>x.title).filter(Boolean).join(', ')+'. A later finish here can move that work back.' : 'This task has no spare time in the schedule; a later finish can move the project finish date.';body.append(impact);
+        const reason=document.createElement('p');reason.className='pdi-driver-reason';reason.textContent=t.has_delay_report && t.reported_root_cause ? 'Reported reason: '+t.reported_root_cause : 'Reason for the delay: not reported yet.';body.append(reason);
+        const link=document.createElement('a');link.className='btn btn-outline btn-xs';link.textContent='View task';
+        const target=new URL(proj.show_url || inv.header?.open_project_url,location.origin);target.searchParams.set('focus_task',t.id);target.hash='tasks';link.href=target.href;
+        row.append(body,link);driverBox.append(row);
+    });
 
     // SECTION C: Critical Path Sequence Flow
     const sequenceContainer = document.getElementById('dam-cpm-sequence-flow');
@@ -1718,7 +1777,7 @@ function populateDelayModal(res) {
         }
 
         if (impactExplanationEl) {
-            impactExplanationEl.textContent = inv.section_c?.impact_explanation || 'Critical tasks have zero schedule float. Overruns directly postpone project completion.';
+            impactExplanationEl.textContent = 'This is the linked task sequence, not a list of overdue tasks. A task with no spare time can affect the finish date if it finishes late. See the affected tasks above for the current delays.';
         }
     }
 
@@ -1742,7 +1801,7 @@ function populateDelayModal(res) {
     // Auto-expand first task with delay report or overdue
     if (allDelayed.length > 0) {
         const firstToExpand = allDelayed.find(t => t.has_delay_report || t.is_overdue) || allDelayed[0];
-        expandedDelayedTaskIds.add(firstToExpand.id);
+        // Details open only when the user chooses a task.
     }
     renderDelayedTasksTable();
 
@@ -2104,9 +2163,9 @@ function submitDelayReport(event, taskId, url) {
     });
 }
 
-function resolveDelayReport(taskId, url, event) {
+async function resolveDelayReport(taskId, url, event) {
     if (event) event.stopPropagation();
-    if (!confirm('Mark this delay report as resolved?')) return;
+    if (!await AppDialog.confirm('Mark this delay report as resolved?')) return;
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
     fetch(url, {

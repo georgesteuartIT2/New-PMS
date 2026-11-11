@@ -114,7 +114,7 @@
                             <div class="inline-actions" style="justify-content: flex-end;">
                                 <button class="icon-btn" type="button" title="Edit Subsidiary" data-show-dialog="edit-sub-{{ $sub->id }}">✎</button>
                                 @if($sub->projects_count === 0)
-                                    <form method="post" action="{{ route('subsidiaries.destroy', $sub) }}" onsubmit="return confirm('Delete subsidiary {{ $sub->name }}?')">
+                                    <form method="post" action="{{ route('subsidiaries.destroy', $sub) }}" onsubmit="return AppDialog.confirmAction(event,this,'Delete subsidiary {{ $sub->name }}?')">
                                         @csrf
                                         @method('DELETE')
                                         <button class="icon-btn" type="submit" title="Delete Subsidiary" style="color: var(--danger);">🗑</button>

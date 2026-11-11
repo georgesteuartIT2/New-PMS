@@ -1,7 +1,7 @@
 document.addEventListener('click',event=>{
  const wrap=event.target.closest('.task-quick-assign');if(!wrap)return;
  const controls=wrap.querySelector('[data-assign-controls]'),button=wrap.querySelector('[data-assign-open]'),select=wrap.querySelector('select'),feedback=wrap.querySelector('[data-assign-feedback]');
- if(event.target.closest('[data-assign-open]')){if(select.options.length===1)select.append(document.getElementById('project-assignee-options')?.content.cloneNode(true)||document.createDocumentFragment());if(select.options.length===1){feedback.textContent='No active project members available. Add someone in Team first.';return;}controls.hidden=false;button.hidden=true;select.focus();}
+ if(event.target.closest('[data-assign-open]')){if(select.options.length===1)select.append(document.getElementById('project-assignee-options')?.content.cloneNode(true)||document.createDocumentFragment());if(select.options.length===1){feedback.textContent='No active project members available. Add someone in Team first.';return;}controls.hidden=false;button.hidden=true;(controls.querySelector('.directory-picker input')||select).focus();}
  if(event.target.closest('[data-assign-cancel]')){controls.hidden=true;button.hidden=false;feedback.textContent='';select.value='';button.focus();}
 });
 document.addEventListener('change',async event=>{

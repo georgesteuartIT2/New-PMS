@@ -45,6 +45,41 @@
     </div>
 @endif
 
+@if($task->children()->exists())
+    <div class="panel-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <b>Subtasks ({{ $task->children->count() }})</b>
+            @if($canManage)
+                <button type="button" class="btn btn-outline btn-xs btn-row-add-subtask" data-parent-id="{{ $task->id }}" data-parent-num="{{ $task->code }}" data-parent-title="{{ $task->title }}">+ Subtask</button>
+            @endif
+        </div>
+        <div class="stack" style="gap: 6px;">
+            @foreach($task->children as $child)
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 7px 10px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 5px; font-size: 12.5px;">
+                    <div style="min-width: 0; padding-right: 8px;">
+                        <button type="button" class="text-action" data-task-location="{{ route('projects.show', [$child->project_id, 'focus_task' => $child->id]) }}" style="font-weight: 600; color: #1E293B; text-align: left; background: none; border: none; padding: 0; cursor: pointer; display: block;">
+                            {{ $child->title }}
+                        </button>
+                        <div class="muted" style="font-size: 11px;">
+                            {{ $child->starts_at->format('d M') }} &ndash; {{ $child->ends_at->format('d M') }} · {{ $child->assignees->first()?->name ?? 'Unassigned' }}
+                        </div>
+                    </div>
+                    <span class="uwt-status-pill status-{{ $child->status }}" style="font-size: 10px;">{{ ucwords(str_replace('_', ' ', $child->status)) }}</span>
+                </div>
+            @endforeach
+        </div>
+    </div>
+@elseif($task->parent)
+    <div class="panel-section">
+        <b>Parent Task</b>
+        <div style="padding: 7px 10px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 5px; font-size: 12.5px; margin-top: 4px;">
+            <button type="button" class="text-action" data-task-location="{{ route('projects.show', [$task->project_id, 'focus_task' => $task->parent->id]) }}" style="font-weight: 600; text-align: left; background: none; border: none; padding: 0; cursor: pointer; color: #315F58;">
+                ↑ {{ $task->parent->title }}
+            </button>
+        </div>
+    </div>
+@endif
+
 
 @if($canManage)
 <details class="panel-inner-details"><summary>Edit task details and schedule</summary>
@@ -155,7 +190,7 @@
                         <small class="muted" style="display: block; font-size: 11px;">Finishes: {{ $dependency->ends_at->format('d M Y') }}</small>
                     </div>
                     @if($canManage)
-                        <form method="post" action="{{ route('tasks.dependencies.delete', [$task, $dependency]) }}" onsubmit="return confirm('Remove dependency on {{ $dependency->code }}?')">
+                        <form method="post" action="{{ route('tasks.dependencies.delete', [$task, $dependency]) }}" onsubmit="return AppDialog.confirmAction(event,this,'Remove dependency on {{ $dependency->code }}?')">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="text-action" style="color: #D32F2F; font-size: 11.5px; border: none; background: none; cursor: pointer; padding: 2px 4px;">Remove</button>
@@ -193,7 +228,7 @@
     </div>
     @if($task->openDelay)
         <div class="blocker-detail">
-            <b>{{ $delayReasons[$task->openDelay->reason_code] ?? $task->openDelay->reason_code }}</b>
+            <b>{{ $task->openDelay->reason_label }}</b>
             @if($task->openDelay->details)<p class="muted">{{ $task->openDelay->details }}</p>@endif
             <small>Reported by: {{ $task->openDelay->reporter?->name ?? 'Team member' }}</small>
             <small>Follow-up owner: {{ $task->openDelay->actionOwner?->name ?? 'Not assigned' }}</small>
@@ -298,6 +333,13 @@
     @endif
 </div>
 
-<div class="panel-section">
+<div class="panel-section" style="display: flex; justify-content: space-between; align-items: center;">
     <a class="text-action" href="{{ route('tasks.show', $task) }}">Open full task page →</a>
+    @if((auth()->user()->isPmo() || (!auth()->user()->isAdminViewer() && $task->project->pm_user_id === auth()->id())) && $task->project->status !== 'archived')
+        <form method="post" action="{{ route('tasks.destroy', $task) }}" onsubmit="return AppDialog.confirmAction(event,this,'Are you sure you want to delete this task? @if($task->children()->exists())All its subtasks will also be deleted. @endif This cannot be undone.');">
+            @csrf
+            @method('DELETE')
+            <button type="submit" class="btn btn-outline btn-xs" style="color: #DC2626; border-color: #FECACA; background: #FFF; padding: 4px 8px; border-radius: 4px; font-size: 11.5px; cursor: pointer;">Delete task</button>
+        </form>
+    @endif
 </div>

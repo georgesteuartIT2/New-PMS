@@ -18,7 +18,7 @@ class DashboardController
     )
     {
         $user = $request->user();
-        if ($user->isPmo()) {
+        if ($user->canViewPortfolio()) {
             $monitoringMetrics = $taskMonitor->getSummaryMetrics($user);
             $teamMetrics = $teamMonitor->getTeamSummaryMetrics($user);
 
@@ -123,33 +123,6 @@ class DashboardController
                 ]);
             }
 
-            foreach ($criticalReviews as $item) {
-                $project = $item['project'];
-                $task = $item['blockingCritical'];
-                $delayDays = null;
-                if ($task && $task->ends_at && $task->ends_at->isPast()) {
-                    $delayDays = (int) ceil(abs(now()->diffInDays($task->ends_at, false)));
-                }
-                $issue = $delayDays && $delayDays > 0
-                    ? "Critical task delayed by {$delayDays} " . ($delayDays === 1 ? 'day' : 'days')
-                    : ($task && $task->openDelay
-                        ? (\App\Http\Controllers\TaskDelayController::REASONS[$task->openDelay->reason_code] ?? 'Critical task delayed')
-                        : 'Schedule dependencies need review');
-
-                $owner = $task?->openDelay?->actionOwner?->name ?? $project->manager?->name ?? '—';
-
-                $attentionItems->push([
-                    'type' => 'critical',
-                    'project' => $project,
-                    'code' => $project->code,
-                    'name' => $project->name,
-                    'issue' => $issue,
-                    'owner' => $owner,
-                    'action_label' => 'Review Delay',
-                    'action_url' => route('projects.show', $project) . '#project-attention',
-                ]);
-            }
-
             foreach ($pendingProjects as $project) {
                 $attentionItems->push([
                     'type' => 'pending',
@@ -163,23 +136,19 @@ class DashboardController
                 ]);
             }
 
-            foreach ($overdueTasks->take(4) as $task) {
-                if ($task->project) {
-                    $attentionItems->push([
-                        'type' => 'overdue_task',
-                        'project' => $task->project,
-                        'code' => $task->project->code,
-                        'name' => $task->project->name,
-                        'issue' => 'Milestone overdue: ' . $task->title . ' (due ' . $task->ends_at->format('d M') . ')',
-                        'owner' => $task->assignees->first()?->name ?? $task->project->manager?->name ?? '—',
-                        'action_label' => 'Open Project',
-                        'action_url' => route('projects.show', $task->project) . '#project-attention',
-                    ]);
-                }
+            // Project decisions stay separate from the task attention preview.
+            $attentionItems = $attentionItems->filter(fn($item) => in_array($item['type'], ['declined', 'pending']))
+                ->sortBy(fn($item) => $item['type'] === 'declined' ? 0 : 1)->values();
+            $blockerQuery=TaskDelay::where('status','open')->whereHas('task.project',fn($q)=>$q->whereIn('status',['active','on_hold']));
+            $blockerCount=(clone $blockerQuery)->count();
+            $unreadBlockerCount=(clone $blockerQuery)->whereDoesntHave('readers',fn($q)=>$q->where('users.id',$user->id))->count();
+            $blockerPreview=(clone $blockerQuery)->with(['task.project','actionOwner'])->withExists(['readers as is_read'=>fn($q)=>$q->where('users.id',$user->id)])->orderByRaw('CASE WHEN action_owner_id IS NULL THEN 0 ELSE 1 END')->oldest()->paginate(5,['*'],'blocker_page');
+            $taskAttentionFilter = in_array($request->query('task_attention'),['critical','blocked']) ? $request->query('task_attention') : 'overdue';
+            if (!$request->has('task_attention') && !$monitoringMetrics['overdue_tasks']) {
+                $taskAttentionFilter = 'critical';
             }
-
-            $attentionItems = $attentionItems->reject(fn($item) => $item['type'] === 'unmanaged')
-                ->sortBy(fn($item) => array_search($item['type'], ['critical', 'overdue_task', 'declined', 'pending']))->values();
+            // Reuse Task Monitor filters, counts and ordering; always preview the first five.
+            $taskAttention = $taskMonitor->getFilteredTasks($user, ['filter' => $taskAttentionFilter], 5);
             $totalAttentionCount = $attentionItems->count();
 
             // Recent projects formatted
@@ -224,6 +193,9 @@ class DashboardController
 
             return view('dashboard', [
                 'isPmo' => true,
+                'taskAttention' => $taskAttention,
+                'taskAttentionFilter' => $taskAttentionFilter,
+                'blockerCount'=>$blockerCount,'unreadBlockerCount'=>$unreadBlockerCount,'blockerPreview'=>$blockerPreview,
                 'draftProjects' => $draftProjects,
                 'draftCount' => Project::where('status', 'draft')->count(),
                 'projects' => $allProjects->take(12),
@@ -280,7 +252,7 @@ class DashboardController
             })
             ->where(function ($q) use ($user) {
                 $q->whereIn('status', ['active', 'on_hold', 'completed', 'archived'])
-                    ->orWhere(fn($sub) => $sub->where('pm_user_id', $user->id)->whereIn('status', ['pending', 'declined']));
+                    ->orWhere(fn($sub) => $sub->where(fn($lead)=>$lead->where('pm_user_id',$user->id)->orWhere('owner_user_id',$user->id))->whereIn('status',['pending','declined']));
             })
             ->latest()
             ->get()
@@ -305,113 +277,9 @@ class DashboardController
             ->whereHas('invitations',fn($q)=>$q->where('user_id',$user->id)->where('status','pending'))
             ->with('subsidiary','creator')->withCount(['tasks'=>fn($q)=>$q->whereDoesntHave('children')])
             ->oldest()->paginate(5,['*'],'approvals_page')->withQueryString()->fragment('project-approvals');
-        // Needs My Attention items aggregation
-        $attentionItems = collect();
-
-        // 2. Overdue assigned tasks
-        foreach ($userTasks->filter(fn($t) => $t->ends_at->isPast()) as $task) {
-            $attentionItems->push([
-                'type' => 'overdue_task',
-                'title' => $task->title,
-                'project_name' => $task->project?->name,
-                'issue' => 'Task overdue by ' . $task->ends_at->diffForHumans(null, true),
-                'deadline' => $task->ends_at->format('d M Y, H:i'),
-                'is_invitation' => false,
-                'task_id' => $task->id,
-                'action_label' => 'Update Task',
-                'action_url' => route('projects.show', [$task->project_id, 'focus_task' => $task->id]),
-            ]);
-        }
-
-        // 3. Blocked tasks
-        $blockedDelays = TaskDelay::with('task.project', 'actionOwner')
-            ->whereHas('task.project', fn($q) => $q->whereIn('id', $userProjects->pluck('id'))->whereIn('status', ['active', 'on_hold']))
-            ->where('status', 'open')
-            ->where(function($q) use ($user) {
-                $q->where('action_owner_id', $user->id)
-                  ->orWhereHas('task.assignees', fn($a) => $a->where('users.id', $user->id))
-                  ->orWhereHas('task.project', fn($p) => $p->where('pm_user_id', $user->id));
-            })->get();
-
-        foreach ($blockedDelays as $delay) {
-            $attentionItems->push([
-                'type' => 'blocker',
-                'title' => $delay->task?->title ?? 'Task',
-                'project_name' => $delay->task?->project?->name,
-                'issue' => 'Blocker: ' . (\App\Http\Controllers\TaskDelayController::REASONS[$delay->reason_code] ?? $delay->reason_code),
-                'deadline' => $delay->revised_expected_end_at ? $delay->revised_expected_end_at->format('d M Y') : 'Action required',
-                'is_invitation' => false,
-                'task_id' => $delay->task_id,
-                'action_label' => 'View Blocker',
-                'action_url' => route('projects.show', [$delay->task->project_id, 'focus_task' => $delay->task_id]),
-            ]);
-        }
-
-        // 4. Tasks due soon (within 3 days)
-        foreach ($userTasks->filter(fn($t) => !$t->ends_at->isPast() && now()->diffInDays($t->ends_at, false) <= 3) as $task) {
-            $attentionItems->push([
-                'type' => 'due_soon',
-                'title' => $task->title,
-                'project_name' => $task->project?->name,
-                'issue' => 'Due in ' . $task->ends_at->diffForHumans(null, true),
-                'deadline' => $task->ends_at->format('d M Y, H:i'),
-                'is_invitation' => false,
-                'task_id' => $task->id,
-                'action_label' => 'Open Task',
-                'action_url' => route('projects.show', [$task->project_id, 'focus_task' => $task->id]),
-            ]);
-        }
-
-        // 5. For PMs: projects completed ready for closure
-        $pmProjects = $userProjects->filter(fn($p) => $p->pm_user_id === $user->id);
-        foreach ($pmProjects as $pmp) {
-            if ($pmp->tasks_count > 0 && $pmp->completed_tasks_count === $pmp->tasks_count && $pmp->status === 'active') {
-                $attentionItems->push([
-                    'type' => 'closure',
-                    'title' => $pmp->name,
-                    'project_name' => $pmp->code,
-                    'issue' => 'All tasks completed. Ready for project closure.',
-                    'deadline' => $pmp->ends_on->format('d M Y'),
-                    'is_invitation' => false,
-                    'project_id' => $pmp->id,
-                    'action_label' => 'Request Closure',
-                    'action_url' => route('projects.closure', $pmp),
-                ]);
-            }
-        }
-
-        // 6. Attention items for projects managed by the user
-        $monitoredProjects = $userMonitoring->getMonitoredProjects($user);
-        $hasMonitoredProjects = $monitoredProjects->isNotEmpty();
-
-        if ($hasMonitoredProjects) {
-            $managedMetrics = $userMonitoring->getManagedTaskMetrics($user);
-            if (($managedMetrics['overdue_tasks'] ?? 0) > 0) {
-                $attentionItems->push([
-                    'type' => 'managed_overdue',
-                    'title' => $managedMetrics['overdue_tasks'] . ' Overdue ' . ($managedMetrics['overdue_tasks'] === 1 ? 'Task' : 'Tasks'),
-                    'project_name' => 'Managed Projects',
-                    'issue' => 'Overdue tasks requiring review in your projects.',
-                    'deadline' => 'Overdue',
-                    'is_invitation' => false,
-                    'action_label' => 'Task Monitor →',
-                    'action_url' => route('tasks.mine', ['view' => 'managed', 'tab' => 'tasks', 'filter' => 'overdue']),
-                ]);
-            }
-
-            if (($managedMetrics['unassigned_tasks'] ?? 0) > 0) {
-                $attentionItems->push([
-                    'type' => 'managed_unassigned',
-                    'title' => $managedMetrics['unassigned_tasks'] . ' Unassigned ' . ($managedMetrics['unassigned_tasks'] === 1 ? 'Task' : 'Tasks'),
-                    'project_name' => 'Managed Projects',
-                    'issue' => 'Executable tasks needing assignment in your projects.',
-                    'deadline' => 'Action required',
-                    'is_invitation' => false,
-                    'action_label' => 'Assign Tasks →',
-                    'action_url' => route('tasks.mine', ['view' => 'managed', 'tab' => 'tasks', 'filter' => 'unassigned']),
-                ]);
-            }
-        }
+        $attentionItems=app(\App\Services\PersonalAttentionService::class)->rows($user);
+        $monitoredProjects=$userMonitoring->getMonitoredProjects($user);
+        $hasMonitoredProjects=$monitoredProjects->isNotEmpty();
 
         // Projects preview formatted with dynamic roles and permissions
         $myProjectsPreview = $userProjects->take(6)->map(function ($p) use ($user, $access) {
@@ -433,8 +301,6 @@ class DashboardController
         });
 
         // Upcoming work short list
-        $attentionItems = $attentionItems->sortBy(fn($item) => array_search($item['type'], ['invitation', 'blocker', 'overdue_task', 'closure', 'managed_overdue', 'managed_unassigned', 'due_soon']))
-            ->unique(fn($item) => isset($item['task_id']) ? 'task:'.$item['task_id'] : $item['type'].':'.($item['project_id'] ?? $item['title']))->values();
         $upcomingWork = $userTasks->filter(fn($task) => $task->ends_at && !$task->ends_at->isPast())->take(5);
 
         return view('dashboard', [

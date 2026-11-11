@@ -1,0 +1,50 @@
+flowchart TD
+    A["PMO: Name, subsidiary, description"] --> CODE["Generate unique subsidiary project code"]
+    CODE --> FIRST{"First reviewer?"}
+    FIRST -->|Owner| O["Owner receives request"]
+    O --> OD{"Owner decision"}
+    OD -->|Reject with reason| OR["PMO reviews reason and reassigns"]
+    OR --> FIRST
+    OD -->|Select PM and approve| P["PM receives request"]
+    FIRST -->|Direct PM| P
+    P --> PD{"PM decision"}
+    PD -->|Reject with reason| PR["Owner and PMO see reason"]
+    PR --> RE["Owner or PMO reassigns PM"]
+    RE --> P
+    PD -->|Accept| THANKS["Thank-you popup and plan setup"]
+    THANKS --> MODE{"Starting plan"}
+    MODE -->|Blank| BLANK["Empty plan"]
+    MODE -->|Template| LIB["Browse and search active templates"]
+    LIB --> NEWT["Optional: + New template (manual or Excel), saved and auto-selected"]
+    NEWT --> COPY
+    LIB --> PREVIEW["Preview tasks and dependencies"]
+    PREVIEW --> COPY["Use template: copy tasks into project"]
+    BLANK --> DATES["Set project dates and optional LKR budget"]
+    COPY --> DATES
+    DATES --> TASKS["Add/edit tasks manually or upload Excel for review"]
+    TASKS --> PEOPLE["Assign people to tasks"]
+    PEOPLE --> EXISTS{"Person in system?"}
+    EXISTS -->|Yes| ASSIGN["Save assignment and project membership"]
+    EXISTS -->|No| AZURE["Search Azure and save person to system"]
+    AZURE --> ASSIGN
+    ASSIGN --> SAVE["Save and notify team"]
+    SAVE --> BASE["Publish plan and capture baseline"]
+    BASE --> EMAIL["Queue team emails and inbox updates"]
+    EMAIL --> WORK["Team works on assigned tasks"]
+    WORK --> UPDATE["Update task status/progress"]
+    UPDATE --> PROGRESS["Recalculate parent and project completion"]
+    PROGRESS --> MONITOR["Dashboards, Task/Team Monitor, Timeline, Calendar"]
+    MONITOR --> NEXT{"Next action?"}
+    NEXT -->|Continue| WORK
+    NEXT -->|Blocker| ISSUE["Report reason and corrective action"]
+    ISSUE --> FOLLOW["Leadership reviews and resolves issue"]
+    FOLLOW --> WORK
+    NEXT -->|Expense| BUDGET["Record expense and update actual cost"]
+    BUDGET --> WORK
+    NEXT -->|Closure| CLOSE["Review and submit closure manually"]
+    CLOSE --> DONE["Project marked completed; activity recorded"]
+    classDef primary fill:#315F58,color:#FFFFFF,stroke:#315F58;
+    classDef decision fill:#FFFFFF,color:#315F58,stroke:#315F58;
+    class A,THANKS,SAVE,BASE,DONE primary;
+    class FIRST,OD,PD,MODE,EXISTS,NEXT decision;
+

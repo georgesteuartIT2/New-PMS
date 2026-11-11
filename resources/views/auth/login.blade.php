@@ -1,77 +1,23 @@
 @extends('layouts.guest')
-@section('title', 'Sign in')
+@section('title','Sign in')
 @section('content')
-<div class="login-split-page">
-    <!-- Left Hero Pane -->
-    <div class="login-hero-pane">
-        <div class="login-hero-branding">
-            <div class="login-hero-logo">
-                <span class="brand-mark">GS</span>
-                <div>
-                    <b class="login-hero-title">GS ProjectFlow</b>
-                    <div class="login-hero-tagline">Project Management, Simplified.</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="login-hero-copy">
-            <span class="login-eyebrow">A clearer way to work</span>
-            <h2>Projects,<br>made clear.</h2>
-            <p>Plan the work. Bring your team together.<br>Keep every next step in view.</p>
-        </div>
-        <p class="login-hero-foot">Your workspace for projects, people and progress.</p>
-    </div>
-
-    <!-- Right Form Pane -->
-    <div class="login-form-pane">
-        <div class="login-form-container">
-            <a class="login-mobile-brand" href="{{ route('login') }}"><span class="brand-mark">GS</span><b>GS ProjectFlow</b></a>
-            <div class="login-header">
-                <h1>Welcome back</h1>
-                <p>Sign in to your project workspace.</p>
-            </div>
-
-            @if ($errors->any())
-                <div class="alert danger" role="alert">
-                    @foreach ($errors->all() as $error)
-                        <div>{{ $error }}</div>
-                    @endforeach
-                </div>
-            @endif
-
-            <form method="POST" action="{{ route('login.submit') }}" class="stack">
-                @csrf
-                <div class="field-group">
-                    <label class="login-field-label" for="email">Work email</label><input type="email" name="email" id="email" value="{{ old('email') }}" autocomplete="username" required autofocus placeholder="you@company.com">
-                </div>
-
-                <div class="field-group" style="position: relative;">
-                    <label class="login-field-label" for="login-password">Password</label><input type="password" name="password" id="login-password" autocomplete="current-password" required placeholder="Password">
-                    <button type="button" class="password-toggle-text-btn" data-toggle-password="login-password" aria-label="Toggle password visibility">Show</button>
-                </div>
-
-                <div class="login-row-remember">
-                    <label>
-                        <input type="checkbox" name="remember" value="1">
-                        <span>Remember me</span>
-                    </label>
-                </div>
-
-                <button class="btn btn-primary btn-wide" type="submit">Sign In</button>
-            </form>
-
-            <div class="or-divider">or</div>
-
-            <a class="btn btn-outline btn-wide ms-btn" href="{{ route('azure.redirect') }}">
-                <span class="ms-mark"><i></i><i></i><i></i><i></i></span>
-                Continue with Microsoft
-            </a>
-
-            <details class="signin-help">
-                <summary>Need help signing in?</summary>
-                <p>For a password reset or access to this workspace, contact your PMO administrator.</p>
-            </details>
-        </div>
-    </div>
-</div>
+<link rel="stylesheet" href="{{ asset('css/sign-in.css') }}?v={{ filemtime(public_path('css/sign-in.css')) }}">
+<main class="signin-shell">
+    <section class="signin-access" aria-labelledby="signin-title"><div class="signin-access-inner">
+        <a class="signin-brand signin-mobile-brand" href="{{ route('login') }}"><span class="signin-monogram">GS</span><span>GS ProjectFlow<small>Project workspace</small></span></a>
+        <header><h1 id="signin-title">Sign in</h1><p>Welcome back to your project workspace.</p></header>
+        @if($errors->any())<div class="signin-error" role="alert">@foreach($errors->all() as $error)<p>{{ $error }}</p>@endforeach</div>@endif
+        @if(session('status'))<p class="signin-status" role="status">{{ session('status') }}</p>@endif
+        <a class="signin-microsoft" href="{{ route('azure.redirect') }}"><span class="signin-ms-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>Continue with Microsoft</a>
+        <div class="signin-divider"><span>or use your email</span></div>
+        <form method="post" action="{{ route('login.submit') }}" class="signin-form">@csrf
+            <label for="email">Work email<input type="email" id="email" name="email" value="{{ old('email') }}" autocomplete="username" inputmode="email" required placeholder="you@company.com" @error('email') aria-invalid="true" @enderror></label>
+            <label for="login-password">Password<span class="signin-password-wrap"><input type="password" id="login-password" name="password" autocomplete="current-password" required placeholder="Enter your password"><button type="button" data-toggle-password="login-password" aria-label="Show password">Show</button></span></label>
+            <label class="signin-remember"><input type="checkbox" name="remember" value="1" @checked(old('remember'))>Remember me</label>
+            <button class="signin-submit" type="submit">Sign in <span aria-hidden="true">&rarr;</span></button>
+        </form>
+        <details class="signin-access-help"><summary>Need help signing in?</summary><p>Contact your PMO administrator for account access or a password reset.</p></details>
+        <footer class="signin-access-footer">GS ProjectFlow &middot; Project management, simplified.</footer>
+    </div></section>
+</main>
 @endsection

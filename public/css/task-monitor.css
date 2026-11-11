@@ -88,3 +88,71 @@
 [data-page="tasks.mine"] .projects-kpi-card .projects-kpi-val { width:auto; }
 /* A single focus row replaces repeated summaries and filter pills. */
 .task-monitor-header{margin-bottom:20px}.task-monitor-header h1{font-size:26px}.task-monitor-header p{font-size:12px}.monitor-focus-tabs{display:flex;align-items:center;gap:4px 20px;flex-wrap:wrap;border-bottom:1px solid #E1E7E3;margin-bottom:18px;padding:0}.monitor-focus-tabs>a.btn{background:transparent!important;border:0!important;border-bottom:2px solid transparent!important;border-radius:0!important;color:#77817C!important;min-height:41px;height:auto!important;padding:9px 0 12px!important;font-size:12px!important;font-weight:450!important;box-shadow:none;gap:7px}.monitor-focus-tabs>a.btn.is-active{border-bottom-color:#315F58!important;color:#315F58!important;font-weight:600!important}.monitor-focus-tabs>a.btn>span+span{background:#F1F4F2!important;color:#69786E!important;border-radius:5px!important;font-size:10px!important;padding:2px 6px!important}.monitor-focus-tabs>a.btn.is-active>span+span{background:#E7F0EB!important;color:#315F58!important}.task-monitor-filters{margin-bottom:16px}.task-filter-primary{gap:10px}.task-filter-primary input,.task-filter-primary select{height:40px;font-size:12px}.task-filter-secondary{margin-top:10px}.task-more-filters summary{font-size:11px}.task-results-count{font-size:11px;color:#8B958F}.task-monitor-workspace>.card{border-radius:11px!important;box-shadow:0 2px 7px #22272B03!important;border-color:#E1E7E3!important}.monitor-task-records th{padding:12px 16px!important;background:#F5F6F7;font-size:11px!important;color:#76817A!important;font-weight:550!important}.monitor-task-records td{padding:15px 16px!important;font-size:12px;vertical-align:middle}.monitor-task-records td:first-child>div:first-child{font-size:10px!important;margin-bottom:4px!important}.monitor-task-records td:first-child>div:nth-child(2),.monitor-task-records td:first-child a{font-size:12px!important}.monitor-task-records td .btn{min-height:31px;font-size:11px!important;padding:6px 10px!important}.monitor-task-records .status-pill,.monitor-task-records .pill{font-size:10px!important}.task-extra-fields{padding:14px;background:#F5F6F7;border:1px solid #E5EBE7;border-radius:8px;margin-top:7px}.task-extra-fields label{flex:1;min-width:160px}@media(max-width:700px){.task-monitor-header{flex-wrap:wrap;gap:12px}.monitor-focus-tabs{gap:0 17px}.monitor-focus-tabs>a.btn{font-size:11px!important;min-height:38px}.task-filter-primary label:not(.task-monitor-search){flex:1 1 calc(50% - 10px)}.task-filter-primary .task-monitor-search{flex-basis:100%}.monitor-task-records td{padding:12px!important}.task-extra-fields{gap:12px}}
+
+/* Executive Clean Task Monitor Control Surface */
+.task-monitor-control-surface {
+    background: #FFFFFF !important;
+    border: 1px solid #E2E8F0 !important;
+    border-radius: 8px !important;
+    padding: 12px 16px !important;
+    margin-bottom: 16px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02) !important;
+}
+.tm-tabs-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #F1F5F9;
+}
+.tm-tab-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 11px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.15s ease;
+    border: 1px solid #E2E8F0;
+    background: #F8FAFC;
+    color: #334155;
+    white-space: nowrap;
+}
+.tm-tab-pill:hover:not(.active) {
+    background: #F1F5F9;
+    border-color: #CBD5E1;
+    color: #0F172A;
+}
+.tm-tab-pill.active {
+    background: #315F58 !important;
+    border-color: #315F58 !important;
+    color: #FFFFFF !important;
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgba(49, 95, 88, 0.15);
+}
+.tm-filter-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.tm-filter-toolbar input,
+.tm-filter-toolbar select {
+    height: 34px !important;
+    border: 1px solid #CBD5E1 !important;
+    border-radius: 6px !important;
+    font-size: 12px !important;
+    background: #FFFFFF !important;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.tm-filter-toolbar input:focus,
+.tm-filter-toolbar select:focus {
+    border-color: #315F58 !important;
+    box-shadow: 0 0 0 2px rgba(49, 95, 88, 0.12) !important;
+    outline: none !important;
+}

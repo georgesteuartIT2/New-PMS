@@ -23,6 +23,7 @@ class ProjectService {
     'subsidiary_id'=>$subsidiary?->id,
     'name'=>$data['name'],
     'description'=>$data['description']??null,
+    'planned_budget'=>$data['planned_budget']??null,
     'starts_on'=>$data['starts_on'],
     'ends_on'=>$data['ends_on'],
     'project_template_id'=>$template?->id,
@@ -71,7 +72,7 @@ class ProjectService {
    $pm=!empty($data['pm_user_id'])?User::whereKey($data['pm_user_id'])->where('account_status','active')->where('system_role','user')->firstOrFail():null;
    $subsidiary=Subsidiary::whereKey($data['subsidiary_id'])->where('status','active')->lockForUpdate()->firstOrFail();
    $code=(int)$p->subsidiary_id===$subsidiary->id?$p->code:$subsidiary->nextProjectCode();
-   $p->update(['name'=>$data['name'],'description'=>$data['description']??null,'starts_on'=>$data['starts_on'],'ends_on'=>$data['ends_on'],'subsidiary_id'=>$subsidiary->id,'code'=>$code,'project_template_id'=>$templateId,'status'=>'draft','pm_user_id'=>$pm?->id]);
+   $p->update(['planned_budget'=>$data['planned_budget']??null,'name'=>$data['name'],'description'=>$data['description']??null,'starts_on'=>$data['starts_on'],'ends_on'=>$data['ends_on'],'subsidiary_id'=>$subsidiary->id,'code'=>$code,'project_template_id'=>$templateId,'status'=>'draft','pm_user_id'=>$pm?->id]);
    if($templateChanged && $template)$this->applyTemplate($p,$template,$actor);
    $desired=collect($data['members']??[])->filter(fn($member)=>!empty($member['user_id'])&&!empty($member['project_role_id']) && (int)$member['user_id']!==$pm?->id)->filter(fn($member)=>User::whereKey($member['user_id'])->where('account_status','active')->where('system_role','user')->exists() && ProjectRole::whereKey($member['project_role_id'])->where('slug','!=','pm')->exists())->values();
    if($pm)$desired->push(['user_id'=>$pm->id,'project_role_id'=>ProjectRole::where('slug','pm')->firstOrFail()->id]);
@@ -87,7 +88,7 @@ class ProjectService {
    return $p->fresh();
   });
  }
- private function applyTemplate(Project $p,ProjectTemplate $template,User $actor):void {
+ public function applyTemplate(Project $p,ProjectTemplate $template,User $actor):void {
     $byCode=[];
     $scheduleService=app(TemplateScheduleService::class);
     foreach($template->tasks->sortBy('sort_order') as $entry){
@@ -105,11 +106,21 @@ class ProjectService {
      if($dependency && isset($byCode[$dependency]))$task->dependencies()->syncWithoutDetaching([$byCode[$dependency][0]->id]);
     }
  }
+ public function addPlanningMember(Project $project,int $id,User $actor):void {
+  if($project->approval_stage!=='planning')return;
+  abort_unless($actor->isPmo() || ($actor->isActive() && $actor->system_role==='user' && in_array($actor->id,[$project->pm_user_id,$project->owner_user_id],true)),403);
+  $person=User::whereKey($id)->where('system_role','user')->where('account_status','active')->firstOrFail();
+  if(!$project->memberships()->where('user_id',$id)->exists()){
+   $role=ProjectRole::firstOrCreate(['slug'=>'team'],['name'=>'Team Member','default_permissions'=>['project.view','tasks.view_assigned','tasks.edit_assigned','tasks.update_status','tasks.update_progress','tasks.upload_attachments','tasks.download_attachments','tasks.add_comments','tasks.report_delays']]);
+   ProjectMembership::firstOrCreate(['project_id'=>$project->id,'user_id'=>$id,'project_role_id'=>$role->id]);
+   Audit::record('project.member_added',$project,['user_id'=>$id,'source'=>'plan_assignment']);
+  }
+ }
  public function assignManager(Project $project,User $user):void {
-  abort_if($user->isPmo()||!$user->isActive(),422,'Only an active project user can be a Project Manager.');
+  abort_if($user->system_role!=='user'||!$user->isActive(),422,'Only an active project user can be a Project Manager.');
   $role=ProjectRole::where('slug','pm')->firstOrFail();
   if($project->pm_user_id && $project->pm_user_id!==$user->id){
-   ProjectMembership::where('project_id',$project->id)->where('user_id',$project->pm_user_id)->delete();
+   ProjectMembership::where('project_id',$project->id)->where('user_id',$project->pm_user_id)->where('project_role_id',$role->id)->delete();
   }
   $project->update(['pm_user_id'=>$user->id,'status'=>'pending']);
   ProjectMembership::updateOrCreate(['project_id'=>$project->id,'user_id'=>$user->id],['project_role_id'=>$role->id]);

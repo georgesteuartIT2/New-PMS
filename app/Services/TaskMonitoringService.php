@@ -23,7 +23,7 @@ class TaskMonitoringService
     public function baseQuery(User $user, bool $leafOnly = true): Builder
     {
         $query = Task::with([
-            'project:id,code,name,status,subsidiary_id',
+            'project:id,code,name,status,subsidiary_id,pm_user_id,owner_user_id,approval_stage,plan_initialized',
             'project.subsidiary:id,name,code',
             'assignees:id,name,email,job_title',
             'parent:id,code,title',
@@ -40,7 +40,7 @@ class TaskMonitoringService
         }
 
         // Scope to authorized projects if standard user
-        if (!$user->isPmo()) {
+        if (!$user->canViewPortfolio()) {
             $query->where(function ($q) use ($user) {
                 $q->whereHas('project.memberships', fn($m) => $m->where('user_id', $user->id))
                   ->orWhereHas('project', fn($p) => $p->where('pm_user_id', $user->id))
@@ -54,10 +54,10 @@ class TaskMonitoringService
     /**
      * Compute company-wide (or scoped) aggregate metrics.
      */
-    public function getSummaryMetrics(User $user, ?Carbon $asOf = null): array
+    public function getSummaryMetrics(User $user, ?Carbon $asOf = null, ?Builder $scopedQuery = null): array
     {
         $asOf ??= now();
-        $base = $this->baseQuery($user, leafOnly: true);
+        $base = $scopedQuery ?? $this->baseQuery($user, leafOnly: true);
 
         $totalTasks = (clone $base)->count();
         $completedTasks = (clone $base)->where(function ($q) {
@@ -116,12 +116,14 @@ class TaskMonitoringService
     /**
      * Get paginated and filtered tasks.
      */
-    public function getFilteredTasks(User $user, array $filters, int $perPage = 25, ?Carbon $asOf = null): LengthAwarePaginator
+    public function getFilteredTasks(User $user, array $filters, int $perPage = 25, ?Carbon $asOf = null, ?Builder $scopedQuery = null): LengthAwarePaginator
     {
         $asOf ??= now();
-        $query = $this->baseQuery($user, leafOnly: true);
+        $query = $scopedQuery ?? $this->baseQuery($user, leafOnly: true);
 
         $criticalIds = $this->getCriticalTaskIds($user);
+
+        if(!empty($filters['active_only']))$query->whereHas('project',fn($q)=>$q->whereIn('status',['active','on_hold']));
 
         // 1. Primary Filter Shortcut
         $quickFilter = $filters['filter'] ?? 'all';
@@ -214,6 +216,8 @@ class TaskMonitoringService
 
         $paginator = $query->paginate($perPage)->withQueryString();
 
+        TaskTree::attachNumbers($paginator->getCollection());
+
         // Attach dynamic attributes: critical, health label, wbs code
         $paginator->getCollection()->transform(function ($task) use ($criticalIds, $asOf) {
             $isCritical = in_array($task->id, $criticalIds, true);
@@ -251,7 +255,7 @@ class TaskMonitoringService
     public function getCriticalTaskIds(User $user): array
     {
         $projectsQuery = Project::whereIn('status', ['active', 'on_hold']);
-        if (!$user->isPmo()) {
+        if (!$user->canViewPortfolio()) {
             $projectsQuery->where(function ($q) use ($user) {
                 $q->whereHas('memberships', fn($m) => $m->where('user_id', $user->id))
                   ->orWhere('pm_user_id', $user->id);

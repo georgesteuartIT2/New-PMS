@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 class ProjectController {
  public function index(Request $request,Access $access){
   $user = $request->user();
-  $query=Project::with(['manager','subsidiary','memberships.role'])->withCount([
+  $query=Project::withSum('expenses','amount')->with(['manager','subsidiary','memberships.role'])->withCount([
       'tasks'=>fn($q)=>$q->whereDoesntHave('children'),
       'tasks as completed_tasks_count'=>fn($q)=>$q->where('status','completed')->whereDoesntHave('children'),
       'tasks as overdue_tasks_count'=>fn($q)=>$q->where('progress','<',100)->where('ends_at','<',now()),
@@ -15,18 +15,18 @@ class ProjectController {
   ]);
 
   // Draft projects are strictly visible ONLY to PMO admin
-  if(!$user->isPmo()){
+  if(!$user->canViewPortfolio()){
     $query->where('status', '!=', 'draft');
   }
 
-  if(!$user->isPmo() && !$access->hasCompanyPermission($user, 'projects.view_all')){
+  if(!$user->canViewPortfolio() && !$access->hasCompanyPermission($user, 'projects.view_all')){
     $query->where(function($q) use ($user) {
-        $q->where('pm_user_id', $user->id)
+        $q->where('pm_user_id', $user->id)->orWhere('owner_user_id',$user->id)
           ->orWhereHas('memberships', fn($m) => $m->where('user_id', $user->id))
           ->orWhereHas('tasks.assignees', fn($a) => $a->where('users.id', $user->id));
     })->where(function($q) use ($user) {
         $q->whereIn('status', ['active', 'on_hold', 'completed', 'archived'])
-          ->orWhere(fn($sub) => $sub->where('pm_user_id', $user->id)->whereIn('status', ['pending', 'declined']));
+          ->orWhere(fn($sub) => $sub->where(fn($lead)=>$lead->where('pm_user_id',$user->id)->orWhere('owner_user_id',$user->id))->whereIn('status',['pending','declined']));
     });
 
     // Role scope filtering (Managed by Me, Assigned Tasks, View-Only)
@@ -49,9 +49,9 @@ class ProjectController {
   $completedCount = (clone $baseQuery)->where('status','completed')->count();
   $pendingCount = (clone $baseQuery)->where('status','pending')->count();
   $declinedCount = (clone $baseQuery)->where('status','declined')->count();
-  $draftCount = $user->isPmo() ? (clone $baseQuery)->where('status','draft')->count() : 0;
+  $draftCount = $user->canViewPortfolio() ? (clone $baseQuery)->where('status','draft')->count() : 0;
   $needsAttention = function($q) use ($user) {
-      $q->whereIn('status', $user->isPmo() ? ['pending','declined','draft'] : ['pending','declined'])
+      $q->whereIn('status', $user->canViewPortfolio() ? ['pending','declined','draft'] : ['pending','declined'])
         ->orWhere(fn($active) => $active->whereIn('status',['active','on_hold'])->where(function($delivery) {
             $delivery->whereDate('ends_on','<',today())
                 ->orWhereHas('tasks',fn($task)=>$task->where('progress','<',100)->where('ends_at','<',now()))
@@ -111,6 +111,7 @@ class ProjectController {
   ]);
  }
  public function create(Request $request, Access $access){
+  if(!$request->filled('draft') && $request->user()->isPmo())return app(ProjectWorkflowController::class)->create($request);
   abort_unless($request->user()->isPmo() || $access->hasCompanyPermission($request->user(), 'projects.create'), 403, 'Permission denied: cannot create projects.');
   $draftProject=null;
   $projectDefaults=[];
@@ -119,7 +120,7 @@ class ProjectController {
    $draftProject=Project::with('memberships')->findOrFail($request->integer('draft'));
    $this->authorizeDraft($request,$draftProject,$access);
    $projectDefaults=[
-    'name'=>$draftProject->name,'description'=>$draftProject->description,'subsidiary_id'=>$draftProject->subsidiary_id,
+    'planned_budget'=>$draftProject->planned_budget,'name'=>$draftProject->name,'description'=>$draftProject->description,'subsidiary_id'=>$draftProject->subsidiary_id,
     'starts_on'=>$draftProject->starts_on->format('Y-m-d'),'ends_on'=>$draftProject->ends_on->format('Y-m-d'),
     'pm_user_id'=>$draftProject->pm_user_id,'mode'=>$draftProject->project_template_id?'template':'blank','project_template_id'=>$draftProject->project_template_id,
     'members'=>$draftProject->memberships->where('user_id','!=',$draftProject->pm_user_id)->map(fn($member)=>['user_id'=>$member->user_id,'project_role_id'=>$member->project_role_id])->values()->all(),
@@ -217,6 +218,7 @@ class ProjectController {
     'name'=>'required|string|max:160',
     'subsidiary_id'=>'required|exists:subsidiaries,id',
     'description'=>'nullable|string|max:3000',
+    'planned_budget'=>'nullable|numeric|decimal:0,2|min:0|max:9999999999999.99',
     'starts_on'=>'required|date',
     'ends_on'=>'required|date|after_or_equal:starts_on',
     'mode'=>'required|in:blank,template',
@@ -242,7 +244,7 @@ class ProjectController {
   abort_unless($access->project($request->user(),$project),403);
   $user = $request->user();
   $isPm = $project->pm_user_id === $user->id;
-  $canViewAllTasks = $user->isPmo() || $isPm || ($access->project($user, $project, 'view_tasks') && in_array($project->status, ['active', 'on_hold', 'completed', 'archived'], true));
+  $canViewAllTasks = $user->canViewPortfolio() || ($access->project($user, $project, 'view_tasks') && in_array($project->status, ['active', 'on_hold', 'completed', 'archived'], true));
 
   if ($canViewAllTasks) {
       $tasks = $project->tasks()->with(['assignees', 'children', 'openDelay.actionOwner', 'attachments', 'comments', 'dependencies:id,code,title'])->orderBy('sort_order')->orderBy('id')->get();
@@ -259,6 +261,8 @@ class ProjectController {
       $completedCount = $tasks->where('status', 'completed')->count();
       $totalCount = $tasks->count();
   }
+
+  $tasks = TaskTree::treeOrdered($tasks);
 
   $health = $canViewAllTasks ? $healthService->assess($project) : null;
   $remainingCount = max(0, $totalCount - $completedCount);
@@ -296,7 +300,7 @@ class ProjectController {
       'files'=>$files,
       'delays'=>$delays,
       'activities'=>$activities,
-      'canViewTasks'=>$canViewAllTasks,
+      'canViewTasks'=>$canViewAllTasks || $tasks->isNotEmpty(),
       'canViewAllTasks'=>$canViewAllTasks,
       'isScopedTeamMember'=>!$canViewAllTasks,
       'canManage'=>$access->canManageTask($user,$project) && ($user->isPmo() || in_array($project->status, ['draft','pending','active','on_hold'], true)) && $project->status!=='archived',
@@ -311,21 +315,28 @@ class ProjectController {
  public function update(Request $request,Project $project,Access $access){
   abort_unless($access->project($request->user(),$project,'edit_project'),403);
   abort_if($project->status==='archived',403);
-  $data=$request->validate(['name'=>'required|string|max:160','description'=>'nullable|string|max:3000','starts_on'=>'required|date','ends_on'=>'required|date|after_or_equal:starts_on','status'=>'required|in:draft,pending,declined,active,on_hold,completed,archived']);
+  $data=$request->validate(['name'=>'required|string|max:160','description'=>'nullable|string|max:3000','starts_on'=>'required|date','ends_on'=>'required|date|after_or_equal:starts_on','status'=>'required|in:draft,pending,declined,active,on_hold,completed,archived','planned_budget'=>'sometimes|nullable|numeric|decimal:0,2|min:0|max:9999999999999.99']);
+  if($project->approval_stage==='planning' && $data['status']!=='active')abort(422,'Save and publish the task plan before changing the project lifecycle status.');
+  if(array_key_exists('planned_budget',$data))abort_unless($project->canManageBudget($request->user()),403);
   if(!$request->user()->isPmo() && $project->status==='pending')abort(403);
   if(in_array($project->status,['draft','pending','declined'],true) && $data['status']!==$project->status)abort(422,'Only PM acceptance can activate a project.');
   if(!in_array($project->status,['draft','pending','declined'],true)&&in_array($data['status'],['draft','pending','declined'],true))abort(422,'Cannot revert an active project to an invitation state.');
+  if($request->exists('project_template_id') && (int)$request->input('project_template_id')!==(int)$project->project_template_id){
+   throw \Illuminate\Validation\ValidationException::withMessages(['project_template_id'=>'The original project template cannot be changed.']);
+  }
   $extra=$request->validate([
    'project_template_id'=>['sometimes','nullable',\Illuminate\Validation\Rule::exists('project_templates','id')->where(fn($q)=>$q->where('status','active')->orWhere('id',$project->project_template_id))],
    'pm_user_id'=>'sometimes|nullable|integer|exists:users,id','edit_team'=>'sometimes|in:1','members'=>'nullable|array|max:100',
    'members.*.user_id'=>'required|integer|distinct|exists:users,id',
    'members.*.project_role_id'=>['required','integer',\Illuminate\Validation\Rule::exists('project_roles','id')->where(fn($q)=>$q->where('slug','!=','pm'))],
   ]);
+  if($project->approval_stage && isset($extra['pm_user_id']) && (int)$extra['pm_user_id']!==(int)$project->pm_user_id)abort(422,'Use the assignment request controls to change the Project Manager.');
   $newPm=isset($extra['pm_user_id']) && (int)$extra['pm_user_id']!==(int)$project->pm_user_id ? User::findOrFail($extra['pm_user_id']) : null;
   if($newPm){
+   abort_unless($project->status==='declined' || ($project->status==='draft' && !$project->pm_user_id),409,'Reassignment is available only after rejection.');
    abort_unless($access->project($request->user(),$project,'manage_team'),403);
    abort_unless(in_array($project->status,['draft','pending','declined','on_hold'],true),422,'Manager reassignment is available before activation or while on hold.');
-   abort_unless($newPm->isActive() && !$newPm->isPmo(),422,'Choose an active project user as manager.');
+   abort_unless($newPm->isActive() && $newPm->system_role==='user',422,'Choose an active project user as manager.');
   }
   $editTeam=$request->boolean('edit_team');
   if($editTeam){
@@ -338,16 +349,15 @@ class ProjectController {
   }
   DB::transaction(function()use($project,$data,$extra,$editTeam,$newPm){
    Project::whereKey($project->id)->lockForUpdate()->firstOrFail();
-   if(array_key_exists('project_template_id',$extra))$data['project_template_id']=$extra['project_template_id'];
    $project->update($data);
    if($editTeam){
     $members=collect($extra['members']??[]);
-    $kept=$members->pluck('user_id')->push($project->pm_user_id)->filter()->all();
+    $kept=$members->pluck('user_id')->push($project->pm_user_id)->push($project->owner_user_id)->filter()->all();
     $assigned=DB::table('task_assignments')->whereIn('task_id',$project->tasks()->select('id'))->pluck('user_id');
     $removed=$project->memberships()->pluck('user_id')->merge($assigned)->unique()->diff($kept)->all();
     $project->memberships()->whereNotIn('user_id',$kept)->delete();
     DB::table('task_assignments')->whereIn('task_id',$project->tasks()->select('id'))->whereIn('user_id',$removed)->delete();
-    foreach($members as $member)ProjectMembership::updateOrCreate(['project_id'=>$project->id,'user_id'=>$member['user_id']],['project_role_id'=>$member['project_role_id']]);
+    foreach($members->reject(fn($member)=>$project->approval_stage && (int)$member['user_id']===(int)$project->owner_user_id) as $member)ProjectMembership::updateOrCreate(['project_id'=>$project->id,'user_id'=>$member['user_id']],['project_role_id'=>$member['project_role_id']]);
    }
    if($newPm)app(ProjectService::class)->assignManager($project,$newPm);
    Audit::record('project.updated',$project);
@@ -364,15 +374,28 @@ class ProjectController {
   return back()->with('success','Original schedule baseline saved. Changes can now be compared to it.');
  }
  public function assignPm(Request $request,Project $project,ProjectService $service){
+  if($project->approval_stage){$request->merge(['assignment_type'=>'pm','assignee_id'=>$request->input('pm_user_id')]);return app(ProjectWorkflowController::class)->reassign($request,$project,$service);}
   abort_unless($request->user()->isPmo() || app(Access::class)->hasCompanyPermission($request->user(), 'projects.create') || app(Access::class)->project($request->user(), $project, 'manage_team'), 403, 'Permission denied.');
+  abort_unless($project->status==='declined' || ($project->status==='draft' && !$project->pm_user_id),409,'Reassignment is available only after rejection.');
   $data=$request->validate(['pm_user_id'=>'required|exists:users,id']);
   $user=User::whereKey($data['pm_user_id'])->where('account_status','active')->firstOrFail();
   abort_if(in_array($project->status,['active','completed','archived'],true),422,'Cannot reassign an active or closed project here.');
   DB::transaction(fn()=>$service->assignManager($project,$user));
   Audit::record('project.manager_assigned',$project,['user_id'=>$user->id]);
-  return back()->with('success',"Project Manager reassigned to {$user->name}. Assignment request sent.");
+  return redirect()->route('projects.show',$project)->with('success',"Project Manager reassigned to {$user->name}. Assignment request sent.");
+ }
+ public function approvalReview(Request $request,Project $project){
+  abort_unless($request->user()->system_role==='user' && $project->pm_user_id===$request->user()->id,403);
+  abort_unless($project->status==='pending',409,'This request is no longer awaiting a decision. Refresh your dashboard.');
+  $invitation=$project->invitations()->where('user_id',$request->user()->id)->where('status','pending')->latest('id')->firstOrFail();
+  $project->load('manager','creator','subsidiary','template','memberships.user','memberships.role');
+  $tasks=TaskTree::treeOrdered($project->tasks()->with('assignees','dependencies')->withCount('children')->orderBy('sort_order')->orderBy('id')->get());
+  $numbers=TaskTree::numbers($tasks);$leafCount=$tasks->where('children_count',0)->count();
+  $files=\App\Models\TaskAttachment::with('task:id,title')->whereIn('task_id',$tasks->pluck('id'))->latest()->get();
+  return response()->view('projects._approval-review',compact('project','invitation','tasks','numbers','leafCount','files'))->header('Cache-Control','private, no-store');
  }
  public function respond(Request $request,Project $project,ProjectService $service){
+  if($project->approval_stage)return app(ProjectWorkflowController::class)->pmRespond($request,$project,$service);
   abort_unless($project->pm_user_id===$request->user()->id,403);
   $data=$request->validate([
       'decision'=>'required|in:accept,decline',
@@ -382,14 +405,29 @@ class ProjectController {
       'decline_reason.min' => 'Please provide a detailed decline reason (at least 5 characters).',
   ]);
   DB::transaction(function()use($project,$data,$request,$service){
+   $locked=Project::whereKey($project->id)->lockForUpdate()->firstOrFail();
+   abort_unless($locked->pm_user_id===$request->user()->id,403,'This assignment has changed. Refresh your dashboard.');
+   abort_unless($locked->status==='pending',404,'This request has already been answered.');
+   $project->setRawAttributes($locked->getAttributes(),true);
    $invitation=ProjectInvitation::where('project_id',$project->id)->where('user_id',$request->user()->id)->where('status','pending')->lockForUpdate()->latest('id')->firstOrFail();
    $status=$data['decision']==='accept'?'active':'declined';
    $project->update(['status'=>$status]);
    if($status==='active' && !$project->baseline_captured_at)$service->captureBaseline($project);
    $invitation->update(['status'=>$data['decision']==='accept'?'accepted':'declined','responded_at'=>now(),'decline_reason'=>$data['decline_reason']??null]);
+   if($data['decision']==='accept')DB::afterCommit(function()use($project){
+    $project->load('manager');
+    $people=User::where('account_status','active')->where('system_role','user')->where('id','!=',$project->pm_user_id)->whereHas('memberships',fn($q)=>$q->where('project_id',$project->id))->get();
+    foreach($people as $person)$person->notify(new \App\Notifications\ProjectActivatedNotification($project));
+   });
   });
+  foreach(User::where('system_role','pmo')->where('account_status','active')->get() as $pmo)app(\App\Services\InboxService::class)->put($pmo,'pm-response:'.$project->id.':'.$project->updated_at->getTimestamp(),['title'=>$data['decision']==='accept'?'Project accepted by PM':'Project declined by PM','message'=>$request->user()->name.' '.($data['decision']==='accept'?'accepted':'declined').' '.$project->name.'. '.($data['decline_reason']??''),'project_name'=>$project->name,'action_label'=>'View project','url'=>route('projects.show',$project,false)]);
   Audit::record('project.pm_'.$data['decision'],$project, ['reason' => $data['decline_reason'] ?? null]);
-  return redirect()->route('dashboard')->with('success',$data['decision']==='accept'?'Project accepted and activated.':'Project declined. PMO can reassign it.');
+  $message=$data['decision']==='accept'?'Project accepted and activated.':'Project declined. PMO can reassign it.';
+  if($request->expectsJson()){
+   $request->session()->flash('success',$message);
+   return response()->json(['message'=>$message,'decision'=>$data['decision'],'redirect'=>route('dashboard').'#project-approvals']);
+  }
+  return redirect()->route('dashboard')->with('success',$message);
  }
  public function addMember(Request $request,Project $project,Access $access){
   abort_unless($access->project($request->user(),$project,'manage_team'),403);
@@ -397,10 +435,11 @@ class ProjectController {
   $data=$request->validate(['user_id'=>'required|exists:users,id','project_role_id'=>'required|exists:project_roles,id']);
   $role=ProjectRole::findOrFail($data['project_role_id']);
   abort_if($role->slug==='pm',422,'Assign a PM through the PM assignment workflow.');
-  abort_if($project->pm_user_id==(int)$data['user_id'],422,'The project manager role cannot be replaced.');
+  abort_if($project->pm_user_id==(int)$data['user_id'] || ($project->approval_stage && (int)$project->owner_user_id===(int)$data['user_id']),422,'Project leadership is managed through the assignment workflow.');
   abort_unless(User::whereKey($data['user_id'])->where('account_status','active')->where('system_role','user')->exists(),422);
   ProjectMembership::updateOrCreate(['project_id'=>$project->id,'user_id'=>$data['user_id']],['project_role_id'=>$role->id]);
-  return back()->with('success','Project member added.');
+  Audit::record('project.member_added',$project,['user_id'=>(int)$data['user_id'],'project_role_id'=>$role->id]);
+  return redirect()->to(route('projects.show',$project).'#team')->with('success','Project member added.');
  }
  public function destroy(Request $request,Project $project){
   abort_unless($request->user()->isPmo(),403);
@@ -416,7 +455,7 @@ class ProjectController {
  }
  public function removeMember(Request $request,Project $project,User $user,Access $access){
   abort_unless($access->project($request->user(),$project,'manage_team'),403);
-  abort_if($user->id===$project->pm_user_id,422);
+  abort_if($user->id===$project->pm_user_id || ($project->approval_stage && $user->id===$project->owner_user_id),422);
   ProjectMembership::where('project_id',$project->id)->where('user_id',$user->id)->delete();
   // Remove assignments to avoid orphaned task access.
   DB::table('task_assignments')->where('user_id',$user->id)->whereIn('task_id',function($q)use($project){$q->select('id')->from('tasks')->where('project_id',$project->id);})->delete();

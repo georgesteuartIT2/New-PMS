@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite name="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\phpunit.xml" tests="55" assertions="391" errors="0" failures="6" skipped="0" time="30.691772">
+    <testsuite name="Feature" tests="55" assertions="391" errors="0" failures="6" skipped="0" time="30.691772">
+      <testsuite name="Tests\Feature\OwnerApprovalWorkflowTest" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\OwnerApprovalWorkflowTest.php" tests="5" assertions="96" errors="0" failures="0" skipped="0" time="10.176870">
+        <testcase name="test_owner_approves_then_pm_accepts_prepares_and_publishes_once" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\OwnerApprovalWorkflowTest.php" line="17" class="Tests\Feature\OwnerApprovalWorkflowTest" classname="Tests.Feature.OwnerApprovalWorkflowTest" assertions="42" time="7.550188"/>
+        <testcase name="test_rejections_and_reassignments_are_visible_to_both_leaders" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\OwnerApprovalWorkflowTest.php" line="34" class="Tests\Feature\OwnerApprovalWorkflowTest" classname="Tests.Feature.OwnerApprovalWorkflowTest" assertions="19" time="0.924623"/>
+        <testcase name="test_direct_pm_route_unique_codes_and_viewer_restrictions" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\OwnerApprovalWorkflowTest.php" line="43" class="Tests\Feature\OwnerApprovalWorkflowTest" classname="Tests.Feature.OwnerApprovalWorkflowTest" assertions="11" time="0.670144"/>
+        <testcase name="test_template_tasks_are_copied_and_directory_person_can_be_assigned_without_early_mail" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\OwnerApprovalWorkflowTest.php" line="50" class="Tests\Feature\OwnerApprovalWorkflowTest" classname="Tests.Feature.OwnerApprovalWorkflowTest" assertions="18" time="0.542734"/>
+        <testcase name="test_owner_request_is_in_inbox_without_a_mail_worker" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\OwnerApprovalWorkflowTest.php" line="62" class="Tests\Feature\OwnerApprovalWorkflowTest" classname="Tests.Feature.OwnerApprovalWorkflowTest" assertions="6" time="0.489181"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\PmoTaskAndTeamMonitorTest" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\PmoTaskAndTeamMonitorTest.php" tests="14" assertions="80" errors="0" failures="0" skipped="0" time="5.941829">
+        <testcase name="test_pmo_admin_can_access_task_monitor_page" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\PmoTaskAndTeamMonitorTest.php" line="56" class="Tests\Feature\PmoTaskAndTeamMonitorTest" classname="Tests.Feature.PmoTaskAndTeamMonitorTest" assertions="10" time="0.280460"/>
+        <testcase name="test_pmo_admin_can_access_team_monitor_page" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\PmoTaskAndTeamMonitorTest.php" line="74" class="Tests\Feature\PmoTaskAndTeamMonitorTest" classname="Tests.Feature.PmoTaskAndTeamMonitorTest" assertions="7" time="0.270451"/>
+        <testcase name="test_standard_user_cannot_access_unauthorized_company_wide_monitoring" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\PmoTaskAndTeamMonitorTest.php" line="89" class="Tests\Feature\PmoTaskAndTeamMonitorTest" classname="Tests.Feature.PmoTaskAndTeamMonitorTest" assertions="2" time="0.255953"/>
+        <testcase name="test_task_monitor_calculates_correct_summary_metrics_without_double_counting_parent_tasks" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\PmoTaskAndTeamMonitorTest.php" line="100" class="Tests\Feature\PmoTaskAndTeamMonitorTest" classname="Tests.Feature.PmoTaskAndTeamMonitorTest" assertions="5" time="0.246212"/>
+        <testcase name="test_task_monitor_filters_by_quick_tabs_and_search" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\PmoTaskAndTeamMonitorTest.php" line="166" class="Tests\Feature\PmoTaskAndTeamMonitorTest" classname="Tests.Feature.PmoTaskAndTeamMonitorTest" assertions="9" time="0.505313"/>
+        <testcase name="test_task_monitor_export_csv_streams_real_data" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\PmoTaskAndTeamMonitorTest.php" line="214" class="Tests\Feature\PmoTaskAndTeamMonitorTest" classname="Tests.Feature.PmoTaskAndTeamMonitorTest" assertions="6" time="0.268398"/>
+        <testcase name="test_pmo_can_request_task_update_and_prevents_spam" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\PmoTaskAndTeamMonitorTest.php" line="245" class="Tests\Feature\PmoTaskAndTeamMonitorTest" classname="Tests.Feature.PmoTaskAndTeamMonitorTest" assertions="6" time="0.451817"/>
+        <testcase name="test_team_monitor_multi_assignee_tasks_do_not_inflate_unique_task_totals" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\PmoTaskAndTeamMonitorTest.php" line="292" class="Tests\Feature\PmoTaskAndTeamMonitorTest" classname="Tests.Feature.PmoTaskAndTeamMonitorTest" assertions="2" time="0.678865"/>
+        <testcase name="test_team_monitor_workload_utilization_and_capacity_not_configured_display" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\PmoTaskAndTeamMonitorTest.php" line="326" class="Tests\Feature\PmoTaskAndTeamMonitorTest" classname="Tests.Feature.PmoTaskAndTeamMonitorTest" assertions="8" time="0.659454"/>
+        <testcase name="test_team_monitor_employee_details_endpoint_returns_json_with_projects_and_tasks" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\PmoTaskAndTeamMonitorTest.php" line="367" class="Tests\Feature\PmoTaskAndTeamMonitorTest" classname="Tests.Feature.PmoTaskAndTeamMonitorTest" assertions="2" time="0.467027"/>
+        <testcase name="test_team_monitor_reassignment_workflow_updates_records_and_audit_history" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\PmoTaskAndTeamMonitorTest.php" line="411" class="Tests\Feature\PmoTaskAndTeamMonitorTest" classname="Tests.Feature.PmoTaskAndTeamMonitorTest" assertions="8" time="0.680921"/>
+        <testcase name="test_team_monitor_reassignment_rejects_non_project_members_with_422" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\PmoTaskAndTeamMonitorTest.php" line="471" class="Tests\Feature\PmoTaskAndTeamMonitorTest" classname="Tests.Feature.PmoTaskAndTeamMonitorTest" assertions="3" time="0.666821"/>
+        <testcase name="test_pmo_dashboard_displays_task_attention_shortcuts" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\PmoTaskAndTeamMonitorTest.php" line="505" class="Tests\Feature\PmoTaskAndTeamMonitorTest" classname="Tests.Feature.PmoTaskAndTeamMonitorTest" assertions="8" time="0.255556"/>
+        <testcase name="test_sidebar_renders_clean_navigation_for_pmo_admin" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\PmoTaskAndTeamMonitorTest.php" line="521" class="Tests\Feature\PmoTaskAndTeamMonitorTest" classname="Tests.Feature.PmoTaskAndTeamMonitorTest" assertions="4" time="0.254582"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\ProjectCreateSmartFlowTest" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\ProjectCreateSmartFlowTest.php" tests="7" assertions="42" errors="0" failures="0" skipped="0" time="3.063774">
+        <testcase name="test_project_create_collects_essentials_and_first_reviewer_before_planning" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\ProjectCreateSmartFlowTest.php" line="39" class="Tests\Feature\ProjectCreateSmartFlowTest" classname="Tests.Feature.ProjectCreateSmartFlowTest" assertions="12" time="0.468967"/>
+        <testcase name="test_templates_index_in_project_selection_mode_shows_banner_and_continue_actions" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\ProjectCreateSmartFlowTest.php" line="76" class="Tests\Feature\ProjectCreateSmartFlowTest" classname="Tests.Feature.ProjectCreateSmartFlowTest" assertions="5" time="0.264794"/>
+        <testcase name="test_project_creation_with_template_shifts_schedule_and_assigns_pm_and_team" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\ProjectCreateSmartFlowTest.php" line="98" class="Tests\Feature\ProjectCreateSmartFlowTest" classname="Tests.Feature.ProjectCreateSmartFlowTest" assertions="9" time="0.913631"/>
+        <testcase name="test_azure_search_returns_json_results_and_is_authorized_for_pmo" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\ProjectCreateSmartFlowTest.php" line="179" class="Tests\Feature\ProjectCreateSmartFlowTest" classname="Tests.Feature.ProjectCreateSmartFlowTest" assertions="2" time="0.249174"/>
+        <testcase name="test_azure_add_imports_user_into_system_database" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\ProjectCreateSmartFlowTest.php" line="214" class="Tests\Feature\ProjectCreateSmartFlowTest" classname="Tests.Feature.ProjectCreateSmartFlowTest" assertions="4" time="0.239472"/>
+        <testcase name="test_unauthorized_user_cannot_access_azure_endpoints_or_project_create" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\ProjectCreateSmartFlowTest.php" line="257" class="Tests\Feature\ProjectCreateSmartFlowTest" classname="Tests.Feature.ProjectCreateSmartFlowTest" assertions="3" time="0.252096"/>
+        <testcase name="test_quick_custom_role_creation_and_assignment_during_project_create" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\ProjectCreateSmartFlowTest.php" line="271" class="Tests\Feature\ProjectCreateSmartFlowTest" classname="Tests.Feature.ProjectCreateSmartFlowTest" assertions="7" time="0.675639"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\SmartTemplateBuilderTest" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\SmartTemplateBuilderTest.php" tests="18" assertions="148" errors="0" failures="0" skipped="0" time="4.450841">
+        <testcase name="test_pmo_admin_can_access_create_template_page_with_simplified_details_form" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\SmartTemplateBuilderTest.php" line="37" class="Tests\Feature\SmartTemplateBuilderTest" classname="Tests.Feature.SmartTemplateBuilderTest" assertions="10" time="0.260714"/>
+        <testcase name="test_unauthorized_user_cannot_access_create_or_store_template" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\SmartTemplateBuilderTest.php" line="56" class="Tests\Feature\SmartTemplateBuilderTest" classname="Tests.Feature.SmartTemplateBuilderTest" assertions="2" time="0.288538"/>
+        <testcase name="test_template_can_be_stored_with_tasks_and_hierarchy_atomically" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\SmartTemplateBuilderTest.php" line="72" class="Tests\Feature\SmartTemplateBuilderTest" classname="Tests.Feature.SmartTemplateBuilderTest" assertions="8" time="0.261045"/>
+        <testcase name="test_template_store_rejects_self_dependency_and_circular_cycles" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\SmartTemplateBuilderTest.php" line="169" class="Tests\Feature\SmartTemplateBuilderTest" classname="Tests.Feature.SmartTemplateBuilderTest" assertions="6" time="0.252755"/>
+        <testcase name="test_templates_index_displays_clean_table_with_instant_task_plan_data" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\SmartTemplateBuilderTest.php" line="222" class="Tests\Feature\SmartTemplateBuilderTest" classname="Tests.Feature.SmartTemplateBuilderTest" assertions="7" time="0.258876"/>
+        <testcase name="test_template_tasks_json_endpoint_returns_full_hierarchy_and_schedule" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\SmartTemplateBuilderTest.php" line="258" class="Tests\Feature\SmartTemplateBuilderTest" classname="Tests.Feature.SmartTemplateBuilderTest" assertions="4" time="0.252223"/>
+        <testcase name="test_template_can_be_updated_in_place_via_ajax_or_form" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\SmartTemplateBuilderTest.php" line="300" class="Tests\Feature\SmartTemplateBuilderTest" classname="Tests.Feature.SmartTemplateBuilderTest" assertions="5" time="0.247679"/>
+        <testcase name="test_excel_import_preview_parses_tasks_and_validates_cycles" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\SmartTemplateBuilderTest.php" line="357" class="Tests\Feature\SmartTemplateBuilderTest" classname="Tests.Feature.SmartTemplateBuilderTest" assertions="5" time="0.254117"/>
+        <testcase name="test_excel_export_and_blank_download_endpoints" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\SmartTemplateBuilderTest.php" line="381" class="Tests\Feature\SmartTemplateBuilderTest" classname="Tests.Feature.SmartTemplateBuilderTest" assertions="2" time="0.308698"/>
+        <testcase name="test_template_reuse_during_project_creation_shifts_relative_dates_and_leaves_template_untouched" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\SmartTemplateBuilderTest.php" line="410" class="Tests\Feature\SmartTemplateBuilderTest" classname="Tests.Feature.SmartTemplateBuilderTest" assertions="4" time="0.471843"/>
+        <testcase name="test_schedule_service_calculates_working_calendar_and_overflow" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\SmartTemplateBuilderTest.php" line="467" class="Tests\Feature\SmartTemplateBuilderTest" classname="Tests.Feature.SmartTemplateBuilderTest" assertions="4" time="0.249178"/>
+        <testcase name="test_generate_periods_for_various_units_and_empty_blank_template" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\SmartTemplateBuilderTest.php" line="505" class="Tests\Feature\SmartTemplateBuilderTest" classname="Tests.Feature.SmartTemplateBuilderTest" assertions="34" time="0.037684"/>
+        <testcase name="test_custom_period_renaming_preserves_system_id" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\SmartTemplateBuilderTest.php" line="563" class="Tests\Feature\SmartTemplateBuilderTest" classname="Tests.Feature.SmartTemplateBuilderTest" assertions="7" time="0.035890"/>
+        <testcase name="test_multi_period_spanning_task_is_stored_as_single_record" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\SmartTemplateBuilderTest.php" line="585" class="Tests\Feature\SmartTemplateBuilderTest" classname="Tests.Feature.SmartTemplateBuilderTest" assertions="7" time="0.247315"/>
+        <testcase name="test_spreadsheet_service_generates_3_sheet_workbook_with_zero_blank_sample_tasks" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\SmartTemplateBuilderTest.php" line="624" class="Tests\Feature\SmartTemplateBuilderTest" classname="Tests.Feature.SmartTemplateBuilderTest" assertions="9" time="0.256631"/>
+        <testcase name="test_excel_import_preview_with_periods_and_error_reporting" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\SmartTemplateBuilderTest.php" line="657" class="Tests\Feature\SmartTemplateBuilderTest" classname="Tests.Feature.SmartTemplateBuilderTest" assertions="12" time="0.248828"/>
+        <testcase name="test_existing_template_export_contains_real_tasks_and_can_be_re_imported_safely" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\SmartTemplateBuilderTest.php" line="705" class="Tests\Feature\SmartTemplateBuilderTest" classname="Tests.Feature.SmartTemplateBuilderTest" assertions="6" time="0.258126"/>
+        <testcase name="test_table_flow_excel_with_hash_header_and_subtasks_parses_and_exports_accurately" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\SmartTemplateBuilderTest.php" line="779" class="Tests\Feature\SmartTemplateBuilderTest" classname="Tests.Feature.SmartTemplateBuilderTest" assertions="16" time="0.260701"/>
+      </testsuite>
+      <testsuite name="Tests\Feature\UserMyTasksAndMonitoringTest" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\UserMyTasksAndMonitoringTest.php" tests="11" assertions="25" errors="0" failures="6" skipped="0" time="7.058457">
+        <testcase name="test_standard_user_with_only_assigned_tasks_sees_only_assigned_to_me" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\UserMyTasksAndMonitoringTest.php" line="84" class="Tests\Feature\UserMyTasksAndMonitoringTest" classname="Tests.Feature.UserMyTasksAndMonitoringTest" assertions="4" time="0.485994"/>
+        <testcase name="test_project_manager_user_sees_managed_by_me_toggle_and_can_access_monitor_tabs" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\UserMyTasksAndMonitoringTest.php" line="101" class="Tests\Feature\UserMyTasksAndMonitoringTest" classname="Tests.Feature.UserMyTasksAndMonitoringTest" assertions="2" time="0.707583">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\UserMyTasksAndMonitoringTest::test_project_manager_user_sees_managed_by_me_toggle_and_can_access_monitor_tabs&#13;
+Failed asserting that '&lt;!doctype html&gt;\n
+&lt;html lang="en"&gt;\n
+&lt;head&gt;\n
+    &lt;meta charset="utf-8"&gt;\n
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;\n
+    &lt;meta name="csrf-token" content="QDDfEoeFn87Os0rB8Nwzsx5cT1syhaJ7eR0jSVaJ"&gt;\n
+    &lt;title&gt;All tasks · GS ProjectFlow&lt;/title&gt;\n
+    &lt;link rel="stylesheet" href="http://127.0.0.1:8000/css/app.css"&gt;\n
+    &lt;link rel="stylesheet" href="http://127.0.0.1:8000/css/workspace.css"&gt;\n
+    &lt;link rel="stylesheet" href="http://127.0.0.1:8000/css/premium.css?v=1794224717"&gt;\n
+                    &lt;link rel="stylesheet" href="http://127.0.0.1:8000/css/task-monitor.css?v=1794208794"&gt;\n
+        &lt;link rel="stylesheet" href="http://127.0.0.1:8000/css/system.css?v=1794197575"&gt;\n
+            &lt;script defer src="http://127.0.0.1:8000/js/system.js?v=1794217530"&gt;&lt;/script&gt;\n
+    &lt;script defer src="http://127.0.0.1:8000/js/app.js"&gt;&lt;/script&gt;\n
+    &lt;script defer src="http://127.0.0.1:8000/js/usability.js"&gt;&lt;/script&gt;\n
+    &lt;script defer src="http://127.0.0.1:8000/js/task-navigation.js?v=1794165199"&gt;&lt;/script&gt;\n
+    &lt;script defer src="http://127.0.0.1:8000/js/task-progress.js?v=1794203970"&gt;&lt;/script&gt;\n
+    &lt;link rel="stylesheet" href="http://127.0.0.1:8000/css/critical-explanation.css?v=1794165724"&gt;\n
+    &lt;script defer src="http://127.0.0.1:8000/js/critical-explanation.js?v=1794165859"&gt;&lt;/script&gt;\n
+    &lt;link rel="stylesheet" href="http://127.0.0.1:8000/css/app-dialog.css?v=1794363220"&gt;\n
+    &lt;script src="http://127.0.0.1:8000/js/app-dialog.js?v=1794363220"&gt;&lt;/script&gt;\n
+&lt;/head&gt;\n
+&lt;body data-page="tasks.mine"&gt;\n
+    &lt;a class="skip-link" href="#main-content"&gt;Skip to content&lt;/a&gt;\n
+    &lt;div class="app-shell"&gt;\n
+        &lt;!-- Sidebar Navigation (Clean Typography, No Icons) --&gt;\n
+        &lt;aside class="sidebar" id="sidebar"&gt;\n
+            &lt;a class="brand" href="http://127.0.0.1:8000/dashboard"&gt;\n
+                &lt;span class="brand-mark" style="display: inline-flex; align-items: center; justify-content: center;"&gt;\n
+                    &lt;svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"&gt;\n
+                        &lt;polygon points="12 2 2 7 12 12 22 7 12 2"&gt;&lt;/polygon&gt;\n
+                        &lt;polyline points="2 12 12 17 22 12"&gt;&lt;/polyline&gt;\n
+                        &lt;polyline points="2 17 12 22 22 17"&gt;&lt;/polyline&gt;\n
+                    &lt;/svg&gt;\n
+                &lt;/span&gt;\n
+                &lt;div&gt;\n
+                    &lt;b&gt;GS ProjectFlow&lt;/b&gt;\n
+                    &lt;small&gt;Project workspace&lt;/small&gt;\n
+                &lt;/div&gt;\n
+            &lt;/a&gt;\n
+\n
+                        &lt;nav class="nav nav-primary" aria-label="Main navigation"&gt;\n
+                                    &lt;a href="http://127.0.0.1:8000/dashboard" class=" " &gt;\n
+                        &lt;svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"&gt;&lt;path d="M3 10.5 12 3l9 7.5V21h-6v-7H9v7H3z"/&gt;&lt;/svg&gt;\n
+                        &lt;span&gt;My Workspace&lt;/span&gt;\n
+                    &lt;/a&gt;\n
+                                    &lt;a href="http://127.0.0.1:8000/projects" class=" " &gt;\n
+                        &lt;svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"&gt;&lt;path d="M3 7V5a1 1 0 0 1 1-1h6l2 3h8a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7z"/&gt;&lt;/svg&gt;\n
+                        &lt;span&gt;My Projects&lt;/span&gt;\n
+                    &lt;/a&gt;\n
+                                    &lt;a href="http://127.0.0.1:8000/tasks/my" class="active "  aria-current="page" &gt;\n
+                        &lt;svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"&gt;&lt;path d="M9 6h12M9 12h12M9 18h12M3 6l1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2"/&gt;&lt;/svg&gt;\n
+                        &lt;span&gt;All Tasks&lt;/span&gt;\n
+                    &lt;/a&gt;\n
+                                    &lt;a href="http://127.0.0.1:8000/team-monitor" class=" " &gt;\n
+                        &lt;svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"&gt;&lt;path d="M4 19V9M10 19V5M16 19v-7M22 21H2"/&gt;&lt;/svg&gt;\n
+                        &lt;span&gt;Team Monitor&lt;/span&gt;\n
+                    &lt;/a&gt;\n
+                                    &lt;a href="http://127.0.0.1:8000/calendar" class=" " &gt;\n
+                        &lt;svg class="nav-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"&gt;&lt;path d="M8 3v4M16 3v4M3 10h18M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/&gt;&lt;/svg&gt;\n
+                        &lt;span&gt;Calendar&lt;/span&gt;\n
+                    &lt;/a&gt;\n
+                            &lt;/nav&gt;\n
+\n
+            &lt;div class="sidebar-foot"&gt;\n
+                &lt;a href="http://127.0.0.1:8000/profile" style="display: flex; align-items: center; gap: 10px; width: 100%;"&gt;\n
+                    &lt;span class="avatar"&gt;S&lt;/span&gt;\n
+                    &lt;div class="user-mini"&gt;\n
+                        &lt;b&gt;Sarah PM&lt;/b&gt;\n
+                        &lt;small&gt;User&lt;/small&gt;\n
+                    &lt;/div&gt;\n
+                &lt;/a&gt;\n
+            &lt;/div&gt;\n
+        &lt;/aside&gt;\n
+\n
+        &lt;div class="mobile-shade" data-close-menu&gt;&lt;/div&gt;\n
+\n
+        &lt;!-- Main Content Area --&gt;\n
+        &lt;main class="main-area"&gt;\n
+            &lt;!-- Topbar (Clean Professional SaaS Header) --&gt;\n
+            &lt;header class="topbar"&gt;\n
+                &lt;button class="mobile-menu-btn" type="button" data-open-menu aria-label="Open menu" aria-controls="sidebar" aria-expanded="false"&gt;\n
+                    &lt;span class="menu-bar"&gt;&lt;/span&gt;\n
+                    &lt;span class="menu-bar"&gt;&lt;/span&gt;\n
+                    &lt;span class="menu-bar"&gt;&lt;/span&gt;\n
+                &lt;/button&gt;\n
+\n
+                &lt;!-- Search Bar --&gt;\n
+                &lt;form method="get" action="http://127.0.0.1:8000/projects" class="global-search-wrap"&gt;\n
+                    &lt;input type="text" name="q" class="global-search-input" aria-label="Search projects" placeholder="Search projects by name or code..." value=""&gt;\n
+                &lt;/form&gt;\n
+\n
+                &lt;!-- Actions &amp; Profile Chip --&gt;\n
+                &lt;div class="top-actions"&gt;\n
+                                        &lt;a class="nav-alerts-pill notification-bell" aria-label="Notifications, 0 unread" title="Notifications" href="http://127.0.0.1:8000/notifications" &gt;\n
+                        &lt;svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"&gt;&lt;path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/&gt;&lt;path d="M10 21h4"/&gt;&lt;/svg&gt;\n
+                                            &lt;/a&gt;\n
+\n
+                    &lt;!-- User Profile Dropdown --&gt;\n
+                    &lt;div class="user-profile-menu"&gt;\n
+                        &lt;button type="button" class="user-chip-btn" id="user-profile-btn" aria-haspopup="true" aria-expanded="false" aria-controls="user-profile-panel"&gt;\n
+                            &lt;span class="avatar"&gt;S&lt;/span&gt;\n
+                            &lt;div class="user-chip-info"&gt;\n
+                                &lt;b&gt;Sarah PM&lt;/b&gt;\n
+                                &lt;small&gt;User&lt;/small&gt;\n
+                            &lt;/div&gt;\n
+                            &lt;span class="dropdown-caret"&gt;&lt;/span&gt;\n
+                        &lt;/button&gt;\n
+\n
+                        &lt;div class="dropdown-panel" id="user-profile-panel"&gt;\n
+                            &lt;a href="http://127.0.0.1:8000/profile" class="dropdown-item"&gt;My Account&lt;/a&gt;\n
+                            &lt;div class="dropdown-divider"&gt;&lt;/div&gt;\n
+                            &lt;form method="post" action="http://127.0.0.1:8000/logout"&gt;\n
+                                &lt;input type="hidden" name="_token" value="QDDfEoeFn87Os0rB8Nwzsx5cT1syhaJ7eR0jSVaJ" autocomplete="off"&gt;                                &lt;button type="submit" class="dropdown-item dropdown-logout" style="width: 100%; text-align: left;"&gt;Sign out&lt;/button&gt;\n
+                            &lt;/form&gt;\n
+                        &lt;/div&gt;\n
+                    &lt;/div&gt;\n
+                &lt;/div&gt;\n
+            &lt;/header&gt;\n
+\n
+            &lt;div class="content" id="main-content" tabindex="-1"&gt;\n
+                                \n
+                                                &lt;link rel="stylesheet" href="http://127.0.0.1:8000/css/task-workspace.css?v=1794365725"&gt;\n
+&lt;div class="task-workspace task-workspace-personal"&gt;\n
+    &lt;header class="tw-header"&gt;\n
+        &lt;div&gt;\n
+            &lt;h1&gt;All tasks&lt;/h1&gt;\n
+            &lt;p&gt;Your assignments and the project tasks you monitor, together.&lt;/p&gt;\n
+        &lt;/div&gt;\n
+    &lt;/header&gt;\n
+    &lt;section class="personal-filter-surface" aria-label="Task filters"&gt;\n
+    &lt;nav class="tw-views" aria-label="Filter tasks"&gt;\n
+                    &lt;a href="http://127.0.0.1:8000/tasks/my?scope=all&amp;amp;filter=all" class="is-active"  aria-current="page" &gt;All tasks &lt;span&gt;0&lt;/span&gt;&lt;/a&gt;\n
+                    &lt;a href="http://127.0.0.1:8000/tasks/my?scope=all&amp;amp;filter=open" class="" &gt;Open Tasks &lt;span&gt;0&lt;/span&gt;&lt;/a&gt;\n
+                    &lt;a href="http://127.0.0.1:8000/tasks/my?scope=all&amp;amp;filter=overdue" class="" &gt;Overdue &lt;span&gt;0&lt;/span&gt;&lt;/a&gt;\n
+                    &lt;a href="http://127.0.0.1:8000/tasks/my?scope=all&amp;amp;filter=due_soon" class="" &gt;Due soon &lt;span&gt;0&lt;/span&gt;&lt;/a&gt;\n
+                    &lt;a href="http://127.0.0.1:8000/tasks/my?scope=all&amp;amp;filter=critical" class="" &gt;Critical path &lt;span&gt;0&lt;/span&gt;&lt;/a&gt;\n
+                    &lt;a href="http://127.0.0.1:8000/tasks/my?scope=all&amp;amp;filter=unassigned" class="" &gt;Unassigned &lt;span&gt;0&lt;/span&gt;&lt;/a&gt;\n
+                    &lt;a href="http://127.0.0.1:8000/tasks/my?scope=all&amp;amp;filter=completed" class="" &gt;Completed &lt;span&gt;0&lt;/span&gt;&lt;/a&gt;\n
+            &lt;/nav&gt;\n
+        &lt;form method="get" action="http://127.0.0.1:8000/tasks/my" class="tw-filters" id="all-task-filter-form"&gt;\n
+                &lt;input type="hidden" name="filter" value="all"&gt;\n
+        &lt;div class="tw-filter-row"&gt;\n
+            &lt;label class="tw-search"&gt;&lt;span class="workspace-sr-only"&gt;Search tasks, projects or people&lt;/span&gt;&lt;input type="search" name="q" value="" placeholder="Search tasks, projects or people..." autocomplete="off"&gt;&lt;/label&gt;\n
+            &lt;label class="tw-scope-select"&gt;\n
+                &lt;span class="workspace-sr-only"&gt;Task ownership&lt;/span&gt;\n
+                &lt;select name="scope" onchange="this.form.requestSubmit()"&gt;\n
+                    &lt;option value="all" selected&gt;All tasks&lt;/option&gt;\n
+                    &lt;option value="assigned" &gt;My tasks&lt;/option&gt;\n
+                                    &lt;/select&gt;\n
+            &lt;/label&gt;\n
+            &lt;label class="tw-project"&gt;&lt;span class="workspace-sr-only"&gt;Project&lt;/span&gt;&lt;select name="project_id" onchange="this.form.requestSubmit()"&gt;&lt;option value=""&gt;All projects&lt;/option&gt;&lt;/select&gt;&lt;/label&gt;\n
+            &lt;button type="button" class="filter-panel-toggle" aria-controls="personal-extra-filters" aria-expanded="false" onclick="const p=document.getElementById('personal-extra-filters');p.open=!p.open;this.setAttribute('aria-expanded',String(p.open));"&gt;&lt;svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"&gt;&lt;path d="M4 7h16M4 17h16"/&gt;&lt;circle cx="9" cy="7" r="2" fill="white"/&gt;&lt;circle cx="15" cy="17" r="2" fill="white"/&gt;&lt;/svg&gt;&lt;span&gt;More filters&lt;/span&gt;&lt;svg class="filter-panel-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"&gt;&lt;path d="m6 9 6 6 6-6"/&gt;&lt;/svg&gt;&lt;/button&gt;&lt;button class="btn btn-primary personal-search-submit" type="submit"&gt;Search&lt;/button&gt;\n
+                        &lt;span class="tw-result-count"&gt;0 tasks&lt;/span&gt;\n
+        &lt;/div&gt;\n
+        &lt;div class="tw-filter-bottom"&gt;&lt;details id="personal-extra-filters" class="tw-more" &gt;&lt;summary hidden&gt;Additional filters&lt;/summary&gt;&lt;div class="filter-panel-caption"&gt;&lt;span&gt;Refine your results&lt;/span&gt;&lt;a href="http://127.0.0.1:8000/tasks/my"&gt;Reset extra filters&lt;/a&gt;&lt;/div&gt;&lt;div class="tw-extra"&gt;\n
+            &lt;label&gt;Assignee&lt;select name="user_id" onchange="this.form.requestSubmit()"&gt;&lt;option value=""&gt;Anyone&lt;/option&gt;&lt;option value="unassigned" &gt;Unassigned&lt;/option&gt;&lt;/select&gt;&lt;/label&gt;\n
+            &lt;label&gt;Status&lt;select name="status" onchange="this.form.requestSubmit()"&gt;&lt;option value=""&gt;Any status&lt;/option&gt;&lt;option value="todo" &gt;To do&lt;/option&gt;&lt;option value="in_progress" &gt;In progress&lt;/option&gt;&lt;option value="on_hold" &gt;On hold&lt;/option&gt;&lt;option value="completed" &gt;Completed&lt;/option&gt;&lt;/select&gt;&lt;/label&gt;\n
+        &lt;/div&gt;&lt;/details&gt;&lt;/div&gt;\n
+    &lt;/form&gt;\n
+    &lt;/section&gt;\n
+    &lt;div class="tw-table-surface"&gt;&lt;div class="table-wrap"&gt;&lt;table class="tw-table tw-personal-table"&gt;\n
+        &lt;thead&gt;&lt;tr&gt;&lt;th&gt;Task / Project&lt;/th&gt;&lt;th&gt;Assignee&lt;/th&gt;&lt;th&gt;Your involvement&lt;/th&gt;&lt;th&gt;Due&lt;/th&gt;&lt;th&gt;Progress&lt;/th&gt;&lt;th&gt;Status&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody&gt;\n
+                    &lt;tr&gt;&lt;td colspan="6"&gt;&lt;div class="tw-empty"&gt;&lt;strong&gt;No matching tasks&lt;/strong&gt;&lt;p&gt;Try another search or change your filters.&lt;/p&gt;&lt;a href="http://127.0.0.1:8000/tasks/my?scope=all"&gt;View all tasks &amp;rarr;&lt;/a&gt;&lt;/div&gt;&lt;/td&gt;&lt;/tr&gt;\n
+                &lt;/tbody&gt;&lt;/table&gt;&lt;/div&gt;\n
+            &lt;/div&gt;\n
+    &lt;p id="progress-save-feedback" class="workspace-sr-only" role="status"&gt;&lt;/p&gt;\n
+&lt;/div&gt;\n
+&lt;script defer src="http://127.0.0.1:8000/js/task-workspace.js?v=1794218940"&gt;&lt;/script&gt;\n
+\n
+                &lt;footer class="footer"&gt;\n
+                    GS ProjectFlow &lt;span&gt;·&lt;/span&gt; Project Management, Simplified.\n
+                &lt;/footer&gt;\n
+            &lt;/div&gt;\n
+        &lt;/main&gt;\n
+    &lt;/div&gt;\n
+    &lt;script id="directory-picker-config" defer src="http://127.0.0.1:8000/js/directory-picker.js?v=1794370401" data-search-url="http://127.0.0.1:8000/users/azure/search" data-add-url="http://127.0.0.1:8000/users/azure/add"&gt;&lt;/script&gt;\n
+&lt;/body&gt;\n
+&lt;/html&gt;\n
+' [UTF-8](length: 13669) contains "Managed by Me" [ASCII](length: 13).
+&#13;
+C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:46
+C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:720
+C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\UserMyTasksAndMonitoringTest.php:113</failure>
+        </testcase>
+        <testcase name="test_user_with_project_monitoring_permission_sees_managed_tab" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\UserMyTasksAndMonitoringTest.php" line="129" class="Tests\Feature\UserMyTasksAndMonitoringTest" classname="Tests.Feature.UserMyTasksAndMonitoringTest" assertions="2" time="0.714457"/>
+        <testcase name="test_assigned_to_me_filters_correctly" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\UserMyTasksAndMonitoringTest.php" line="157" class="Tests\Feature\UserMyTasksAndMonitoringTest" classname="Tests.Feature.UserMyTasksAndMonitoringTest" assertions="6" time="0.486428"/>
+        <testcase name="test_request_update_creates_request_and_notifies_user" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\UserMyTasksAndMonitoringTest.php" line="182" class="Tests\Feature\UserMyTasksAndMonitoringTest" classname="Tests.Feature.UserMyTasksAndMonitoringTest" assertions="1" time="0.667463">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\UserMyTasksAndMonitoringTest::test_request_update_creates_request_and_notifies_user&#13;
+Expected response status code [200] but received 403.
+Failed asserting that 403 is identical to 200.
+&#13;
+C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:46
+C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:183
+C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\UserMyTasksAndMonitoringTest.php:198</failure>
+        </testcase>
+        <testcase name="test_request_update_prevents_duplicate_within_24_hours" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\UserMyTasksAndMonitoringTest.php" line="211" class="Tests\Feature\UserMyTasksAndMonitoringTest" classname="Tests.Feature.UserMyTasksAndMonitoringTest" assertions="1" time="0.666011">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\UserMyTasksAndMonitoringTest::test_request_update_prevents_duplicate_within_24_hours&#13;
+Expected response status code [422] but received 403.
+Failed asserting that 403 is identical to 422.
+&#13;
+C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:46
+C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:183
+C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\UserMyTasksAndMonitoringTest.php:232</failure>
+        </testcase>
+        <testcase name="test_reassign_task_successfully_updates_assignment_and_logs_history" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\UserMyTasksAndMonitoringTest.php" line="236" class="Tests\Feature\UserMyTasksAndMonitoringTest" classname="Tests.Feature.UserMyTasksAndMonitoringTest" assertions="1" time="0.870930">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\UserMyTasksAndMonitoringTest::test_reassign_task_successfully_updates_assignment_and_logs_history&#13;
+Expected response status code [200] but received 403.
+Failed asserting that 403 is identical to 200.
+&#13;
+C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:46
+C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:183
+C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\UserMyTasksAndMonitoringTest.php:260</failure>
+        </testcase>
+        <testcase name="test_reassign_task_rejects_user_not_in_project" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\UserMyTasksAndMonitoringTest.php" line="281" class="Tests\Feature\UserMyTasksAndMonitoringTest" classname="Tests.Feature.UserMyTasksAndMonitoringTest" assertions="1" time="0.875743">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\UserMyTasksAndMonitoringTest::test_reassign_task_rejects_user_not_in_project&#13;
+Expected response status code [422] but received 403.
+Failed asserting that 403 is identical to 422.
+&#13;
+C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:46
+C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:183
+C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\UserMyTasksAndMonitoringTest.php:299</failure>
+        </testcase>
+        <testcase name="test_team_member_details_endpoint_returns_scoped_data" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\UserMyTasksAndMonitoringTest.php" line="303" class="Tests\Feature\UserMyTasksAndMonitoringTest" classname="Tests.Feature.UserMyTasksAndMonitoringTest" assertions="1" time="0.669694">
+          <failure type="PHPUnit\Framework\ExpectationFailedException">Tests\Feature\UserMyTasksAndMonitoringTest::test_team_member_details_endpoint_returns_scoped_data&#13;
+Expected response status code [200] but received 403.
+Failed asserting that 403 is identical to 200.
+&#13;
+C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\vendor\laravel\framework\src\Illuminate\Testing\TestResponseAssert.php:46
+C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\vendor\laravel\framework\src\Illuminate\Testing\TestResponse.php:183
+C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\UserMyTasksAndMonitoringTest.php:317</failure>
+        </testcase>
+        <testcase name="test_unauthorized_user_cannot_access_team_member_details" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\UserMyTasksAndMonitoringTest.php" line="330" class="Tests\Feature\UserMyTasksAndMonitoringTest" classname="Tests.Feature.UserMyTasksAndMonitoringTest" assertions="1" time="0.656782"/>
+        <testcase name="test_user_sidebar_renders_team_monitor_link" file="C:\Users\nadumi\Desktop\GS_ProjectFlow_V3_Full_Project\GS_ProjectFlow_Complete_V2\tests\Feature\UserMyTasksAndMonitoringTest.php" line="343" class="Tests\Feature\UserMyTasksAndMonitoringTest" classname="Tests.Feature.UserMyTasksAndMonitoringTest" assertions="5" time="0.257373"/>
+      </testsuite>
+    </testsuite>
+  </testsuite>
+</testsuites>

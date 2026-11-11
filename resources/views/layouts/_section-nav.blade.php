@@ -1,13 +1,11 @@
 @php
     $sectionItems = [];
     if (auth()->user()->isPmo()) {
-        if (request()->routeIs('administration.*', 'role-directory.*', 'subsidiaries.*', 'activity.*', 'settings.system')) {
+        if (request()->routeIs('administration.*', 'role-directory.*', 'subsidiaries.*')) {
             $sectionItems = [
                 ['label' => 'Overview', 'url' => route('administration.index'), 'active' => request()->routeIs('administration.*')],
                 ['label' => 'Roles & access', 'url' => route('role-directory.index'), 'active' => request()->routeIs('role-directory.*')],
                 ['label' => 'Subsidiaries', 'url' => route('subsidiaries.index'), 'active' => request()->routeIs('subsidiaries.*')],
-                ['label' => 'Activity log', 'url' => route('activity.index'), 'active' => request()->routeIs('activity.*')],
-                ['label' => 'Integrations', 'url' => route('settings.system'), 'active' => request()->routeIs('settings.system')],
             ];
         }
     }

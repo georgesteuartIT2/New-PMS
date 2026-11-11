@@ -26,7 +26,7 @@ class EmployeeWorkloadService
         $asOf ??= now();
 
         $activeEmployeesQuery = User::where('account_status', 'active');
-        if (!$actor->isPmo()) {
+        if (!$actor->canViewPortfolio()) {
             // Scope to employees who share projects with this user
             $sharedProjectIds = ProjectMembership::where('user_id', $actor->id)->pluck('project_id');
             $activeEmployeesQuery->whereHas('memberships', fn($m) => $m->whereIn('project_id', $sharedProjectIds));
@@ -58,7 +58,7 @@ class EmployeeWorkloadService
                     ->whereColumn('children.parent_task_id', 'tasks.id');
             });
 
-        if (!$actor->isPmo()) {
+        if (!$actor->canViewPortfolio()) {
             $sharedProjectIds = ProjectMembership::where('user_id', $actor->id)->pluck('project_id');
             $openAssignmentsQuery->whereIn('projects.id', $sharedProjectIds);
         }
@@ -88,11 +88,15 @@ class EmployeeWorkloadService
         $query = User::with(['subsidiary:id,name,code'])
             ->where('account_status', 'active');
 
-        if (!$actor->isPmo()) {
+        if (!$actor->canViewPortfolio()) {
             $sharedProjectIds = ProjectMembership::where('user_id', $actor->id)->pluck('project_id');
             $query->whereHas('memberships', fn($m) => $m->whereIn('project_id', $sharedProjectIds));
         }
 
+        if(!empty($filters['project_id']) && !$actor->canViewPortfolio()){
+            $selected=Project::find((int)$filters['project_id']);
+            if(!$selected || !$this->access->project($actor,$selected,'view_tasks'))$query->whereRaw('1=0');
+        }
         // Search by name or email or job_title
         if (!empty($filters['q'])) {
             $search = trim($filters['q']);
@@ -113,13 +117,14 @@ class EmployeeWorkloadService
 
         // Project filter
         if (!empty($filters['project_id'])) {
-            $query->whereHas('memberships', fn($m) => $m->where('project_id', $filters['project_id']));
+            $selectedProjectId=(int)$filters['project_id'];
+            $query->where(function($q)use($selectedProjectId){$q->whereHas('memberships',fn($m)=>$m->where('project_id',$selectedProjectId))->orWhereHas('pmProjects',fn($p)=>$p->where('id',$selectedProjectId))->orWhereHas('assignedTasks',fn($t)=>$t->where('project_id',$selectedProjectId));});
         }
 
         // Filter: has overdue tasks
         if (!empty($filters['has_overdue'])) {
-            $query->whereHas('assignedTasks', function ($q) use ($asOf) {
-                $q->whereDoesntHave('children')
+            $query->whereHas('assignedTasks', function ($q) use ($asOf, $filters) {
+                $q->when(!empty($filters['project_id']),fn($t)=>$t->where('project_id',$filters['project_id']))->whereDoesntHave('children')
                   ->where('tasks.status', '!=', 'completed')
                   ->where('tasks.progress', '<', 100)
                   ->where('tasks.ends_at', '<', $asOf)
@@ -129,8 +134,8 @@ class EmployeeWorkloadService
 
         // Filter: has critical tasks
         if (!empty($filters['has_critical'])) {
-            $query->whereHas('assignedTasks', function ($q) use ($criticalTaskIds) {
-                $q->whereDoesntHave('children')
+            $query->whereHas('assignedTasks', function ($q) use ($criticalTaskIds, $filters) {
+                $q->when(!empty($filters['project_id']),fn($t)=>$t->where('project_id',$filters['project_id']))->whereDoesntHave('children')
                   ->where('tasks.status', '!=', 'completed')
                   ->where('tasks.progress', '<', 100)
                   ->whereIn('tasks.id', $criticalTaskIds)
@@ -138,11 +143,19 @@ class EmployeeWorkloadService
             });
         }
 
+        if (!empty($filters['attention_first'])) {
+            $query->withCount(['assignedTasks as attention_overdue_count' => function ($q) use ($asOf, $filters) {
+                $q->whereDoesntHave('children')->where('tasks.status', '!=', 'completed')->where('tasks.progress', '<', 100)
+                    ->where('tasks.ends_at', '<', $asOf)->whereHas('project', fn($p) => $p->whereIn('status', ['active', 'on_hold']))
+                    ->when(!empty($filters['project_id']), fn($t) => $t->where('project_id', $filters['project_id']));
+            }])->orderByDesc('attention_overdue_count');
+        }
         $paginator = $query->orderBy('name')->paginate($perPage)->withQueryString();
 
         // Calculate metrics for each employee in page
-        $paginator->getCollection()->transform(function ($employee) use ($criticalTaskIds, $asOf) {
-            $employeeMetrics = $this->calculateEmployeeWorkload($employee, $criticalTaskIds, $asOf);
+        $paginator->getCollection()->transform(function ($employee) use ($criticalTaskIds, $asOf, $filters, $actor) {
+            $employeeMetrics = $this->calculateEmployeeWorkload($employee, $criticalTaskIds, $asOf, !empty($filters['project_id'])?(int)$filters['project_id']:null);
+            if(!$actor->canViewPortfolio() && empty($filters['project_id']))foreach(['priority_task_id','priority_task_title','priority_task_due_at','priority_task_project_id','active_project_names'] as $key)$employeeMetrics[$key]=null;
             foreach ($employeeMetrics as $k => $v) {
                 $employee->{$k} = $v;
             }
@@ -165,20 +178,23 @@ class EmployeeWorkloadService
     /**
      * Compute single employee workload metrics.
      */
-    public function calculateEmployeeWorkload(User $employee, array $criticalTaskIds = [], ?Carbon $asOf = null): array
+    public function calculateEmployeeWorkload(User $employee, array $criticalTaskIds = [], ?Carbon $asOf = null, ?int $projectId = null): array
     {
         $asOf ??= now();
 
         // 1. Active Projects Count (distinct active projects)
-        $activeProjectsCount = Project::whereIn('status', ['active', 'on_hold'])
+        $activeProjectsCount = Project::whereIn('status', ['active', 'on_hold'])->when($projectId,fn($q)=>$q->whereKey($projectId))
             ->where(function ($q) use ($employee) {
                 $q->whereHas('memberships', fn($m) => $m->where('user_id', $employee->id))
-                  ->orWhere('pm_user_id', $employee->id);
-            })->count();
+                  ->orWhere('pm_user_id', $employee->id)
+                  ->orWhereHas('tasks.assignees', fn($a) => $a->where('users.id', $employee->id));
+            })->orderBy('name')->get(['id', 'name']);
+        $activeProjects = $activeProjectsCount;
+        $activeProjectsCount = $activeProjects->count();
 
         // 2. Assigned Leaf Tasks
-        $assignedLeafTasks = $employee->assignedTasks()
-            ->with(['project:id,code,name,status'])
+        $assignedLeafTasks = $employee->assignedTasks()->when($projectId,fn($q)=>$q->where('project_id',$projectId))
+            ->with(['project:id,code,name,status,pm_user_id,owner_user_id,approval_stage,plan_initialized'])
             ->whereDoesntHave('children')
             ->whereHas('project', fn($p) => $p->whereIn('status', ['active', 'on_hold']))
             ->get();
@@ -252,8 +268,15 @@ class EmployeeWorkloadService
         $displayLabel = ($status !== 'not_configured') ? "{$statusLabel}" . ($utilization !== null ? " ({$utilization}%)" : '') : $taskStatusLabel;
         $displayBadge = ($status !== 'not_configured') ? $badgeClass : $taskBadgeClass;
 
+        $priorityTask=$openTasks->filter(fn($task)=>$task->ends_at!==null)->sortBy('ends_at')->first();
+
         return [
+            'priority_task_id'=>$priorityTask?->id,
+            'priority_task_title'=>$priorityTask?->title,
+            'priority_task_due_at'=>$priorityTask?->ends_at,
+            'priority_task_project_id'=>$priorityTask?->project_id,
             'active_projects_count' => $activeProjectsCount,
+            'active_project_names' => $activeProjects->map(fn($p) => ['id'=>$p->id,'name'=>$p->name])->all(),
             'open_tasks_count' => $openTasks->count(),
             'completed_tasks_count' => $completedTasks->count(),
             'overdue_tasks_count' => $overdueTasks->count(),
@@ -278,6 +301,7 @@ class EmployeeWorkloadService
         $asOf ??= now();
         $criticalTaskIds = $this->taskMonitoringService->getCriticalTaskIds($actor);
         $summary = $this->calculateEmployeeWorkload($employee, $criticalTaskIds, $asOf);
+        foreach(['priority_task_id','priority_task_title','priority_task_due_at','priority_task_project_id'] as $key)unset($summary[$key]);
 
         // 1. Projects Breakdown
         $projectsQuery = Project::whereIn('status', ['active', 'on_hold'])
@@ -287,7 +311,7 @@ class EmployeeWorkloadService
             })
             ->with(['memberships.role', 'subsidiary']);
 
-        if (!$actor->isPmo()) {
+        if (!$actor->canViewPortfolio()) {
             $sharedProjectIds = ProjectMembership::where('user_id', $actor->id)->pluck('project_id');
             $projectsQuery->whereIn('id', $sharedProjectIds);
         }
@@ -317,12 +341,12 @@ class EmployeeWorkloadService
 
         // 2. Assigned Tasks List
         $tasksQuery = $employee->assignedTasks()
-            ->with(['project:id,code,name,status,pm_user_id', 'parent:id,code,title'])
+            ->with(['project:id,code,name,status,pm_user_id,owner_user_id,approval_stage,plan_initialized', 'parent:id,code,title'])
             ->whereDoesntHave('children')
             ->whereHas('project', fn($p) => $p->whereIn('status', ['active', 'on_hold']))
             ->orderBy('ends_at');
 
-        if (!$actor->isPmo()) {
+        if (!$actor->canViewPortfolio()) {
             $sharedProjectIds = ProjectMembership::where('user_id', $actor->id)->pluck('project_id');
             $tasksQuery->whereIn('project_id', $sharedProjectIds);
         }

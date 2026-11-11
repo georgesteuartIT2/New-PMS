@@ -105,6 +105,7 @@ class ProjectHealthService
             $project->status === 'completed' => 'completed',
             $project->status === 'archived' => 'archived',
             !in_array($project->status, ['active','on_hold'], true) => 'not_started',
+            $project->approval_stage==='planning' => 'not_started',
             $pastDeadline => 'overdue',
             $forecastLate || $overdue->isNotEmpty() || $openDelays->isNotEmpty() => 'at_risk',
             default => 'on_track',

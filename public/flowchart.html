@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GS ProjectFlow V3 — Complete System Flowchart</title>
+    <style>
+        :root {
+            --primary: #315F58;
+            --primary-dark: #22433E;
+            --primary-light: #E8F0EE;
+            --accent: #B98745;
+            --danger: #DC2626;
+            --danger-light: #FEE2E2;
+            --warning: #D97706;
+            --warning-light: #FEF3C7;
+            --success: #166534;
+            --success-light: #DCFCE7;
+            --border: #E2E8F0;
+            --text-dark: #0F172A;
+            --text-muted: #64748B;
+            --bg-canvas: #F8FAFC;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: var(--bg-canvas);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Executive Bar */
+        .toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: #FFFFFF;
+            border-bottom: 1px solid var(--border);
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+
+        .brand-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-logo {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: var(--primary);
+            color: #FFFFFF;
+            display: grid;
+            place-items: center;
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .brand-text h1 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-dark);
+            letter-spacing: -0.3px;
+        }
+
+        .brand-text p {
+            font-size: 11.5px;
+            color: var(--text-muted);
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn {
+            height: 34px;
+            padding: 0 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.15s ease;
+            text-decoration: none;
+            border: 1px solid var(--border);
+            background: #FFFFFF;
+            color: #334155;
+        }
+
+        .btn:hover {
+            background: #F1F5F9;
+            border-color: #CBD5E1;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #FFFFFF;
+            border-color: var(--primary);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+
+        /* Zoom & Viewer Area */
+        .viewer-container {
+            flex: 1;
+            overflow: auto;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .svg-card {
+            background: #FFFFFF;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+            padding: 40px;
+            max-width: 1400px;
+            width: 100%;
+            transition: transform 0.2s ease;
+            transform-origin: top center;
+        }
+
+        svg {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="toolbar">
+        <div class="brand-title">
+            <div class="brand-logo">GS</div>
+            <div class="brand-text">
+                <h1>GS ProjectFlow V3 — Enterprise Lifecycle Flowchart</h1>
+                <p>PMO &rarr; Owner (Optional) &rarr; PM &rarr; Plan Setup &rarr; Save & Notify Team &rarr; Execution & Oversight</p>
+            </div>
+        </div>
+        <div class="controls">
+            <button class="btn" onclick="zoomIn()">Zoom +</button>
+            <button class="btn" onclick="zoomOut()">Zoom -</button>
+            <button class="btn" onclick="resetZoom()">Reset</button>
+            <button class="btn" onclick="window.print()">Print / PDF</button>
+            <a href="/" class="btn btn-primary">&larr; Return to Workspace</a>
+        </div>
+    </header>
+
+    <main class="viewer-container">
+        <div class="svg-card" id="flowchart-card">
+            <!-- FULL VECTOR SVG SYSTEM FLOWCHART -->
+            <svg viewBox="0 0 1200 2120" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="primaryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#315F58" />
+                        <stop offset="100%" stop-color="#1E3E39" />
+                    </linearGradient>
+                    <linearGradient id="headerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#1E293B" />
+                        <stop offset="100%" stop-color="#0F172A" />
+                    </linearGradient>
+                    <linearGradient id="amberGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#F59E0B" />
+                        <stop offset="100%" stop-color="#D97706" />
+                    </linearGradient>
+                    <filter id="cardShadow" x="-5%" y="-5%" width="110%" height="115%">
+                        <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.06"/>
+                    </filter>
+                    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#64748B" />
+                    </marker>
+                    <marker id="arrowGreen" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#166534" />
+                    </marker>
+                    <marker id="arrowRed" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#DC2626" />
+                    </marker>
+                </defs>
+
+                <!-- HEADER BOX -->
+                <rect x="50" y="30" width="1100" height="90" rx="12" fill="url(#headerGrad)" />
+                <text x="80" y="70" font-size="22" font-weight="700" fill="#FFFFFF">GS ProjectFlow V3 — Complete Operational Lifecycle & Governance Flowchart</text>
+                <text x="80" y="98" font-size="13" fill="#94A3B8">Architecture: PMO &rarr; Owner Gate &rarr; PM Gate &rarr; Plan Setup (Blank/Template) &rarr; Save & Notify &rarr; Monitoring & Delays</text>
+
+                <!-- ========================================== -->
+                <!-- PHASE 1: PROJECT CREATION (PMO) -->
+                <!-- ========================================== -->
+                <rect x="50" y="150" width="1100" height="230" rx="10" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1.5" />
+                <rect x="70" y="165" width="220" height="28" rx="6" fill="#315F58" />
+                <text x="80" y="184" font-size="12" font-weight="700" fill="#FFFFFF">PHASE 1: PROJECT INITIATION</text>
+
+                <!-- Step 1.1 -->
+                <g filter="url(#cardShadow)">
+                    <rect x="70" y="210" width="280" height="145" rx="8" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.2" />
+                    <text x="88" y="235" font-size="13" font-weight="700" fill="#0F172A">1.1 PMO Creates Project</text>
+                    <text x="88" y="258" font-size="11.5" fill="#475569">&bull; Project Name & Description</text>
+                    <text x="88" y="278" font-size="11.5" fill="#475569">&bull; Selects Subsidiary (e.g. GS Consumer)</text>
+                    <text x="88" y="298" font-size="11.5" fill="#166534" font-weight="600">&bull; Auto Code: GSC-PRJ-003 (Unique)</text>
+                    <text x="88" y="318" font-size="11.5" fill="#475569">&bull; Sets Planned Budget: LKR 100,000</text>
+                    <text x="88" y="338" font-size="11.5" fill="#475569">&bull; Defines Start Date & Due Date</text>
+                </g>
+
+                <!-- Connector -->
+                <line x1="350" y1="280" x2="420" y2="280" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)" />
+
+                <!-- Step 1.2 Decision: Choose Owner? -->
+                <polygon points="500,220 590,280 500,340 410,280" fill="#FEF3C7" stroke="#D97706" stroke-width="1.5" />
+                <text x="460" y="275" font-size="12" font-weight="700" fill="#92400E">Assign Owner?</text>
+                <text x="450" y="293" font-size="10.5" fill="#B45309">(Project Sponsor)</text>
+
+                <!-- Route A: Owner Selected -->
+                <line x1="590" y1="280" x2="680" y2="280" stroke="#D97706" stroke-width="2" marker-end="url(#arrow)" />
+                <text x="600" y="270" font-size="11" font-weight="700" fill="#D97706">YES (Owner Assigned)</text>
+
+                <g filter="url(#cardShadow)">
+                    <rect x="680" y="225" width="230" height="110" rx="8" fill="#FFFFFF" stroke="#F59E0B" stroke-width="1.5" />
+                    <text x="695" y="250" font-size="12.5" font-weight="700" fill="#92400E">1.2 Route A: Owner Gate</text>
+                    <text x="695" y="272" font-size="11" fill="#475569">Status: Pending Owner Approval</text>
+                    <text x="695" y="292" font-size="11" fill="#475569">&bull; Owner gets in-app/email alert</text>
+                    <text x="695" y="312" font-size="11" fill="#475569">&bull; Owner reviews concept & budget</text>
+                </g>
+
+                <!-- Route B: No Owner (Direct to PM) -->
+                <path d="M 500 340 L 500 365 L 1000 365 L 1000 420" fill="none" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)" />
+                <text x="515" y="360" font-size="11" font-weight="600" fill="#64748B">NO (Direct to PM nomination)</text>
+
+                <!-- ========================================== -->
+                <!-- PHASE 2: OWNER REVIEW & PM NOMINATION -->
+                <!-- ========================================== -->
+                <rect x="50" y="410" width="1100" height="210" rx="10" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1.5" />
+                <rect x="70" y="425" width="280" height="28" rx="6" fill="#D97706" />
+                <text x="80" y="444" font-size="12" font-weight="700" fill="#FFFFFF">PHASE 2: OWNER APPROVAL & PM ASSIGNMENT</text>
+
+                <!-- Owner Decision -->
+                <polygon points="795,470 885,525 795,580 705,525" fill="#FEF3C7" stroke="#D97706" stroke-width="1.5" />
+                <text x="755" y="522" font-size="12" font-weight="700" fill="#92400E">Owner Decision</text>
+                <text x="760" y="538" font-size="10.5" fill="#B45309">Approve / Reject</text>
+
+                <!-- Owner Reject -->
+                <line x1="705" y1="525" x2="480" y2="525" stroke="#DC2626" stroke-width="2" marker-end="url(#arrowRed)" />
+                <text x="540" y="515" font-size="11" font-weight="700" fill="#DC2626">REJECT / DECLINE</text>
+                <g filter="url(#cardShadow)">
+                    <rect x="260" y="480" width="220" height="90" rx="8" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.2" />
+                    <text x="275" y="505" font-size="12" font-weight="700" fill="#991B1B">Project Declined</text>
+                    <text x="275" y="525" font-size="11" fill="#7F1D1D">&bull; Feedback returned to PMO</text>
+                    <text x="275" y="545" font-size="11" fill="#7F1D1D">&bull; PMO revises scope or closes</text>
+                </g>
+
+                <!-- Owner Approve -->
+                <line x1="885" y1="525" x2="950" y2="525" stroke="#166534" stroke-width="2" marker-end="url(#arrowGreen)" />
+                <text x="895" y="515" font-size="11" font-weight="700" fill="#166534">APPROVE</text>
+
+                <g filter="url(#cardShadow)">
+                    <rect x="950" y="475" width="180" height="100" rx="8" fill="#FFFFFF" stroke="#107C41" stroke-width="1.5" />
+                    <text x="965" y="500" font-size="12" font-weight="700" fill="#166534">Owner Selects PM</text>
+                    <text x="965" y="520" font-size="11" fill="#475569">&bull; Chooses certified PM</text>
+                    <text x="965" y="540" font-size="11" fill="#475569">&bull; Submits nomination</text>
+                    <text x="965" y="558" font-size="10.5" fill="#64748B">Owner retains full mgmt</text>
+                </g>
+
+                <!-- Connector to Phase 3 -->
+                <path d="M 1040 575 L 1040 650 L 590 650" fill="none" stroke="#315F58" stroke-width="2" marker-end="url(#arrow)" />
+
+                <!-- ========================================== -->
+                <!-- PHASE 3: PM ACCEPTANCE & SETUP MODAL -->
+                <!-- ========================================== -->
+                <rect x="50" y="670" width="1100" height="340" rx="10" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1.5" />
+                <rect x="70" y="685" width="280" height="28" rx="6" fill="#1E3E39" />
+                <text x="80" y="704" font-size="12" font-weight="700" fill="#FFFFFF">PHASE 3: PM ACCEPTANCE & TEMPLATE MODAL</text>
+
+                <!-- PM Status Box -->
+                <g filter="url(#cardShadow)">
+                    <rect x="70" y="730" width="250" height="95" rx="8" fill="#FFFFFF" stroke="#315F58" stroke-width="1.2" />
+                    <text x="88" y="755" font-size="12.5" font-weight="700" fill="#0F172A">Project Pending PM Approval</text>
+                    <text x="88" y="775" font-size="11" fill="#475569">&bull; Queued email dispatched to PM</text>
+                    <text x="88" y="795" font-size="11" fill="#475569">&bull; In-app approval badge visible</text>
+                    <text x="88" y="813" font-size="10.5" fill="#64748B">&bull; Team members cannot view yet</text>
+                </g>
+
+                <line x1="320" y1="775" x2="410" y2="775" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)" />
+
+                <!-- PM Decision Diamond -->
+                <polygon points="490,720 570,775 490,830 410,775" fill="#E8F0EE" stroke="#315F58" stroke-width="1.5" />
+                <text x="450" y="770" font-size="12" font-weight="700" fill="#1E3E39">PM Decision</text>
+                <text x="445" y="788" font-size="10.5" fill="#315F58">Accept / Decline</text>
+
+                <!-- PM Decline Path -->
+                <path d="M 490 830 L 490 890" stroke="#DC2626" stroke-width="2" marker-end="url(#arrowRed)" />
+                <text x="500" y="865" font-size="11" font-weight="700" fill="#DC2626">DECLINE</text>
+
+                <g filter="url(#cardShadow)">
+                    <rect x="360" y="890" width="260" height="100" rx="8" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.2" />
+                    <text x="375" y="915" font-size="12" font-weight="700" fill="#991B1B">PM Rejection Handling</text>
+                    <text x="375" y="935" font-size="11" fill="#7F1D1D">&bull; PM Enters Rejection Reason</text>
+                    <text x="375" y="955" font-size="11" fill="#7F1D1D">&bull; Reason visible to Owner AND PMO</text>
+                    <text x="375" y="975" font-size="11" fill="#166534" font-weight="600">&bull; Owner or PMO reassigns new PM</text>
+                </g>
+
+                <!-- Loop back from Reassign to Phase 3 -->
+                <path d="M 360 940 L 200 940 L 200 825" fill="none" stroke="#64748B" stroke-width="1.5" stroke-dasharray="4,4" marker-end="url(#arrow)" />
+                <text x="210" y="890" font-size="10" fill="#64748B">Reassign New PM</text>
+
+                <!-- PM Accept Path -->
+                <line x1="570" y1="775" x2="680" y2="775" stroke="#166534" stroke-width="2" marker-end="url(#arrowGreen)" />
+                <text x="590" y="765" font-size="11" font-weight="700" fill="#166534">ACCEPT</text>
+
+                <!-- Instant Setup Popup Modal -->
+                <g filter="url(#cardShadow)">
+                    <rect x="680" y="725" width="440" height="170" rx="10" fill="#FFFFFF" stroke="#315F58" stroke-width="2" />
+                    <rect x="680" y="725" width="440" height="32" rx="10" fill="#315F58" />
+                    <text x="700" y="747" font-size="12.5" font-weight="700" fill="#FFFFFF">POPUP MODAL: CHOOSE INITIAL WORKPLAN</text>
+
+                    <!-- Option A: Blank -->
+                    <rect x="700" y="775" width="190" height="100" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1" />
+                    <text x="715" y="800" font-size="12" font-weight="700" fill="#0F172A">Option A: Blank Project</text>
+                    <text x="715" y="822" font-size="10.5" fill="#475569">Start with empty canvas</text>
+                    <text x="715" y="842" font-size="10.5" fill="#475569">Author custom WBS tasks</text>
+                    <text x="715" y="862" font-size="10.5" fill="#315F58" font-weight="600">Click Select &rarr;</text>
+
+                    <!-- Option B: Template -->
+                    <rect x="910" y="775" width="190" height="100" rx="6" fill="#E8F0EE" stroke="#315F58" stroke-width="1" />
+                    <text x="925" y="800" font-size="12" font-weight="700" fill="#1E3E39">Option B: Use Template</text>
+                    <text x="925" y="822" font-size="10.5" fill="#475569">Choose corporate template</text>
+                    <text x="925" y="842" font-size="10.5" fill="#475569">Auto-clone tasks & periods</text>
+                    <text x="925" y="862" font-size="10.5" fill="#166534" font-weight="600">Click Select &rarr;</text>
+                </g>
+
+                <!-- Connector to Phase 4 -->
+                <path d="M 900 895 L 900 1040 L 590 1040" fill="none" stroke="#315F58" stroke-width="2" marker-end="url(#arrow)" />
+
+                <!-- ========================================== -->
+                <!-- PHASE 4: PLAN SETUP & TASK ASSIGNMENT -->
+                <!-- ========================================== -->
+                <rect x="50" y="1060" width="1100" height="230" rx="10" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1.5" />
+                <rect x="70" y="1075" width="310" height="28" rx="6" fill="#315F58" />
+                <text x="80" y="1094" font-size="12" font-weight="700" fill="#FFFFFF">PHASE 4: PLAN SETUP & WORKPLAN AUTHORING</text>
+
+                <!-- Tool 1: Manual WBS -->
+                <g filter="url(#cardShadow)">
+                    <rect x="70" y="1120" width="220" height="150" rx="8" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.2" />
+                    <text x="85" y="1145" font-size="12.5" font-weight="700" fill="#0F172A">4.1 Manual Tasks</text>
+                    <text x="85" y="1168" font-size="11" fill="#475569">&bull; Hierarchical WBS tree</text>
+                    <text x="85" y="1188" font-size="11" fill="#475569">&bull; Summary parent phases</text>
+                    <text x="85" y="1208" font-size="11" fill="#475569">&bull; Subtasks with due dates</text>
+                    <text x="85" y="1228" font-size="11" fill="#475569">&bull; Dependencies & Milestones</text>
+                    <text x="85" y="1248" font-size="11" fill="#475569">&bull; Estimated hours</text>
+                </g>
+
+                <line x1="290" y1="1195" x2="330" y2="1195" stroke="#64748B" stroke-width="1.5" />
+
+                <!-- Tool 2: Excel Bulk Workflow -->
+                <g filter="url(#cardShadow)">
+                    <rect x="330" y="1120" width="230" height="150" rx="8" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.2" />
+                    <text x="345" y="1145" font-size="12.5" font-weight="700" fill="#0F172A">4.2 Excel Bulk Workflow</text>
+                    <text x="345" y="1168" font-size="11" fill="#475569">1. Download Project .xlsx</text>
+                    <text x="345" y="1188" font-size="11" fill="#475569">2. Populate offline tasks</text>
+                    <text x="345" y="1208" font-size="11" fill="#475569">3. Upload Spreadsheet</text>
+                    <text x="345" y="1228" font-size="11" fill="#475569">4. Preview & Validate Rules</text>
+                    <text x="345" y="1248" font-size="11" fill="#166534" font-weight="600">5. Confirm Bulk Import</text>
+                </g>
+
+                <line x1="560" y1="1195" x2="600" y2="1195" stroke="#64748B" stroke-width="1.5" />
+
+                <!-- Tool 3: Assign Users -->
+                <g filter="url(#cardShadow)">
+                    <rect x="600" y="1120" width="240" height="150" rx="8" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.2" />
+                    <text x="615" y="1145" font-size="12.5" font-weight="700" fill="#0F172A">4.3 Assign Team Members</text>
+                    <text x="615" y="1168" font-size="11" fill="#475569">&bull; System Database Users</text>
+                    <text x="615" y="1188" font-size="11" fill="#475569">&bull; Microsoft Azure Entra ID</text>
+                    <text x="615" y="1208" font-size="11" fill="#475569">&bull; Multi-assignees supported</text>
+                    <text x="615" y="1228" font-size="11" fill="#475569">&bull; Primary assignee priority</text>
+                    <text x="615" y="1248" font-size="10.5" fill="#64748B">Roles: Team Member, Reviewer</text>
+                </g>
+
+                <line x1="840" y1="1195" x2="890" y2="1195" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)" />
+
+                <!-- Action: Save & Notify Team -->
+                <g filter="url(#cardShadow)">
+                    <rect x="890" y="1135" width="240" height="120" rx="8" fill="url(#primaryGrad)" stroke="#1E3E39" stroke-width="1.5" />
+                    <text x="910" y="1165" font-size="14" font-weight="700" fill="#FFFFFF">&star; Save &amp; Notify Team</text>
+                    <text x="910" y="1190" font-size="11.5" fill="#D1E5DE">&bull; Finalizes Workplan</text>
+                    <text x="910" y="1210" font-size="11.5" fill="#D1E5DE">&bull; Changes status to: ACTIVE</text>
+                    <text x="910" y="1232" font-size="11.5" fill="#FEF3C7" font-weight="600">&bull; Dispatches Team Emails!</text>
+                </g>
+
+                <!-- Connector to Phase 5 -->
+                <path d="M 1010 1255 L 1010 1330 L 590 1330" fill="none" stroke="#166534" stroke-width="2" marker-end="url(#arrowGreen)" />
+
+                <!-- ========================================== -->
+                <!-- PHASE 5: ACTIVE EXECUTION & GOVERNANCE -->
+                <!-- ========================================== -->
+                <rect x="50" y="1350" width="1100" height="360" rx="10" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1.5" />
+                <rect x="70" y="1365" width="290" height="28" rx="6" fill="#166534" />
+                <text x="80" y="1384" font-size="12" font-weight="700" fill="#FFFFFF">PHASE 5: ACTIVE EXECUTION &amp; MONITORING</text>
+
+                <!-- Track 1: Team Member Workspace -->
+                <g filter="url(#cardShadow)">
+                    <rect x="70" y="1410" width="310" height="150" rx="8" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.2" />
+                    <text x="85" y="1435" font-size="12.5" font-weight="700" fill="#0F172A">5.1 Team Member Execution</text>
+                    <text x="85" y="1458" font-size="11" fill="#475569">&bull; Access /tasks/mine (Focused)</text>
+                    <text x="85" y="1478" font-size="11" fill="#475569">&bull; Update Progress % (0% to 100%)</text>
+                    <text x="85" y="1498" font-size="11" fill="#475569">&bull; Status: Todo &rarr; In Progress &rarr; Done</text>
+                    <text x="85" y="1518" font-size="11" fill="#475569">&bull; Post task comments &amp; attachments</text>
+                    <text x="85" y="1538" font-size="11" fill="#166534" font-weight="600">&bull; Cannot view unassigned projects</text>
+                </g>
+
+                <!-- Track 2: Delay & Blocker Escalation -->
+                <g filter="url(#cardShadow)">
+                    <rect x="420" y="1410" width="340" height="150" rx="8" fill="#FFFFFF" stroke="#DC2626" stroke-width="1.2" />
+                    <text x="435" y="1435" font-size="12.5" font-weight="700" fill="#991B1B">5.2 Blocker &amp; Delay Diagnosis</text>
+                    <text x="435" y="1458" font-size="11" fill="#475569">&bull; Member / PM reports impediment</text>
+                    <text x="435" y="1478" font-size="11" fill="#7F1D1D">&bull; Stores Typed Delay Reason &amp; Owner</text>
+                    <text x="435" y="1498" font-size="11" fill="#DC2626" font-weight="600">&bull; PMO Dashboard: 'X new blockers' alert</text>
+                    <text x="435" y="1518" font-size="11" fill="#475569">&bull; Timestamped Delay Read Receipts</text>
+                    <text x="435" y="1538" font-size="11" fill="#166534">&bull; Critical Path automatically updated</text>
+                </g>
+
+                <!-- Track 3: Financial & Expense Tracking -->
+                <g filter="url(#cardShadow)">
+                    <rect x="800" y="1410" width="330" height="150" rx="8" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.2" />
+                    <text x="815" y="1435" font-size="12.5" font-weight="700" fill="#0F172A">5.3 Budget &amp; Receipts (LKR)</text>
+                    <text x="815" y="1458" font-size="11" fill="#475569">&bull; Planned Budget stored in projects</text>
+                    <text x="815" y="1478" font-size="11" fill="#475569">&bull; Log Expense: Title, Category, LKR</text>
+                    <text x="815" y="1498" font-size="11" fill="#475569">&bull; Upload Receipt (PDF / PNG / JPG)</text>
+                    <text x="815" y="1518" font-size="11" fill="#475569">&bull; Variance calculation: Spent vs Planned</text>
+                    <text x="815" y="1538" font-size="11" fill="#166534" font-weight="600">&bull; Real-time burn badge in portfolio</text>
+                </g>
+
+                <!-- Track 4: PMO High-Density Oversight -->
+                <g filter="url(#cardShadow)">
+                    <rect x="70" y="1585" width="1060" height="105" rx="8" fill="#FFFFFF" stroke="#315F58" stroke-width="1.5" />
+                    <text x="90" y="1612" font-size="13" font-weight="700" fill="#1E3E39">5.4 PMO Executive Oversight Workspaces (High-Density &amp; Action-Oriented)</text>
+                    
+                    <text x="90" y="1635" font-size="11.5" fill="#0F172A" font-weight="600">Task Monitor (/pmo/task-monitor):</text>
+                    <text x="90" y="1653" font-size="11" fill="#475569">&bull; Immediate above-the-fold table &bull; Quick tabs (All, Overdue, Critical, Unassigned) &bull; Export CSV &bull; Request Task Update (24h cooldown)</text>
+                    
+                    <text x="90" y="1675" font-size="11.5" fill="#0F172A" font-weight="600">Team Monitor (/pmo/team-monitor):</text>
+                    <text x="90" y="1693" font-size="11" fill="#475569">&bull; Workload utilization per employee &bull; Overdue task counts &bull; Instant Reassign Modal with audit history logging</text>
+                </g>
+
+                <!-- ========================================== -->
+                <!-- PHASE 6: PROJECT CLOSURE & AUDIT -->
+                <!-- ========================================== -->
+                <rect x="50" y="1740" width="1100" height="150" rx="10" fill="#F8FAFC" stroke="#E2E8F0" stroke-width="1.5" />
+                <rect x="70" y="1755" width="260" height="28" rx="6" fill="#0F172A" />
+                <text x="80" y="1774" font-size="12" font-weight="700" fill="#FFFFFF">PHASE 6: COMPLETION &amp; ARCHIVE</text>
+
+                <g filter="url(#cardShadow)">
+                    <rect x="70" y="1800" width="310" height="75" rx="8" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.2" />
+                    <text x="85" y="1825" font-size="12" font-weight="700" fill="#0F172A">All Tasks 100% Completed</text>
+                    <text x="85" y="1845" font-size="11" fill="#475569">&bull; Project status changes to Completed</text>
+                    <text x="85" y="1862" font-size="10.5" fill="#166534">&bull; Financial reconciliation completed</text>
+                </g>
+
+                <line x1="380" y1="1838" x2="440" y2="1838" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)" />
+
+                <g filter="url(#cardShadow)">
+                    <rect x="440" y="1800" width="320" height="75" rx="8" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.2" />
+                    <text x="455" y="1825" font-size="12" font-weight="700" fill="#0F172A">PMO Signs Off &amp; Archives</text>
+                    <text x="455" y="1845" font-size="11" fill="#475569">&bull; Locked for editing (Read-only)</text>
+                    <text x="455" y="1862" font-size="10.5" fill="#64748B">&bull; Retained in permanent portfolio history</text>
+                </g>
+
+                <line x1="760" y1="1838" x2="820" y2="1838" stroke="#64748B" stroke-width="2" marker-end="url(#arrow)" />
+
+                <g filter="url(#cardShadow)">
+                    <rect x="820" y="1800" width="310" height="75" rx="8" fill="#FFFFFF" stroke="#166534" stroke-width="1.2" />
+                    <text x="835" y="1825" font-size="12" font-weight="700" fill="#166534">Post-Project Audit &amp; Lessons</text>
+                    <text x="835" y="1845" font-size="11" fill="#475569">&bull; Export Executive CSV Report</text>
+                    <text x="835" y="1862" font-size="10.5" fill="#475569">&bull; Convert successful plan to reusable template</text>
+                </g>
+
+                <!-- FOOTER -->
+                <text x="600" y="1930" text-anchor="middle" font-size="11" fill="#94A3B8">GS ProjectFlow V3 &bull; Enterprise Governance Framework &bull; Verified Laravel 13 + PHP 8.3 Architecture</text>
+            </svg>
+        </div>
+    </main>
+
+    <script>
+        let currentZoom = 1;
+        const card = document.getElementById('flowchart-card');
+
+        function zoomIn() {
+            currentZoom = Math.min(currentZoom + 0.15, 2.0);
+            card.style.transform = `scale(${currentZoom})`;
+        }
+
+        function zoomOut() {
+            currentZoom = Math.max(currentZoom - 0.15, 0.5);
+            card.style.transform = `scale(${currentZoom})`;
+        }
+
+        function resetZoom() {
+            currentZoom = 1;
+            card.style.transform = `scale(1)`;
+        }
+    </script>
+</body>
+</html>

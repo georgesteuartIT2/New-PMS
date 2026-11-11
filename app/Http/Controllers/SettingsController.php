@@ -22,8 +22,22 @@ class SettingsController {
   $user->update(['password'=>$data['password'],'must_change_password'=>false]);
   $request->session()->regenerate();return back()->with('success','Password changed.');
  }
- public function system(Request $request){
+ public function system(Request $request,\App\Services\EmailConfigurationService $email){
   abort_unless($request->user()->isPmo(),403);
-  return view('settings.system',['azureConfigured'=>filled(config('services.azure.client_id'))&&filled(config('services.azure.tenant'))&&filled(config('services.azure.client_secret')),'mailDriver'=>config('mail.default'),'queueDriver'=>config('queue.default'),'projectCount'=>Project::count(),'userCount'=>User::count()]);
+  $configuration=$email->current();$hasPassword=!empty($configuration['password']);unset($configuration['password']);
+  return view('settings.system',compact('configuration','hasPassword'));
+ }
+ public function updateEmail(Request $request,\App\Services\EmailConfigurationService $email){
+  abort_unless($request->user()->isPmo(),403);
+  $data=$request->validate(['mailer'=>'required|in:smtp,log','host'=>'required_if:mailer,smtp|nullable|string|max:255|not_regex:/[\\r\\n]/','port'=>'required|integer|min:1|max:65535','scheme'=>'required|in:smtp,smtps','username'=>'nullable|string|max:255','password'=>'nullable|string|max:1000','clear_password'=>'sometimes|boolean','from_address'=>'required|email|max:255','from_name'=>'required|string|max:120']);
+  $email->save($data);\App\Services\Audit::record('settings.email_updated',$request->user(),['mailer'=>$data['mailer'],'host'=>$data['host']??null,'from_address'=>$data['from_address']]);
+  return back()->with('success','Email configuration saved.');
+ }
+ public function testEmail(Request $request,\App\Services\EmailConfigurationService $email){
+  abort_unless($request->user()->isPmo(),403);$data=$request->validate(['recipient'=>'required|email|max:255']);$email->apply();
+  if(config('mail.default')!=='smtp')throw ValidationException::withMessages(['recipient'=>'Save an SMTP configuration before sending a test email.']);
+  try{\Illuminate\Support\Facades\Mail::raw('Your GS ProjectFlow email configuration is working.',fn($message)=>$message->to($data['recipient'])->subject('GS ProjectFlow: Email configuration test'));}
+  catch(\Throwable $error){report($error);throw ValidationException::withMessages(['recipient'=>'Email could not be sent. Check the saved server, port and credentials.']);}
+  return back()->with('success','Test email sent to '.$data['recipient'].'.');
  }
 }

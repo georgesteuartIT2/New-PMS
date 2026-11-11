@@ -28,8 +28,8 @@ const path = require('node:path');
         const primaryLinks=[...document.querySelectorAll('nav[aria-label="Main navigation"]>a')];
         if(primaryLinks.length){
           const isAdmin=primaryLinks[0].textContent.trim()==='Dashboard';
-          if(primaryLinks.length!==(isAdmin?8:4))failures.push('primary navigation count');
-          if(primaryLinks.some(link=>/^(Reports|Portfolio Timeline|Task Monitor|Team Workload)$/.test(link.textContent.trim())))failures.push('standalone navigation clutter');
+          if(primaryLinks.length!==(isAdmin?(document.querySelector('.viewer-notice')?8:10):5))failures.push('primary navigation count');
+
           if(primaryLinks.filter(link=>link.classList.contains('active')).length>1)failures.push('multiple active destinations');
         }
         if(document.documentElement.scrollWidth>innerWidth+2)failures.push('page overflow '+document.documentElement.scrollWidth+'/'+innerWidth);
@@ -71,7 +71,7 @@ const path = require('node:path');
         const projectTabs=[...document.querySelectorAll('.project-tabs-nav [data-tab-target]')];
         if(projectTabs.length>2){
           if(projectTabs.map(button=>button.dataset.tabTarget).join(',')!=='tasks,gantt,team,risks,info')failures.push('five clear project destinations');
-          if(!document.querySelector('#tab-info #project-milestones') || !document.querySelector('#tab-risks #project-changes'))failures.push('grouped project sections');
+          if(!document.querySelector('#tab-info .overview-closure-card') || !document.querySelector('#tab-risks #project-changes'))failures.push('grouped project sections');
           projectTabs[0].focus();projectTabs[0].dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight',bubbles:true}));
           if(!projectTabs[1].classList.contains('active'))failures.push('keyboard project tabs');
           projectTabs[0].click();
@@ -172,7 +172,7 @@ const path = require('node:path');
               start.value=initial;start.dispatchEvent(new Event('change',{bubbles:true}));
             }
             const templateSelect=editDialog.querySelector('[name="project_template_id"]');
-            if(!templateSelect || templateSelect.form!==detailsForm)failures.push('editable template association');
+            if(templateSelect || !editDialog.querySelector('.project-template-readonly'))failures.push('fixed original template');
             const addPerson=editDialog.querySelector('[data-editor-add-member]');
             if(addPerson){
               const before=editDialog.querySelectorAll('[data-editor-member]').length;

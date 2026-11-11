@@ -1,0 +1,12 @@
+<?php
+namespace App\Http\Controllers;
+use App\Models\{Project,ProjectExpense};
+use App\Services\{Access,Audit};
+use Illuminate\Http\Request;
+class ProjectBudgetController {
+ private function authorizeBudget(Request $r,Project $p):void {abort_unless(app(Access::class)->project($r->user(),$p,'project.view') && $p->canManageBudget($r->user()),403);abort_if($p->status==='archived',403);}
+ public function update(Request $r,Project $project){$this->authorizeBudget($r,$project);$data=$r->validate(['planned_budget'=>'nullable|numeric|decimal:0,2|min:0|max:9999999999999.99']);$project->update($data);Audit::record('project.budget_updated',$project);return redirect(route('projects.show',$project).'#info')->with('success','Planned budget saved.');}
+ public function store(Request $r,Project $project){$this->authorizeBudget($r,$project);$data=$r->validate(['amount'=>'required|numeric|decimal:0,2|min:0.01|max:9999999999999.99','description'=>'required|string|max:240','receipt'=>'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120','spent_on'=>'required|date|before_or_equal:today']);if($r->hasFile('receipt')){$data['receipt_path']=$r->file('receipt')->store('expense-receipts','local');$data['receipt_name']=$r->file('receipt')->getClientOriginalName();}unset($data['receipt']);$project->expenses()->create($data+['created_by'=>$r->user()->id]);Audit::record('project.expense_added',$project);return redirect(route('projects.show',$project).'#info')->with('success','Expense recorded. Actual cost updated.');}
+ public function receipt(Request $r,Project $project,ProjectExpense $expense){abort_unless(app(Access::class)->project($r->user(),$project,'project.view') && $project->canViewBudget($r->user()),403);abort_unless($expense->project_id===$project->id && $expense->receipt_path,404);return \Illuminate\Support\Facades\Storage::disk('local')->download($expense->receipt_path,$expense->receipt_name);}
+ public function destroy(Request $r,Project $project,ProjectExpense $expense){$this->authorizeBudget($r,$project);abort_unless($expense->project_id===$project->id,404);$r->validate(['confirm_remove'=>'required|accepted']);$path=$expense->receipt_path;$expense->delete();if($path)\Illuminate\Support\Facades\Storage::disk('local')->delete($path);Audit::record('project.expense_removed',$project);return redirect(route('projects.show',$project).'#info')->with('success','Expense removed. Actual cost updated.');}
+}

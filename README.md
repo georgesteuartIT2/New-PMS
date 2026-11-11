@@ -64,7 +64,7 @@ Requirements: PHP 8.3 or newer with cURL, PDO MySQL, mbstring, OpenSSL, XML, DOM
 8. In a second terminal, start the notification queue worker:
 
    ```powershell
-   php artisan queue:work
+   php artisan queue:work --queue=project-notifications,default
    ```
 
    By default `MAIL_MAILER=log`: notification emails are written to `storage/logs/laravel.log`. Real email delivery requires valid SMTP configuration.
@@ -201,3 +201,7 @@ docs/                       screen catalogue, acceptance checklist, project plan
 ## H. Notes on limits
 
 This deliverable is a substantial **application source implementation**, not a claim that every integration is currently live or that production deployment is complete. Any company-specific permission settings, Graph permissions, production SMTP, operational backup policy, domain/HTTPS and independent UAT remain configuration/release tasks.
+
+### Email settings and Admin Viewer
+
+PMO can configure encrypted SMTP settings and send a test email under Settings. Project submission emails the PM; acceptance emails the active project team. Admin Viewer provides company-wide read-only portfolio access. See [Email delivery and executive access](docs/EMAIL_AND_ADMIN_VIEWER.md) for worker setup and role details.

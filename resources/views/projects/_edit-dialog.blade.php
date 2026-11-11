@@ -23,9 +23,21 @@
 @endphp
 <dialog id="project-edit-dialog" class="project-editor" aria-labelledby="project-editor-title" aria-describedby="project-editor-subtitle" data-reopen="{{ $editorHasErrors ? 'true' : 'false' }}">
     <header class="project-editor-head">
-        <div>
-            <h2 id="project-editor-title">Edit project</h2>
-            <p id="project-editor-subtitle">{{ $project->code }} <span aria-hidden="true">&middot;</span> {{ $project->name }}</p>
+        <div class="project-editor-heading-wrap">
+            <div class="project-editor-title-row">
+                <h2 id="project-editor-title">Edit project</h2>
+                <div class="project-editor-badges">
+                    <span class="project-code-chip" title="Project code">
+                        <svg class="project-chip-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 8h10M7 12h10M7 16h6"/></svg>
+                        <span>{{ $project->code }}</span>
+                    </span>
+                    <span class="project-subsidiary-chip" title="Subsidiary">
+                        <svg class="project-chip-icon" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-3M9 9v.01M9 13v.01M9 17v.01"/></svg>
+                        <span>{{ $project->subsidiary?->name ?? 'General Group' }}</span>
+                    </span>
+                </div>
+            </div>
+            <p id="project-editor-subtitle">{{ $project->name }}</p>
         </div>
         <button type="button" class="project-editor-close" data-close-dialog aria-label="Close edit project">&times;</button>
     </header>
@@ -55,6 +67,12 @@
                             <input type="date" name="ends_on" value="{{ old('ends_on', $project->ends_on->format('Y-m-d')) }}" min="{{ old('starts_on', $project->starts_on->format('Y-m-d')) }}" required>
                         </label>
                     </div>
+                    @if($project->canManageBudget(auth()->user()))
+                    <label>Planned budget (LKR) <span class="project-editor-optional">Optional</span>
+                        <input type="number" name="planned_budget" value="{{ old('planned_budget',$project->planned_budget) }}" min="0" max="9999999999999.99" step="0.01" placeholder="Not set">
+                        <small>Actual cost is calculated from recorded expenses.</small>
+                    </label>
+                    @endif
                     <label>Project status <span class="required">*</span>
                         <select name="status" required>
                             @foreach($editorStatuses as $value=>$label)
@@ -71,25 +89,13 @@
             <aside class="project-editor-context" aria-label="Project setup and ownership">
                 <section class="project-editor-context-card" data-project-setup="{{ $project->project_template_id ? 'template' : 'blank' }}">
                     <h3>Project setup</h3>
-                    <label>Project template
-                        <select name="project_template_id" form="project-details-edit-form">
-                            <option value="">Blank project</option>
-                            @foreach(\App\Models\ProjectTemplate::where(fn($q)=>$q->where('status','active')->orWhere('id',$project->project_template_id))->orderBy('name')->get() as $option)
-                            <option value="{{ $option->id }}" @selected((string)$project->project_template_id===(string)$option->id)>{{ $option->name }}</option>
-                            @endforeach
-                        </select>
-                    </label>
-                    <p>Change the linked template or choose Blank. Existing tasks, dates and progress are kept.</p>
-                    <dl class="project-editor-context-list">
-                        <div><dt>Project code</dt><dd>{{ $project->code }}</dd></div>
-                        <div><dt>Subsidiary</dt><dd>{{ $project->subsidiary?->name ?? 'General Group' }}</dd></div>
-                    </dl>
+                    <div class="project-template-readonly"><small>Original project template</small><strong>{{ $project->template?->name ?? 'Blank project' }}</strong><p>The original template is fixed. Manage the current plan in Tasks.</p></div>
                 </section>
 
                 <section class="project-editor-context-card">
                     <h3>Project manager</h3>
-                    @if($canTeam && in_array($project->status,['draft','pending','declined','on_hold'],true))
-                    <label>Assigned manager<select name="pm_user_id" form="project-details-edit-form"><option value="">Not assigned</option>@foreach($users as $option)<option value="{{ $option->id }}" @selected($project->pm_user_id===$option->id)>{{ $option->name }}</option>@endforeach</select></label>
+                    @if(!$project->approval_stage && $canTeam && ($project->status==='declined' || ($project->status==='draft' && !$project->pm_user_id)))
+                    <label>Assigned manager<select data-directory-picker data-directory-project="{{ $project->id }}" name="pm_user_id" form="project-details-edit-form"><option value="">Not assigned</option>@foreach($users as $option)<option value="{{ $option->id }}" @selected($project->pm_user_id===$option->id)>{{ $option->name }}</option>@endforeach</select></label>
                     <p>A new manager must accept the project before it becomes active.</p>
                     @endif
                     @if($project->manager)
@@ -117,9 +123,9 @@
                         <input type="hidden" name="edit_team" value="1" form="project-details-edit-form">
                         <p class="muted">Removing a person also removes their task assignments. The manager is managed separately.</p>
                         <div data-editor-members>
-                        @foreach($editorPeople->reject(fn($person)=>$person['user']->id===$project->pm_user_id)->values() as $index=>$person)
+                        @foreach($editorPeople->reject(fn($person)=>$person['user']->id===$project->pm_user_id || ($project->approval_stage && $person['user']->id===$project->owner_user_id))->values() as $index=>$person)
                         <div class="project-editor-member" data-editor-member>
-                            <label><span class="workspace-sr-only">Person</span><select data-member-user name="members[{{ $index }}][user_id]" form="project-details-edit-form" required>
+                            <label><span class="workspace-sr-only">Person</span><select data-directory-picker data-directory-project="{{ $project->id }}" data-member-user name="members[{{ $index }}][user_id]" form="project-details-edit-form" required>
                             @foreach($users->merge(collect([$person['user']]))->unique('id') as $option)<option value="{{ $option->id }}" @selected($option->id===$person['user']->id)>{{ $option->name }}</option>@endforeach
                             </select></label>
                             <label><span class="workspace-sr-only">Project role</span><select data-member-role name="members[{{ $index }}][project_role_id]" form="project-details-edit-form" required><option value="">Choose role</option>
@@ -130,7 +136,7 @@
                         @endforeach
                         </div>
                         <template data-editor-member-template><div class="project-editor-member" data-editor-member>
-                            <label><span class="workspace-sr-only">Person</span><select data-member-user form="project-details-edit-form" required><option value="">Choose person</option>@foreach($users->where('id','!=',$project->pm_user_id) as $option)<option value="{{ $option->id }}">{{ $option->name }}</option>@endforeach</select></label>
+                            <label><span class="workspace-sr-only">Person</span><select data-directory-picker data-directory-project="{{ $project->id }}" data-member-user form="project-details-edit-form" required><option value="">Choose person</option>@foreach($users->where('id','!=',$project->pm_user_id) as $option)<option value="{{ $option->id }}">{{ $option->name }}</option>@endforeach</select></label>
                             <label><span class="workspace-sr-only">Project role</span><select data-member-role form="project-details-edit-form" required><option value="">Choose role</option>@foreach($roles->where('slug','!=','pm') as $role)<option value="{{ $role->id }}">{{ $role->name }}</option>@endforeach</select></label>
                             <button type="button" class="btn btn-ghost" data-editor-remove-member aria-label="Remove person">&times;</button>
                         </div></template>
@@ -162,7 +168,7 @@
     </div>
 
     <footer class="project-editor-footer">
-        <span data-editor-feedback role="status">Project details, template and team</span>
+        <span data-editor-feedback role="status">Project details and assigned team</span>
         <div>
             <button type="button" class="btn btn-ghost" data-close-dialog>Cancel</button>
             <button type="submit" form="project-details-edit-form" class="btn btn-primary">Save changes</button>

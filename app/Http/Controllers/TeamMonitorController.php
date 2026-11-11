@@ -26,15 +26,15 @@ class TeamMonitorController
     public function index(Request $request)
     {
         $user = $request->user();
-        if (!$user->isPmo() && !$this->hasMonitoringAccess($user)) {
+        if (!$user->canViewPortfolio() && !$this->hasMonitoringAccess($user)) {
             abort(403, 'Unauthorized. Company-wide team monitoring requires PMO Administrator authority.');
         }
 
         $filters = [
+            'attention_first' => true,
             'q' => $request->input('q'),
             'subsidiary_id' => $request->input('subsidiary_id'),
             'project_id' => $request->input('project_id'),
-            'workload' => $request->input('workload'),
             'has_overdue' => $request->boolean('has_overdue'),
             'has_critical' => $request->boolean('has_critical'),
         ];
@@ -52,7 +52,7 @@ class TeamMonitorController
 
         $subsidiaries = Subsidiary::orderBy('name')->get(['id', 'code', 'name']);
         $projectsQuery = Project::whereIn('status', ['active', 'on_hold'])->orderBy('name');
-        if (!$user->isPmo()) {
+        if (!$user->canViewPortfolio()) {
             $projectsQuery->where(function ($q) use ($user) {
                 $q->whereHas('memberships', fn($m) => $m->where('user_id', $user->id))
                   ->orWhere('pm_user_id', $user->id);
@@ -72,7 +72,7 @@ class TeamMonitorController
     public function employeeDetails(Request $request, User $user)
     {
         $actor = $request->user();
-        if (!$actor->isPmo() && !$this->hasMonitoringAccess($actor)) {
+        if (!$actor->canViewPortfolio() && !$this->hasMonitoringAccess($actor)) {
             abort(403, 'Unauthorized to view employee workload details.');
         }
 
@@ -98,7 +98,7 @@ class TeamMonitorController
         $task = Task::with('project.memberships')->findOrFail($data['task_id']);
 
         // Check permission
-        if (!$actor->isPmo() && !$this->access->canManageTask($actor, $task->project)) {
+        if (!$actor->canViewPortfolio() && !$this->access->canManageTask($actor, $task->project)) {
             abort(403, 'Unauthorized to reassign tasks in this project.');
         }
 

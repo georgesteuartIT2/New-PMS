@@ -34,6 +34,52 @@ class TemplateController {
     }
 
     /**
+     * Query keys that carry a project flow through the template library and builder.
+     */
+    public const PROJECT_CONTEXT_KEYS = ['project_flow', 'draft', 'plan_project', 'starts_on', 'ends_on', 'planned_budget'];
+
+    /**
+     * The project whose plan setup opened the library, if the current user may prepare that plan
+     * (PMO, or the project's own Owner/PM while it is awaiting plan setup). Grants no company-wide template rights.
+     */
+    protected function planProject(Request $request): ?Project {
+        $user = $request->user();
+        $id = (int) $request->input('plan_project');
+        if (!$id || !$user || !$user->isActive()) {
+            return null;
+        }
+        $project = Project::find($id);
+        if (!$project || $project->approval_stage !== 'planning' || $project->status !== 'active') {
+            return null;
+        }
+        $leader = $user->system_role === 'user' && in_array($user->id, [(int) $project->pm_user_id, (int) $project->owner_user_id], true);
+
+        return ($user->isPmo() || $leader) ? $project : null;
+    }
+
+    /**
+     * Creating a template needs template management, or an authorised plan-setup context.
+     */
+    protected function authorizeCreate(Request $request): void {
+        $user = $request->user();
+        $canManage = $user && ($user->isPmo() || app(Access::class)->hasCompanyPermission($user, 'templates.manage'));
+        abort_unless($canManage || $this->planProject($request), 403, 'Permission denied: cannot create project templates.');
+    }
+
+    /**
+     * Where to continue after choosing or saving a template inside a project flow (null for the normal library).
+     */
+    protected function continuationUrl(Request $request, int $templateId): ?string {
+        if ($project = $this->planProject($request)) {
+            return route('projects.plan.setup', array_merge($request->only('starts_on', 'ends_on', 'planned_budget'), ['project' => $project->id, 'template_id' => $templateId]));
+        }
+
+        return $request->boolean('select_for_project')
+            ? route('projects.create', array_merge($request->only('project_flow', 'draft'), ['template_id' => $templateId, 'mode' => 'template']))
+            : null;
+    }
+
+    /**
      * Templates Library (Screen 01)
      */
     public function index(Request $request) {
@@ -78,7 +124,10 @@ class TemplateController {
         $user = $request->user();
         $canManage = $user && ($user->isPmo() || app(Access::class)->hasCompanyPermission($user, 'templates.manage'));
         $canCreateProject = $user && ($user->isPmo() || app(Access::class)->hasCompanyPermission($user, 'projects.create'));
-        abort_unless($canManage || $canCreateProject, 403, 'Permission denied.');
+        $planProject = $this->planProject($request);
+        abort_unless($canManage || $canCreateProject || $planProject || $user?->isAdminViewer(), 403, 'Permission denied.');
+        $canCreateProject = $canCreateProject || $planProject !== null;
+        $canCreateTemplate = $canManage || $planProject !== null;
         $roles = ProjectRole::orderBy('name')->get();
 
         $templatesCache = $templates->getCollection()->mapWithKeys(function($t) {
@@ -129,6 +178,7 @@ class TemplateController {
             'counts', 
             'canManage', 
             'canCreateProject', 
+            'canCreateTemplate',
             'roles',
             'templatesCache',
             'selectForProject'
@@ -139,18 +189,20 @@ class TemplateController {
      * Screen 02: Create Template form
      */
     public function create(Request $request) {
-        $this->authorizeManage($request);
+        $this->authorizeCreate($request);
 
         $roles = ProjectRole::orderBy('name')->get();
         $categories = self::DEFAULT_CATEGORIES;
-        return view('templates.create', compact('roles', 'categories'));
+        $user = $request->user();
+        $canCreateProject = $this->planProject($request) !== null || ($user && ($user->isPmo() || app(Access::class)->hasCompanyPermission($user, 'projects.create')));
+        return view('templates.create', compact('roles', 'categories', 'canCreateProject'));
     }
 
     /**
      * Store newly created template
      */
     public function store(Request $request) {
-        $this->authorizeManage($request);
+        $this->authorizeCreate($request);
 
         $data = $request->validate([
             'name' => 'required|string|max:160',
@@ -199,9 +251,7 @@ class TemplateController {
             return $tpl;
         });
 
-        $returnUrl=$request->boolean('select_for_project')
-            ? route('projects.create',array_merge($request->only('project_flow','draft'),['template_id'=>$template->id,'mode'=>'template']))
-            : route('templates.index');
+        $returnUrl = $this->continuationUrl($request, $template->id) ?? route('templates.index');
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
@@ -240,7 +290,7 @@ class TemplateController {
         $user = request()->user();
         $canManage = $user && ($user->isPmo() || app(Access::class)->hasCompanyPermission($user, 'templates.manage'));
         $canCreateProject = $user && ($user->isPmo() || app(Access::class)->hasCompanyPermission($user, 'projects.create'));
-        abort_unless($canManage || $canCreateProject, 403, 'Permission denied.');
+        abort_unless($canManage || $canCreateProject || $this->planProject(request()) || $user?->isAdminViewer(), 403, 'Permission denied.');
 
         $template->load(['tasks.suggestedRole', 'creator']);
         $roles = ProjectRole::orderBy('name')->get(['id', 'name', 'slug']);
@@ -378,16 +428,17 @@ class TemplateController {
             Audit::record('template.updated', $template, ['name' => $template->name, 'task_count' => count($tasks)]);
         });
 
+        $returnUrl = $this->continuationUrl($request, $template->id) ?? route('templates.index');
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
                 'success' => true,
                 'message' => "Template '{$template->name}' updated successfully.",
                 'template_id' => $template->id,
-                'redirect' => route('templates.index')
+                'redirect' => $returnUrl
             ]);
         }
 
-        return redirect()->route('templates.index')->with('success', "Template '{$template->name}' updated successfully.");
+        return redirect()->to($returnUrl)->with('success', "Template '{$template->name}' updated successfully.");
     }
 
     /**

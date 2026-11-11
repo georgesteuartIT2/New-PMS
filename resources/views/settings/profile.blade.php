@@ -20,7 +20,7 @@
 
     <div style="display: inline-flex; gap: 8px; margin-bottom: 24px;">
         <span class="pill {{ $user->isPmo() ? 'active' : 'todo' }}">
-            {{ $user->isPmo() ? 'PMO Admin' : 'User' }}
+            {{ $user->systemRoleLabel() }}
         </span>
         <span class="pill active">Account Active</span>
     </div>

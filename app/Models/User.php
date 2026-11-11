@@ -9,6 +9,9 @@ class User extends Authenticatable {
  protected $hidden=['password','remember_token'];
  protected function casts(): array {return ['password'=>'hashed','must_change_password'=>'boolean','email_verified_at'=>'datetime','weekly_capacity_hours'=>'integer'];}
  public function isPmo(): bool {return $this->system_role==='pmo';}
+ public function isAdminViewer(): bool {return $this->system_role==='admin_viewer';}
+ public function canViewPortfolio(): bool {return $this->isPmo() || $this->isAdminViewer();}
+ public function systemRoleLabel(): string {return match($this->system_role){'pmo'=>'PMO Admin','admin_viewer'=>'Admin Viewer',default=>'User'};}
  public function isActive(): bool {return $this->account_status==='active';}
  public function subsidiary(){return $this->belongsTo(Subsidiary::class);}
  public function memberships(): HasMany {return $this->hasMany(ProjectMembership::class);}

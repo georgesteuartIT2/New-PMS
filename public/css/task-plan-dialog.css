@@ -1,0 +1,52 @@
+/* Scoped task-plan workspace; controls retain their existing behavior. */
+#smart-task-plan-backdrop{padding:12px!important;box-sizing:border-box;background:rgba(34,39,43,.46)!important;backdrop-filter:blur(3px)}
+#smart-task-plan-modal{width:100%!important;max-width:1760px!important;max-height:calc(100dvh - 24px)!important;border:1px solid #DFE6E3!important;border-radius:16px!important;box-shadow:0 24px 80px #142b242e!important;color:#22272B}
+#smart-task-plan-modal .stp-header{padding:12px 18px!important;gap:16px;flex-shrink:0;background:white}
+#smart-task-plan-modal .stp-header h2{font-size:18px!important;line-height:1.4;margin:0;gap:10px}
+#smart-task-plan-modal #stp-template-title{font-size:14px!important;font-weight:600!important}
+#smart-task-plan-modal #stp-schedule-badge{font-size:12px!important;font-weight:400!important;color:#687772!important}
+#smart-task-plan-modal .stp-badge{font-size:11px!important;padding:3px 8px!important;border-radius:5px!important;font-weight:600!important}
+#smart-task-plan-modal .stp-header-actions{gap:10px}
+#smart-task-plan-modal .stp-header-actions .btn{height:34px!important;min-height:34px!important;border-radius:8px!important;font-size:12px!important}
+#smart-task-plan-modal .stp-close-btn{width:34px;height:34px;border-radius:8px;font-size:20px!important;color:#687772}
+#smart-task-plan-modal .stp-selection-note{margin:0!important;padding:6px 18px!important;font-size:12px!important;color:#52645D;background:#F5F8F6;border-bottom:1px solid #E4EBE7;line-height:1.5}
+#smart-task-plan-modal .stp-toolbar{padding:8px 18px!important;background:#FFF!important;gap:12px;border-bottom:0!important;justify-content:space-between;flex-shrink:0;flex-wrap:wrap}
+#smart-task-plan-modal .stp-toolbar-left{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#smart-task-plan-modal .stp-toolbar .btn{display:inline-flex;align-items:center;gap:7px;height:34px!important;min-height:34px!important;padding:0 12px!important;font-size:12px!important;border-radius:7px!important;font-weight:600!important}
+#smart-task-plan-modal .stp-toolbar-hint{font-size:12px;color:#687772}
+#smart-task-plan-modal .stp-summary-bar{padding:0 18px 6px!important;min-height:0!important;flex-shrink:0;border-bottom:1px solid #E4EBE7!important;background:#FFF!important}
+#smart-task-plan-modal #stp-summary-counts{font-size:12px!important;color:#687772!important;font-weight:500!important}
+#smart-task-plan-modal #stp-periods-count-badge{display:none!important}
+#smart-task-plan-modal .stp-body{min-height:0;overscroll-behavior:contain;scrollbar-gutter:stable;overflow:auto}
+#smart-task-plan-modal #stp-table-wrap{padding:0 18px 8px!important}
+#smart-task-plan-modal .stp-table{width:100%;min-width:1360px;table-layout:fixed;border-collapse:separate;border-spacing:0}
+#smart-task-plan-modal .stp-table th{height:34px!important;padding:6px 8px!important;font-size:12px!important;text-transform:none!important;letter-spacing:0!important;font-weight:600!important;background:#F5F6F7!important;color:#52645D!important;border-bottom:1px solid #DFE6E3!important}
+#smart-task-plan-modal .stp-table th:nth-child(1){width:44px!important}
+#smart-task-plan-modal .stp-table th:nth-child(2){width:auto!important;min-width:240px!important}
+#smart-task-plan-modal .stp-table th:nth-child(3),#smart-task-plan-modal .stp-table th:nth-child(4){width:224px!important}
+#smart-task-plan-modal .stp-table th:nth-child(5){width:70px!important}
+#smart-task-plan-modal .stp-table th:nth-child(6){width:150px!important}
+#smart-task-plan-modal .stp-table th:nth-child(7){width:150px!important}
+#smart-task-plan-modal .stp-table th:nth-child(8){width:145px!important}
+#smart-task-plan-modal .stp-table tbody td{padding:6px 8px!important;border-bottom:1px solid #EAEFED!important;vertical-align:middle!important}
+#smart-task-plan-modal .stp-table tbody tr:hover{background:#F8FAF9}
+#smart-task-plan-modal .stp-table input,#smart-task-plan-modal .stp-table select{height:30px!important;min-height:30px!important;font-size:12px!important;border:1px solid #DEE5E1!important;border-radius:6px!important;padding:0 7px!important;box-shadow:none!important;color:#22272B!important;min-width:0!important;max-width:100%!important;box-sizing:border-box}
+#smart-task-plan-modal .stp-table input:focus,#smart-task-plan-modal .stp-table select:focus{border-color:#315F58!important;outline:2px solid #315F5826!important;outline-offset:1px}
+#smart-task-plan-modal .stp-table .stp-task-name-input{border-color:transparent!important;background:transparent!important;font-size:13px!important;font-weight:600!important;width:100%!important}
+#smart-task-plan-modal .stp-table .stp-task-name-input:hover{border-color:#DEE5E1!important;background:white!important}
+#smart-task-plan-modal .stp-table .stp-datetime{display:grid!important;grid-template-columns:minmax(110px,1fr) 96px;align-items:center!important;gap:4px!important}
+#smart-task-plan-modal .stp-table .stp-datetime input{width:100%!important;flex:none!important}
+#smart-task-plan-modal .stp-table .stp-datetime input[type=time]{height:30px!important;min-height:30px!important;font-size:11.5px!important;color:#687772!important;background:#F8FAF9!important}
+#smart-task-plan-modal .stp-table .stp-row-action{display:inline-flex!important;justify-content:center;align-items:center;height:30px!important;min-height:30px!important;padding:0 7px!important;font-size:11px!important;box-shadow:none!important;border:1px solid transparent!important;border-radius:6px!important;background:transparent!important;color:#315F58!important;white-space:nowrap}
+#smart-task-plan-modal .stp-table .stp-row-action:hover{background:#EAF1EE!important;border-color:#D9E5DF!important}
+#smart-task-plan-modal .stp-table .stp-row-insert,#smart-task-plan-modal .stp-table .stp-row-delete{width:28px!important;padding:0!important;font-size:17px!important}
+#smart-task-plan-modal .stp-table .stp-row-delete{color:#A34848!important}
+#smart-task-plan-modal .stp-table .stp-row-delete:hover{background:#FFF0F0!important;border-color:#F0D3D3!important}
+#smart-task-plan-modal .stp-footer{padding:10px 18px!important;min-height:0!important;gap:16px;border-top:1px solid #DFE6E3!important;background:white;flex-shrink:0}
+#smart-task-plan-modal .stp-footer button{height:38px!important;min-height:38px!important;font-size:13px!important;padding:0 16px!important;border-radius:8px!important}
+#smart-task-plan-modal[data-mode=view] .stp-table th:last-child,#smart-task-plan-modal[data-mode=view] .stp-table td:last-child{display:none}
+#smart-task-plan-modal .stp-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+@media(max-width:700px){#smart-task-plan-backdrop{padding:8px!important}#smart-task-plan-modal{max-height:calc(100dvh - 16px)!important;border-radius:12px!important}#smart-task-plan-modal .stp-header{padding:14px!important;align-items:flex-start}#smart-task-plan-modal .stp-header-actions{flex-wrap:wrap;justify-content:flex-end}#smart-task-plan-modal .stp-toolbar,#smart-task-plan-modal .stp-selection-note{padding:10px 14px!important}#smart-task-plan-modal .stp-toolbar-hint{display:none}#smart-task-plan-modal .stp-summary-bar{padding:0 14px 8px!important}#smart-task-plan-modal #stp-table-wrap{padding:0 14px 12px!important}#smart-task-plan-modal .stp-footer{padding:12px 14px!important;align-items:center}#smart-task-plan-modal .stp-footer>div:last-child{gap:6px!important}#smart-task-plan-modal .stp-footer button{padding:0 12px!important;font-size:12px!important}}
+
+/* Keep counts in the toolbar and reserve extra rows for real warnings only. */
+#smart-task-plan-modal .stp-toolbar-meta{margin-left:auto;display:flex;align-items:center;gap:10px}#smart-task-plan-modal:not([data-mode=view]) .stp-summary-bar>div:first-child{display:none}#smart-task-plan-modal:not([data-mode=view]) .stp-summary-bar:not(:has(#stp-warning-banner[style*="inline-flex"])){display:none!important}#smart-task-plan-modal .stp-table th,#smart-task-plan-modal .stp-table td{box-sizing:border-box}#smart-task-plan-modal .stp-table .stp-datetime input[type=time]{padding:0 4px!important}#smart-task-plan-modal .stp-table .stp-datetime input[type=date]{padding:0 4px!important}#smart-task-plan-modal .stp-footer button{height:34px!important;min-height:34px!important}@media(max-width:700px){#smart-task-plan-modal .stp-toolbar-meta{margin-left:0}#smart-task-plan-modal .stp-header{padding:10px 14px!important}#smart-task-plan-modal .stp-footer{padding:8px 14px!important}}

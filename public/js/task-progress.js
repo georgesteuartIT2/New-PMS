@@ -28,6 +28,22 @@
   const old=select.dataset.currentStatus;select.disabled=true;
   try{await save(select.dataset.updateUrl,{status:select.value});}catch(error){select.value=old;alert(error.message);}finally{select.disabled=false;}
  });
+ document.addEventListener('change',async event=>{
+  const select=event.target.closest('.quick-priority-select');if(!select)return;
+  const old=select.dataset.currentPriority;select.disabled=true;
+  try{
+      const res=await fetch(select.dataset.updateUrl,{method:'PATCH',headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]')?.content||''},body:JSON.stringify({priority:select.value})});
+      if(!res.ok){const data=await res.json();throw Error(data.message||'Could not save priority.');}
+       select.dataset.currentPriority=select.value;
+       const styles={
+           high:'border-color:#FECACA;border-left-color:#DC2626;color:#B91C1C;',
+           low:'border-color:#E2E8F0;border-left-color:#64748B;color:#475569;',
+           medium:'border-color:#FDE68A;border-left-color:#D97706;color:#B45309;'
+       };
+       select.style.cssText='height: 28px; font-size: 11.5px; padding: 2px 6px 2px 8px; border-radius: 5px; font-weight: 600; cursor: pointer; background: #FFFFFF; border: 1px solid; border-left-width: 3.5px; outline: none; '+(styles[select.value]||styles.medium);
+       const feedback=document.getElementById('progress-save-feedback');if(feedback)feedback.textContent='Task priority updated to '+select.value+'.';
+  }catch(error){select.value=old;alert(error.message);}finally{select.disabled=false;}
+ });
  document.addEventListener('submit',async event=>{
   const form=event.target;if(!form.closest('.task-inline-content')||! /\/tasks\/\d+$/.test(new URL(form.getAttribute('action'),location.href).pathname)||!form.querySelector('[name="status"]'))return;
   event.preventDefault();if(saving)return;saving=true;const button=event.submitter;if(button)button.disabled=true;

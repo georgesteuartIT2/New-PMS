@@ -2,13 +2,14 @@
 @section('title', $project->name)
 @section('content')
 @include('projects._delete-dialog')
+@include('projects._workflow')
 @php
     $projectImportLabel=$project->template ? 'Download project template' : 'Download blank template';
     $projectImportUrl=route('tasks.export',['project'=>$project,'starter'=>1]);
 @endphp
 <script defer src="{{ asset('js/project-import.js') }}?v={{ filemtime(public_path('js/project-import.js')) }}"></script>
 @if(app(\App\Services\Access::class)->project(auth()->user(),$project,'assign_tasks') && $project->status!=='archived')
-<template id="project-assignee-options">@foreach($project->memberships->pluck('user')->push($project->manager)->filter(fn($person)=>$person && $person->account_status==='active')->unique('id')->sortBy('name') as $person)<option value="{{ $person->id }}">{{ $person->name }}</option>@endforeach</template>
+<template id="project-assignee-options">@foreach(($project->approval_stage==='planning' ? $users : $project->memberships->pluck('user')->push($project->manager)->filter(fn($person)=>$person && $person->account_status==='active')->unique('id')->sortBy('name')) as $person)<option value="{{ $person->id }}">{{ $person->name }}</option>@endforeach</template>
 @endif
 <script defer src="{{ asset('js/task-assignment.js') }}?v={{ filemtime(public_path('js/task-assignment.js')) }}"></script>
 
@@ -34,9 +35,9 @@
                 <span class="status-dot"></span>
                 <span>
                     @if($project->status === 'declined')
-                        PM Declined
+                        {{ $project->approval_stage==='owner_declined'?'Owner Declined':'PM Declined' }}
                     @elseif($project->status === 'pending')
-                        Pending PM Approval
+                        {{ $project->approval_stage==='owner'?'Pending Owner Approval':'Pending PM Approval' }}
                     @else
                         {{ ucwords(str_replace('_', ' ', $project->status)) }}
                     @endif
@@ -47,43 +48,19 @@
                 <button type="button" class="btn btn-outline workspace-edit-project" data-show-dialog="project-edit-dialog">Edit project</button>
             @endif
             @if($project->status==='draft' && (auth()->user()->isPmo() || ($project->created_by===auth()->id() && app(\App\Services\Access::class)->hasCompanyPermission(auth()->user(),'projects.create'))))<a href="{{ route('projects.create',['draft'=>$project->id]) }}" class="btn btn-primary">Create project</a>@endif
-            <!-- More Actions (...) Dropdown -->
-            <div class="pw-dropdown-wrap">
-                <button type="button" class="pw-more-btn pw-dropdown-toggle" title="More project actions" aria-label="More actions">
-                    ···
-                </button>
-                <div class="pw-dropdown-menu align-right">
-@if($health && !$health['baseline_available'] && $canTeam && in_array($project->status, ['active', 'on_hold'], true))
-                        <form method="post" action="{{ route('projects.baseline', $project) }}">
-                            @csrf
-                            <button type="submit" class="pw-dropdown-item">Capture Schedule Baseline</button>
-                        </form>
-                    @endif
-
-                    @if($canManage)
-                        <a href="{{ route('tasks.export', $project) }}" class="pw-dropdown-item">Export Tasks to Excel</a>
-                        <a href="{{ $projectImportUrl }}" class="pw-dropdown-item">{{ $projectImportLabel }}</a>
-                    @endif
-
-                    @if($canTeam)
-                        <button type="button" class="pw-dropdown-item" data-show-dialog="project-closure-dialog" style="text-align: left; width: 100%; background: none; border: none; font-size: inherit; cursor: pointer;">Project Closure & Sign-off</button>
-                    @endif
-@if(auth()->user()->isPmo())<button type="button" class="pw-dropdown-item project-delete-action" data-delete-project-url="{{ route('projects.destroy',$project) }}" data-delete-project-name="{{ $project->name }}" data-delete-project-code="{{ $project->code }}">Delete project</button>@endif
-                </div>
-            </div>
         </div>
     </div>
 
     <!-- PM Acceptance & Comprehensive Scope Review Banner (When project is pending and current user is PM) -->
-    @if($project->status === 'pending' && $project->pm_user_id === auth()->id())
+    @if(!auth()->user()->isAdminViewer() && $project->status === 'pending' && $project->pm_user_id === auth()->id())
         @php
             $workingDays = max(1, (int) $project->starts_on->diffInWeekdays($project->ends_on) + 1);
             $calendarDays = $project->starts_on->diffInDays($project->ends_on) + 1;
         @endphp
         <section class="pm-assignment-review-banner approval-review" aria-labelledby="approval-review-title">
-            <header><div><span class="approval-eyebrow">Project manager invitation</span><h2 id="approval-review-title">Review your project assignment</h2><p>Check the tasks, timeline and team below. Accepting activates the project and captures its baseline.</p></div><div class="approval-review-actions"><button type="button" class="btn btn-outline" data-show-dialog="decline-project-dialog">Decline</button><form method="post" action="{{ route('projects.respond',$project) }}" onsubmit="return confirm('Accept this assignment and activate the project?');">@csrf
+            <header><div><span class="approval-eyebrow">Project manager invitation</span><h2 id="approval-review-title">Review your project assignment</h2><p>Check the tasks, timeline and team below. {{ $project->approval_stage ? 'Accept to choose your plan, prepare tasks and assign the team.' : 'Accepting activates the project and captures its baseline.' }}</p></div><div class="approval-review-actions"><button type="button" class="btn btn-outline" data-show-dialog="decline-project-dialog">Decline</button><form method="post" action="{{ route('projects.respond',$project) }}" onsubmit="return AppDialog.confirmAction(event,this,'Accept this assignment and activate the project?');">@csrf
             <input type="hidden" name="decision" value="accept"><button type="submit" class="btn btn-primary">Accept project</button></form></div></header>
-            <dl><div><dt>Company</dt><dd>{{ $project->subsidiary?->name ?? 'General Group' }}</dd></div><div><dt>Planned schedule</dt><dd>{{ $project->starts_on->format('d M Y') }} &ndash; {{ $project->ends_on->format('d M Y') }}</dd></div><div><dt>Prepared plan</dt><dd>{{ $project->template?->name ?? 'Blank project' }} <small>{{ $project->tasks()->whereDoesntHave('children')->count() }} executable tasks</small></dd></div><div><dt>Requested by</dt><dd>{{ $project->creator?->name ?? 'PMO' }}<small>{{ $project->created_at->format('d M Y') }}</small></dd></div></dl>
+            <dl><div><dt>Company</dt><dd>{{ $project->subsidiary?->name ?? 'General Group' }}</dd></div><div><dt>Planned schedule</dt><dd>@if($project->approval_stage && !$project->plan_initialized)Set after acceptance@else{{ $project->starts_on->format('d M Y') }} &ndash; {{ $project->ends_on->format('d M Y') }}@endif</dd></div><div><dt>Prepared plan</dt><dd>{{ $project->template?->name ?? 'Blank project' }} <small>{{ $project->tasks()->whereDoesntHave('children')->count() }} executable tasks</small></dd></div><div><dt>Requested by</dt><dd>{{ $project->creator?->name ?? 'PMO' }}<small>{{ $project->created_at->format('d M Y') }}</small></dd></div></dl>
         </section>
     @elseif($project->status === 'declined' && $project->pm_user_id === auth()->id())
         <section class="action-banner" style="margin-bottom: 20px; background: #FEF2F2; border: 1px solid #FECACA; border-left: 5px solid #DC2626; border-radius: 8px; padding: 16px 20px;">
@@ -102,7 +79,7 @@
                 </div>
             </div>
         </section>
-    @elseif($project->status === 'declined' && auth()->user()->isPmo())
+    @elseif(!$project->approval_stage && $project->status === 'declined' && auth()->user()->isPmo())
         <section class="action-banner action-banner-declined" style="margin-bottom: 20px; background: #FEF2F2; border: 1px solid #FECACA; border-left: 5px solid #DC2626; border-radius: 8px; padding: 16px 20px;">
             <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
                 <div style="flex: 1; min-width: 260px;">
@@ -130,7 +107,7 @@
                 </div>
             </div>
         </section>
-    @elseif($project->status === 'pending' && auth()->user()->isPmo())
+    @elseif(!$project->approval_stage && $project->status === 'pending' && auth()->user()->isPmo())
         <section class="action-banner action-banner-pending" style="margin-bottom: 20px; background: #FFFBEB; border: 1px solid #FDE68A; border-left: 5px solid #F59E0B; border-radius: 8px; padding: 14px 20px;">
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;">
                 <div>
@@ -139,12 +116,10 @@
                         <strong style="color: #92400E; font-size: 14px;">Awaiting Project Manager Acceptance</strong>
                     </div>
                     <p style="color: #B45309; font-size: 13px; margin: 4px 0 0 0;">
-                        Assignment invitation sent to <strong>{{ $project->manager?->name }}</strong> on {{ $pendingInvitation?->created_at ? $pendingInvitation->created_at->format('d M Y') : $project->created_at->format('d M Y') }}. You can reassign to another Project Manager if needed.
+                        Assignment invitation sent to <strong>{{ $project->manager?->name }}</strong> on {{ $pendingInvitation?->created_at ? $pendingInvitation->created_at->format('d M Y') : $project->created_at->format('d M Y') }}. Reassignment becomes available if the Project Manager rejects the request.
                     </p>
                 </div>
-                <button type="button" class="btn btn-outline btn-sm" data-show-dialog="assign-pm-dialog" style="border-color: #315F58; color: #315F58; font-weight: 600;">
-                    Reassign PM
-                </button>
+
             </div>
         </section>
     @elseif($project->status === 'draft' && auth()->user()->isPmo())
@@ -183,9 +158,9 @@
         <div class="workspace-schedule">
             <dt>Schedule</dt>
             <dd>
-                <time datetime="{{ $project->starts_on->format('Y-m-d') }}" aria-label="Start date">{{ $project->starts_on->format('d M Y') }}</time>
+                @if($project->approval_stage && !$project->plan_initialized)<span>Set by PM after acceptance</span>@else<time datetime="{{ $project->starts_on->format('Y-m-d') }}" aria-label="Start date">{{ $project->starts_on->format('d M Y') }}</time>
                 <span class="workspace-date-separator" aria-hidden="true">&rarr;</span>
-                <time datetime="{{ $project->ends_on->format('Y-m-d') }}" aria-label="Due date">{{ $project->ends_on->format('d M Y') }}</time>
+                <time datetime="{{ $project->ends_on->format('Y-m-d') }}" aria-label="Due date">{{ $project->ends_on->format('d M Y') }}</time>@endif
             </dd>
         </div>
         <div class="workspace-summary-progress">
@@ -230,7 +205,7 @@
                 @endif
             </button>
         @endif
-        <button type="button" class="project-tab-btn" data-tab-target="info">Overview</button>
+        <button type="button" class="project-tab-btn" data-tab-target="info">Budget &amp; Closure</button>
     </nav>
 
     <!-- =========================================================================
@@ -313,12 +288,13 @@
                     <table class="clean-table project-tasks-full-table" style="width: 100%; border-collapse: collapse; text-align: left;">
                         <thead>
                             <tr style="background: #F8FAFC; border-bottom: 1px solid #E2E8F0; font-size: 12px; font-weight: 700; color: #475569;">
-                                <th style="padding: 12px 16px; width: 34%;">Task / Subtask</th>
-                                <th style="padding: 12px 14px; width: 18%;">Assignee</th>
-                                <th style="padding: 12px 14px; width: 14%;">Starts<span class="workspace-sr-only">Start Date &amp; Time</span></th>
-                                <th style="padding: 12px 14px; width: 14%;">Due<span class="workspace-sr-only">End Date &amp; Time</span></th>
-                                <th style="padding: 12px 14px; width: 10%;">Progress</th>
-                                <th style="padding: 12px 16px; width: 10%;">Status</th>
+                                <th style="padding: 12px 16px; width: 33%;">Task / Subtask</th>
+                                <th style="padding: 12px 14px; width: 14%;">Assignee</th>
+                                <th style="padding: 12px 10px; width: 10%;">Priority</th>
+                                <th style="padding: 12px 14px; width: 11%;">Starts<span class="workspace-sr-only">Start Date &amp; Time</span></th>
+                                <th style="padding: 12px 14px; width: 11%;">Due<span class="workspace-sr-only">End Date &amp; Time</span></th>
+                                <th style="padding: 12px 14px; width: 9%;">Progress</th>
+                                <th style="padding: 12px 16px; width: 12%;">Status</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -332,32 +308,49 @@
                                     $extraCount = max(0, $assignees->count() - 1);
                                     $isOverdue = $task->isOverdue();
                                     $isFocusedTask = (string)request('focus_task') === (string)$task->id;
+                                    $canDeleteTask = app(\App\Services\Access::class)->project(auth()->user(),$project,'tasks.delete') && $project->status !== 'archived';
                                 @endphp
                                 <tr id="task-row-{{ $task->id }}"
                                     class="project-task-row {{ $isSubtask ? 'is-subtask' : 'is-main-task' }} {{ $isOverdue ? 'is-overdue-task' : '' }} {{ $isFocusedTask ? 'is-focused-task' : '' }}"
                                     data-task-id="{{ $task->id }}"
                                     data-parent="{{ $task->parent_task_id ?? '' }}"
-                                    data-is-overdue="{{ $isOverdue ? '1' : '0' }}" data-task-status="{{ $task->status }}" data-task-search-text="{{ $task->title . ' ' . $assignees->pluck('name')->join(' ') }}"
-                                    style="border-bottom: 1px solid #F1F5F9; transition: background 0.25s, box-shadow 0.25s; {{ $isOverdue ? 'background: #FFF8F8;' : '' }}">
+                                    data-is-overdue="{{ $isOverdue ? '1' : '0' }}" data-task-status="{{ $task->status }}" data-task-search-text="{{ $task->title . ' ' . $task->priority . ' ' . $assignees->pluck('name')->join(' ') }}"
+                                    style="border-bottom: 1px solid #F1F5F9; transition: background 0.25s, box-shadow 0.25s; {{ $isSubtask ? 'background: #F8FAFC;' : '' }} {{ $isOverdue ? 'background: #FFF8F8;' : '' }}">
 
                                     <!-- Column 1: Task / Subtask -->
-                                    <td style="padding: 12px 16px; {{ $isSubtask ? 'padding-left: 36px;' : '' }}">
-                                        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                                            <span class="muted" style="font-size: 12px; font-weight: 600; min-width: 24px;">{{ $wbsNum }}</span>
+                                    <td style="padding: {{ $isSubtask ? '10px 14px 10px 38px' : '12px 16px' }}; {{ $isSubtask ? 'border-left: 3px solid #CBD5E1;' : '' }}; vertical-align: middle;">
+                                        <div style="display: flex; align-items: center; gap: 8px;">
+                                            @if($isSubtask)
+                                                <span style="color: #94A3B8; font-weight: 700; font-size: 13px; line-height: 1; flex-shrink: 0;" aria-hidden="true">↳</span>
+                                                <span class="muted" style="font-size: 11.5px; font-weight: 600; min-width: 20px; flex-shrink: 0;">{{ $wbsNum }}</span>
+                                            @else
+                                                <span class="muted" style="font-size: 12px; font-weight: 700; min-width: 20px; flex-shrink: 0;">{{ $wbsNum }}</span>
+                                            @endif
+
                                             @if($hasChildren)
-                                                <button type="button" class="uwt-toggle-btn" data-parent-task="{{ $task->id }}" aria-expanded="true" title="Collapse / Expand subtasks" style="cursor: pointer; border: none; background: none; color: var(--muted); font-size: 11px; padding: 2px 4px;">
+                                                <button type="button" class="uwt-toggle-btn" data-parent-task="{{ $task->id }}" aria-expanded="true" title="Collapse / Expand subtasks" style="cursor: pointer; border: 1px solid #CBD5E1; background: #FFFFFF; color: #475569; font-size: 10px; width: 18px; height: 18px; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; padding: 0; line-height: 1; flex-shrink: 0;">
                                                     ⌵
                                                 </button>
                                             @endif
+
                                             <button type="button"
                                                     class="uwt-task-title-link"
                                                     data-task-location="{{ route('projects.show', [$task->project_id, 'focus_task'=>$task->id]) }}"
-                                                    title="Focus this task"
-                                                    style="font-size: 13.5px; {{ $isSubtask ? 'font-weight: 500; color: #334155;' : 'font-weight: 700; color: #0F172A;' }} text-decoration: none; border: none; background: none; cursor: pointer; text-align: left; padding: 0;">
+                                                    title="{{ $task->title }}"
+                                                    style="font-size: {{ $isSubtask ? '13px' : '13.5px' }}; {{ $isSubtask ? 'font-weight: 500; color: #334155;' : 'font-weight: 700; color: #0F172A;' }} text-decoration: none; border: none; background: none; cursor: pointer; text-align: left; padding: 0; line-height: 1.4;">
                                                 {{ $task->title }}
                                             </button>
+
+                                            @if($isSubtask)
+                                                <span style="font-size: 9.5px; background: #EEF2F6; color: #475569; border: 1px solid #CBD5E1; padding: 1px 6px; border-radius: 4px; font-weight: 600; flex-shrink: 0; white-space: nowrap;">Subtask</span>
+                                            @elseif($hasChildren)
+                                                <span class="pill pill-neutral" style="font-size: 10px; padding: 1px 6px; font-weight: 600; flex-shrink: 0; white-space: nowrap;" title="{{ $task->children->count() }} subtasks under this task">
+                                                    {{ $task->children->count() }} subtasks
+                                                </span>
+                                            @endif
+
                                             @if($isOverdue)
-                                                <span class="badge-overdue-tag" style="background: #FEE2E2; color: #DC2626; border: 1px solid #FECACA; font-size: 10px; font-weight: 700; padding: 1.5px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px; vertical-align: middle; flex-shrink: 0;" title="Task deadline has passed">
+                                                <span class="badge-overdue-tag" style="background: #FEE2E2; color: #DC2626; border: 1px solid #FECACA; font-size: 10px; font-weight: 700; padding: 1.5px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0; white-space: nowrap;" title="Task deadline has passed">
                                                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                                                     Overdue
                                                 </span>
@@ -376,20 +369,55 @@
                                             </div>
                                         @else
                                             @if(app(\App\Services\Access::class)->project(auth()->user(),$project,'assign_tasks') && $project->status!=='archived')
-                                                <div class="task-quick-assign" data-assign-url="{{ route('tasks.assign',$task) }}"><button type="button" class="btn btn-outline btn-xs" data-assign-open>+ Assign</button><div data-assign-controls hidden><select aria-label="Assign a project member" data-assign-select><option value="">Choose a project member</option></select><button type="button" class="task-assign-cancel" data-assign-cancel aria-label="Cancel assignment">&times;</button></div><small data-assign-feedback role="status"></small></div>
+                                                <div class="task-quick-assign" data-assign-url="{{ route('tasks.assign',$task) }}"><button type="button" class="btn btn-outline btn-xs" data-assign-open>+ Assign</button><div data-assign-controls hidden><select aria-label="Assign a project member" data-assign-select @if($project->approval_stage==='planning') data-directory-picker data-directory-project="{{ $project->id }}" @endif><option value="">Choose a project member</option></select><button type="button" class="task-assign-cancel" data-assign-cancel aria-label="Cancel assignment">&times;</button></div><small data-assign-feedback role="status"></small></div>
                                             @else
                                                 <span class="muted" style="font-size: 12.5px;">Unassigned</span>
                                             @endif
                                         @endif
                                     </td>
 
-                                    <!-- Column 3: Start Date & Time -->
+                                    <!-- Column 3: Priority -->
+                                    <td style="padding: 12px 10px; font-size: 12px;">
+                                        @php
+                                            $canChangePriority = (
+                                                auth()->user()->isPmo() ||
+                                                (($project->status === 'active' || auth()->user()->isPmo()) && (
+                                                    $project->pm_user_id === auth()->id() ||
+                                                    $canManage ||
+                                                    $assignees->contains('id', auth()->id())
+                                                ))
+                                            ) && $project->status !== 'archived';
+                                            $prioConfig = match($task->priority) {
+                                                'high' => ['border' => '#FECACA', 'accent' => '#DC2626', 'text' => '#B91C1C'],
+                                                'low' => ['border' => '#E2E8F0', 'accent' => '#64748B', 'text' => '#475569'],
+                                                default => ['border' => '#FDE68A', 'accent' => '#D97706', 'text' => '#B45309'],
+                                            };
+                                        @endphp
+                                        @if($canChangePriority)
+                                            <select class="quick-priority-select priority-select-{{ $task->priority }}"
+                                                    data-task-id="{{ $task->id }}"
+                                                    data-update-url="{{ route('tasks.update', $task) }}"
+                                                    data-current-priority="{{ $task->priority }}"
+                                                    aria-label="Change priority for {{ $task->title }}"
+                                                    style="height: 28px; font-size: 11.5px; padding: 2px 6px 2px 8px; border-radius: 5px; font-weight: 600; cursor: pointer; background: #FFFFFF; border: 1px solid {{ $prioConfig['border'] }}; border-left: 3.5px solid {{ $prioConfig['accent'] }}; color: {{ $prioConfig['text'] }}; outline: none;">
+                                                <option value="low" @selected($task->priority === 'low') style="background: #FFFFFF; color: #1E293B;">Low</option>
+                                                <option value="medium" @selected($task->priority === 'medium') style="background: #FFFFFF; color: #1E293B;">Medium</option>
+                                                <option value="high" @selected($task->priority === 'high') style="background: #FFFFFF; color: #1E293B;">High</option>
+                                            </select>
+                                        @else
+                                            <span style="font-size: 11px; padding: 2px 8px; border-radius: 5px; font-weight: 600; display: inline-block; background: #FFFFFF; border: 1px solid {{ $prioConfig['border'] }}; border-left: 3.5px solid {{ $prioConfig['accent'] }}; color: {{ $prioConfig['text'] }};">
+                                                {{ ucfirst($task->priority ?? 'medium') }}
+                                            </span>
+                                        @endif
+                                    </td>
+
+                                    <!-- Column 4: Start Date & Time -->
                                     <td style="padding: 12px 14px; font-size: 12.5px;">
                                         <div style="color: #22272B; font-weight: 500;">{{ $task->starts_at->format('d M Y') }}</div>
                                         <div class="muted" style="font-size: 11px;">{{ $task->starts_at->format('h:i A') }}</div>
                                     </td>
 
-                                    <!-- Column 4: End Date & Time -->
+                                    <!-- Column 5: End Date & Time -->
                                     <td style="padding: 12px 14px; font-size: 12.5px;" class="task-end-date-cell">
                                         @if($isOverdue)
                                             <div class="task-date-val" style="color: #DC2626; font-weight: 700;">{{ $task->ends_at->format('d M Y') }}</div>
@@ -405,7 +433,7 @@
                                         @endif
                                     </td>
 
-                                    <!-- Column 5: Progress -->
+                                    <!-- Column 6: Progress -->
                                     <td style="padding: 12px 14px;">
                                         <div style="display: flex; align-items: center; gap: 8px;">
                                             <div style="width: 50px; height: 5px; background: #E5E7EB; border-radius: 3px; overflow: hidden; flex-shrink: 0;">
@@ -415,28 +443,50 @@
                                         </div>
                                     </td>
 
-                                    <!-- Column 6: Status -->
+                                    <!-- Column 7: Status & Actions -->
                                     <td style="padding: 12px 16px;">
-                                        @if(!$hasChildren && ($canManage || (app(\App\Services\Access::class)->task(auth()->user(), $task, 'update') && $project->status === 'active')))
-                                            <select class="quick-status-select"
-                                                    data-task-id="{{ $task->id }}"
-                                                    data-update-url="{{ route('tasks.update', $task) }}"
-                                                    data-current-status="{{ $task->status }}"
-                                                    style="{{ $isOverdue ? 'border-color: #FCA5A5; color: #DC2626; font-weight: 600;' : '' }}">
-                                                @foreach(['todo' => 'To Do', 'in_progress' => 'In Progress', 'on_hold' => 'On Hold', 'completed' => 'Completed'] as $val => $lbl)
-                                                    <option value="{{ $val }}" @selected($task->status === $val)>{{ $lbl }}</option>
-                                                @endforeach
-                                            </select>
-                                        @else
-                                            <div style="display: flex; align-items: center; gap: 4px;">
-                                                <span class="uwt-status-pill status-{{ $task->status }}" style="font-size: 11px;">
-                                                    {{ ucwords(str_replace('_', ' ', $task->status)) }}
-                                                </span>
-                                                @if($isOverdue)
-                                                    <span class="badge-overdue" style="font-size: 9.5px; padding: 1px 5px;">Overdue</span>
+                                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
+                                            <div>
+                                                @if(!$hasChildren && app(\App\Services\Access::class)->task(auth()->user(),$task,'update') && app(\App\Services\Access::class)->project(auth()->user(),$project,'tasks.update_status') && $project->status==='active')
+                                                    <select class="quick-status-select"
+                                                            data-task-id="{{ $task->id }}"
+                                                            data-update-url="{{ route('tasks.update', $task) }}"
+                                                            data-current-status="{{ $task->status }}"
+                                                            style="{{ $isOverdue ? 'border-color: #FCA5A5; color: #DC2626; font-weight: 600;' : '' }}">
+                                                        @foreach(['todo' => 'To Do', 'in_progress' => 'In Progress', 'on_hold' => 'On Hold', 'completed' => 'Completed'] as $val => $lbl)
+                                                            <option value="{{ $val }}" @selected($task->status === $val)>{{ $lbl }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                @else
+                                                    <div style="display: flex; align-items: center; gap: 5px;">
+                                                        <span class="uwt-status-pill status-{{ $task->status }}" style="font-size: 11px;" @if($hasChildren) title="Parent task status is automatically calculated from its subtasks" @endif>
+                                                            {{ ucwords(str_replace('_', ' ', $task->status)) }}
+                                                        </span>
+                                                        @if($hasChildren)
+                                                            <span style="font-size: 9px; color: #94A3B8; font-weight: 600; cursor: help; background: #F1F5F9; border: 1px solid #E2E8F0; padding: 1px 4px; border-radius: 3px;" title="Parent task status is automatically calculated from its subtasks">Auto</span>
+                                                        @endif
+                                                        @if($isOverdue)
+                                                            <span class="badge-overdue" style="font-size: 9.5px; padding: 1px 5px;">Overdue</span>
+                                                        @endif
+                                                    </div>
                                                 @endif
                                             </div>
-                                        @endif
+
+                                            @if($canDeleteTask)
+                                                <form method="POST" action="{{ route('tasks.destroy', $task) }}" onsubmit="return AppDialog.confirmAction(event,this,'Are you sure you want to delete \'{{ addslashes($task->title) }}\'? @if($hasChildren)All its subtasks will also be deleted. @endif This action cannot be undone.');" style="margin: 0; line-height: 1;">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn-delete-task-row" title="Delete task" style="border: none; background: transparent; color: #94A3B8; cursor: pointer; padding: 3px 5px; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s ease;" onmouseover="this.style.color='#DC2626'; this.style.background='#FEE2E2';" onmouseout="this.style.color='#94A3B8'; this.style.background='transparent';">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                            <polyline points="3 6 5 6 21 6"></polyline>
+                                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                                            <line x1="10" y1="11" x2="10" y2="17"></line>
+                                                            <line x1="14" y1="11" x2="14" y2="17"></line>
+                                                        </svg>
+                                                    </button>
+                                                </form>
+                                            @endif
+                                        </div>
                                     </td>
 
                                 </tr>
@@ -513,13 +563,19 @@
                                     $isSubtask = !empty($task->parent_task_id);
                                     $isOverdue = $task->isOverdue();
                                 @endphp
-                                <div class="uwt-body-row {{ $isSubtask ? 'is-subtask' : '' }} {{ $isOverdue ? 'is-overdue-row' : '' }}" data-task-id="{{ $task->id }}">
+                                <div class="uwt-body-row {{ $isSubtask ? 'is-subtask' : '' }} {{ $isOverdue ? 'is-overdue-row' : '' }}" data-task-id="{{ $task->id }}" style="{{ $isSubtask ? 'background: #FAFCFF;' : '' }}">
                                     <div class="uwt-cell-table">
-                                        <div class="uwt-wbs-num" style="text-align: center;">{{ $wbsNum }}</div>
-                                        <div class="uwt-task-title-cell" style="display: flex; align-items: center; gap: 4px; overflow: hidden;">
-                                            <button type="button" class="uwt-task-title-link" data-task-location="{{ route('projects.show', [$task->project_id, 'focus_task'=>$task->id]) }}" data-uwt-task-link="{{ $task->id }}" title="{{ $task->title }}" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                                        <div class="uwt-wbs-num" style="text-align: center; {{ $isSubtask ? 'font-size: 11px; color: #64748B;' : 'font-weight: 700;' }}">{{ $wbsNum }}</div>
+                                        <div class="uwt-task-title-cell" style="display: flex; align-items: center; gap: 4px; overflow: hidden; {{ $isSubtask ? 'padding-left: 18px;' : '' }}">
+                                            @if($isSubtask)
+                                                <span style="color: #94A3B8; font-size: 11px; margin-right: 2px;" aria-hidden="true">↳</span>
+                                            @endif
+                                            <button type="button" class="uwt-task-title-link" data-task-location="{{ route('projects.show', [$task->project_id, 'focus_task'=>$task->id]) }}" data-uwt-task-link="{{ $task->id }}" title="{{ $task->title }}" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap; {{ $isSubtask ? 'font-weight: 500; color: #334155;' : 'font-weight: 700; color: #0F172A;' }}">
                                                 {{ $task->title }}
                                             </button>
+                                            @if($isSubtask)
+                                                <span style="font-size: 8.5px; background: #E2E8F0; color: #475569; border: 1px solid #CBD5E1; padding: 0.5px 4px; border-radius: 3px; font-weight: 600;">Sub</span>
+                                            @endif
                                             @if($isOverdue)
                                                 <span style="background: #FEE2E2; color: #DC2626; border: 1px solid #FECACA; font-size: 9px; font-weight: 700; padding: 1px 4px; border-radius: 3px; flex-shrink: 0;">Overdue</span>
                                             @endif
@@ -551,12 +607,12 @@
     <!-- =========================================================================
          TAB 3: TEAM & ROLES
          ========================================================================= -->
-    <div class="pw-tab-panel" id="tab-team">
+    <div class="pw-tab-panel project-team-workspace" id="tab-team">
         <div class="card" style="padding: 20px; background: #FFFFFF;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
                 <div>
-                    <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 4px;">Project Team & Stakeholders</h2>
-                    <p class="muted" style="font-size: 13px; margin: 0;">Assigned employees, roles, and project leadership.</p>
+                    <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 4px;">Project team</h2>
+                    <p class="muted" style="font-size: 13px; margin: 0;">People and roles assigned to this project.</p>
                 </div>
                 @if($canTeam && $project->status !== 'archived')
                     <button class="btn btn-primary btn-sm" type="button" onclick="document.getElementById('add-member-form-box').style.display = document.getElementById('add-member-form-box').style.display === 'none' ? 'block' : 'none'">
@@ -570,8 +626,8 @@
                 <form method="post" action="{{ route('projects.members.store', $project) }}" style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
                     @csrf
                     <label style="flex: 1; min-width: 220px; margin: 0; font-size: 12px; font-weight: 600;">Person
-                        <select name="user_id" required style="height: 38px; font-size: 13px; background: #FFFFFF; margin-top: 4px;">
-                            <option value="">Select team member...</option>
+                        <select data-directory-picker data-directory-project="{{ $project->id }}" name="user_id" required style="height: 38px; font-size: 13px; background: #FFFFFF; margin-top: 4px;">
+                            <option value="">Search for a person...</option>
                             @foreach($users as $u)
                                 <option value="{{ $u->id }}">{{ $u->name }} ({{ $u->email }})</option>
                             @endforeach
@@ -616,7 +672,7 @@
                             <td>{{ $tasks->filter(fn($t) => $t->assignees->contains('id', $project->pm_user_id))->count() }}</td>
                             @if($canTeam)
                                 <td class="right">
-                                    @if(auth()->user()->isPmo() && in_array($project->status, ['draft', 'pending', 'declined']))
+                                    @if(!$project->approval_stage && auth()->user()->isPmo() && ($project->status==='declined' || ($project->status==='draft' && !$project->pm_user_id)))
                                         <button type="button" class="btn btn-outline btn-sm" data-show-dialog="assign-pm-dialog">Change PM</button>
                                     @else
                                         <span class="muted text-sm">Lead</span>
@@ -639,11 +695,11 @@
                                 <td>{{ $tasks->filter(fn($t) => $t->assignees->contains('id', $m->user_id))->count() }}</td>
                                 @if($canTeam)
                                     <td class="right">
-                                        <form method="post" action="{{ route('projects.members.delete', ['project' => $project, 'user' => $m->user_id]) }}" onsubmit="return confirm('Remove this member from project?')">
+                                        @if($project->approval_stage && (int)$project->owner_user_id===(int)$m->user_id)<span class="muted text-sm">Project Owner</span>@else<form method="post" action="{{ route('projects.members.delete', ['project' => $project, 'user' => $m->user_id]) }}" onsubmit="return AppDialog.confirmAction(event,this,'Remove this member from project?')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-outline btn-sm" style="color: var(--danger);">Remove</button>
-                                        </form>
+                                        </form>@endif
                                     </td>
                                 @endif
                             </tr>
@@ -915,14 +971,14 @@
                         </thead>
                         <tbody>
                             @foreach($delays as $delay)
-                                <tr>
+                                <tr id="reported-issue-{{ $delay->id }}" @if((string)request('focus_issue')===(string)$delay->id) class="focused-reported-issue" @endif>
                                     <td style="padding: 10px 14px;">
                                         <button type="button" class="text-action" data-task-location="{{ route('projects.show', [$delay->task->project_id, 'focus_task'=>$delay->task->id]) }}" style="text-align: left; background: none; border: none; padding: 0; font-size: 13px; font-weight: 650; color: #22272B; cursor: pointer;">
                                             <span style="color: #64748B;">{{ $delay->task?->code }}</span> {{ $delay->task?->title ?? 'Task' }}
                                         </button>
                                     </td>
                                     <td style="padding: 10px 14px;">
-                                        <b style="color: #22272B;">{{ \App\Http\Controllers\TaskDelayController::REASONS[$delay->reason_code] ?? $delay->reason_code }}</b>
+                                        <b style="color: #22272B;">{{ $delay->reason_label }}</b>
                                         @if($delay->details)
                                             <small class="block muted" style="font-size: 12px; margin-top: 2px; max-width: 300px;">{{ $delay->details }}</small>
                                         @endif
@@ -952,7 +1008,7 @@
                                             <form method="post" action="{{ route('tasks.delays.resolve', $delay) }}" style="display: inline-block;">
                                                 @csrf
                                                 @method('PATCH')
-                                                <button type="submit" class="btn btn-outline btn-xs" style="color: #107C41; border-color: #107C41; font-weight: 600;" onclick="return confirm('Mark this blocker as resolved?')">
+                                                <button type="submit" class="btn btn-outline btn-xs" style="color: #107C41; border-color: #107C41; font-weight: 600;" onclick="return AppDialog.confirmAction(event,this,'Mark this blocker as resolved?')">
                                                     ✓ Resolve
                                                 </button>
                                             </form>
@@ -1013,7 +1069,7 @@
                         @if($canTeam && in_array($project->status, ['active', 'on_hold'], true))
                             <form method="post" action="{{ route('projects.baseline', $project) }}">
                                 @csrf
-                                <button type="submit" class="btn btn-outline btn-sm" onclick="return confirm('Capture current schedule as the approved baseline?')">
+                                <button type="submit" class="btn btn-outline btn-sm" onclick="return AppDialog.confirmAction(event,this,'Capture current schedule as the approved baseline?')">
                                     Capture Schedule Baseline
                                 </button>
                             </form>
@@ -1058,59 +1114,99 @@
     <!-- =========================================================================
          TAB 8: PROJECT INFO & CLOSURE
          ========================================================================= -->
-    <div class="pw-tab-panel" id="tab-info">
-        <div class="card" style="padding: 20px; background: #FFFFFF;">
-            <div style="margin-bottom: 18px;">
-                <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 4px;">Project details</h2>
-                <p class="muted" style="font-size: 13px; margin: 0;">Key information and project setup.</p>
-            </div>
+    <div class="pw-tab-panel project-overview" id="tab-info">
+        <!-- Top 2-Column Responsive Overview Grid -->
+        <div class="overview-grid">
+            @include('projects._budget')
 
-            <div class="info-grid" style="margin-bottom: 20px;">
-                <div>
-                    <small>Project Code</small>
-                    <b>{{ $project->code }}</b>
+            <!-- Right Card: Project Closure & Governance (Moved from 3-dots) -->
+            <section class="overview-card overview-closure-card" aria-labelledby="overview-closure-title">
+                <div class="overview-card-head">
+                    <div>
+                        
+                        <h2 id="overview-closure-title">Closure &amp; Sign-off</h2>
+                    </div>
+                    <span class="project-status-pill status-{{ $project->status }}">
+                        <span class="status-dot"></span>
+                        <span>{{ ucwords(str_replace('_', ' ', $project->status)) }}</span>
+                    </span>
                 </div>
-                <div>
-                    <small>Subsidiary</small>
-                    <b>{{ $project->subsidiary?->name ?? 'None' }} [{{ $project->subsidiary?->code ?? '—' }}]</b>
-                </div>
-                <div>
-                    <small>Project Manager</small>
-                    <b>{{ $project->manager?->name ?? 'Not assigned' }}</b>
-                </div>
-                <div>
-                    <small>Timeline</small>
-                    <b>{{ $project->starts_on->format('d M Y') }} – {{ $project->ends_on->format('d M Y') }}</b>
-                </div>
-            </div>
 
-            @if($project->description)
-                <div style="background: var(--surface); padding: 14px 18px; border-radius: 6px; margin-bottom: 20px; border: 1px solid var(--border);">
-                    <b style="font-size: 12px; color: var(--muted); display: block; margin-bottom: 4px;">Description</b>
-                    <p style="margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--text);">{{ $project->description }}</p>
-                </div>
-            @endif
+                <div class="overview-closure-body">
+                    <!-- Progress & Tally -->
+                    <div class="overview-metric-block">
+                        <div class="overview-progress-gauge">
+                            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
+                                <span style="font-size: 12px; font-weight: 600; color: #475569;">Overall Completion</span>
+                                <strong style="font-size: 16px; font-weight: 700; color: #22272B;">{{ (int)$project->progress }}%</strong>
+                            </div>
+                            <div class="overview-progress-bar-wrap">
+                                <div class="overview-progress-bar-fill" style="width: {{ (int)$project->progress }}%;"></div>
+                            </div>
+                        </div>
+                        <div class="overview-task-tally">
+                            <span class="tally-count">{{ $completedCount }} / {{ $totalCount }}</span>
+                            <span class="tally-label">tasks completed</span>
+                        </div>
+                    </div>
 
-            <div style="border-top: 1px solid var(--border); padding-top: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-                <div>
-                    <b>Project actions</b>
-                    <p class="muted text-sm" style="margin: 2px 0 0;">Complete all deliverables, review sign-offs, and submit for formal closure.</p>
-                </div>
-                <div class="inline-actions">
-                    @if(app(\App\Services\Access::class)->project(auth()->user(), $project, 'edit_project') && $project->status !== 'archived')
-                        <button type="button" class="btn btn-outline btn-sm" data-show-dialog="project-edit-dialog">Edit Details</button>
+                    <!-- Closure Action CTA -->
+                    <div class="overview-closure-action-box">
+                        @if($project->status === 'completed')
+                            <div class="overview-closure-status is-completed">
+                                <span class="status-check-badge">✓</span>
+                                <div>
+                                    <b style="color: #065F46; font-size: 13.5px;">Project Closed &amp; Signed Off</b>
+                                    <p class="muted" style="margin: 2px 0 0; font-size: 12px;">All project deliverables and approvals have been formally recorded.</p>
+                                </div>
+                            </div>
+                        @elseif($canTeam && in_array($project->status, ['active', 'on_hold'], true))
+                            <div class="overview-closure-status">
+                                <p class="muted" style="font-size: 12.5px; margin: 0 0 12px; line-height: 1.5;">
+                                    Complete deliverables, verify sign-offs, and submit for formal stakeholder closure.
+                                </p>
+                                <button type="button" class="btn btn-primary" data-show-dialog="project-closure-dialog" style="width: 100%; justify-content: center; height: 38px; font-weight: 600; font-size: 13px;">
+                                    Review Closure &amp; Sign-off &rarr;
+                                </button>
+                            </div>
+                        @else
+                            <p class="muted" style="font-size: 12px; margin: 0;">Project sign-off is available once the project is under active delivery.</p>
+                        @endif
+                    </div>
+
+                    <!-- Tools & Governance Strip -->
+                    @if($canManage || auth()->user()->isPmo())
+                        <div class="overview-tools-strip">
+                            <span class="tools-label">Governance Tools</span>
+                            <div class="tools-buttons">
+                                @if($canManage)
+                                    <a class="btn btn-outline btn-xs" href="{{ route('tasks.export', $project) }}">Export Tasks</a>
+                                    <a class="btn btn-outline btn-xs" href="{{ $projectImportUrl }}">{{ $projectImportLabel }}</a>
+                                @endif
+                                @if($health && !$health['baseline_available'] && $canTeam && in_array($project->status, ['active', 'on_hold'], true))
+                                    <form method="post" action="{{ route('projects.baseline', $project) }}" style="display: inline;">
+                                        @csrf
+                                        <button class="btn btn-outline btn-xs" type="submit" onclick="return AppDialog.confirmAction(event,this,'Capture schedule baseline?')">Capture Baseline</button>
+                                    </form>
+                                @endif
+                                @if(auth()->user()->isPmo())
+                                    <button type="button" class="btn btn-ghost btn-xs overview-delete text-danger" data-delete-project-url="{{ route('projects.destroy', $project) }}" data-delete-project-name="{{ $project->name }}" data-delete-project-code="{{ $project->code }}">Delete Project</button>
+                                @endif
+                            </div>
+                        </div>
                     @endif
-                    @if($canTeam && in_array($project->status,['active','on_hold','completed'],true))
-                        <button type="button" class="btn btn-outline btn-sm" data-show-dialog="project-closure-dialog">Closure Sign-off →</button>
-                    @endif
                 </div>
-            </div>
+            </section>
         </div>
-        <section class="workspace-subsection" id="project-milestones">
-        <div class="card" style="padding: 20px; background: #FFFFFF;">
-            <div style="margin-bottom: 16px;">
-                <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 4px;">Milestones & deliverables</h2>
-                <p class="muted" style="font-size: 13px; margin: 0;">Major schedule checkpoints and completion deadlines.</p>
+
+        <!-- Milestones & Deliverables Card Below -->
+        <section class="overview-card overview-milestones-card">
+            <div class="overview-card-head">
+                <div>
+                    
+                    <h2>Key checkpoints</h2>
+                </div>
+                <p class="muted" style="font-size: 12.5px; margin: 0;">Major schedule checkpoints and deliverable completion.</p>
             </div>
 
             @php
@@ -1118,39 +1214,38 @@
             @endphp
 
             @if($milestoneTasks->isEmpty())
-                <p class="muted">All scheduled tasks are tracked in the <b>Tasks</b> view.</p>
+                <div style="padding: 24px 16px; text-align: center; color: #64748B;">
+                    <p class="muted" style="margin: 0; font-size: 13px;">All project activities are tracked in the <b>Tasks</b> view.</p>
+                </div>
             @else
                 <div class="table-wrap">
-                    <table class="clean-table">
+                    <table class="clean-table" style="width: 100%;">
                         <thead>
-                            <tr>
-                                <th>Phase / Milestone</th>
-                                <th>Target Date</th>
-                                <th>Progress</th>
-                                <th>Status</th>
-                                <th class="right">Action</th>
+                            <tr style="background: #F8FAFC;">
+                                <th style="padding: 10px 14px; font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase;">Phase / Milestone</th>
+                                <th style="padding: 10px 14px; font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase;">Target Date</th>
+                                <th style="padding: 10px 14px; font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase;">Progress</th>
+                                <th style="padding: 10px 14px; font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase;">Status</th>
+                                <th style="padding: 10px 14px; font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; text-align: right;">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($milestoneTasks as $mt)
                                 @php $mtOverdue = $mt->isOverdue(); @endphp
-                                <tr style="{{ $mtOverdue ? 'background: #FFF8F8;' : '' }}">
-                                    <td>
-                                        <b>{{ $mt->title }}</b>
+                                <tr style="{{ $mtOverdue ? 'background: #FFF8F8;' : '' }}; border-bottom: 1px solid #F1F5F9;">
+                                    <td style="padding: 12px 14px;">
+                                        <b style="color: #22272B; font-size: 13px;">{{ $mt->title }}</b>
                                         @if($mtOverdue)
                                             <span class="badge-overdue" style="font-size: 10px; margin-left: 6px;">Overdue</span>
                                         @endif
                                     </td>
-                                    <td style="{{ $mtOverdue ? 'color: #DC2626; font-weight: 700;' : '' }}">
+                                    <td style="padding: 12px 14px; {{ $mtOverdue ? 'color: #DC2626; font-weight: 700;' : 'color: #475569;' }}; font-size: 12.5px;">
                                         {{ $mt->ends_at->format('d M Y') }}
-                                        @if($mtOverdue)
-                                            <span style="color: #DC2626; font-size: 11px; font-weight: 700; display: block;">Overdue</span>
-                                        @endif
                                     </td>
-                                    <td style="{{ $mtOverdue ? 'color: #DC2626; font-weight: 600;' : '' }}">{{ $mt->progress }}%</td>
-                                    <td><span class="uwt-status-pill status-{{ $mt->status }}">{{ ucwords(str_replace('_',' ',$mt->status)) }}</span></td>
-                                    <td class="right">
-                                        <button type="button" class="btn btn-outline btn-sm" data-task-location="{{ route('projects.show', [$mt->project_id, 'focus_task'=>$mt->id]) }}">View</button>
+                                    <td style="padding: 12px 14px; {{ $mtOverdue ? 'color: #DC2626; font-weight: 600;' : 'color: #475569;' }}; font-size: 12px;">{{ $mt->progress }}%</td>
+                                    <td style="padding: 12px 14px;"><span class="uwt-status-pill status-{{ $mt->status }}" style="font-size: 11px;">{{ ucwords(str_replace('_',' ',$mt->status)) }}</span></td>
+                                    <td style="padding: 12px 14px; text-align: right;">
+                                        <button type="button" class="btn btn-outline btn-xs" data-task-location="{{ route('projects.show', [$mt->project_id, 'focus_task'=>$mt->id]) }}" style="font-size: 11px; height: 26px; padding: 0 8px;">View</button>
                                     </td>
                                 </tr>
                             @endforeach
@@ -1158,7 +1253,6 @@
                     </table>
                 </div>
             @endif
-        </div>
         </section>
     </div>
 
@@ -1207,11 +1301,15 @@
 
             <div class="two-fields">
                 <label>Assign To
-                    <select name="assigned_user_id" id="add-task-assignee-select">
+                    <select name="assigned_user_id" id="add-task-assignee-select" @if($project->approval_stage==='planning') data-directory-picker data-directory-project="{{ $project->id }}" @endif>
                         <option value="">Unassigned (Assign later...)</option>
+                        @if($project->approval_stage==='planning')
+                            @foreach($users as $person)<option value="{{ $person->id }}">{{ $person->name }} ({{ $person->email }})</option>@endforeach
+                        @else
                         @foreach($project->memberships->unique('user_id') as $m)
                             <option value="{{ $m->user_id }}">{{ $m->user?->name }} ({{ $m->role?->name ?? 'Member' }})</option>
                         @endforeach
+                        @endif
                     </select>
                     @if($canTeam)
                         <button type="button" class="text-action" id="add-task-open-member-btn" style="font-size: 11px; margin-top: 4px; display: inline-block; padding: 0; background: none; border: none; cursor: pointer; color: #315F58; text-decoration: underline;">
@@ -1289,10 +1387,13 @@
                             @endphp
                             <tr class="bulk-task-row {{ $isSub ? 'is-subtask-row' : '' }}"
                                 data-task-id="{{ $task->id }}"
-                                style="border-bottom: 1px solid #E2E8F0; transition: background 0.15s;">
+                                style="border-bottom: 1px solid #E2E8F0; {{ $isSub ? 'background: #FAFCFF;' : '' }} transition: background 0.15s;">
 
                                 <!-- 1. Number / Code -->
-                                <td style="padding: 8px 12px; color: #64748B; font-weight: 600; font-size: 11.5px; border-bottom: 1px solid #E2E8F0;">
+                                <td style="padding: 8px 12px; color: #64748B; font-weight: 600; font-size: 11.5px; border-bottom: 1px solid #E2E8F0; {{ $isSub ? 'padding-left: 18px;' : '' }}">
+                                    @if($isSub)
+                                        <span style="color: #94A3B8; margin-right: 2px;" aria-hidden="true">↳</span>
+                                    @endif
                                     {{ $wbsNum }}
                                     @if($task->isOverdue())
                                         <div style="color: #DC2626; font-size: 9.5px; font-weight: 700; margin-top: 2px;">Overdue</div>
@@ -1300,15 +1401,20 @@
                                 </td>
 
                                 <!-- 2. Task Name -->
-                                <td style="padding: 8px 12px; border-bottom: 1px solid #E2E8F0; {{ $isSub ? 'padding-left: 28px;' : '' }}">
-                                    <input type="text"
-                                           name="tasks[{{ $task->id }}][title]"
-                                           value="{{ $task->title }}"
-                                           required
-                                           maxlength="200"
-                                           class="bulk-input bulk-field-track"
-                                           data-field="title"
-                                           style="width: 100%; font-size: 12.5px; padding: 5px 8px; border: 1px solid #CBD5E1; border-radius: 4px; {{ $isSub ? 'font-weight: 500;' : 'font-weight: 650; color: #0F172A;' }}">
+                                <td style="padding: 8px 12px; border-bottom: 1px solid #E2E8F0; {{ $isSub ? 'padding-left: 24px;' : '' }}">
+                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                        <input type="text"
+                                               name="tasks[{{ $task->id }}][title]"
+                                               value="{{ $task->title }}"
+                                               required
+                                               maxlength="200"
+                                               class="bulk-input bulk-field-track"
+                                               data-field="title"
+                                               style="flex: 1; font-size: 12.5px; padding: 5px 8px; border: 1px solid #CBD5E1; border-radius: 4px; {{ $isSub ? 'font-weight: 500; color: #334155;' : 'font-weight: 650; color: #0F172A;' }}">
+                                        @if($isSub)
+                                            <span style="font-size: 9.5px; background: #E2E8F0; color: #475569; border: 1px solid #CBD5E1; padding: 1px 5px; border-radius: 3px; font-weight: 600; flex-shrink: 0;">Subtask</span>
+                                        @endif
+                                    </div>
                                 </td>
 
                                 <!-- 3. Assignee -->
@@ -1500,7 +1606,7 @@
     @include('projects._edit-dialog')
 @endif
 
-@if($project->status === 'pending' && $project->pm_user_id === auth()->id())
+@if(!auth()->user()->isAdminViewer() && $project->status === 'pending' && $project->pm_user_id === auth()->id())
     <!-- PM Decline Assignment Dialog -->
     <dialog id="decline-project-dialog" class="modal" style="max-width: 520px;">
         <div class="modal-head">
@@ -1654,13 +1760,8 @@
                 </select>
             </label>
 
-            <label style="display: block; font-weight: 600; font-size: 13px; margin-top: 10px;">Root Cause / Category <span class="required">*</span>
-                <select name="reason_code" required style="width: 100%; margin-top: 6px; padding: 8px 10px; border: 1px solid #D1D5DB; border-radius: 6px;">
-                    <option value="">-- Choose category --</option>
-                    @foreach(\App\Http\Controllers\TaskDelayController::REASONS as $code => $lbl)
-                        <option value="{{ $code }}">{{ $lbl }}</option>
-                    @endforeach
-                </select>
+            <label style="display: block; font-weight: 600; font-size: 13px; margin-top: 10px;">Reason <span class="required">*</span>
+                <textarea name="reason_text" required rows="2" maxlength="500" placeholder="Explain why this task is blocked or delayed..." style="width:100%;margin-top:6px;resize:vertical">{{ old('reason_text') }}</textarea>
             </label>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">

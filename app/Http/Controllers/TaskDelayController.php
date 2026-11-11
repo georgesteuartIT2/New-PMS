@@ -23,16 +23,18 @@ class TaskDelayController
 
     public function store(Request $request, Task $task, Access $access)
     {
-        abort_unless($access->task($request->user(), $task, 'update'), 403);
+        abort_unless($access->task($request->user(), $task, 'delay'), 403);
         abort_unless(in_array($task->project->status, ['active', 'on_hold'], true), 403);
         $data = $request->validate([
-            'reason_code' => ['required', Rule::in(array_keys(self::REASONS))],
+            'reason_text' => 'required_without:reason_code|nullable|string|max:500',
+            'reason_code' => ['required_without:reason_text', 'nullable', Rule::in(array_keys(self::REASONS))],
             'details' => 'nullable|string|max:2000',
             'responsible_party_type' => ['required', Rule::in(['unknown', 'internal', 'supplier', 'department', 'external'])],
             'responsible_party_name' => 'nullable|string|max:160',
             'action_owner_id' => 'nullable|integer|exists:users,id',
             'revised_expected_end_at' => 'nullable|date',
         ]);
+        if (!empty($data['reason_text'])) $data['reason_code']='other';
         if (!empty($data['action_owner_id'])) {
             $id = (int) $data['action_owner_id'];
             $project = $task->project;
@@ -45,6 +47,7 @@ class TaskDelayController
         }
         $task->delayReports()->where('status', 'open')->update(['status' => 'resolved', 'resolved_at' => now()]);
         $report = $task->delayReports()->create($data + ['reported_by' => $request->user()->id, 'status' => 'open']);
+        app(\App\Services\InboxService::class)->blocker($report);
         Audit::record('task.delay_reported', $task, ['delay_id' => $report->id, 'reason_code' => $report->reason_code]);
 
         if ($request->expectsJson() || $request->wantsJson()) {
@@ -58,6 +61,11 @@ class TaskDelayController
         return back()->with('success', 'Delay reported. PMO can now see the reason and follow-up owner.');
     }
 
+    public function read(Request $request,TaskDelay $delay,Access $access){
+        abort_unless($request->user()->canViewPortfolio() && $access->project($request->user(),$delay->task->project,'project.view'),403);
+        $delay->readers()->syncWithoutDetaching([$request->user()->id=>['read_at'=>now()]]);
+        return redirect(route('projects.show',[$delay->task->project_id,'focus_issue'=>$delay->id]).'#risks');
+    }
     public function resolve(Request $request, TaskDelay $delay, Access $access)
     {
         $task = $delay->task;

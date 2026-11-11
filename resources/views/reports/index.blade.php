@@ -211,7 +211,7 @@
                             <td>{{ $task?->assignees->pluck('name')->join(', ') ?: '—' }}</td>
                             <td>
                                 @if($task && $task->openDelay)
-                                    <span class="status-pill pill-warning">{{ \App\Http\Controllers\TaskDelayController::REASONS[$task->openDelay->reason_code] ?? $task->openDelay->reason_code }}</span>
+                                    <span class="status-pill pill-warning">{{ $task->openDelay->reason_label }}</span>
                                 @else
                                     <span class="muted">Schedule variance</span>
                                 @endif
@@ -260,7 +260,7 @@
                             </td>
                             <td>
                                 <span class="status-pill pill-warning">
-                                    {{ \App\Http\Controllers\TaskDelayController::REASONS[$item->reason_code] ?? $item->reason_code }}
+                                    {{ $item->reason_label }}
                                 </span>
                             </td>
                             <td>{{ $item->responsible_party_name ?: ucwords($item->responsible_party_type) }}</td>

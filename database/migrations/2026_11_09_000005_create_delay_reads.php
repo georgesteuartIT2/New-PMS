@@ -1,0 +1,3 @@
+<?php
+use Illuminate\Database\Migrations\Migration;use Illuminate\Database\Schema\Blueprint;use Illuminate\Support\Facades\Schema;
+return new class extends Migration {public function up():void{Schema::create('task_delay_reads',function(Blueprint $t){$t->id();$t->foreignId('task_delay_id')->constrained('task_delays')->cascadeOnDelete();$t->foreignId('user_id')->constrained()->cascadeOnDelete();$t->timestamp('read_at');$t->unique(['task_delay_id','user_id']);});}public function down():void{Schema::dropIfExists('task_delay_reads');}};

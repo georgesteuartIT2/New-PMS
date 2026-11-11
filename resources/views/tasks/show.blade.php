@@ -28,7 +28,7 @@
     @if($canManage)
         <div class="inline-actions">
             <button class="btn btn-outline btn-sm" type="button" data-show-dialog="task-edit-dialog">Edit Task Details</button>
-            <form method="post" action="{{ route('tasks.destroy', $task) }}" onsubmit="return confirm('Delete this task? This action cannot be undone.')">
+            <form method="post" action="{{ route('tasks.destroy', $task) }}" onsubmit="return AppDialog.confirmAction(event,this,'Delete this task? This action cannot be undone.')">
                 @csrf
                 @method('DELETE')
                 <button class="btn btn-danger-outline btn-sm" type="submit">Delete Task</button>
@@ -92,6 +92,33 @@
             <small class="muted block" style="font-weight: 600;">Description</small>
             <p style="margin-top: 6px; color: #4B5563; font-size: 13.5px; line-height: 1.5;">{{ $task->description ?: 'No description provided.' }}</p>
         </div>
+
+        @if($task->children()->exists())
+            <div class="mt-16" style="padding-top: 14px; border-top: 1px solid var(--border-light, #E1E4E8);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <small class="muted block" style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Subtasks ({{ $task->children->count() }})</small>
+                </div>
+                <div class="stack" style="gap: 6px;">
+                    @foreach($task->children as $child)
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 7px 10px; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 5px; font-size: 13px;">
+                            <div>
+                                <a href="{{ route('tasks.show', $child) }}" style="font-weight: 600; color: #1E293B; text-decoration: none;">
+                                    ↳ {{ $child->title }}
+                                </a>
+                                <div class="muted" style="font-size: 11px;">
+                                    {{ $child->starts_at->format('d M') }} &ndash; {{ $child->ends_at->format('d M') }} · {{ $child->assignees->pluck('name')->implode(', ') ?: 'Unassigned' }}
+                                </div>
+                            </div>
+                            <span class="pill {{ $child->status }}" style="font-size: 11px;">{{ ucwords(str_replace('_', ' ', $child->status)) }}</span>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @elseif($task->parent)
+            <div class="mt-16" style="padding-top: 10px; border-top: 1px solid var(--border-light, #E1E4E8);">
+                <small class="muted">Parent Task: <a href="{{ route('tasks.show', $task->parent) }}" style="font-weight: 600; color: #315F58;">{{ $task->parent->title }}</a></small>
+            </div>
+        @endif
     </div>
 
     <!-- Quick Status & Progress Updater -->
@@ -145,7 +172,7 @@
                             </div>
                         </div>
                         @if($canManage)
-                            <form action="{{ route('tasks.dependencies.delete', [$task, $dependency]) }}" method="post" onsubmit="return confirm('Remove dependency link to {{ $dependency->code }}?')">
+                            <form action="{{ route('tasks.dependencies.delete', [$task, $dependency]) }}" method="post" onsubmit="return AppDialog.confirmAction(event,this,'Remove dependency link to {{ $dependency->code }}?')">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-outline btn-sm" style="color: #D32F2F; border-color: #EF9A9A; padding: 3px 8px; font-size: 11.5px;">Remove</button>
@@ -190,7 +217,7 @@
 
         @if($task->openDelay)
             <div class="blocker-detail" style="padding: 12px; background: #FFF5F5; border: 1px solid #FFCDD2; border-radius: 6px; margin-bottom: 14px;">
-                <strong style="color: #C62828; display: block; font-size: 13.5px;">{{ $delayReasons[$task->openDelay->reason_code] ?? $task->openDelay->reason_code }}</strong>
+                <strong style="color: #C62828; display: block; font-size: 13.5px;">{{ $task->openDelay->reason_label }}</strong>
                 @if($task->openDelay->details)
                     <p class="muted" style="margin: 6px 0; font-size: 12.5px; color: #4B5563;">{{ $task->openDelay->details }}</p>
                 @endif
@@ -279,7 +306,7 @@
                     <small class="muted">({{ number_format($file->size_bytes / 1024) }} KB)</small>
                 </div>
                 @if($canUpload)
-                    <form action="{{ route('attachments.delete', $file) }}" method="post" onsubmit="return confirm('Remove file?')">
+                    <form action="{{ route('attachments.delete', $file) }}" method="post" onsubmit="return AppDialog.confirmAction(event,this,'Remove file?')">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn btn-outline btn-sm" style="color: #D32F2F; border-color: #EF9A9A; padding: 2px 6px; font-size: 11px;">Remove</button>

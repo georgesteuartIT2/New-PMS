@@ -325,7 +325,7 @@ class ProjectDelayDiagnosisService
 
             if ($openDelay) {
                 $hasReportedRootCause = true;
-                $reportedRootCause = TaskDelayController::REASONS[$openDelay->reason_code] ?? $openDelay->reason_code;
+                $reportedRootCause = $openDelay->reason_label;
                 $correctiveAction = $openDelay->details ?: 'None recorded';
                 $actionOwner = $openDelay->actionOwner?->name ?: 'None assigned';
                 $resolutionDate = $openDelay->revised_expected_end_at ? $openDelay->revised_expected_end_at->format('d M Y') : null;

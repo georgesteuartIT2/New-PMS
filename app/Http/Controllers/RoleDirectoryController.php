@@ -95,7 +95,7 @@ class RoleDirectoryController
         $data = $request->validate([
             'name' => 'required|string|max:80',
             'permissions' => 'nullable|array',
-            'permissions.*' => 'string',
+            'permissions.*' => ['string', \Illuminate\Validation\Rule::in($this->allowedPermissionKeys($request,$access))],
         ]);
 
         $slug = Str::slug($data['name'], '_');
@@ -107,7 +107,7 @@ class RoleDirectoryController
             throw ValidationException::withMessages(['name' => 'A role with this name already exists.']);
         }
 
-        $perms = array_values(array_unique($data['permissions'] ?? []));
+        $perms = array_values(array_unique(array_map(fn($key)=>$access->normalize($key),$data['permissions']??[])));
 
         $role = ProjectRole::create([
             'name' => $data['name'],
@@ -126,11 +126,67 @@ class RoleDirectoryController
             ->with('success', "Custom role '{$role->name}' created successfully.");
     }
 
+    public function quickStore(Request $request, Access $access)
+    {
+        $user = $request->user();
+        $canManage = $user->isPmo() || $access->hasCompanyPermission($user, 'roles.manage') || $access->hasCompanyPermission($user, 'projects.create');
+        abort_unless($canManage, 403, 'Permission to create project roles required.');
+
+        $data = $request->validate([
+            'name' => 'required|string|max:80',
+            'permissions' => 'nullable|array',
+            'permissions.*' => ['string', \Illuminate\Validation\Rule::in($this->allowedPermissionKeys($request,$access))],
+        ]);
+
+        $baseSlug = Str::slug($data['name'], '_');
+        if (!$baseSlug) {
+            $baseSlug = 'custom_role';
+        }
+
+        $slug = $baseSlug;
+        $count = 1;
+        while (ProjectRole::where('slug', $slug)->exists()) {
+            $slug = $baseSlug . '_' . (++$count);
+        }
+
+        $perms = array_values(array_unique(array_merge(
+            ['project.view'],
+            $data['permissions'] ?? []
+        )));
+        $perms=array_values(array_unique(array_map(fn($key)=>$access->normalize($key),$perms)));
+
+        $role = ProjectRole::create([
+            'name' => $data['name'],
+            'slug' => $slug,
+            'is_system' => false,
+            'default_permissions' => $perms,
+        ]);
+
+        Audit::record('role.created', $role, [
+            'name' => $role->name,
+            'slug' => $role->slug,
+            'permissions_count' => count($perms),
+            'created_via' => 'project_creation',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'role' => [
+                'id' => $role->id,
+                'name' => $role->name,
+                'slug' => $role->slug,
+                'is_system' => false,
+                'default_permissions' => $role->default_permissions,
+            ],
+            'message' => "Role '{$role->name}' created successfully."
+        ]);
+    }
+
     public function update(Request $request, ProjectRole $role, Access $access)
     {
         $rules = [
             'permissions' => 'nullable|array',
-            'permissions.*' => 'string',
+            'permissions.*' => ['string', \Illuminate\Validation\Rule::in($this->allowedPermissionKeys($request,$access))],
         ];
 
         if (!$role->is_system) {
@@ -140,7 +196,7 @@ class RoleDirectoryController
         $data = $request->validate($rules);
 
         $updateData = [
-            'default_permissions' => array_values(array_unique($data['permissions'] ?? [])),
+            'default_permissions' => array_values(array_unique(array_map(fn($key)=>$access->normalize($key),$data['permissions']??[]))),
         ];
 
         if (!$role->is_system && !empty($data['name'])) {
@@ -175,7 +231,7 @@ class RoleDirectoryController
         $roleName = $role->name;
         $role->delete();
 
-        Audit::record('role.deleted', null, ['name' => $roleName]);
+        Audit::record('role.deleted', $role, ['name' => $roleName]);
 
         return redirect()->route('role-directory.index')
             ->with('success', "Custom role '{$roleName}' deleted successfully.");
@@ -202,5 +258,12 @@ class RoleDirectoryController
             'preview_user_id' => $user->id,
             'preview_project_id' => $project->id,
         ]);
+    }
+    private function allowedPermissionKeys(Request $request,Access $access):array {
+        $actor=$request->user();
+        $companyAllowed=$actor->isPmo() || $access->hasCompanyPermission($actor,'roles.manage');
+        $keys=array_keys(array_filter(Access::CATALOG,fn($permission)=>$companyAllowed || $permission['category']!=='company'));
+        foreach(Access::ALIASES as $alias=>$canonical)if(in_array($canonical,$keys,true))$keys[]=$alias;
+        return $keys;
     }
 }
