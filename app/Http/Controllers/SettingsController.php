@@ -25,7 +25,9 @@ class SettingsController {
  public function system(Request $request,\App\Services\EmailConfigurationService $email){
   abort_unless($request->user()->isPmo(),403);
   $configuration=$email->current();$hasPassword=!empty($configuration['password']);unset($configuration['password']);
-  return view('settings.system',compact('configuration','hasPassword'));
+  $pendingProjectEmails=\Illuminate\Support\Facades\DB::table('jobs')->where('queue','project-notifications')->count();
+  $failedProjectEmails=\Illuminate\Support\Facades\DB::table('failed_jobs')->where('queue','project-notifications')->orderByDesc('failed_at')->get(['uuid','failed_at']);
+  return view('settings.system',compact('configuration','hasPassword','pendingProjectEmails','failedProjectEmails'));
  }
  public function updateEmail(Request $request,\App\Services\EmailConfigurationService $email){
   abort_unless($request->user()->isPmo(),403);
@@ -39,5 +41,13 @@ class SettingsController {
   try{\Illuminate\Support\Facades\Mail::raw('Your GS ProjectFlow email configuration is working.',fn($message)=>$message->to($data['recipient'])->subject('GS ProjectFlow: Email configuration test'));}
   catch(\Throwable $error){report($error);throw ValidationException::withMessages(['recipient'=>'Email could not be sent. Check the saved server, port and credentials.']);}
   return back()->with('success','Test email sent to '.$data['recipient'].'.');
+ }
+
+ public function retryProjectEmail(Request $request){
+  abort_unless($request->user()->isPmo(),403);
+  $data=$request->validate(['uuid'=>'required|uuid']);
+  abort_unless(\Illuminate\Support\Facades\DB::table('failed_jobs')->where('queue','project-notifications')->where('uuid',$data['uuid'])->exists(),404);
+  \Illuminate\Support\Facades\Artisan::call('queue:retry',['id'=>[$data['uuid']]]);
+  return back()->with('success','Failed notification queued for retry. A running worker is required to send it.');
  }
 }

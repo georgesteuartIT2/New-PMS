@@ -89,7 +89,7 @@ class ProjectCreateSmartFlowTest extends TestCase
         $response = $this->actingAs($pmo)->get(route('templates.index', ['select_for_project' => 1]));
 
         $response->assertStatus(200);
-        $response->assertSee('Select a Template for Your New Project');
+        $response->assertSee('Choose a starting plan');
         $response->assertSee('Continue with Template →');
         $response->assertSee('← Return to Create Project');
         $response->assertSee(route('projects.create', ['template_id' => $tpl->id, 'mode' => 'template']));

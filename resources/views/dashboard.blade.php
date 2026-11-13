@@ -1,7 +1,6 @@
 @extends('layouts.app')
 @section('title', $isPmo ? 'Dashboard' : 'My Workspace')
 @section('content')
-@include('projects._owner-dashboard')
 <div class="home-workspace premium-dashboard">
     <div class="page-head">
         <div><span class="workspace-eyebrow">{{ now()->format('l, d M Y') }}@if($isPmo) &middot; Portfolio Health @endif</span><h1>{{ $isPmo ? 'Project Overview' : 'My workspace' }}</h1><p class="muted">{{ $isPmo ? 'See what needs attention, then keep work moving.' : 'Your priorities, projects and upcoming work in one place.' }}</p></div>
@@ -41,6 +40,7 @@
         @if($approvalQueue->hasPages())<footer class="approval-pagination" aria-label="Approval pages">@if($approvalQueue->onFirstPage())<span class="btn btn-outline btn-sm" aria-disabled="true">&larr; Previous</span>@else<a class="btn btn-outline btn-sm" href="{{ $approvalQueue->previousPageUrl() }}">&larr; Previous</a>@endif<span>Page {{ $approvalQueue->currentPage() }} of {{ $approvalQueue->lastPage() }}</span>@if($approvalQueue->hasMorePages())<a class="btn btn-outline btn-sm" href="{{ $approvalQueue->nextPageUrl() }}">Next &rarr;</a>@else<span class="btn btn-outline btn-sm" aria-disabled="true">Next &rarr;</span>@endif</footer>@endif
     </section>
     @endif
+    @include('projects._owner-dashboard')
     <nav class="home-summary" aria-label="Workspace summary">
         @foreach($homeMetrics as $metric)<a href="{{ $metric['url'] }}"><span>{{ $metric['label'] }}</span><strong class="{{ !empty($metric['warning']) && $metric['value']>0 ? 'text-danger' : '' }}">{{ $metric['value'] }}</strong><span class="home-summary-arrow" aria-hidden="true">&rarr;</span></a>@endforeach
     </nav>

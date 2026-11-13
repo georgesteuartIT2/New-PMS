@@ -7,7 +7,7 @@
     $templateSelectionContext=($selectForProject ?? request()->boolean('select_for_project')) ? array_merge($projectReturnContext,['select_for_project'=>1]) : [];
 @endphp
 @include('templates._selection-context')
-<link rel="stylesheet" href="{{ asset('css/template-library.css') }}?v={{ filemtime(public_path('css/template-library.css')) }}">
+<link rel="stylesheet" href="{{ asset('css/template-library.css') }}?v={{ filemtime(public_path('css/template-library.css')) }}?v={{ filemtime(public_path('css/template-library.css')) }}">
 <div class="page-head" style="margin-bottom: 20px;">
     <div>
         <h1 style="font-size: 24px; font-weight: 700; color: #22272B; margin: 0 0 4px;">Templates</h1>
@@ -29,7 +29,7 @@
             : route('projects.create', $projectReturnContext);
         $returnLabel = request('plan_project') ? '← Return to Plan Setup' : '← Return to Create Project';
     @endphp
-    <section class="template-selection-banner"><div><b>Select a Template for Your New Project</b><p>Select a saved plan or create a new one. Your project details will be kept.</p></div><a href="{{ $returnUrl }}" class="btn btn-outline btn-sm">{{ $returnLabel }}</a></section>
+    <section class="template-selection-banner"><div><b>Choose a starting plan</b><p>Open a template, edit the tasks, then save and continue. Your project details are kept.</p></div><a href="{{ $returnUrl }}" class="btn btn-outline btn-sm">{{ $returnLabel }}</a></section>
 @endif
 
 <!-- Search & Filter Toolbar -->
@@ -84,7 +84,7 @@
                         class="template-table-row"
                         style="border-bottom: 1px solid #F1F5F9; transition: background 0.12s ease; cursor: pointer;"
                         data-template-id="{{ $template->id }}"
-                        onclick="openTemplatePlan({{ $template->id }}, 'view')"
+                        onclick="openTemplatePlan({{ $template->id }}, '{{ ($selectForProject ?? false) ? 'select' : ($canManage ? 'edit' : 'view') }}')"
                         onmouseover="this.style.background='#F8FAFC'"
                         onmouseout="this.style.background='transparent'"
                     >
@@ -133,7 +133,7 @@
                                             ? route('projects.plan.setup', array_merge(['project' => request('plan_project'), 'template_id' => $template->id], request()->only('starts_on', 'ends_on', 'planned_budget')))
                                             : route('projects.create', ['template_id' => $template->id, 'mode' => 'template']);
                                     @endphp
-                                    @if(!$template->isArchived())<button type="button" class="btn btn-primary btn-sm btn-select-template" data-select-template="{{ $template->id }}" data-create-url="{{ $rowTargetUrl }}" onclick="event.stopPropagation(); openTemplatePlan({{ $template->id }}, 'select')">Continue with Template &rarr;</button><span class="workspace-sr-only">Continue with Template →</span>@else<span class="muted text-sm">Archived</span>@endif
+                                    @if(!$template->isArchived())<button type="button" class="btn btn-primary btn-sm btn-select-template" data-select-template="{{ $template->id }}" data-create-url="{{ $rowTargetUrl }}" onclick="event.stopPropagation(); openTemplatePlan({{ $template->id }}, 'select')">Continue with Template →</button>@else<span class="muted text-sm">Archived</span>@endif
                                 @endif
 
                                 @if($canManage && !($selectForProject ?? false))

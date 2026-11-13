@@ -119,7 +119,7 @@
                         @if($isPlanningStage)
                             <small style="color:#0D5C46;display:flex;align-items:flex-start;gap:6px;margin-top:6px;line-height:1.4;">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                                <span>Project plan is being prepared. Click <b>Save & notify team</b> on the workspace banner to publish the plan and activate the project.</span>
+                                <span>Project plan is being prepared. Click <b>Review & publish</b> on the workspace banner to publish the plan and activate the project.</span>
                             </small>
                         @elseif($isOwnerApprovalStage)
                             <small>Awaiting Project Owner review and PM assignment.</small>
@@ -139,7 +139,7 @@
                         <small>Plan source</small>
                         <strong>{{ $project->template?->name ?? 'Blank project plan' }}</strong>
                         @if($isPlanningStage)
-                            <p style="color:#0D5C46;font-weight:500;margin-top:6px;">Plan setup in progress. Tasks and team assignments will be published when you click <b>Save & notify team</b>.</p>
+                            <p style="color:#0D5C46;font-weight:500;margin-top:6px;">Plan setup in progress. Tasks and team assignments will be published when you click <b>Review & publish</b>.</p>
                         @elseif($project->plan_published_at)
                             <p style="color:#1E534B;font-size:11px;margin-top:6px;">Plan published on {{ $project->plan_published_at->format('d M Y') }}.</p>
                         @else

@@ -94,12 +94,12 @@
             <thead>
                 <tr>
                     <th>Project</th>
-                    <th>{{ auth()->user()->canViewPortfolio() ? 'Project manager' : 'My role' }}</th>
+                    <th>{{ auth()->user()->canViewPortfolio() ? 'Project leads' : 'My role' }}</th>
 
                     <th>Progress</th>
                     <th>Budget <span class="budget-currency-label">LKR</span></th>
                     <th>Due</th>
-                    <th>Status</th>
+                    <th>{{ auth()->user()->canViewPortfolio() ? 'Status / Next action' : 'Status' }}</th>
                     <th class="right">Actions</th>
                 </tr>
             </thead>
@@ -139,11 +139,7 @@
                         </td>
                         <td>
                             @if(auth()->user()->canViewPortfolio())
-                                @if($project->manager)
-                                    <div class="library-manager"><span class="library-manager-avatar" aria-hidden="true">{{ mb_strtoupper(mb_substr($project->manager->name,0,1)) }}</span><span class="pm-name">{{ $project->manager->name }}</span></div>
-                                @else
-                                    <span class="pm-unassigned">Not assigned</span>
-                                @endif
+                                @include('projects._leads',['project'=>$project])
                             @else
                                 <span class="muted text-sm" style="font-weight: 600; color: #374151;">
                                     {{ implode(', ', $userRoles) }}
@@ -186,6 +182,7 @@
                         </td>
                         <td>
                             <div class="project-health-cell">
+                                @if(auth()->user()->canViewPortfolio()) @include('projects._workflow-holder') @endif
                                 @if($project->approval_stage==='planning')<span class="status-pill pill-neutral">Preparing plan</span>
                                 @elseif($project->status === 'declined')
                                     <span class="status-pill status-declined" style="background: #FEE2E2; color: #991B1B; font-weight: 600;">{{ $project->approval_stage==='owner_declined'?'Owner Declined':'PM Declined' }}</span>
@@ -306,8 +303,8 @@
 
             <div class="grid-card-meta">
                 <div class="grid-meta-row">
-                    <span>Manager:</span>
-                    <b>{{ $project->manager?->name ?? 'Not assigned' }}</b>
+                    <span>Project leads:</span>
+                    @include('projects._leads',['project'=>$project])
                 </div>
                 <div class="grid-meta-row">
                     <span>Deadline:</span>

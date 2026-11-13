@@ -28,6 +28,7 @@ Route::middleware(['auth','account.active'])->group(function(){
   Route::get('/projects/{project}/plan-setup',[\App\Http\Controllers\ProjectWorkflowController::class,'setup'])->name('projects.plan.setup');
   Route::post('/projects/{project}/plan-options',[\App\Http\Controllers\ProjectWorkflowController::class,'saveOptions'])->name('projects.plan.options');
   Route::post('/projects/{project}/plan-setup',[\App\Http\Controllers\ProjectWorkflowController::class,'initialize'])->name('projects.plan.initialize');
+  Route::post('/projects/{project}/setup-draft',[\App\Http\Controllers\ProjectWorkflowController::class,'saveSetupDraft'])->name('projects.plan.draft');
   Route::post('/projects/{project}/publish-plan',[\App\Http\Controllers\ProjectWorkflowController::class,'publish'])->name('projects.plan.publish');
   Route::get('/projects/create',[ProjectController::class,'create'])->name('projects.create');
   Route::post('/projects',[ProjectController::class,'store'])->name('projects.store');
@@ -125,6 +126,7 @@ Route::middleware(['auth','account.active'])->group(function(){
    Route::get('/users',[UserController::class,'index'])->name('users.index');
    Route::get('/users/{user}',[\App\Http\Controllers\UserDetailsController::class,'show'])->whereNumber('user')->name('users.show');
    Route::put('/settings/email',[\App\Http\Controllers\SettingsController::class,'updateEmail'])->name('settings.email.update');
+   Route::post('/settings/email/retry',[\App\Http\Controllers\SettingsController::class,'retryProjectEmail'])->name('settings.email.retry');
    Route::post('/settings/email/test',[\App\Http\Controllers\SettingsController::class,'testEmail'])->middleware('throttle:5,1')->name('settings.email.test');
    Route::get('/settings',[\App\Http\Controllers\SettingsController::class,'system'])->name('settings.system');
    Route::get('/roles',[\App\Http\Controllers\RoleDirectoryController::class,'index'])->name('role-directory.index');

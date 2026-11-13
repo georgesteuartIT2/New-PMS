@@ -14,10 +14,10 @@
   const close=()=>{list.hidden=true;input.setAttribute('aria-expanded','false');};
   function choose(person){
    let option=[...select.options].find(o=>o.value===String(person.id));
-   if(!option){option=new Option(person.name,person.id);select.add(option);}
+   if(!option){option=new Option(person.email ? person.name+' ('+person.email+')' : person.name,person.id);select.add(option);}
    select.value=String(person.id);input.value=option.textContent.trim();input.setCustomValidity('');status.textContent='';close();select.dispatchEvent(new Event('change',{bubbles:true}));
   }
-  function item(name,email,run,remote=false){const b=document.createElement('button');b.type='button';b.className='directory-person';const strong=document.createElement('strong');strong.textContent=name;const detail=document.createElement('small');detail.textContent=(remote?'Add from Microsoft - ':'')+(email||'Existing system user');b.append(strong,detail);b.addEventListener('click',run);list.append(b);}
+  function item(name,email,run,remote=false){const b=document.createElement('button');b.type='button';b.className='directory-person';const strong=document.createElement('strong');const match=name.match(/^(.+?)\s*\(([^)]+@[^)]+)\)$/);strong.textContent=match?match[1].trim():name;if(!email&&match)email=match[2];const detail=document.createElement('small');detail.textContent=(remote?'Add from Microsoft - ':'')+(email||'System user');b.append(strong,detail);b.addEventListener('click',run);list.append(b);}
   async function search(){
    if(busy)return;const term=input.value.trim(),current=++version;controller?.abort();controller=new AbortController();list.replaceChildren();list.hidden=false;input.setAttribute('aria-expanded','true');
    const local=[...select.options].filter(o=>o.value&&o.textContent.toLowerCase().includes(term.toLowerCase()));

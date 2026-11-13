@@ -316,7 +316,7 @@ class OwnerApprovalWorkflowTest extends TestCase
             ->assertSee('Project Manager')
             ->assertSee('Planning stage')
             ->assertSee('Planning (Unpublished)')
-            ->assertSee('Save & notify team', false);
+            ->assertSee('Review & publish', false);
 
         // PM edits project details during planning - status stays 'active'
         $this->actingAs($pm)->putJson(route('projects.update', $project), [
@@ -387,5 +387,70 @@ class OwnerApprovalWorkflowTest extends TestCase
         $p=Project::latest('id')->first();$this->assertNull($p->project_template_id);$this->assertSame('Manual kickoff',$p->tasks()->first()->title);$this->assertSame(0,ProjectTemplate::count());
         $task['dependency_code']='1';$data['blank_plan']=json_encode(['tasks'=>[$task]]);$before=Project::count();
         $this->postJson(route('projects.initiate'),$data)->assertUnprocessable();$this->assertSame($before,Project::count());
+    }
+
+    public function test_pm_can_customize_a_template_copy_without_changing_shared_plan(): void
+    {
+        [$pmo,$pm,$p]=$this->initiate('pm');
+        $this->actingAs($pm)->postJson(route('projects.respond',$p),['decision'=>'accept'])->assertOk();
+        $original=ProjectTemplate::create(['name'=>'Shared baseline','status'=>'active','created_by'=>$pmo->id,'estimated_duration'=>2,'duration_unit'=>'working_days']);
+        TemplateTask::create(['project_template_id'=>$original->id,'code'=>'1','title'=>'Shared original task','duration_days'=>2,'sort_order'=>1]);
+        $page=$this->get(route('templates.index',['select_for_project'=>1,'plan_project'=>$p->id]))->assertOk()->assertSee('canEditSelection: true',false);
+        $this->snapshot('workflow-editable-template',$page->getContent());
+        $payload=['name'=>'My project plan','category'=>'General','select_for_project'=>1,'plan_project'=>$p->id,'estimated_duration'=>2,'duration_unit'=>'working_days','tasks'=>[['code'=>'1','title'=>'Customized task','duration_days'=>2]]];
+        $response=$this->postJson(route('templates.store'),$payload)->assertOk();
+        $id=$response->json('template_id');$this->assertNotEquals($original->id,$id);
+        $this->assertSame('Shared original task',$original->tasks()->first()->title);
+        $this->assertDatabaseHas('template_tasks',['project_template_id'=>$id,'title'=>'Customized task']);
+    }
+
+    public function test_project_leads_show_owner_before_pm_and_both_after_owner_approval(): void
+    {
+        [$pmo,$owner,$p]=$this->initiate();$owner->update(['name'=>'Owner lead example']);
+        $this->actingAs($pmo)->get(route('projects.index'))->assertOk()->assertSee('Project leads')->assertSee('Owner lead example');
+        $pm=$this->person();$pm->update(['name'=>'Manager lead example']);
+        $this->actingAs($owner)->post(route('projects.owner.respond',$p),['decision'=>'accept','pm_user_id'=>$pm->id])->assertRedirect();
+        $this->actingAs($pmo)->get(route('projects.index'))->assertOk()->assertSee('Owner lead example')->assertSee('Manager lead example');
+        $this->get(route('projects.index',['search'=>'Owner lead example']))->assertOk()->assertSee($p->name);
+    }
+
+    public function test_pm_excel_assignee_roundtrip_assigns_tasks_and_members_only_to_the_project(): void
+    {
+        [$pmo,$pm,$p]=$this->initiate('pm');$member=$this->person();
+        $this->actingAs($pm)->postJson(route('projects.respond',$p),['decision'=>'accept'])->assertOk();
+        $details=['name'=>'Assigned plan','plan_project'=>$p->id,'estimated_duration'=>2,'duration_unit'=>'working_days','reference_start_date'=>'2026-11-12','working_hours'=>'09:00 - 17:00'];
+        $task=['code'=>'1','title'=>'Assigned task','duration_days'=>1,'start_date'=>'2026-11-12','end_date'=>'2026-11-12','start_time'=>'09:00','end_time'=>'17:00','assignee_email'=>$member->email];
+        $service=app(\App\Services\TemplateSpreadsheetService::class);$book=$service->blankWorkbook($details,[$task]);
+        $this->assertSame('Assignee (Email)',$book->getSheetByName('TASKS')->getCell('J1')->getValue());
+        $this->assertSame($member->email,$book->getSheetByName('TASKS')->getCell('J2')->getValue());
+        $path=tempnam(sys_get_temp_dir(),'plan_xlsx_');(new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($book))->save($path);
+        try{$upload=new \Illuminate\Http\UploadedFile($path,'assigned-plan.xlsx','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',null,true);$this->post(url('/templates/import-preview'),array_merge($details,['file'=>$upload]),['Accept'=>'application/json'])->assertOk()->assertJsonPath('success',true)->assertJsonPath('tasks.0.assignee_id',$member->id);}finally{@unlink($path);}
+
+        $text="Task Code\tTask Name\tStart Date\tEnd Date\tDuration\tAssignee (Email)\n1\tAssigned task\t2026-11-12\t2026-11-12\t1\t".$member->email;
+        $preview=$this->postJson(url('/templates/import-preview'),array_merge($details,['raw_text'=>$text]))->assertOk()->assertJsonPath('success',true)->assertJsonPath('tasks.0.assignee_id',$member->id);
+        $tasks=$preview->json('tasks');
+        $saved=$this->postJson(route('templates.store'),array_merge($details,['category'=>'General','select_for_project'=>1,'tasks'=>$tasks]))->assertOk();$id=$saved->json('template_id');
+        $this->assertEquals($member->id,$p->fresh()->plan_assignment_drafts[$id]['1']);
+        $this->flushSession();
+        $this->post(route('projects.plan.initialize',$p),['mode'=>'template','project_template_id'=>$id,'starts_on'=>'2026-11-12','ends_on'=>'2026-11-30'])->assertRedirect();
+        $task=$p->tasks()->first();$this->assertTrue($task->assignees()->where('users.id',$member->id)->exists());
+        $this->assertTrue($p->memberships()->where('user_id',$member->id)->exists());Notification::assertNotSentTo($member,ProjectActivatedNotification::class);
+        $this->postJson(url('/templates/import-preview'),array_merge($details,['raw_text'=>str_replace($member->email,'unknown@example.test',$text)]))->assertJsonPath('success',false);
+        $outsider=$this->person();$this->actingAs($outsider)->postJson(route('templates.store'),array_merge($details,['category'=>'General','tasks'=>$tasks]))->assertForbidden();
+    }
+
+    public function test_publish_review_lists_recipients_and_unassigned_tasks():void {
+        [$pmo,$pm,$p]=$this->initiate('pm');$this->actingAs($pm)->postJson(route('projects.respond',$p),['decision'=>'accept'])->assertOk();
+        $this->post(route('projects.plan.initialize',$p),['mode'=>'blank','starts_on'=>'2026-11-12','ends_on'=>'2026-11-30'])->assertRedirect();
+        Task::create(['project_id'=>$p->id,'code'=>'1','title'=>'Needs owner','starts_at'=>'2026-11-12 09:00','ends_at'=>'2026-11-12 17:00','created_by'=>$pm->id]);
+        $reviewPage=$this->get(route('projects.show',$p));$this->snapshot('publish-review-page',$reviewPage->getContent());$reviewPage->assertOk()->assertSee('Review &amp; publish',false)->assertSee('tasks still need an assignee')->assertSee('Needs owner')->assertSee('emails are queued');
+    }
+
+    public function test_review_popup_opens_after_continue_to_tasks_when_plan_has_tasks():void {
+        [$pmo,$pm,$p]=$this->initiate('pm');$this->actingAs($pm)->postJson(route('projects.respond',$p),['decision'=>'accept'])->assertOk();
+        $this->post(route('projects.plan.initialize',$p),['mode'=>'blank','starts_on'=>'2026-11-12','ends_on'=>'2026-11-30'])->assertRedirect()->assertSessionHas('open_publish_review');
+        $this->get(route('projects.show',$p))->assertOk()->assertSee('Ready to publish your plan?')->assertDontSee("d.showModal()",false)->assertSee('Your plan has no tasks yet')->assertSee('Review &amp; publish',false);
+        Task::create(['project_id'=>$p->id,'code'=>'1','title'=>'First task','starts_at'=>'2026-11-12 09:00','ends_at'=>'2026-11-12 17:00','created_by'=>$pm->id]);
+        $this->withSession(['open_publish_review'=>true])->get(route('projects.show',$p))->assertOk()->assertSee("d.showModal()",false)->assertSee('Assignment coverage')->assertSee('Publish &amp; notify team',false);
     }
 }

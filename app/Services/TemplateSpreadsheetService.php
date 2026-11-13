@@ -69,7 +69,7 @@ class TemplateSpreadsheetService
             ['5. Start / End Dates', 'Enter reference start and end dates (format YYYY-MM-DD, e.g. 2026-11-09). Dates shift automatically to real project start dates upon project creation.'],
             ['6. Working Hours', 'Optional. Specify 24-hour start and end times (format HH:MM, e.g. 09:00 and 17:00).'],
             ['7. Predecessors', 'Optional. Enter the Task # that must finish before this task starts (e.g. 1). Multiple predecessors can be comma-separated.'],
-            ['8. Suggested Role', 'Optional. Assign a suggested corporate project role (e.g. Project Manager, Team Member, Project Owner, Sponsor).'],
+            ['8. Suggested Role / Assignee', !empty($templateDetails['plan_project']) ? 'Enter the exact email of an active system user in Assignee (Email). For a new Microsoft user, add them in the project picker first, then upload again. Leave blank for unassigned tasks.' : 'Optional. Choose a suggested project role.'],
             ['9. Upload Workbook', 'Save this file and click "Upload Excel" in GS ProjectFlow. Your task plan will be generated automatically!'],
         ];
 
@@ -120,6 +120,7 @@ class TemplateSpreadsheetService
 
         $colKeys = array_keys(self::COLUMNS);
         $colLabels = array_values(self::COLUMNS);
+        if(!empty($templateDetails['plan_project']))$colLabels[9]='Assignee (Email)';
 
         foreach ($colLabels as $colIdx => $label) {
             $sheet3->setCellValueExplicit([$colIdx + 1, 1], $label, DataType::TYPE_STRING);
@@ -139,7 +140,7 @@ class TemplateSpreadsheetService
             $startPeriod = $t['start_period'] ?? ($periodMap[$startDate] ?? '');
             $endPeriod = $t['end_period'] ?? ($periodMap[$endDate] ?? $startPeriod);
 
-            $roleName = $t['suggested_role_name'] ?? ($t['suggestedRole']?->name ?? '');
+            $roleName = !empty($templateDetails['plan_project']) ? ($t['assignee_email'] ?? '') : ($t['suggested_role_name'] ?? ($t['suggestedRole']?->name ?? ''));
 
             $rowVals = [
                 $t['code'] ?? '',
@@ -181,7 +182,7 @@ class TemplateSpreadsheetService
 
         // Add Role Dropdown Validation on Column J
         $rolesList = ProjectRole::orderBy('name')->pluck('name')->all();
-        if (!empty($rolesList)) {
+        if (empty($templateDetails['plan_project']) && !empty($rolesList)) {
             $roleValidation = new DataValidation();
             $roleValidation->setType(DataValidation::TYPE_LIST);
             $roleValidation->setErrorStyle(DataValidation::STYLE_INFORMATION);
@@ -388,6 +389,8 @@ class TemplateSpreadsheetService
                 $headerMap['duration_days'] = $colIdx;
             } elseif (str_contains($header, 'depend') || str_contains($header, 'predecessor')) {
                 $headerMap['dependency_code'] = $colIdx;
+            } elseif (str_contains($header, 'assignee') || str_contains($header, 'assignedto')) {
+                $headerMap['assignee_email'] = $colIdx;
             } elseif (str_contains($header, 'role')) {
                 $headerMap['suggested_role'] = $colIdx;
             } elseif (str_contains($header, 'description') || str_contains($header, 'desc') || str_contains($header, 'notes')) {
@@ -418,6 +421,7 @@ class TemplateSpreadsheetService
                 'duration_days' => isset($headerMap['duration_days']) ? trim((string) ($row[$headerMap['duration_days']] ?? '')) : trim((string) ($row[7] ?? '1')),
                 'dependency_code' => isset($headerMap['dependency_code']) ? trim((string) ($row[$headerMap['dependency_code']] ?? '')) : trim((string) ($row[8] ?? '')),
                 'suggested_role' => isset($headerMap['suggested_role']) ? trim((string) ($row[$headerMap['suggested_role']] ?? '')) : trim((string) ($row[9] ?? '')),
+                'assignee_email' => isset($headerMap['assignee_email']) ? trim((string)($row[$headerMap['assignee_email']] ?? '')) : '',
                 'description' => isset($headerMap['description']) ? trim((string) ($row[$headerMap['description']] ?? '')) : trim((string) ($row[10] ?? '')),
             ];
 
@@ -485,6 +489,8 @@ class TemplateSpreadsheetService
                         $headerMap['duration_days'] = $colIdx;
                     } elseif (str_contains($norm, 'depend') || str_contains($norm, 'predecessor')) {
                         $headerMap['dependency_code'] = $colIdx;
+                    } elseif (str_contains($norm, 'assignee') || str_contains($norm, 'assignedto')) {
+                        $headerMap['assignee_email'] = $colIdx;
                     } elseif (str_contains($norm, 'role')) {
                         $headerMap['suggested_role'] = $colIdx;
                     } elseif (str_contains($norm, 'desc') || str_contains($norm, 'notes')) {
@@ -519,6 +525,7 @@ class TemplateSpreadsheetService
                     'duration_days' => isset($headerMap['duration_days']) ? ($cells[$headerMap['duration_days']] ?? '1') : '1',
                     'dependency_code' => isset($headerMap['dependency_code']) ? ($cells[$headerMap['dependency_code']] ?? '') : '',
                     'suggested_role' => isset($headerMap['suggested_role']) ? ($cells[$headerMap['suggested_role']] ?? '') : '',
+                    'assignee_email' => isset($headerMap['assignee_email']) ? ($cells[$headerMap['assignee_email']] ?? '') : '',
                     'description' => isset($headerMap['description']) ? ($cells[$headerMap['description']] ?? '') : '',
                 ];
             } else {
@@ -751,6 +758,7 @@ class TemplateSpreadsheetService
                 'duration_days' => $duration,
                 'suggested_role_id' => $roleId,
                 'suggested_role_name' => $roleName,
+                'assignee_email' => trim($row['assignee_email'] ?? ''),
                 'dependency_code' => trim($row['dependency_code'] ?? '') ?: null,
                 'priority' => 'medium',
                 'sort_order' => $index,

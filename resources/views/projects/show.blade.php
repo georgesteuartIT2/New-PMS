@@ -47,6 +47,18 @@
             @if(app(\App\Services\Access::class)->project(auth()->user(), $project, 'edit_project') && $project->status !== 'archived')
                 <button type="button" class="btn btn-outline workspace-edit-project" data-show-dialog="project-edit-dialog">Edit project</button>
             @endif
+            @if($project->approval_stage==='planning' && ((int)$project->owner_user_id===auth()->id() || (int)$project->pm_user_id===auth()->id() || auth()->user()->isPmo()))
+                <a href="{{ route('projects.plan.setup', $project) }}" class="btn btn-outline" style="display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:12px;padding:0 14px;height:34px;border-radius:8px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                    <span>Plan setup</span>
+                </a>
+            @endif
+            @if($project->approval_stage==='planning' && $project->plan_initialized && ((int)$project->owner_user_id===auth()->id() || (int)$project->pm_user_id===auth()->id() || auth()->user()->isPmo()))
+                <button type="button" class="btn btn-primary workspace-review-publish-btn" data-show-dialog="publish-plan-review" style="display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:12px;padding:0 14px;height:34px;border-radius:8px;background:#315F58;color:#FFFFFF;box-shadow:0 2px 6px rgba(49,95,88,.2);">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                    <span>Review &amp; publish</span>
+                </button>
+            @endif
             @if($project->status==='draft' && (auth()->user()->isPmo() || ($project->created_by===auth()->id() && app(\App\Services\Access::class)->hasCompanyPermission(auth()->user(),'projects.create'))))<a href="{{ route('projects.create',['draft'=>$project->id]) }}" class="btn btn-primary">Create project</a>@endif
         </div>
     </div>
@@ -60,7 +72,12 @@
         <section class="pm-assignment-review-banner approval-review" aria-labelledby="approval-review-title">
             <header><div><span class="approval-eyebrow">Project manager invitation</span><h2 id="approval-review-title">Review your project assignment</h2><p>Check the tasks, timeline and team below. {{ $project->approval_stage ? 'Accept to choose your plan, prepare tasks and assign the team.' : 'Accepting activates the project and captures its baseline.' }}</p></div><div class="approval-review-actions"><button type="button" class="btn btn-outline" data-show-dialog="decline-project-dialog">Decline</button><form method="post" action="{{ route('projects.respond',$project) }}" onsubmit="return AppDialog.confirmAction(event,this,'Accept this assignment and activate the project?');">@csrf
             <input type="hidden" name="decision" value="accept"><button type="submit" class="btn btn-primary">Accept project</button></form></div></header>
-            <dl><div><dt>Company</dt><dd>{{ $project->subsidiary?->name ?? 'General Group' }}</dd></div><div><dt>Planned schedule</dt><dd>@if($project->approval_stage && !$project->plan_initialized)Set after acceptance@else{{ $project->starts_on->format('d M Y') }} &ndash; {{ $project->ends_on->format('d M Y') }}@endif</dd></div><div><dt>Prepared plan</dt><dd>{{ $project->template?->name ?? 'Blank project' }} <small>{{ $project->tasks()->whereDoesntHave('children')->count() }} executable tasks</small></dd></div><div><dt>Requested by</dt><dd>{{ $project->creator?->name ?? 'PMO' }}<small>{{ $project->created_at->format('d M Y') }}</small></dd></div></dl>
+            <dl><div><dt>Company</dt><dd>{{ $project->subsidiary?->name ?? 'General Group' }}</dd></div><div><dt>Planned schedule</dt><dd>{{ ($project->approval_stage && !$project->plan_initialized) ? 'Set after acceptance' : $project->starts_on->format('d M Y').' – '.$project->ends_on->format('d M Y') }}</dd></div><div><dt>Prepared plan</dt><dd>{{ $project->template?->name ?? 'Blank project' }} <small>{{ $project->tasks()->whereDoesntHave('children')->count() }} executable tasks</small></dd></div><div><dt>Requested by</dt><dd>{{ $project->creator?->name ?? 'PMO' }}<small>{{ $project->created_at->format('d M Y') }}</small></dd></div></dl>
+            @if($project->description)
+                <div class="approval-review-description" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid #E2E8F0; font-size: 13px; color: #475569; line-height: 1.5;">
+                    <strong style="color: #1E293B; font-weight: 600;">Description:</strong> {{ $project->description }}
+                </div>
+            @endif
         </section>
     @elseif($project->status === 'declined' && $project->pm_user_id === auth()->id())
         <section class="action-banner" style="margin-bottom: 20px; background: #FEF2F2; border: 1px solid #FECACA; border-left: 5px solid #DC2626; border-radius: 8px; padding: 16px 20px;">

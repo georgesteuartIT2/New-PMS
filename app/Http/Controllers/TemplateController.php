@@ -12,6 +12,14 @@ class TemplateController {
     /**
      * Standard corporate categories.
      */
+    private function validatePlanAssignees(Request $request,array $tasks):void {
+        if($request->filled('plan_project'))abort_unless($this->planProject($request),403);
+        foreach($tasks as $task){if(empty($task['assignee_id']))continue;
+            if(!$this->planProject($request))throw ValidationException::withMessages(['tasks'=>'Task assignees require an authorised project plan.']);
+            if(!\App\Models\User::whereKey($task['assignee_id'])->where('account_status','active')->where('system_role','user')->exists())throw ValidationException::withMessages(['tasks'=>'Choose an active project user as assignee.']);
+        }
+    }
+
     public const DEFAULT_CATEGORIES = [
         'IT & Software',
         'Infrastructure',
@@ -167,6 +175,7 @@ class TemplateController {
             ];
         })->toArray();
 
+        if($planProject){foreach($templatesCache as $id=>&$cached){$assigned=($planProject->plan_assignment_drafts??[])[$id]??[];foreach($cached['tasks'] as &$task){$uid=$assigned[$task['code']]??null;if(!$uid)continue;$person=\App\Models\User::whereKey($uid)->where('account_status','active')->where('system_role','user')->first();if($person){$task['assignee_id']=$person->id;$task['assignee_email']=$person->email;$task['assignee_name']=$person->name;}}unset($task);}unset($cached);}
         $selectForProject = $request->boolean('select_for_project') || $request->has('select');
 
         return view('templates.index', compact(
@@ -224,12 +233,14 @@ class TemplateController {
             'tasks.*.end_date' => 'nullable|date',
             'tasks.*.end_time' => 'nullable|string|max:10',
             'tasks.*.suggested_role_id' => 'nullable|exists:project_roles,id',
+            'tasks.*.assignee_id' => 'nullable|integer|exists:users,id',
             'tasks.*.dependency_code' => 'nullable|string|max:60',
             'tasks.*.priority' => 'nullable|in:low,medium,high',
         ]);
 
         $tasks = $data['tasks'] ?? [];
         $this->validateTaskGraph($tasks);
+        $this->validatePlanAssignees($request,$tasks);
 
         $template = DB::transaction(function() use ($request, $data, $tasks) {
             $tpl = ProjectTemplate::create([
@@ -251,6 +262,7 @@ class TemplateController {
             return $tpl;
         });
 
+        if($plan=$this->planProject($request))DB::transaction(function()use($plan,$template,$tasks){$locked=Project::whereKey($plan->id)->lockForUpdate()->firstOrFail();$drafts=$locked->plan_assignment_drafts??[];$drafts[$template->id]=collect($tasks)->mapWithKeys(fn($task)=>[(string)($task['code']??'')=>$task['assignee_id']??null])->all();$locked->update(['plan_assignment_drafts'=>$drafts]);});
         $returnUrl = $this->continuationUrl($request, $template->id) ?? route('templates.index');
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
@@ -383,6 +395,8 @@ class TemplateController {
      * Update existing template
      */
     public function update(Request $request, ProjectTemplate $template) {
+        if($request->boolean('select_for_project'))return $this->store($request);
+
         $this->authorizeManage($request);
 
         $data = $request->validate([
@@ -405,12 +419,14 @@ class TemplateController {
             'tasks.*.end_date' => 'nullable|date',
             'tasks.*.end_time' => 'nullable|string|max:10',
             'tasks.*.suggested_role_id' => 'nullable|exists:project_roles,id',
+            'tasks.*.assignee_id' => 'nullable|integer|exists:users,id',
             'tasks.*.dependency_code' => 'nullable|string|max:60',
             'tasks.*.priority' => 'nullable|in:low,medium,high',
         ]);
 
         $tasks = $data['tasks'] ?? [];
         $this->validateTaskGraph($tasks);
+        $this->validatePlanAssignees($request,$tasks);
 
         DB::transaction(function() use ($template, $data, $tasks) {
             $template->update([
@@ -428,6 +444,7 @@ class TemplateController {
             Audit::record('template.updated', $template, ['name' => $template->name, 'task_count' => count($tasks)]);
         });
 
+        if($plan=$this->planProject($request))DB::transaction(function()use($plan,$template,$tasks){$locked=Project::whereKey($plan->id)->lockForUpdate()->firstOrFail();$drafts=$locked->plan_assignment_drafts??[];$drafts[$template->id]=collect($tasks)->mapWithKeys(fn($task)=>[(string)($task['code']??'')=>$task['assignee_id']??null])->all();$locked->update(['plan_assignment_drafts'=>$drafts]);});
         $returnUrl = $this->continuationUrl($request, $template->id) ?? route('templates.index');
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
@@ -491,7 +508,7 @@ class TemplateController {
             'reference_start_date',
             'working_hours',
             'category',
-            'description'
+            'description', 'plan_project'
         ]);
 
         $name = !empty($details['name']) ? $details['name'] : 'Project-Template';
@@ -541,6 +558,14 @@ class TemplateController {
                 return response()->json(['success' => false, 'message' => 'Please provide an Excel file or pasted table content.'], 422);
             }
 
+            if($request->filled('plan_project')){
+                abort_unless($this->planProject($request),403);
+                foreach($result['tasks'] as &$task){$email=trim($task['assignee_email']??'');$task['assignee_id']=null;if($email==='')continue;
+                    $users=\App\Models\User::where('account_status','active')->where('system_role','user')->where(fn($q)=>$q->where('email',$email)->orWhere('name',$email))->get();
+                    if($users->count()!==1){$result['errors'][]='Task '.($task['code']??'').': Assignee "'.$email.'" was not found or is ambiguous. Use an existing user email; add Microsoft users in the picker first.';continue;}
+                    $task['assignee_id']=$users->first()->id;$task['assignee_email']=$users->first()->email;
+                }unset($task);
+            }
             return response()->json([
                 'success' => count($result['errors']) === 0,
                 'tasks' => $result['tasks'],

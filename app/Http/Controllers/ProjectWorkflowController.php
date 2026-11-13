@@ -159,7 +159,21 @@ class ProjectWorkflowController
     {
         $this->planner($r, $project);
 
-        return view('projects.plan-setup', ['project' => $project->load('template','memberships.user','memberships.role'), 'roles'=>$this->availableRoles($r), 'users'=>User::where('system_role','user')->where('account_status','active')->orderBy('name')->get(), 'selectedTemplate' => ProjectTemplate::where('status', 'active')->find((int) ($r->old('project_template_id') ?: $r->query('template_id')))]);
+        if(!$r->session()->hasOldInput() && $project->setup_draft){$draft=$project->setup_draft;if($r->filled('template_id')){$draft['project_template_id']=$r->integer('template_id');$draft['mode']='template';}foreach(['starts_on','ends_on','planned_budget'] as $key)if($r->filled($key))$draft[$key]=$r->input($key);$r->session()->now('_old_input',$draft);}
+        return view('projects.plan-setup', [
+            'project' => $project->load('template','memberships.user','memberships.role'),
+            'roles' => $this->availableRoles($r),
+            'users' => User::where('system_role','user')->where('account_status','active')->orderBy('name')->get(),
+            'selectedTemplate' => ProjectTemplate::where('status', 'active')->with('tasks')->find((int) ($r->old('project_template_id') ?: $r->query('template_id'))),
+            'templates' => ProjectTemplate::where('status', 'active')->withCount('tasks')->orderBy('name')->get(),
+        ]);
+    }
+
+    public function saveSetupDraft(Request $r,Project $project){
+        $this->planner($r,$project);
+        $d=$r->validate(['name'=>'nullable|string|max:160','description'=>'nullable|string|max:3000','mode'=>'nullable|in:blank,template','project_template_id'=>'nullable|integer|exists:project_templates,id','starts_on'=>'nullable|string|max:10','ends_on'=>'nullable|string|max:10','planned_budget'=>'nullable|string|max:30','blank_plan'=>'nullable|json|max:1000000','members'=>'nullable|array|max:100','members.*.user_id'=>'nullable|integer|exists:users,id','members.*.project_role_id'=>'nullable|integer|exists:project_roles,id']);
+        DB::transaction(function()use($r,$project,$d){$p=Project::whereKey($project->id)->lockForUpdate()->firstOrFail();$this->planner($r,$p);$p->update(['setup_draft'=>$d]);});
+        return response()->json(['saved'=>true]);
     }
 
     private function validateBlankPlan(string $json): array
@@ -197,13 +211,38 @@ class ProjectWorkflowController
             ProjectMembership::firstOrCreate(['project_id'=>$p->id,'user_id'=>$u->id,'project_role_id'=>(int)$rid]);
         }
     }
-    public function saveOptions(Request $r,Project $project){
-        $d=$r->validate(array_merge(['planned_budget'=>'sometimes|nullable|numeric|min:0|max:9999999999999'],$this->memberRules()));
-        DB::transaction(function()use($r,$project,$d){$p=Project::whereKey($project->id)->lockForUpdate()->firstOrFail();$this->planner($r,$p);abort_unless($p->plan_initialized || $p->tasks()->exists(),409,'Choose a starting plan first.');
-            if(array_key_exists('planned_budget',$d))$p->update(['planned_budget'=>$d['planned_budget']]);
-            $this->assignOptionalMembers($p,$d['members']??[],$r);Audit::record('project.plan_options_updated',$p);
+    public function saveOptions(Request $r, Project $project, ProjectService $service = null)
+    {
+        $d = $r->validate(array_merge([
+            'planned_budget' => 'sometimes|nullable|numeric|min:0|max:9999999999999',
+            'publish_now' => 'nullable|boolean',
+            'name'=>'sometimes|required|string|max:160','description'=>'sometimes|nullable|string|max:3000',
+        ], $this->memberRules()));
+        DB::transaction(function () use ($r, $project, $d, $service) {
+            $p = Project::whereKey($project->id)->lockForUpdate()->firstOrFail();
+            $this->planner($r, $p);
+            if(isset($d))$p->fill(array_intersect_key($d,array_flip(['name','description'])))->save();
+            abort_unless($p->plan_initialized || $p->tasks()->exists(), 409, 'Choose a starting plan first.');
+            if (array_key_exists('planned_budget', $d)) $p->update(['planned_budget' => $d['planned_budget']]);
+            $this->assignOptionalMembers($p, $d['members'] ?? [], $r);
+            Audit::record('project.plan_options_updated', $p);
+
+            if ($r->boolean('publish_now') && $p->tasks()->exists() && $service) {
+                $p->update(['approval_stage' => 'ready', 'plan_published_at' => now(),'setup_draft'=>null]);
+                $service->captureBaseline($p);
+                $ids = $p->tasks()->with('assignees')->get()->flatMap(fn ($t) => $t->assignees->pluck('id'))->merge($p->memberships()->pluck('user_id'))->unique()->reject(fn ($id) => (int) $id === (int) $p->pm_user_id);
+                foreach (User::whereIn('id', $ids)->where('account_status', 'active')->where('system_role', 'user')->get() as $u) {
+                    DB::afterCommit(fn () => $u->notify(new ProjectActivatedNotification($p)));
+                }
+                Audit::record('project.plan_published', $p);
+            }
         });
-        return redirect(route('projects.show',$project).'#tasks')->with('success','Project roles saved. Review your tasks, then save and notify the team.');
+
+        if ($r->boolean('publish_now') && $project->fresh()->plan_published_at) {
+            return redirect(route('projects.show', $project).'#tasks')->with('success', 'Plan published successfully! In-app notifications sent and team emails queued.');
+        }
+
+        return redirect(route('projects.show', $project).'#tasks')->with('success', 'Project roles saved. Review your plan, then publish to notify the team.')->with('open_publish_review', true);
     }
 
     public function templates(Request $r, Project $project)
@@ -232,21 +271,78 @@ class ProjectWorkflowController
 
     public function initialize(Request $r, Project $project, ProjectService $service)
     {
-        $d = $r->validate(array_merge(['mode' => 'required|in:blank,template', 'project_template_id' => 'required_if:mode,template|nullable|integer|exists:project_templates,id', 'starts_on' => 'required|date', 'ends_on' => 'required|date|after_or_equal:starts_on', 'planned_budget' => 'nullable|numeric|min:0|max:9999999999999'], $this->memberRules()));
-        DB::transaction(function () use ($r, $project, $d, $service) {
+        $d = $r->validate(array_merge([
+            'mode' => 'required|in:blank,template',
+            'project_template_id' => 'required_if:mode,template|nullable|integer|exists:project_templates,id',
+            'starts_on' => 'required|date',
+            'ends_on' => 'required|date|after_or_equal:starts_on',
+            'planned_budget' => 'nullable|numeric|min:0|max:9999999999999',
+            'blank_plan' => 'nullable|json|max:1000000',
+            'publish_now' => 'nullable|boolean',
+            'name'=>'sometimes|required|string|max:160','description'=>'sometimes|nullable|string|max:3000',
+        ], $this->memberRules()));
+
+        $blankPlan = ($d['mode'] === 'blank' && !empty($d['blank_plan'])) ? $this->validateBlankPlan($d['blank_plan']) : null;
+
+        DB::transaction(function () use ($r, $project, $d, $service, $blankPlan) {
             $p = Project::whereKey($project->id)->lockForUpdate()->firstOrFail();
             $this->planner($r, $p);
+            $p->fill(array_intersect_key($d,array_flip(['name','description'])))->save();
             abort_if($p->plan_initialized || $p->tasks()->exists(), 409, 'The plan has already been started. Continue editing its tasks.');
             $template = $d['mode'] === 'template' ? ProjectTemplate::whereKey($d['project_template_id'])->where('status', 'active')->with('tasks')->firstOrFail() : null;
             $p->update(['starts_on' => $d['starts_on'], 'ends_on' => $d['ends_on'], 'planned_budget' => $d['planned_budget'] ?? null, 'project_template_id' => $template?->id, 'plan_initialized' => true]);
             if ($template) {
                 $service->applyTemplate($p, $template, $r->user());
+            } elseif ($blankPlan) {
+                $source = new ProjectTemplate([
+                    'reference_start_date' => $blankPlan['reference_start_date'] ?? $d['starts_on'],
+                    'working_hours' => '09:00 - 17:00'
+                ]);
+                $source->setRelation('tasks', collect($blankPlan['tasks'])->map(fn ($task, $i) => new \App\Models\TemplateTask(array_merge($task, [
+                    'sort_order' => $i + 1,
+                    'priority' => $task['priority'] ?? 'medium'
+                ]))));
+                $service->applyTemplate($p, $source, $r->user());
+                foreach ($blankPlan['tasks'] as $t) {
+                    if (!empty($t['assignee_id'])) {
+                        $u = $this->person((int)$t['assignee_id']);
+                        $createdTask = $p->tasks()->where('code', (string)$t['code'])->first();
+                        if ($createdTask) {
+                            $service->addPlanningMember($p, $u->id, $r->user());
+                            $createdTask->assignees()->syncWithoutDetaching([$u->id]);
+                        }
+                    }
+                }
             }
-            $this->assignOptionalMembers($p,$d['members']??[],$r);
+            $assignments = ($p->plan_assignment_drafts ?? [])[$template?->id ?? 0] ?? [];
+            foreach ($assignments as $code => $uid) {
+                if (!$uid) continue;
+                $user = $this->person((int)$uid);
+                $task = $p->tasks()->where('code', (string)$code)->first();
+                if (!$task) continue;
+                $service->addPlanningMember($p, $user->id, $r->user());
+                $task->assignees()->syncWithoutDetaching([$user->id]);
+            }
+            $this->assignOptionalMembers($p, $d['members'] ?? [], $r);
+            $p->update(['plan_assignment_drafts' => null]);
             Audit::record('project.plan_started', $p);
+
+            if ($r->boolean('publish_now') && $p->tasks()->exists()) {
+                $p->update(['approval_stage' => 'ready', 'plan_published_at' => now()]);
+                $service->captureBaseline($p);
+                $ids = $p->tasks()->with('assignees')->get()->flatMap(fn ($t) => $t->assignees->pluck('id'))->merge($p->memberships()->pluck('user_id'))->unique()->reject(fn ($id) => (int) $id === (int) $p->pm_user_id);
+                foreach (User::whereIn('id', $ids)->where('account_status', 'active')->where('system_role', 'user')->get() as $u) {
+                    DB::afterCommit(fn () => $u->notify(new ProjectActivatedNotification($p)));
+                }
+                Audit::record('project.plan_published', $p);
+            }
         });
 
-        return redirect(route('projects.show', $project).'#tasks')->with('success', 'Plan started. Add or import tasks, assign your team, then save and notify them.');
+        if ($r->boolean('publish_now') && $project->fresh()->plan_published_at) {
+            return redirect(route('projects.show', $project).'#tasks')->with('success', 'Plan published successfully! In-app notifications sent and team emails queued.');
+        }
+
+        return redirect(route('projects.show', $project).'#tasks')->with('success', 'Plan started. Review it below, then publish to notify your team.')->with('open_publish_review', true);
     }
 
     public function publish(Request $r, Project $project, ProjectService $service)
@@ -263,6 +359,6 @@ class ProjectWorkflowController
             }Audit::record('project.plan_published', $p);
         });
 
-        return redirect(route('projects.show', $project).'#tasks')->with('success','Plan saved. Your team has been notified.');
+        return redirect(route('projects.show', $project).'#tasks')->with('success','Plan published. In-app notifications were created and team emails were queued for sending.');
     }
 }

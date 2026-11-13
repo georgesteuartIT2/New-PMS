@@ -65,4 +65,14 @@ class AdminViewerAndEmailSettingsTest extends TestCase {
   $p->update(['status'=>'active']);$this->assertFalse($invite->shouldSend($pm,'mail'));
   $activated=new ProjectActivatedNotification($p->fresh());$this->assertTrue($activated->shouldSend($member,'mail'));$this->assertFalse($activated->shouldSend($pm,'mail'));$message=$activated->toMail($member);$this->assertStringContainsString('Open project',view($message->view['html'],$message->viewData)->render());
  }
+
+ public function test_notification_queue_status_and_retry_are_pmo_only_and_queue_scoped():void {
+  $pmo=$this->person('pmo');$user=$this->person();$uuid=(string)\Illuminate\Support\Str::uuid();
+  DB::table('failed_jobs')->insert(['uuid'=>$uuid,'connection'=>'database','queue'=>'project-notifications','payload'=>'{}','exception'=>'Private transport diagnostic','failed_at'=>now()]);
+  $page=$this->actingAs($pmo)->get(route('settings.system'))->assertOk()->assertSee('1 failed')->assertDontSee('Private transport diagnostic');$this->snapshot('email-queue-status',$page);
+  $this->actingAs($user)->post(route('settings.email.retry'),['uuid'=>$uuid])->assertForbidden();
+  $this->actingAs($pmo)->post(route('settings.email.retry'),['uuid'=>(string)\Illuminate\Support\Str::uuid()])->assertNotFound();
+  \Illuminate\Support\Facades\Artisan::shouldReceive('call')->once()->with('queue:retry',['id'=>[$uuid]])->andReturn(0);
+  $this->post(route('settings.email.retry'),['uuid'=>$uuid])->assertRedirect();
+ }
 }

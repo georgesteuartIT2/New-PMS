@@ -1,3 +1,6 @@
+@php
+ $planAssignmentUsers=request('plan_project') ? \App\Models\User::where('system_role','user')->where('account_status','active')->orderBy('name')->get(['id','name','email']) : [];
+@endphp
 <link rel="stylesheet" href="{{ asset('css/task-plan-dialog.css') }}?v={{ filemtime(public_path('css/task-plan-dialog.css')) }}">
 <!-- Smart Task Plan Modal Component -->
 <div id="smart-task-plan-backdrop" class="smart-task-plan-backdrop" role="dialog" aria-modal="true" aria-labelledby="stp-modal-title">
@@ -243,6 +246,9 @@
         if (window.SmartTaskPlan) {
             window.SmartTaskPlan.init({
                 roles: @json($roles ?? []),
+                assignmentProject: @json(request('plan_project') ? (int)request('plan_project') : null),
+                assignmentUsers: @json($planAssignmentUsers),
+                canEditSelection: @json(($selectForProject ?? false) && ($canCreateTemplate ?? false)),
                 canManage: @json($canManage ?? (auth()->user()?->isPmo() || app(\App\Services\Access::class)->hasCompanyPermission(auth()->user(), 'templates.manage'))),
                 canCreateProject: @json($canCreateProject ?? (auth()->user()?->isPmo() || app(\App\Services\Access::class)->hasCompanyPermission(auth()->user(), 'projects.create')))
             });

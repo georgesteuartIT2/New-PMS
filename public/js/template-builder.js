@@ -34,7 +34,9 @@
 
         init(config = {}) {
             this.roles = config.roles || [];
+            this.assignmentProject=config.assignmentProject||null;this.assignmentUsers=config.assignmentUsers||[];document.getElementById('smart-task-plan-modal')?.classList.toggle('stp-assignment-mode',!!this.assignmentProject);
             this.localPlanSave = config.localPlanSave || null;
+            this.canEditSelection = !!config.canEditSelection;
             this.canManage = !!config.canManage;
             this.canCreateProject = !!config.canCreateProject;
 
@@ -149,9 +151,12 @@
                 document.body.style.overflow = '';
             }
             this.unsavedChanges = false;
+            if(this.suspendedSetupDialog){const setup=this.suspendedSetupDialog;this.suspendedSetupDialog=null;if(setup.isConnected&&!setup.open)setup.showModal();document.body.style.overflow='hidden';document.getElementById('btn-customize-template-tasks')?.focus();}
         },
 
         showBackdrop() {
+            const setup=document.getElementById('plan-start-dialog');
+            if(setup?.open){this.suspendedSetupDialog=setup;setup.close();}
             if (this.dom.backdrop) {
                 this.dom.backdrop.style.display = 'flex';
                 void this.dom.backdrop.offsetWidth;
@@ -476,7 +481,7 @@
 
         /* Open Modal in Select Mode (For Project Creation Flow) */
         openSelect(templateData, tasksData = null) {
-            this.mode = this.canManage ? 'select' : 'view';
+            this.mode = (this.canManage || this.canEditSelection) ? 'select' : 'view';
             this.viewType = 'table';
             this.template = Object.assign({}, templateData);
             this.tasks = tasksData ? JSON.parse(JSON.stringify(tasksData)) : [];
@@ -508,7 +513,10 @@
 
         /* Fetch template JSON for popups */
         fetchTemplateJson(templateId, isEditMode = false) {
-            fetch(`/templates/${templateId}/tasks-json`, {
+            const detailsUrl=new URL(`/templates/${templateId}/tasks-json`,window.location.origin);
+            const projectId=this.assignmentProject||window.PROJECT_TEMPLATE_CONTEXT?.plan_project;
+            if(projectId)detailsUrl.searchParams.set('plan_project',projectId);
+            fetch(detailsUrl.href, {
                 headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
             })
             .then(res => res.json())
@@ -581,7 +589,7 @@
                     this.dom.modeBadge.style.color = '#137333';
                     this.dom.modeBadge.style.borderColor = '#CEEAD6';
                     this.dom.modeBadge.style.fontWeight = '650';
-                    this.dom.modeBadge.textContent = 'Preview & Customize';
+                    this.dom.modeBadge.textContent = 'Edit task plan';
                 } else {
                     this.dom.modeBadge.style.background = '';
                     this.dom.modeBadge.style.color = '';
@@ -621,6 +629,7 @@
                 this.dom.btnExport.style.display = ((isView || isSelect) && this.template.id) ? 'inline-block' : 'none';
                 if (this.template.id) {
                     this.dom.btnExport.href = `/templates/${this.template.id}/export-excel`;
+                    this.dom.btnExport.onclick=this.assignmentProject ? (event)=>{event.preventDefault();this.downloadExcel();}:null;
                 }
             }
             if (this.dom.detailsToggleBtn) {
@@ -1147,8 +1156,14 @@
                         ` : ''}
                     </td>
                 `;
+                if(this.assignmentProject && isEditable){
+                    const cell=tr.cells[6];cell.textContent='';const select=document.createElement('select');select.dataset.directoryPicker='';select.dataset.directoryProject=this.assignmentProject;select.setAttribute('aria-label','Assignee for task '+t.code);select.add(new Option('Unassigned',''));
+                    this.assignmentUsers.forEach(user=>select.add(new Option(user.name+' ('+user.email+')',user.id)));if(t.assignee_id&&!Array.from(select.options).some(o=>o.value==t.assignee_id))select.add(new Option(t.assignee_email||t.assignee_name||'Selected user',t.assignee_id));select.value=t.assignee_id||'';
+                    select.addEventListener('change',()=>{t.assignee_id=select.value?Number(select.value):null;const label=select.selectedOptions[0]?.textContent||'';t.assignee_email=label.match(/\(([^)]+)\)/)?.[1]||'';t.assignee_name=label;this.unsavedChanges=true;this.renderFooter();});cell.append(select);
+                }
+                const roleHeader=this.dom.tableWrap?.querySelector('thead th:nth-child(7)');if(roleHeader)roleHeader.textContent=this.assignmentProject?'Assignee':'Suggested role';
                 tr.classList.toggle('stp-subtask-row',isSubtask);
-                const labels=['Task number','Task name','Start date','Finish date','Duration in working days','Depends on','Suggested role','Task actions'];
+                const labels=['Task number','Task name','Start date','Finish date','Duration in working days','Depends on',this.assignmentProject?'Assignee':'Suggested role','Task actions'];
                 [...tr.cells].forEach((cell,column)=>{
                     cell.dataset.label=labels[column];
                     cell.querySelectorAll('input,select').forEach(control=>{
@@ -1383,6 +1398,7 @@
         },
 
         renderFooter() {
+            if(this.unsavedChanges && this.localPlanSave && document.getElementById('plan-setup-form'))document.dispatchEvent(new CustomEvent('project-plan-draft-change',{detail:{...this.template,tasks:JSON.parse(JSON.stringify(this.tasks))}}));
             if (this.dom.unsavedText) {
                 this.dom.unsavedText.textContent = this.unsavedChanges ? 'Unsaved changes' : (this.mode==='create' ? 'Draft - not saved yet' : 'No unsaved changes');
                 this.dom.unsavedText.style.color = this.unsavedChanges ? '#D97706' : '#64748B';
@@ -1654,6 +1670,7 @@
                 reference_start_date: this.template.reference_start_date || this.formatDateISO(new Date()),
                 working_hours: this.template.working_hours || '09:00 - 17:00',
                 category: this.template.category || 'General',
+                plan_project: this.assignmentProject || '',
                 tasks: JSON.stringify(this.tasks)
             };
 
@@ -1684,6 +1701,7 @@
         uploadExcel(file) {
             const formData = new FormData();
             formData.append('file', file);
+            if(this.assignmentProject)formData.append('plan_project',this.assignmentProject);
             formData.append('estimated_duration', this.template.estimated_duration || 14);
             formData.append('duration_unit', this.template.duration_unit || 'working_days');
             formData.append('reference_start_date', this.template.reference_start_date || this.formatDateISO(new Date()));
@@ -1854,6 +1872,7 @@
 
         /* Save Template to Database */
         saveTemplate(customRedirect = null) {
+            if(this.assignmentProject){const invalid=this.dom.tableBody?.querySelector('.directory-picker input:invalid');if(invalid){invalid.reportValidity();invalid.focus();return;}}
             if (!this.template.name || !this.template.name.trim()) {
                 alert('Please enter a Template Name before saving.');
                 if (this.dom.detailsDrawer) this.dom.detailsDrawer.style.display = 'grid';
@@ -1881,6 +1900,7 @@
                     start_time: t.start_time || '09:00',
                     end_date: t.end_date || null,
                     end_time: t.end_time || '17:00',
+                    assignee_id: this.assignmentProject ? (t.assignee_id || null) : null,
                     suggested_role_id: t.suggested_role_id || null,
                     dependency_code: t.dependency_code || null,
                     priority: t.priority || 'medium',
@@ -1889,8 +1909,9 @@
             };
 
             if (this.localPlanSave) { this.localPlanSave(payload); this.close(); return; }
-            const url = this.template.id ? `/templates/${this.template.id}` : '/templates';
-            const method = this.template.id ? 'PUT' : 'POST';
+            const saveCopy = this.mode === 'select';
+            const url = this.template.id && !saveCopy ? `/templates/${this.template.id}` : '/templates';
+            const method = this.template.id && !saveCopy ? 'PUT' : 'POST';
 
             if (this.dom.btnSave) {
                 this.dom.btnSave.disabled = true;

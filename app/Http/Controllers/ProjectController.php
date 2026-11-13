@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 class ProjectController {
  public function index(Request $request,Access $access){
   $user = $request->user();
-  $query=Project::withSum('expenses','amount')->with(['manager','subsidiary','memberships.role'])->withCount([
+  $query=Project::withSum('expenses','amount')->with(['owner','manager','subsidiary','memberships.role'])->withCount([
       'tasks'=>fn($q)=>$q->whereDoesntHave('children'),
       'tasks as completed_tasks_count'=>fn($q)=>$q->where('status','completed')->whereDoesntHave('children'),
       'tasks as overdue_tasks_count'=>fn($q)=>$q->where('progress','<',100)->where('ends_at','<',now()),
@@ -62,7 +62,7 @@ class ProjectController {
   if($request->boolean('attention')) $query->where($needsAttention);
   if($request->filled('q')){ 
    $search=trim($request->input('q')); 
-   $query->where(fn($q)=>$q->where('name','like','%'.$search.'%')->orWhere('code','like','%'.$search.'%')->orWhereHas('manager',fn($m)=>$m->where('name','like','%'.$search.'%'))); 
+   $query->where(fn($q)=>$q->where('name','like','%'.$search.'%')->orWhere('code','like','%'.$search.'%')->orWhereHas('manager',fn($m)=>$m->where('name','like','%'.$search.'%'))->orWhereHas('owner',fn($m)=>$m->where('name','like','%'.$search.'%'))); 
   }
   if($request->filled('subsidiary_id')){
    $query->where('subsidiary_id', $request->subsidiary_id);
@@ -244,7 +244,7 @@ class ProjectController {
   abort_unless($access->project($request->user(),$project),403);
   $user = $request->user();
   $isPm = $project->pm_user_id === $user->id;
-  $canViewAllTasks = $user->canViewPortfolio() || ($access->project($user, $project, 'view_tasks') && in_array($project->status, ['active', 'on_hold', 'completed', 'archived'], true));
+  $canViewAllTasks = $user->canViewPortfolio() || $isPm || ($access->project($user, $project, 'view_tasks') && in_array($project->status, ['active', 'on_hold', 'completed', 'archived'], true));
 
   if ($canViewAllTasks) {
       $tasks = $project->tasks()->with(['assignees', 'children', 'openDelay.actionOwner', 'attachments', 'comments', 'dependencies:id,code,title'])->orderBy('sort_order')->orderBy('id')->get();
@@ -389,7 +389,7 @@ class ProjectController {
   abort_unless($request->user()->system_role==='user' && $project->pm_user_id===$request->user()->id,403);
   abort_unless($project->status==='pending',409,'This request is no longer awaiting a decision. Refresh your dashboard.');
   $invitation=$project->invitations()->where('user_id',$request->user()->id)->where('status','pending')->latest('id')->firstOrFail();
-  $project->load('manager','creator','subsidiary','template','memberships.user','memberships.role');
+  $project->load('manager','owner','creator','subsidiary','template','memberships.user','memberships.role');
   $tasks=TaskTree::treeOrdered($project->tasks()->with('assignees','dependencies')->withCount('children')->orderBy('sort_order')->orderBy('id')->get());
   $numbers=TaskTree::numbers($tasks);$leafCount=$tasks->where('children_count',0)->count();
   $files=\App\Models\TaskAttachment::with('task:id,title')->whereIn('task_id',$tasks->pluck('id'))->latest()->get();
