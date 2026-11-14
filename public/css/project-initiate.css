@@ -1,0 +1,122 @@
+/* Focused project creation workspace. */
+.project-initiate-page{max-width:920px;margin:0 auto 28px}
+.project-initiate-page>.text-action{font-size:12px;display:inline-flex;margin-bottom:4px}
+.project-initiate-page .initiate-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin:16px 0 20px}
+.project-initiate-page .initiate-heading h1{font-size:27px;letter-spacing:-.65px;margin:0 0 6px;color:#22272B}
+.project-initiate-page .initiate-heading p{font-size:13px;line-height:1.5;margin:0;color:#687772;max-width:560px}
+.project-initiate-page .initiate-required-note{font-size:11px;color:#687772;white-space:nowrap}
+.project-initiate-page #initiate-project-form{display:block;padding:0;border:1px solid #DEE6E2;border-radius:12px;box-shadow:0 3px 16px rgba(34,39,43,.035);overflow:visible}
+.project-initiate-page .initiate-section{padding:22px 26px;margin:0;border-bottom:1px solid #E8EDEA}
+.project-initiate-page .initiate-section-heading{margin:0 0 16px;display:block}
+.project-initiate-page .initiate-section-heading h2{font-size:15px;font-weight:650;margin:0 0 4px}
+.project-initiate-page .initiate-section-heading p{font-size:12px;color:#687772;margin:0;line-height:1.5}
+.project-initiate-page .initiate-details-grid{display:grid;grid-template-columns:1fr 1fr;align-items:start;gap:18px}
+.project-initiate-page .initiate-section label:not(.flow-choices label){display:block;font-size:12px;font-weight:600}
+.project-initiate-page .initiate-field-label{display:block!important;color:#22272B!important;margin:0 0 7px}
+.project-initiate-page .initiate-field-label b{color:#B42318;font-weight:500}
+.project-initiate-page .initiate-field-label em{display:inline;font-size:11px;font-style:normal;font-weight:400;color:#7B8882;margin-left:5px}
+.project-initiate-page .initiate-section input:not([type=radio]),.project-initiate-page .initiate-section select{height:42px;min-height:42px;font-size:13px;margin:0}
+.project-initiate-page .initiate-section small{margin-top:5px;font-size:11px}
+.project-initiate-page .initiate-description{margin-top:16px}
+.project-initiate-page .initiate-description textarea{min-height:76px;height:76px;resize:vertical;font-size:13px;margin:0}
+.project-initiate-page .initiate-reviewer{background:#FFF}
+.project-initiate-page .flow-choices{gap:12px;margin-bottom:16px}
+.project-initiate-page .flow-choices label{padding:12px 14px;min-height:68px;cursor:pointer;border-radius:8px;transition:background .15s,border-color .15s}
+.project-initiate-page .flow-choices label:hover{border-color:#9DB8B1}
+.project-initiate-page .flow-choices label:has(input:checked){background:#F0F6F3;border-color:#315F58;box-shadow:inset 0 0 0 1px #315F58}
+.project-initiate-page .flow-choices label>span{color:#22272B!important}
+.project-initiate-page .flow-choices b{font-size:13px}
+.project-initiate-page .flow-choices small{font-size:11px;line-height:1.4;margin-top:3px}
+.project-initiate-page .flow-choices input{width:15px;height:15px;flex-shrink:0}
+.project-initiate-page .directory-picker{margin-top:0}
+.project-initiate-page .flow-optional-setup{margin:20px 26px!important;border-radius:9px!important;overflow:visible;background:#FFF}
+.project-initiate-page .flow-optional-header{padding:12px 16px;background:#F5F6F7;border-radius:9px 9px 0 0}
+.project-initiate-page .flow-optional-header h2{font-size:13px;margin:0;display:flex;align-items:center;gap:8px}
+.project-initiate-page .flow-optional-header h2>span{font-size:10px;font-weight:500;padding:2px 6px;border:1px solid #DEE6E2;border-radius:4px;background:#FFF;color:#687772}
+.project-initiate-page .flow-optional-header p{font-size:11px;margin:4px 0 0;color:#687772}
+.project-initiate-page .flow-optional-setup>.flow-optional-section{border:0!important;border-radius:0!important;box-shadow:none!important;margin:0!important;background:#FFF!important}
+.project-initiate-page #initiate-plan-options{padding:14px 16px}
+.project-initiate-page .flow-role-card>summary{background:#FFF!important;padding:13px 16px!important;border-top:1px solid #E8EDEA}
+.project-initiate-page .flow-role-card-title{font-size:13px!important}
+.project-initiate-page .flow-role-card-icon{width:26px!important;height:26px!important}
+.project-initiate-page .flow-role-card-body{padding:14px 16px!important}
+.project-initiate-page .initiate-footer{margin:0;padding:16px 26px;border-top:1px solid #E8EDEA;background:#FAFCFB;border-radius:0 0 12px 12px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.project-initiate-page .initiate-footer p{font-size:11px;line-height:1.5;color:#687772;margin:0;max-width:260px}
+.project-initiate-page .initiate-footer>div{display:flex;gap:8px;flex-shrink:0}
+.project-initiate-page .initiate-footer .btn{min-height:40px;font-size:12px;padding:0 15px;display:inline-flex;align-items:center;justify-content:center}
+@media(max-width:650px){.project-initiate-page .initiate-heading{align-items:start;flex-direction:column;gap:8px}.project-initiate-page .initiate-heading h1{font-size:24px}.project-initiate-page .initiate-section{padding:18px 16px}.project-initiate-page .initiate-details-grid,.project-initiate-page .flow-choices{grid-template-columns:1fr;gap:12px}.project-initiate-page .flow-optional-setup{margin:16px!important}.project-initiate-page .initiate-footer{padding:16px;flex-direction:column;align-items:stretch}.project-initiate-page .initiate-footer p{max-width:none}.project-initiate-page .initiate-footer>div{display:grid;grid-template-columns:auto 1fr}.project-initiate-page .initiate-required-note{align-self:start}}
+
+/* Palette and rhythm: keep creation calm and easy to scan. */
+body[data-page="projects.create"] .project-initiate-page{width:100%;max-width:980px!important;box-sizing:border-box}
+body[data-page="projects.create"] .project-initiate-page .initiate-section{padding:20px 24px!important}
+body[data-page="projects.create"] .project-initiate-page .initiate-section-heading{margin-bottom:14px!important}
+body[data-page="projects.create"] .project-initiate-page .initiate-section-heading h2{font-size:15px!important;color:#315F58!important;font-weight:650!important}
+body[data-page="projects.create"] .project-initiate-page .initiate-field-label{display:block!important;font-size:12px!important;font-weight:600!important;color:#22272B!important;line-height:1.5!important;margin:0 0 6px!important}
+body[data-page="projects.create"] .project-initiate-page .initiate-field-label b{color:#B42318!important;font-size:12px!important;font-weight:500!important}
+body[data-page="projects.create"] .project-initiate-page .initiate-field-label em{color:#78847F!important;font-weight:400!important}
+body[data-page="projects.create"] .project-initiate-page .initiate-section input:not([type=radio]),body[data-page="projects.create"] .project-initiate-page .initiate-section select{height:42px!important;min-height:42px!important;border-radius:7px!important;font-size:13px!important;font-weight:400!important;background:#FFF!important;border-color:#D8E1DD!important}
+body[data-page="projects.create"] .project-initiate-page .initiate-section textarea{height:72px!important;min-height:72px!important;font-size:13px!important;font-weight:400!important;border-radius:7px!important}
+body[data-page="projects.create"] .project-initiate-page input::placeholder,body[data-page="projects.create"] .project-initiate-page textarea::placeholder{color:#8A9590!important;font-weight:400!important}
+body[data-page="projects.create"] .project-initiate-page input:focus-visible,body[data-page="projects.create"] .project-initiate-page select:focus-visible,body[data-page="projects.create"] .project-initiate-page textarea:focus-visible{outline:2px solid #315F5833!important;outline-offset:1px!important;border-color:#315F58!important;box-shadow:none!important}
+body[data-page="projects.create"] .project-initiate-page .flow-choices label{min-height:66px!important;padding:11px 14px!important;box-shadow:none!important}
+body[data-page="projects.create"] .project-initiate-page .flow-choices b{font-size:13px!important;font-weight:600!important}
+body[data-page="projects.create"] .project-initiate-page .flow-choices label:has(input:checked){border-color:#315F58!important;background:#F0F6F3!important}
+body[data-page="projects.create"] .project-initiate-page .initiate-reviewer>label>small{margin-top:6px!important}
+body[data-page="projects.create"] .project-initiate-page .directory-picker{margin-bottom:0!important}
+body[data-page="projects.create"] .project-initiate-page .flow-optional-setup{margin:18px 24px!important;overflow:visible!important}
+body[data-page="projects.create"] .project-initiate-page .flow-optional-header{padding:12px 16px!important;background:#F5F6F7!important}
+body[data-page="projects.create"] .project-initiate-page #initiate-plan-options{padding:0!important}
+body[data-page="projects.create"] .project-initiate-page #initiate-plan-options>summary{padding:14px 16px!important;font-size:13px!important;min-height:48px;box-sizing:border-box;color:#315F58!important}
+body[data-page="projects.create"] .project-initiate-page #initiate-plan-options>label,body[data-page="projects.create"] .project-initiate-page #initiate-plan-options>fieldset{margin:0 16px 14px!important}
+body[data-page="projects.create"] .project-initiate-page .flow-role-card>summary{padding:12px 16px!important;min-height:48px!important}
+body[data-page="projects.create"] .project-initiate-page .flow-role-card-title{color:#315F58!important;font-weight:600!important}
+body[data-page="projects.create"] .project-initiate-page .flow-role-card-badge{background:#F5F6F7!important;border-color:#DEE6E2!important;color:#687772!important;font-size:10px!important}
+body[data-page="projects.create"] .project-initiate-page .flow-role-card-icon{background:#EDF4F0!important;color:#315F58!important}
+body[data-page="projects.create"] .project-initiate-page .initiate-footer{padding:14px 24px!important;background:#F5F6F7!important}
+body[data-page="projects.create"] .project-initiate-page .initiate-footer .btn-primary{background:#315F58!important;border-color:#315F58!important;box-shadow:none!important}
+@media(max-width:650px){body[data-page="projects.create"] .project-initiate-page .initiate-section{padding:18px 16px!important}body[data-page="projects.create"] .project-initiate-page .flow-optional-setup{margin:16px!important}body[data-page="projects.create"] .project-initiate-page .initiate-footer{padding:14px 16px!important}}
+
+/* Matching optional setup rows, with a useful collapsed summary. */
+body[data-page="projects.create"] .project-initiate-page .flow-optional-header{background:#FFF!important;border-bottom:1px solid #E7ECE9;padding:14px 16px!important}
+body[data-page="projects.create"] .project-initiate-page .flow-optional-header h2{font-size:13px!important;color:#22272B!important}
+body[data-page="projects.create"] .project-initiate-page .flow-optional-header p{margin-top:4px;font-size:12px}
+body[data-page="projects.create"] .project-initiate-page .flow-optional-section>summary.initiate-setup-row{display:flex!important;align-items:center!important;gap:12px!important;padding:13px 16px!important;background:#FFF!important;min-height:68px!important;list-style:none;border:0!important;cursor:pointer}
+body[data-page="projects.create"] .project-initiate-page .flow-optional-section>summary.initiate-setup-row:after{display:none!important}
+body[data-page="projects.create"] .project-initiate-page .flow-role-card>summary.initiate-setup-row{border-top:1px solid #E7ECE9!important}
+.initiate-setup-row::-webkit-details-marker{display:none}
+body[data-page="projects.create"] .project-initiate-page .initiate-setup-icon{width:32px;height:32px;display:grid;place-items:center;flex-shrink:0;background:#EDF4F0;border-radius:7px;color:#315F58!important}
+body[data-page="projects.create"] .project-initiate-page .initiate-setup-copy{min-width:0;flex:1;color:#22272B!important}
+.initiate-setup-copy b{display:block;font-size:13px;font-weight:600}
+body[data-page="projects.create"] .project-initiate-page .initiate-setup-copy small{display:block;margin:3px 0 0!important;font-size:11px!important;line-height:1.5;color:#687772;overflow-wrap:anywhere}
+.initiate-setup-action{display:flex;align-items:center;gap:9px;font-size:12px;font-weight:600;color:#315F58;flex-shrink:0}
+details[open]>.initiate-setup-row .initiate-setup-action svg{transform:rotate(90deg)}
+body[data-page="projects.create"] .project-initiate-page summary.initiate-setup-row:hover{background:#F8FAF9!important}
+.initiate-setup-row:focus-visible{outline:2px solid #315F58;outline-offset:-3px;border-radius:6px}
+
+.project-initiate-page .initiate-plan-picker{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 16px 8px}
+.project-initiate-page .initiate-plan-choice{position:relative;text-align:left;border:1px solid #D8E1DD;border-radius:8px;background:#FFF;padding:12px 36px 12px 14px;color:#22272B;cursor:pointer;font:inherit}
+.project-initiate-page .initiate-plan-choice b{display:block;font-size:13px;font-weight:600}
+.project-initiate-page .initiate-plan-choice small{display:block;font-size:11px;color:#687772;margin-top:4px}
+.project-initiate-page .initiate-plan-choice:after{content:'';position:absolute;right:14px;top:16px;width:14px;height:14px;border:1px solid #BDCCC5;border-radius:50%;box-sizing:border-box}
+.project-initiate-page .initiate-plan-choice[aria-pressed=true]{border-color:#315F58;background:#F0F6F3}
+.project-initiate-page .initiate-plan-choice[aria-pressed=true]:after{background:#315F58;border:4px solid #FFF;box-shadow:0 0 0 1px #315F58}
+.project-initiate-page .initiate-plan-choice:hover{border-color:#315F58}
+.project-initiate-page .initiate-plan-choice:focus-visible{outline:2px solid #315F58;outline-offset:2px}
+.project-initiate-page .initiate-plan-skip{font-size:11px;color:#687772;margin:0 16px 14px;line-height:1.6}
+.project-initiate-page .initiate-plan-skip button{border:0;background:none;padding:0 0 0 6px;font:inherit;color:#315F58;text-decoration:underline;cursor:pointer}
+@media(max-width:500px){.project-initiate-page .initiate-plan-picker{grid-template-columns:1fr}}
+
+/* Fewer steps: plan choices are visible and launch their workspace directly. */
+body[data-page="projects.create"] .project-initiate-page .flow-optional-header{padding:12px 16px!important}
+body[data-page="projects.create"] .project-initiate-page .flow-optional-section>summary.initiate-setup-row{min-height:56px!important;padding:10px 16px!important}
+body[data-page="projects.create"] .project-initiate-page .initiate-plan-choice{padding:10px 34px 10px 12px;min-height:62px}
+body[data-page="projects.create"] .project-initiate-page .initiate-plan-choice small{font-size:11px;line-height:1.4;margin-top:3px}
+body[data-page="projects.create"] .project-initiate-page .initiate-plan-skip{margin-bottom:12px;font-size:11px}
+body[data-page="projects.create"] .project-initiate-page .flow-role-card-body{padding:0 16px 14px!important}
+body[data-page="projects.create"] .project-initiate-page .flow-option-hint-banner{background:transparent!important;border:0!important;padding:0!important;margin:0 0 8px!important;box-shadow:none!important}
+body[data-page="projects.create"] .project-initiate-page .flow-option-hint-banner svg{display:none}
+body[data-page="projects.create"] .project-initiate-page .flow-option-hint-banner p{font-size:11px!important;line-height:1.5;margin:0;color:#687772}
+body[data-page="projects.create"] .project-initiate-page .flow-role-row{margin-top:8px!important;padding:10px!important;background:#F5F6F7!important;border:1px solid #E4EAE6!important;border-radius:7px!important;gap:10px!important}
+body[data-page="projects.create"] .project-initiate-page .flow-role-actions{margin-top:10px!important;gap:12px!important}
+body[data-page="projects.create"] .project-initiate-page .flow-btn-add-role{padding:7px 10px!important;min-height:34px!important;font-size:12px!important;background:#FFF!important;color:#315F58!important;border:1px solid #D8E1DD!important;box-shadow:none!important}
+body[data-page="projects.create"] .project-initiate-page [data-show-new-role]{border:0!important;background:transparent!important;padding:6px 0!important;color:#315F58!important;font-size:12px!important;box-shadow:none!important}

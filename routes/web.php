@@ -73,6 +73,7 @@ Route::middleware(['auth','account.active'])->group(function(){
   Route::delete('/projects/{project}/members/{user}',[ProjectController::class,'removeMember'])->name('projects.members.delete');
   Route::get('/projects/{project}/gantt',[GanttController::class,'project'])->name('gantt.project');
   Route::post('/projects/{project}/tasks',[TaskController::class,'store'])->name('tasks.store');
+  Route::post('/projects/{project}/tasks/assign-selected',[\App\Http\Controllers\TaskAssignmentController::class,'store'])->name('tasks.assign-selected');
   Route::post('/projects/{project}/tasks/bulk-update',[\App\Http\Controllers\TaskBulkController::class,'update'])->name('tasks.bulk-update');
   Route::get('/tasks/my',[TaskController::class,'mine'])->name('tasks.mine');
   Route::get('/tasks/team-member/{user}/details',[TaskController::class,'teamMemberDetails'])->name('tasks.team-member.details');

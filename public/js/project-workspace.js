@@ -46,6 +46,7 @@
     tabPanels.forEach(p => {
       p.classList.toggle('active', p.id === 'tab-' + cleanId);
     });
+    document.getElementById('project-workspace')?.classList.toggle('is-timeline-view',cleanId==='gantt');
     if (cleanId === 'gantt' && typeof renderTimeline === 'function') {
       setTimeout(renderTimeline, 60);
     }
@@ -112,6 +113,7 @@
   weekStart.setUTCDate(weekStart.getUTCDate() - (weekStart.getUTCDay() + 6) % 7);
 
   let currentScale = 'week';
+  let fitProject = true;
 
   const units = {
     day: {
@@ -140,14 +142,33 @@
     }
   };
 
+  const timelineTip=document.createElement('div');
+  timelineTip.id='project-timeline-tooltip';timelineTip.className='project-timeline-tooltip';timelineTip.setAttribute('role','tooltip');timelineTip.hidden=true;document.body.append(timelineTip);
+  function hideTimelineTip(){timelineTip.hidden=true;grid.querySelectorAll('[aria-describedby="project-timeline-tooltip"]').forEach(bar=>bar.removeAttribute('aria-describedby'));}
+  function showTimelineTip(bar,task){
+    timelineTip.replaceChildren();const title=document.createElement('strong');title.textContent=task.title||'Task';timelineTip.append(title);
+    const date=value=>new Date(value).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+    const status=({todo:'To do',in_progress:'In progress',on_hold:'On hold',completed:'Completed'})[task.status]||task.status;
+    for(const [label,value] of [['Status',status],['Progress',task.progress+'%'],['Start',date(task.start)],['Finish',date(task.end)]]){const row=document.createElement('div'),key=document.createElement('span'),val=document.createElement('b');key.textContent=label;val.textContent=value;row.append(key,val);timelineTip.append(row);}
+    timelineTip.hidden=false;bar.setAttribute('aria-describedby',timelineTip.id);const rect=bar.getBoundingClientRect(),tip=timelineTip.getBoundingClientRect();timelineTip.style.left=Math.max(8,Math.min(innerWidth-tip.width-8,rect.left))+'px';timelineTip.style.top=(rect.top>tip.height+12?rect.top-tip.height-8:Math.min(innerHeight-tip.height-8,rect.bottom+8))+'px';
+  }
+  document.addEventListener('keydown',event=>{if(event.key==='Escape')hideTimelineTip();});
+  document.getElementById('unified-workplan-scroll')?.addEventListener('scroll',hideTimelineTip);
+  window.addEventListener('scroll',hideTimelineTip,{passive:true});
+  let resizeFrame;window.addEventListener('resize',()=>{cancelAnimationFrame(resizeFrame);resizeFrame=requestAnimationFrame(renderTimeline);});
   function renderTimeline() {
-    const unit = units[currentScale];
+    hideTimelineTip();
+    const viewport=document.getElementById('unified-workplan-scroll');
+    const available=Math.max(200,(viewport?.clientWidth||1000)-(window.innerWidth<=700?280:420));
+    if(fitProject)currentScale=(end-start)/DAY>120?'month':'week';
+    const unit = {...units[currentScale]};
     const base = unit.anchor;
     const count = currentScale === 'month'
       ? (finish.getUTCFullYear() - monthStart.getUTCFullYear()) * 12 + finish.getUTCMonth() - monthStart.getUTCMonth() + 1
       : Math.ceil((end - base + DAY) / unit.step);
 
     const slots = Math.max(3, Math.min(1000, count));
+    if(fitProject)unit.size=available/slots;
     const width = slots * unit.size;
     grid.style.setProperty('--timeline-px', width + 'px');
 
@@ -227,7 +248,7 @@
 
       const bar = document.createElement('button');
       bar.type = 'button';
-      bar.className = 'uwt-gantt-bar';
+      bar.className = 'uwt-gantt-bar status-' + (task.status || (task.progress === 100 ? 'completed' : task.progress > 0 ? 'in_progress' : 'todo'));
       if (task.progress === 100) {
         bar.classList.add('is-completed');
       } else if (task.progress === 0) {
@@ -240,6 +261,11 @@
       bar.dataset.taskLocation = grid.querySelector(`[data-uwt-task-link="${task.id}"]`)?.dataset.taskLocation || '';
       bar.title = `${task.title || 'Task'} · ${task.progress}% complete`;
       bar.setAttribute('aria-label', `View ${task.title || 'Task'} details (${task.progress}% complete)`);
+      bar.removeAttribute('title');
+      bar.addEventListener('mouseenter',()=>showTimelineTip(bar,task));
+      bar.addEventListener('mouseleave',hideTimelineTip);
+      bar.addEventListener('focus',()=>showTimelineTip(bar,task));
+      bar.addEventListener('blur',hideTimelineTip);
       bar.style.left = left + 'px';
       bar.style.width = barWidth + 'px';
 
@@ -259,15 +285,23 @@
     btn.addEventListener('click', () => {
       scaleButtons.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      currentScale = btn.dataset.scale || 'week';
-      document.addEventListener('task-progress-saved',event=>{
-    for(const updated of event.detail.tasks||[]){const task=tasks.find(item=>Number(item.id)===Number(updated.id));if(task)task.progress=updated.progress;}
-    renderTimeline();
-  });
-  renderTimeline();
+      fitProject=btn.dataset.scale==='fit';
+      currentScale=fitProject?'week':btn.dataset.scale||'week';
+      renderTimeline();
     });
   });
 
+  document.addEventListener('task-progress-saved',event=>{
+    for(const updated of event.detail.tasks||[]){
+      const task=tasks.find(item=>Number(item.id)===Number(updated.id));if(!task)continue;
+      task.progress=updated.progress;task.status=updated.status;
+      const row=grid.querySelector('[data-task-id="'+updated.id+'"]');
+      const pill=row?.querySelector('.uwt-status-pill');
+      if(pill){pill.className='uwt-status-pill status-'+updated.status;pill.textContent=({todo:'To do',in_progress:'In progress',on_hold:'On hold',completed:'Completed'})[updated.status]||updated.status;}
+    }
+    renderTimeline();
+  });
+  grid.classList.toggle('show-critical',!!document.getElementById('highlight-critical')?.checked);
   renderTimeline();
 
   // Highlight critical path toggle
@@ -329,9 +363,15 @@
     updateBulkModifiedCounter();
   }
 
+  const bulkSearch=document.getElementById('bulk-task-search');
+  function filterBulkTasks(){const term=(bulkSearch?.value||'').trim().toLowerCase();let count=0;bulkDialog?.querySelectorAll('.bulk-task-row').forEach(row=>{const title=row.querySelector('[data-field="title"]')?.value||'';const number=row.cells[0]?.textContent||'';const match=(title+' '+number).toLowerCase().includes(term);row.hidden=!match;if(match)count++;});const counter=document.getElementById('bulk-visible-count');if(counter)counter.textContent=count+' tasks';}
+  bulkSearch?.addEventListener('input',filterBulkTasks);
+  document.getElementById('bulk-show-extra')?.addEventListener('change',event=>bulkDialog.classList.toggle('show-extra-columns',event.target.checked));
   // Hook bulk modal open
   document.getElementById('open-bulk-edit-btn')?.addEventListener('click', () => {
     initBulkSnapshot();
+    const scroll=bulkDialog.querySelector('.bulk-edit-scroll');if(scroll)scroll.scrollTop=0;
+    filterBulkTasks();
   });
 
   // Track field changes in bulk edit

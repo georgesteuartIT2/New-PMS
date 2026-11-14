@@ -1,10 +1,11 @@
 (() => {
  const root=document.querySelector('[data-optional-roles]');if(!root)return;
  const rows=root.querySelector('[data-role-rows]'),source=root.querySelector('[data-role-row-template]'),panel=root.querySelector('[data-new-role-panel]'),feedback=root.querySelector('[data-roles-feedback]');let index=1000;
- const count=()=>{root.querySelector('[data-role-count]').textContent=rows.children.length?rows.children.length+' '+(rows.children.length===1?'assignment':'assignments'):'';};
+ const count=()=>{const complete=[...rows.children].filter(row=>row.querySelector('[data-role-person]').value&&row.querySelector('[data-role-choice]').value);const summary=root.querySelector('[data-role-summary]');if(summary){summary.textContent=complete.length?complete.length+' '+(complete.length===1?'person assigned':'people assigned'):'No additional people assigned';root.querySelector('[data-setup-action]').textContent=complete.length?'Edit':'Add';}root.querySelector('[data-role-count]').textContent=rows.children.length?rows.children.length+' '+(rows.children.length===1?'assignment':'assignments'):'';};
  const save=()=>{count();try{sessionStorage.setItem(root.dataset.draftKey,JSON.stringify([...rows.children].map(row=>({user_id:row.querySelector('[data-role-person]').value,project_role_id:row.querySelector('[data-role-choice]').value}))));}catch{}};
  function add(value={}){const row=source.content.firstElementChild.cloneNode(true);const i=index++;const person=row.querySelector('[data-role-person]'),role=row.querySelector('[data-role-choice]');person.name='members['+i+'][user_id]';role.name='members['+i+'][project_role_id]';person.value=value.user_id||'';role.value=value.project_role_id||'';rows.append(row);count();return row;}
  if(!rows.children.length){try{const cached=JSON.parse(sessionStorage.getItem(root.dataset.draftKey)||'[]');if(Array.isArray(cached))cached.slice(0,100).forEach(add);}catch{}}count();if(rows.children.length)root.open=true;
+ if(root.closest('#initiate-project-form')){root.addEventListener('toggle',()=>{if(root.open&&!rows.children.length)add();});if(root.open&&!rows.children.length)add();}
  root.addEventListener('change',save);
  root.addEventListener('click',async event=>{
   if(event.target.closest('[data-add-role-row]')){if(rows.children.length>=100)return;add();save();}

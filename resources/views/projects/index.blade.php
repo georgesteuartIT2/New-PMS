@@ -39,7 +39,7 @@
 <!-- Search and Filter Bar -->
 <form method="get" action="{{ route('projects.index') }}" id="projects-filter-form" class="projects-toolbar-wrap">
     <div class="projects-search-input-wrap">
-        <input type="text" name="q" id="projects-search-input" class="projects-search-input" placeholder="{{ auth()->user()->canViewPortfolio() ? 'Search by project name, code or manager...' : 'Search your projects by name or code...' }}" value="{{ request('q') }}" autocomplete="off">
+        <input type="text" name="q" id="projects-search-input" class="projects-search-input" placeholder="{{ auth()->user()->canViewPortfolio() ? 'Search projects or people...' : 'Search your projects by name or code...' }}" value="{{ request('q') }}" autocomplete="off">
     </div>
 
     @if(auth()->user()->canViewPortfolio())
@@ -118,9 +118,9 @@
                         <td>
                             <div class="project-title-cell">
                                 <div style="display: flex; align-items: center; gap: 8px;">
-                                    @if($isDelayed)
+                                    @if($project->approval_stage!=='planning' && $isDelayed)
                                         <span class="health-dot health-delayed" title="Delayed project" aria-label="Delayed"></span>
-                                    @elseif($isAtRisk)
+                                    @elseif($project->approval_stage!=='planning' && $isAtRisk)
                                         <span class="health-dot health-at-risk" title="At risk project" aria-label="At Risk"></span>
                                     @endif
                                     <a class="strong-link" href="{{ route('projects.show', $project) }}">
@@ -215,7 +215,7 @@
                         <td>
                             <div class="table-actions-cell">
                                 <!-- Review Delay Primary Action (Direct 1-Click Trigger) -->
-                                @if($isDelayed || $isAtRisk || $overdueCount > 0)
+                                @if($project->approval_stage!=='planning' && ($isDelayed || $isAtRisk || $overdueCount > 0))
                                     <button type="button" 
                                             class="btn btn-outline btn-xs btn-review-delay" 
                                             onclick="openDelayAnalysis({{ $project->id }})"
@@ -391,7 +391,7 @@
             <div class="dam-header-left">
                 <h2 id="dam-modal-title" class="dam-title" style="display: flex; align-items: center; gap: 8px;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#315F58" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                    <span>Project schedule review</span>
+                    <span>Project review</span>
                 </h2>
                 <div class="dam-subtitle">
                     <span id="dam-project-name" style="font-weight: 600; color: #1E293B;">Loading project...</span> &nbsp;·&nbsp;
@@ -422,7 +422,7 @@
                     <div class="pdi-card-head">
                         <div class="pdi-section-title">
                             <span class="pdi-title-icon">?</span>
-                            <span>What needs attention?</span>
+                            <span>What to check first</span>
                         </div>
                         <span id="pdi-explanation-status-pill" class="pdi-micro-pill">Schedule review</span>
                     </div>
@@ -436,7 +436,7 @@
 
                 <!-- SECTION B: Project Schedule Impact -->
                 <div class="pdi-card pdi-section-b">
-                    <div class="pdi-section-heading">When will this project finish?</div>
+                    <div class="pdi-section-heading">Finish date</div>
                     <p id="pdi-finish-summary" class="pdi-finish-summary"></p>
                     <div class="pdi-impact-grid">
                         <div class="pdi-impact-col">
@@ -463,6 +463,7 @@
                     <p class="pdi-driver-note">Task delays are not added together: some tasks run at the same time. The finish date follows the full task plan. Saturdays and Sundays are excluded from working-day counts.</p>
                 </section>
 
+                <details class="project-review-more"><summary>More schedule details <span>Dependencies and full task lists</span></summary><div class="project-review-more-body">
                 <!-- SECTION C: Critical Path & Affected Dependencies -->
                 <div class="pdi-card pdi-section-c">
                     <div class="pdi-card-head">
@@ -593,6 +594,7 @@
                     </div>
                 </div>
 
+                </div></details>
             </div>
         </div>
 
@@ -1671,7 +1673,7 @@ function populateDelayModal(res) {
     const overdueCandidates=inv.section_e?.tasks || res.overdue_section?.tasks || [];
     const focus=candidates.find(t=>t.is_critical && t.is_overdue) || candidates.find(t=>t.has_delay_report) || overdueCandidates[0] || candidates[0];
     document.getElementById('pdi-first-task').textContent=focus ? (focus.title || focus.name || 'Review the unfinished tasks below') : 'No delayed tasks identified';
-    document.getElementById('pdi-plain-reason').textContent=(focus?.has_delay_report && focus?.reported_root_cause) || 'No reason has been reported yet. A missed deadline alone does not explain why the work is late.';
+    document.getElementById('pdi-plain-reason').textContent=(focus?.has_delay_report && focus?.reported_root_cause) || 'No delay reason reported. Ask the task owner for an update.';
     const nextLink=document.getElementById('pdi-next-task-link');
     nextLink.href=focus?.id ? new URL((proj.show_url || inv.header?.open_project_url || '#'),location.origin).pathname+'?focus_task='+encodeURIComponent(focus.id)+'#tasks' : (proj.show_url || '#');
     nextLink.textContent=focus?.id?'Review task \u2192':'Open project \u2192';
@@ -2201,6 +2203,7 @@ function escapeHtml(str) {
 </script>
 @endpush
 
+<link rel="stylesheet" href="{{ asset('css/project-list-refinement.css') }}?v={{ filemtime(public_path('css/project-list-refinement.css')) }}">
 @endsection
 
 @push('scripts')

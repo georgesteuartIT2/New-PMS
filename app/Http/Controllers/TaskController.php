@@ -221,7 +221,17 @@ class TaskController {
   abort_if($project->status==='archived',403);
   $data=$request->validate(['title'=>'required|string|max:200','description'=>'nullable|string|max:3000','parent_task_id'=>'nullable|integer','starts_at'=>'required|date','ends_at'=>'required|date|after:starts_at','priority'=>'required|in:low,medium,high','assigned_user_id'=>'nullable|exists:users,id','files'=>'nullable|array|max:5','files.*'=>'file|max:10240|mimes:pdf,doc,docx,xls,xlsx,csv,txt,jpg,jpeg,png']);
   if(!empty($data['parent_task_id']))abort_unless($project->tasks()->whereKey($data['parent_task_id'])->exists(),422);
-  if(!empty($data['assigned_user_id']))$service->addPlanningMember($project,(int)$data['assigned_user_id'],$request->user());
+  if(!empty($data['assigned_user_id'])){
+   $person=User::whereKey($data['assigned_user_id'])->where('account_status','active')->where('system_role','user')->firstOrFail();
+   $member=(int)$project->pm_user_id===$person->id||$project->memberships()->where('user_id',$person->id)->exists();
+   if(!$member){
+    abort_unless($access->project($request->user(),$project,'assign_tasks')&&$access->project($request->user(),$project,'manage_team'),403);
+    abort_unless($request->boolean('add_assignee_to_project'),422,'Confirm Add this person to the project before assigning.');
+    $role=\App\Models\ProjectRole::where('slug','team')->firstOrFail();
+    \App\Models\ProjectMembership::firstOrCreate(['project_id'=>$project->id,'user_id'=>$person->id,'project_role_id'=>$role->id]);
+    Audit::record('project.member_added',$project,['user_id'=>$person->id,'source'=>'manual_task']);
+   }
+  }
   if(!empty($data['assigned_user_id']))abort_unless($project->pm_user_id==$data['assigned_user_id']||$project->memberships()->where('user_id',$data['assigned_user_id'])->exists(),422,'Add this user to the project first.');
   $parentId = !empty($data['parent_task_id']) ? (int)$data['parent_task_id'] : null;
   $siblingOrder = ($parentId ? $project->tasks()->where('parent_task_id', $parentId)->count() : $project->tasks()->whereNull('parent_task_id')->count()) + 1;

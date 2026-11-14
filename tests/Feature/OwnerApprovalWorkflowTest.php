@@ -357,7 +357,7 @@ class OwnerApprovalWorkflowTest extends TestCase
         $this->assertDatabaseHas('project_memberships',['project_id'=>$p->id,'user_id'=>$member->id,'project_role_id'=>$role->id]);
         Notification::assertNotSentTo($member,ProjectActivatedNotification::class);
         $this->actingAs($pm)->postJson(route('projects.respond',$p),['decision'=>'accept'])->assertOk();
-        $page=$this->get(route('projects.plan.setup',$p))->assertOk()->assertSee('Review prepared plan')->assertSee('Project roles');
+        $page=$this->get(route('projects.plan.setup',$p))->assertOk()->assertSee('Resume plan setup')->assertSee('Project roles');
         $this->snapshot('workflow-optional-plan',$page->getContent());
         $payload=['planned_budget'=>10000,'members'=>[['user_id'=>$other->id,'project_role_id'=>$role->id]]];
         $this->actingAs($member)->post(route('projects.plan.options',$p),$payload)->assertForbidden();

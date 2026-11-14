@@ -30,7 +30,8 @@ class TaskBulkController
             'tasks.*.end_time' => 'required|string',
             'tasks.*.progress' => 'required|integer|min:0|max:100',
             'tasks.*.status' => 'required|in:todo,in_progress,on_hold,completed',
-            'tasks.*.assigned_user_id' => 'nullable|integer',
+            'tasks.*.assigned_user_id' => 'nullable|integer|exists:users,id',
+            'tasks.*.add_to_project' => 'sometimes|boolean',
             'tasks.*.dependencies' => 'nullable|array',
             'tasks.*.dependencies.*' => 'integer',
         ], [
@@ -55,6 +56,7 @@ class TaskBulkController
         // 3. Row-level validations
         $errors = [];
         $newDependenciesMap = [];
+        $newMembers = [];
 
         foreach ($data['tasks'] as $id => $row) {
             $task = $existingTasks->get($id);
@@ -77,8 +79,12 @@ class TaskBulkController
 
             if (!empty($row['assigned_user_id'])) {
                 $uid = (int)$row['assigned_user_id'];
-                if (!in_array($uid, $eligibleAssigneeIds, true)) {
-                    $errors["tasks.{$id}.assigned_user_id"] = "Task \"{$row['title']}\": Selected assignee is not a member of this project.";
+                $person=User::whereKey($uid)->where('account_status','active')->where('system_role','user')->first();
+                if(!$person){$errors["tasks.{$id}.assigned_user_id"]='Choose an active project user.';}
+                elseif (!in_array($uid, $eligibleAssigneeIds, true)) {
+                    if(!($row['add_to_project']??false))$errors["tasks.{$id}.assigned_user_id"]='Confirm adding this person to the project.';
+                    elseif(!$access->project($request->user(),$project,'assign_tasks')||!$access->project($request->user(),$project,'manage_team'))abort(403);
+                    else $newMembers[$uid]=$person;
                 }
             }
 
@@ -143,7 +149,8 @@ class TaskBulkController
 
         // 5. Database transaction for atomic persistence
         $updatedCount = 0;
-        DB::transaction(function() use ($data, $existingTasks, $newDependenciesMap, $project, $projectService, &$updatedCount) {
+        DB::transaction(function() use ($data, $existingTasks, $newDependenciesMap, $project, $projectService, $request, $newMembers, &$updatedCount) {
+            if($newMembers){$role=\App\Models\ProjectRole::where('slug','team')->firstOrFail();foreach($newMembers as $person){\App\Models\ProjectMembership::firstOrCreate(['project_id'=>$project->id,'user_id'=>$person->id,'project_role_id'=>$role->id]);Audit::record('project.member_added',$project,['user_id'=>$person->id,'source'=>'bulk_task_edit']);}}
             foreach ($data['tasks'] as $id => $row) {
                 $task = $existingTasks->get($id);
                 $startTime = trim($row['start_time']) ?: '09:00';
@@ -165,7 +172,9 @@ class TaskBulkController
 
                 // Sync assignees
                 if (!empty($row['assigned_user_id'])) {
-                    $task->assignees()->sync([(int)$row['assigned_user_id']]);
+                    $uid=(int)$row['assigned_user_id'];$already=$task->assignees()->where('users.id',$uid)->exists();
+                    if(!$already){$task->assignees()->sync([$uid]);if(in_array($project->status,['active','on_hold'])&&$project->approval_stage!=='planning'){ $person=User::findOrFail($uid);DB::afterCommit(fn()=>$person->notify(new \App\Notifications\TaskReassignedNotification($task,$request->user())));}}
+
                 } else {
                     $task->assignees()->detach();
                 }

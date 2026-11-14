@@ -3,6 +3,9 @@
     $optionalRoleGroups = collect(app(\App\Services\Access::class)->catalogGrouped())->except('company')->all();
 @endphp
 <details class="flow-optional-section flow-role-card" data-optional-roles data-project-id="{{ $roleProject?->id }}" data-role-url="{{ route('roles.quick') }}" data-draft-key="project-roles-{{ auth()->id() }}-{{ $roleProject?->id ?? 'new' }}" @if(old('members')) open @endif>
+    @if($compactSetup ?? false)
+    <summary class="initiate-setup-row"><span class="initiate-setup-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="9" cy="8" r="3"/><path d="M3 21v-3a6 6 0 0 1 12 0v3M16 5a3 3 0 0 1 0 6m2 3a5 5 0 0 1 3 4v3"/></svg></span><span class="initiate-setup-copy"><b>Project roles</b><small data-role-summary>No additional people assigned</small></span><span data-role-count hidden></span><span class="initiate-setup-action"><span data-setup-action>Add</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 5 7 7-7 7"/></svg></span></summary>
+    @else
     <summary class="flow-role-card-summary">
         <div class="flow-role-card-title-group">
             <span class="flow-role-card-icon" aria-hidden="true">
@@ -25,6 +28,7 @@
             </span>
         </div>
     </summary>
+    @endif
 
     <div class="flow-role-card-body">
         <div class="flow-option-hint-banner">

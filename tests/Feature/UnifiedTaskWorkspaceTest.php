@@ -40,4 +40,43 @@ class UnifiedTaskWorkspaceTest extends TestCase {
   $this->getJson(route('tasks.mine',['q'=>'Second main']))->assertJsonPath('tasks.data.0.display_number','2');
   $this->assertSame($b->code,$b->fresh()->code);
  }
+
+ public function test_bulk_assignment_is_atomic_explicit_and_project_scoped():void {
+  \Illuminate\Support\Facades\Notification::fake();
+  $pm=$this->person();$member=$this->person();$outsider=$this->person();$p=$this->project($pm);$a=$this->task($p);$b=$this->task($p);$other=$this->task($this->project($outsider));
+  ProjectRole::create(['name'=>'Team Member','slug'=>'team','default_permissions'=>['project.view','tasks.view_assigned']]);
+  $url=route('tasks.assign-selected',$p);
+  $this->actingAs($outsider)->postJson($url,['task_ids'=>[$a->id],'user_id'=>$member->id,'add_to_project'=>true])->assertForbidden();
+  $this->actingAs($pm)->postJson($url,['task_ids'=>[$a->id,$other->id],'user_id'=>$member->id,'add_to_project'=>true])->assertUnprocessable();
+  $this->assertSame(0,$a->assignees()->count());$this->assertFalse($p->memberships()->where('user_id',$member->id)->exists());
+  $this->postJson($url,['task_ids'=>[$a->id,$b->id],'user_id'=>$member->id])->assertUnprocessable();
+  $this->postJson($url,['task_ids'=>[$a->id,$b->id],'user_id'=>$member->id,'add_to_project'=>true])->assertOk()->assertJsonCount(2,'tasks');
+  $this->assertTrue($p->memberships()->where('user_id',$member->id)->exists());
+  $this->assertSame(1,$a->assignees()->count());$this->assertSame(1,$b->assignees()->count());
+  $this->postJson($url,['task_ids'=>[$a->id,$b->id],'user_id'=>$member->id])->assertOk();$this->assertSame(1,$a->assignees()->count());
+  \Illuminate\Support\Facades\Notification::assertSentToTimes($member,\App\Notifications\TaskReassignedNotification::class,2);
+  $this->actingAs($pm)->get(route('projects.show',$p))->assertOk()->assertSee('Assign selected')->assertSee('task-assignment-check',false);
+ }
+
+ public function test_manual_task_can_add_an_assignee_with_explicit_project_access():void {
+  $pm=$this->person();$person=$this->person();$p=$this->project($pm);
+  ProjectRole::create(['name'=>'Team Member','slug'=>'team','default_permissions'=>['project.view','tasks.view_assigned']]);
+  $data=['title'=>'Manual assigned task','starts_at'=>now()->format('Y-m-d H:i'),'ends_at'=>now()->addDay()->format('Y-m-d H:i'),'priority'=>'medium','assigned_user_id'=>$person->id];
+  $this->actingAs($pm)->postJson(route('tasks.store',$p),$data)->assertUnprocessable();
+  $this->assertSame(0,$p->tasks()->count());
+  $this->postJson(route('tasks.store',$p),$data+['add_assignee_to_project'=>true])->assertRedirect();
+  $this->assertTrue($p->tasks()->first()->assignees()->where('users.id',$person->id)->exists());
+  $this->assertTrue($p->memberships()->where('user_id',$person->id)->exists());
+ }
+
+ public function test_bulk_edit_can_search_and_add_a_new_project_assignee_on_save():void {
+  \Illuminate\Support\Facades\Notification::fake();$pm=$this->person();$person=$this->person();$p=$this->project($pm);$task=$this->task($p);
+  ProjectRole::create(['name'=>'Team Member','slug'=>'team','default_permissions'=>['project.view','tasks.view_assigned']]);
+  $row=['title'=>$task->title,'start_date'=>today()->format('Y-m-d'),'start_time'=>'09:00','end_date'=>today()->addDay()->format('Y-m-d'),'end_time'=>'17:00','progress'=>0,'status'=>'todo','assigned_user_id'=>$person->id];
+  $this->actingAs($pm)->postJson(route('tasks.bulk-update',$p),['tasks'=>[$task->id=>$row]])->assertUnprocessable();
+  $this->assertFalse($p->memberships()->where('user_id',$person->id)->exists());
+  $row['add_to_project']=true;
+  $this->postJson(route('tasks.bulk-update',$p),['tasks'=>[$task->id=>$row]])->assertOk();
+  $this->assertTrue($p->memberships()->where('user_id',$person->id)->exists());$this->assertTrue($task->assignees()->where('users.id',$person->id)->exists());
+ }
 }

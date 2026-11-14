@@ -14,6 +14,11 @@
 <script defer src="{{ asset('js/task-assignment.js') }}?v={{ filemtime(public_path('js/task-assignment.js')) }}"></script>
 
 
+@php $canQuickAssign=app(\App\Services\Access::class)->project(auth()->user(),$project,'assign_tasks') && $project->status!=='archived'; @endphp
+@if($canQuickAssign)
+<div id="task-assignment-config" hidden data-url="{{ route('tasks.assign-selected',$project) }}" data-project="{{ $project->id }}" data-members="{{ $project->memberships->pluck('user_id')->push($project->pm_user_id)->filter()->unique()->values()->toJson() }}"></div>
+<dialog id="task-assign-dialog" class="modal task-assign-dialog"><div class="task-assign-dialog-head"><div><h2>Assign tasks</h2><p data-bulk-assign-count></p></div><button type="button" data-close-dialog aria-label="Close">&times;</button></div><label>Person<select data-bulk-assign-person data-members-only="1" data-directory-picker data-directory-project="{{ $project->id }}"><option value="">Search name or email</option>@foreach($users->sortBy(fn($person)=>($project->memberships->contains('user_id',$person->id)||$project->pm_user_id===$person->id?'0':'1').$person->name) as $person)<option value="{{ $person->id }}">{{ $person->name }} ({{ $person->email }})</option>@endforeach</select></label><p data-bulk-assign-hint>Choose a project member, or search for another person.</p><p data-bulk-assign-feedback role="status"></p><footer><button type="button" class="btn btn-outline" data-close-dialog>Cancel</button><button type="button" class="btn btn-primary" data-bulk-assign-save disabled>Assign selected</button></footer></dialog>
+@endif
 <div class="project-workspace-v3" id="project-workspace">
 
     <nav class="workspace-breadcrumb" aria-label="Breadcrumb">
@@ -264,6 +269,7 @@
                     @if($tasks->isNotEmpty())
                         <button type="button" class="btn btn-ghost" data-show-dialog="add-task-dialog" data-add-mode="sub">+ Subtask</button>
                     @endif
+                    
                     <button type="button" class="btn btn-outline" data-show-dialog="bulk-edit-tasks-dialog" id="open-bulk-edit-btn">Bulk edit</button>
                     <div class="pw-dropdown-wrap">
                         <button type="button" class="btn btn-outline pw-dropdown-toggle workspace-import-toggle" aria-label="Import and export tasks" aria-expanded="false" aria-controls="project-import-menu">
@@ -305,7 +311,7 @@
                     <table class="clean-table project-tasks-full-table" style="width: 100%; border-collapse: collapse; text-align: left;">
                         <thead>
                             <tr style="background: #F8FAFC; border-bottom: 1px solid #E2E8F0; font-size: 12px; font-weight: 700; color: #475569;">
-                                <th style="padding: 12px 16px; width: 33%;">Task / Subtask</th>
+                                <th style="padding: 12px 16px; width: 33%;"> Task / Subtask</th>
                                 <th style="padding: 12px 14px; width: 14%;">Assignee</th>
                                 <th style="padding: 12px 10px; width: 10%;">Priority</th>
                                 <th style="padding: 12px 14px; width: 11%;">Starts<span class="workspace-sr-only">Start Date &amp; Time</span></th>
@@ -359,34 +365,28 @@
                                             </button>
 
                                             @if($isSubtask)
-                                                <span style="font-size: 9.5px; background: #EEF2F6; color: #475569; border: 1px solid #CBD5E1; padding: 1px 6px; border-radius: 4px; font-weight: 600; flex-shrink: 0; white-space: nowrap;">Subtask</span>
+                                                <span style="font-size: 9.5px; background: #EEF2F6; color: #475569; border: 1px solid #CBD5E1; padding: 1px 6px; border-radius: 4px; font-weight: 600; flex-shrink: 0; white-space: nowrap;" class="task-hierarchy-badge">Subtask</span>
                                             @elseif($hasChildren)
                                                 <span class="pill pill-neutral" style="font-size: 10px; padding: 1px 6px; font-weight: 600; flex-shrink: 0; white-space: nowrap;" title="{{ $task->children->count() }} subtasks under this task">
                                                     {{ $task->children->count() }} subtasks
-                                                </span>
-                                            @endif
-
-                                            @if($isOverdue)
-                                                <span class="badge-overdue-tag" style="background: #FEE2E2; color: #DC2626; border: 1px solid #FECACA; font-size: 10px; font-weight: 700; padding: 1.5px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px; flex-shrink: 0; white-space: nowrap;" title="Task deadline has passed">
-                                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                                                    Overdue
                                                 </span>
                                             @endif
                                         </div>
                                     </td>
 
                                     <!-- Column 2: Assignee -->
-                                    <td style="padding: 12px 14px; font-size: 13px;">
+                                    <td style="padding: 12px 14px; font-size: 13px;" data-assignment-cell="{{ $task->id }}">
                                         @if($primaryAssignee)
                                             <div style="display: flex; align-items: center; gap: 6px;">
                                                 <span style="color: #22272B; font-weight: 500;">{{ $primaryAssignee->name }}</span>
+                                                @if($canQuickAssign)<button type="button" class="task-add-assignee" data-single-assign="{{ $task->id }}" aria-label="Add an assignee to {{ $task->title }}">+</button>@endif
                                                 @if($extraCount > 0)
                                                     <span class="pill pill-neutral" title="{{ $assignees->pluck('name')->join(', ') }}" style="font-size: 10px; padding: 1px 5px; cursor: help;">+{{ $extraCount }}</span>
                                                 @endif
                                             </div>
                                         @else
                                             @if(app(\App\Services\Access::class)->project(auth()->user(),$project,'assign_tasks') && $project->status!=='archived')
-                                                <div class="task-quick-assign" data-assign-url="{{ route('tasks.assign',$task) }}"><button type="button" class="btn btn-outline btn-xs" data-assign-open>+ Assign</button><div data-assign-controls hidden><select aria-label="Assign a project member" data-assign-select @if($project->approval_stage==='planning') data-directory-picker data-directory-project="{{ $project->id }}" @endif><option value="">Choose a project member</option></select><button type="button" class="task-assign-cancel" data-assign-cancel aria-label="Cancel assignment">&times;</button></div><small data-assign-feedback role="status"></small></div>
+                                                <button type="button" class="btn btn-outline btn-xs" data-single-assign="{{ $task->id }}">+ Assign</button>
                                             @else
                                                 <span class="muted" style="font-size: 12.5px;">Unassigned</span>
                                             @endif
@@ -477,13 +477,10 @@
                                                 @else
                                                     <div style="display: flex; align-items: center; gap: 5px;">
                                                         <span class="uwt-status-pill status-{{ $task->status }}" style="font-size: 11px;" @if($hasChildren) title="Parent task status is automatically calculated from its subtasks" @endif>
-                                                            {{ ucwords(str_replace('_', ' ', $task->status)) }}
+                                                            {{ ['todo'=>'To do','in_progress'=>'In progress','on_hold'=>'On hold','completed'=>'Completed'][$task->status] ?? $task->status }}
                                                         </span>
                                                         @if($hasChildren)
                                                             <span style="font-size: 9px; color: #94A3B8; font-weight: 600; cursor: help; background: #F1F5F9; border: 1px solid #E2E8F0; padding: 1px 4px; border-radius: 3px;" title="Parent task status is automatically calculated from its subtasks">Auto</span>
-                                                        @endif
-                                                        @if($isOverdue)
-                                                            <span class="badge-overdue" style="font-size: 9.5px; padding: 1px 5px;">Overdue</span>
                                                         @endif
                                                     </div>
                                                 @endif
@@ -522,8 +519,8 @@
         <div class="card" style="padding: 20px; background: #FFFFFF; border: 1px solid var(--border); border-radius: 8px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
                 <div>
-                    <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 4px;">Full Schedule Gantt</h2>
-                    <p class="muted" style="font-size: 13px; margin: 0;">Comprehensive schedule with dependencies and Critical Path Analysis.</p>
+                    <h2 style="font-size: 16px; font-weight: 700; margin: 0 0 4px;">Project timeline</h2>
+                    <p class="muted" style="font-size: 13px; margin: 0;">Hover or focus a bar for dates and progress. Select it to open the task.</p>
                 </div>
                 <div class="inline-actions" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                     @if($health && $health['cpm_reliable'])
@@ -535,8 +532,8 @@
 
                     <!-- Scale Switcher Segmented Control -->
                     <div class="view-scale-segmented" role="group" aria-label="Timeline scale">
-                        <button type="button" class="view-scale-btn" data-scale="day">Day</button>
-                        <button type="button" class="view-scale-btn active" data-scale="week">Week</button>
+                        <button type="button" class="view-scale-btn active" data-scale="fit">Fit project</button><button type="button" class="view-scale-btn" data-scale="day">Day</button>
+                        <button type="button" class="view-scale-btn" data-scale="week">Week</button>
                         <button type="button" class="view-scale-btn" data-scale="month">Month</button>
                     </div>
                 </div>
@@ -551,6 +548,7 @@
             @if($tasks->isEmpty())
                 <p class="muted text-sm">No tasks created yet to display on the Gantt chart.</p>
             @else
+                <div class="timeline-legend" aria-label="Task status colors"><span class="legend-todo">To do</span><span class="legend-in_progress">In progress</span><span class="legend-on_hold">On hold</span><span class="legend-completed">Completed</span><small>Red outline: critical path</small><small class="timeline-today-key">Dashed line: today</small></div>
                 <!-- Interactive Gantt Timeline Grid in Tab 2 -->
                 <div class="unified-workplan-card" style="border: 1px solid var(--border); border-radius: 6px; margin-top: 14px;">
                     <div class="unified-workplan-scroll" id="unified-workplan-scroll">
@@ -594,7 +592,7 @@
                                                 <span style="font-size: 8.5px; background: #E2E8F0; color: #475569; border: 1px solid #CBD5E1; padding: 0.5px 4px; border-radius: 3px; font-weight: 600;">Sub</span>
                                             @endif
                                             @if($isOverdue)
-                                                <span style="background: #FEE2E2; color: #DC2626; border: 1px solid #FECACA; font-size: 9px; font-weight: 700; padding: 1px 4px; border-radius: 3px; flex-shrink: 0;">Overdue</span>
+                                                
                                             @endif
                                         </div>
                                         <div>
@@ -1318,16 +1316,10 @@
 
             <div class="two-fields">
                 <label>Assign To
-                    <select name="assigned_user_id" id="add-task-assignee-select" @if($project->approval_stage==='planning') data-directory-picker data-directory-project="{{ $project->id }}" @endif>
+                    <select name="assigned_user_id" id="add-task-assignee-select" data-members-only="1" data-directory-picker data-directory-project="{{ $project->id }}">
                         <option value="">Unassigned (Assign later...)</option>
-                        @if($project->approval_stage==='planning')
-                            @foreach($users as $person)<option value="{{ $person->id }}">{{ $person->name }} ({{ $person->email }})</option>@endforeach
-                        @else
-                        @foreach($project->memberships->unique('user_id') as $m)
-                            <option value="{{ $m->user_id }}">{{ $m->user?->name }} ({{ $m->role?->name ?? 'Member' }})</option>
-                        @endforeach
-                        @endif
-                    </select>
+                        @foreach($users as $person)<option value="{{ $person->id }}">{{ $person->name }} ({{ $person->email }})</option>@endforeach
+                    </select><span id="manual-task-member-confirm" hidden><label style="display:flex;align-items:center;gap:7px;font-size:11px;margin-top:8px"><input type="checkbox" name="add_assignee_to_project" value="1" style="width:14px;min-height:14px;height:14px;accent-color:#315F58">Add this person to the project as a Team Member</label></span>
                     @if($canTeam)
                         <button type="button" class="text-action" id="add-task-open-member-btn" style="font-size: 11px; margin-top: 4px; display: inline-block; padding: 0; background: none; border: none; cursor: pointer; color: #315F58; text-decoration: underline;">
                             + Add Project Member
@@ -1366,12 +1358,14 @@
             <!-- Sticky Modal Header -->
             <div class="modal-head" style="padding: 16px 24px; border-bottom: 1px solid #E1E4E8; display: flex; justify-content: space-between; align-items: center; background: #FFFFFF; flex-shrink: 0;">
                 <div>
-                    <h2 style="font-size: 18px; font-weight: 700; color: #22272B; margin: 0 0 2px;">Edit Project Tasks</h2>
-                    <p class="muted" style="font-size: 13px; margin: 0;">Update tasks directly in the table.</p>
+                    <h2 style="font-size: 18px; font-weight: 700; color: #22272B; margin: 0 0 2px;">Bulk edit tasks</h2>
+                    <p class="muted" style="font-size: 13px; margin: 0;">Edit the fields you need, then save your changes.</p>
                 </div>
                 <button type="button" class="icon-btn" data-close-dialog id="bulk-edit-x-btn" aria-label="Close dialog" style="font-size: 20px; background: none; border: none; cursor: pointer; color: #6B7280; padding: 4px 8px;">×</button>
             </div>
 
+            @if($canQuickAssign)<div class="bulk-assignment-toolbar"><label><input type="checkbox" id="select-visible-assignments"> Select all tasks</label><span data-selected-task-count></span><button type="button" class="btn btn-outline" id="assign-selected-tasks" disabled>Assign selected</button><small>Assignments save immediately. Other edits use Save changes.</small></div>@endif
+            <div class="bulk-workspace-tools"><label class="bulk-task-search"><span class="workspace-sr-only">Find a task in bulk edit</span><input type="search" id="bulk-task-search" placeholder="Find a task by name or number" autocomplete="off"></label><span id="bulk-visible-count">{{ $tasks->count() }} tasks</span><label class="bulk-extra-toggle"><input type="checkbox" id="bulk-show-extra"> Times &amp; dependencies</label></div>
             <!-- Scrollable Bulk Edit Table -->
             <div class="bulk-edit-scroll" style="flex: 1; overflow-y: auto; overflow-x: auto; background: #FAFAFA; padding: 0;">
                 <table class="clean-table bulk-edit-table" style="width: 100%; border-collapse: separate; border-spacing: 0; text-align: left; background: #FFFFFF; font-size: 12.5px;">
@@ -1381,9 +1375,6 @@
                             <th style="padding: 10px 12px; min-width: 220px; border-bottom: 1px solid #CBD5E1;">Task / Subtask</th>
                             <th style="padding: 10px 12px; min-width: 180px; border-bottom: 1px solid #CBD5E1;">
                                 Assignee
-                                @if($canTeam)
-                                    <button type="button" class="text-action" id="bulk-open-add-member" style="font-size: 10.5px; color: #315F58; margin-left: 6px; text-decoration: underline; background: none; border: none; cursor: pointer;">+ Add Member</button>
-                                @endif
                             </th>
                             <th style="padding: 10px 8px; width: 130px; border-bottom: 1px solid #CBD5E1;">Start Date</th>
                             <th style="padding: 10px 8px; width: 95px; border-bottom: 1px solid #CBD5E1;">Start Time</th>
@@ -1407,7 +1398,7 @@
                                 style="border-bottom: 1px solid #E2E8F0; {{ $isSub ? 'background: #FAFCFF;' : '' }} transition: background 0.15s;">
 
                                 <!-- 1. Number / Code -->
-                                <td style="padding: 8px 12px; color: #64748B; font-weight: 600; font-size: 11.5px; border-bottom: 1px solid #E2E8F0; {{ $isSub ? 'padding-left: 18px;' : '' }}">
+                                <td style="padding: 8px 12px; color: #64748B; font-weight: 600; font-size: 11.5px; border-bottom: 1px solid #E2E8F0; {{ $isSub ? 'padding-left: 18px;' : '' }}">@if($canQuickAssign)<input type="checkbox" class="task-assignment-check" value="{{ $task->id }}" aria-label="Select {{ $task->title }} for assignment">@endif
                                     @if($isSub)
                                         <span style="color: #94A3B8; margin-right: 2px;" aria-hidden="true">↳</span>
                                     @endif
@@ -1437,16 +1428,12 @@
                                 <!-- 3. Assignee -->
                                 <td style="padding: 8px 12px; border-bottom: 1px solid #E2E8F0;">
                                     <select name="tasks[{{ $task->id }}][assigned_user_id]"
-                                            class="bulk-select bulk-assignee-select bulk-field-track"
+                                            class="bulk-select bulk-assignee-select bulk-field-track" data-directory-picker data-members-only="1" data-directory-floating="1" data-directory-project="{{ $project->id }}"
                                             data-field="assigned_user_id"
                                             style="width: 100%; font-size: 12px; padding: 5px 6px; border: 1px solid #CBD5E1; border-radius: 4px; background: #FFFFFF;">
                                         <option value="">Unassigned</option>
-                                        @foreach($project->memberships->unique('user_id') as $m)
-                                            <option value="{{ $m->user_id }}" @selected($assignedId == $m->user_id)>
-                                                {{ $m->user?->name }} ({{ $m->role?->name ?? 'Member' }})
-                                            </option>
-                                        @endforeach
-                                    </select>
+                                        @foreach($users->sortBy(fn($person)=>($project->memberships->contains('user_id',$person->id)||$project->pm_user_id===$person->id?'0':'1').$person->name) as $person)<option value="{{ $person->id }}" @selected($assignedId==$person->id)>{{ $person->name }} ({{ $person->email }})</option>@endforeach
+                                    </select><label class="bulk-new-member-confirm" hidden><input type="checkbox" name="tasks[{{ $task->id }}][add_to_project]" value="1">Add to project as Team Member</label>
                                 </td>
 
                                 <!-- 4. Start Date -->
@@ -1833,6 +1820,7 @@
 window.gsProjectTimeline = {{ \Illuminate\Support\Js::from($tasks->map(fn($t) => [
     'id' => $t->id,
     'title' => $t->title,
+    'status' => $t->status,
     'start' => $t->starts_at->toIso8601String(),
     'end' => $t->ends_at->toIso8601String(),
     'progress' => $t->progress,

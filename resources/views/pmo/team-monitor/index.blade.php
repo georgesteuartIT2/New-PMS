@@ -72,14 +72,17 @@
                         <th style="padding: 12px 18px; font-size: 11.5px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">Projects</th>
                         <th style="padding: 12px 18px; font-size: 11.5px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; text-align: center;">Open tasks</th>
                         <th style="padding: 12px 18px; font-size: 11.5px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; text-align: center;">Overdue</th>
-                        <th style="padding: 12px 18px; font-size: 11.5px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">Next deadline</th>
-                        <th class="right" style="padding: 12px 18px; font-size: 11.5px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; text-align: right;">Tasks</th>
+                        <th style="padding: 12px 18px; font-size: 11.5px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">Task to follow up</th>
+                        <th class="right" style="padding: 12px 18px; font-size: 11.5px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; text-align: right;">Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($employees as $person)
                         @php
                             $taskLink = $person->priority_task_id ? route('projects.show', [$person->priority_task_project_id, 'focus_task' => $person->priority_task_id]) . '#tasks' : route('pmo.task-monitor', array_filter(['user_id' => $person->id, 'project_id' => $filters['project_id'] ?? null, 'filter' => $person->open_tasks_count > 0 ? 'open' : 'completed', 'active_only' => 1], fn($value) => $value !== null && $value !== ''));
+                        $priorityProjectName = collect($person->active_project_names)->firstWhere('id', $person->priority_task_project_id)['name'] ?? null;
+                            $priorityOverdue = $person->priority_task_due_at?->isPast() ?? false;
+                            $overdueDays = $priorityOverdue ? max(1, (int) $person->priority_task_due_at->copy()->startOfDay()->diffInDays(today(), false)) : 0;
                         @endphp
                         <tr style="border-bottom: 1px solid var(--border); transition: background-color 0.15s ease;">
                             <td style="padding: 12px 18px;">
@@ -106,7 +109,7 @@
                                         </a>
                                     @endforeach
                                     @if($person->active_projects_count > 1)
-                                        <small style="display: block; font-size: 11px; color: #64748B; margin-top: 2px;">+{{ $person->active_projects_count - 1 }} more</small>
+                                        <details class="team-more-projects"><summary>+{{ $person->active_projects_count - 1 }} more</summary><div>@foreach(collect($person->active_project_names)->skip(1) as $extraProject)<a href="{{ route('projects.show', $extraProject['id']) }}">{{ $extraProject['name'] }}</a>@endforeach</div></details>
                                     @elseif(!$person->active_projects_count)
                                         <span class="team-empty-priority" style="font-size: 11.5px; color: #94A3B8;">No active projects</span>
                                     @endif
@@ -114,7 +117,7 @@
                             </td>
 
                             <td class="team-number" style="padding: 12px 18px; text-align: center;">
-                                <span style="font-size: 13px; font-weight: 700; color: #0F172A;">{{ $person->open_tasks_count }}</span>
+                                <a class="team-open-count" href="{{ route('pmo.task-monitor', array_filter(['user_id'=>$person->id,'project_id'=>$filters['project_id']??null,'filter'=>'open','active_only'=>1])) }}" aria-label="View {{ $person->open_tasks_count }} open tasks for {{ $person->name }}">{{ $person->open_tasks_count }}</a>
                             </td>
 
                             <td class="team-number" style="padding: 12px 18px; text-align: center;">
@@ -129,11 +132,12 @@
 
                             <td style="padding: 12px 18px;">
                                 @if($person->priority_task_id)
-                                    <a class="team-priority-task" href="{{ route('projects.show', [$person->priority_task_project_id, 'focus_task' => $person->priority_task_id]) }}" style="font-size: 13px; font-weight: 600; color: #0F172A; text-decoration: none; line-height: 1.4;">
+                                    <a class="team-priority-task" href="{{ route('projects.show', [$person->priority_task_project_id, 'focus_task' => $person->priority_task_id]) }}#tasks" style="font-size: 13px; font-weight: 600; color: #0F172A; text-decoration: none; line-height: 1.4;">
                                         {{ $person->priority_task_title }}
                                     </a>
+                                    @if($priorityProjectName)<span class="team-task-project">{{ $priorityProjectName }}</span>@endif
                                     <small class="team-priority-date {{ $person->priority_task_due_at->isPast() ? 'text-danger' : '' }}" style="display: block; font-size: 11.5px; font-weight: {{ $person->priority_task_due_at->isPast() ? '650' : '500' }}; color: {{ $person->priority_task_due_at->isPast() ? '#DC2626' : '#64748B' }}; margin-top: 2px;">
-                                        {{ $person->priority_task_due_at->format('d M Y') }}@if($person->priority_task_due_at->isPast()) &middot; Oldest overdue @endif
+                                        {{ $person->priority_task_due_at->format('d M Y') }} &middot; @if($priorityOverdue){{ $overdueDays }} {{ Str::plural('day', $overdueDays) }} overdue @elseif($person->priority_task_due_at->isToday())Due today @else Upcoming @endif
                                     </small>
                                 @else
                                     <span class="team-empty-priority" style="font-size: 12px; color: #94A3B8;">No open tasks</span>
@@ -143,7 +147,7 @@
                             <td class="right" style="padding: 12px 18px; text-align: right;">
                                 @if($person->open_tasks_count + $person->completed_tasks_count > 0)
                                     <a class="btn btn-outline btn-xs team-view-tasks" href="{{ $taskLink }}" style="font-weight: 600; white-space: nowrap;">
-                                        {{ $person->priority_task_id ? 'View task' : 'View tasks' }} &rarr;
+                                        {{ $person->priority_task_id ? 'Open task' : 'View tasks' }} &rarr;
                                     </a>
                                 @else
                                     <span class="team-empty-priority" style="font-size: 12px; color: #94A3B8;">No tasks</span>

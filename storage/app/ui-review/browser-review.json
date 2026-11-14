@@ -1,27 +1,13 @@
 [
   {
-    "page": "personal-managed.html",
+    "page": "pmo-projects-49.html",
     "width": 1440,
     "viewport": 1440,
-    "scrollWidth": 1440,
+    "scrollWidth": 1425,
     "failures": []
   },
   {
-    "page": "personal-managed.html",
-    "width": 1280,
-    "viewport": 1280,
-    "scrollWidth": 1280,
-    "failures": []
-  },
-  {
-    "page": "personal-managed.html",
-    "width": 768,
-    "viewport": 768,
-    "scrollWidth": 768,
-    "failures": []
-  },
-  {
-    "page": "personal-managed.html",
+    "page": "pmo-projects-49.html",
     "width": 390,
     "viewport": 390,
     "scrollWidth": 390,

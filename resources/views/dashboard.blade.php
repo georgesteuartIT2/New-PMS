@@ -57,7 +57,7 @@
                                 <span class="pill pill-danger" style="font-size: 11px; padding: 2px 7px; font-weight: 700;">{{ $unreadBlockerCount }} new</span>
                             @endif
                         </div>
-                        <p style="margin: 4px 0 0; font-size: 12.5px; color: #64748B;">Unfinished work requiring immediate review, reassignment, or schedule mitigation.</p>
+                        <p style="margin: 4px 0 0; font-size: 12.5px; color: #64748B;">Review urgent work across your projects.</p>
                     </div>
                     <a class="btn btn-outline btn-xs" href="{{ route('pmo.task-monitor') }}" style="font-weight: 600; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;">Task Monitor &rarr;</a>
                 </header>
@@ -109,47 +109,18 @@
                         <a class="text-action" href="{{ route('pmo.task-monitor',['filter'=>'blocked']) }}" style="font-weight: 600;">View all blockers &rarr;</a>
                     </footer>
                 @else
+                <div class="attention-list-heading" aria-hidden="true"><span>Task / Project</span><span>Assignee</span><span>Due</span></div>
                 @forelse($taskAttention as $task)
-                <article class="dashboard-task-row" style="display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(100px, 0.45fr) 95px; gap: 14px; padding: 10px 20px; border-bottom: 1px solid #F1F5F9; align-items: center;">
-                    <div class="dashboard-task-copy" style="min-width: 0;">
-                        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                            <a class="dashboard-task-title-link" href="{{ route('projects.show', [$task->project_id, 'focus_task'=>$task->id]) }}" style="font-size: 13.5px; font-weight: 650; color: #0F172A; text-decoration: none;">
-                                {{ $task->title }}
-                            </a>
-                            @if($task->isOverdue())
-                                @php $daysOverdue = max(1, (int) today()->diffInDays($task->ends_at)); @endphp
-                                <span class="pill pill-danger" style="font-size: 10px; padding: 1px 6px; font-weight: 700; display: inline-flex; align-items: center; gap: 3px; background: #FEE2E2; color: #DC2626; border: 1px solid #FECACA; white-space: nowrap;">
-                                    <span style="width: 4px; height: 4px; border-radius: 50%; background: #DC2626;"></span>
-                                    {{ $daysOverdue }}d Overdue
-                                </span>
-                            @endif
-                            @if($task->is_critical)
-                                @include('tasks._critical-badge', ['task'=>$task])
-                            @endif
-                        </div>
-                        <div class="dashboard-task-meta" style="margin-top: 2px;">
-                            <span style="font-size: 11px; color: #64748B; font-weight: 500; display: inline-flex; align-items: center; gap: 4px;">
-                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -1px;"><path d="M3 7V5a1 1 0 0 1 1-1h6l2 3h8a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7z"/></svg>
-                                {{ $task->project?->name ?? 'General' }}
-                            </span>
-                        </div>
+                @php
+                    $lateDays=$task->isOverdue() && $task->ends_at ? max(1,(int)$task->ends_at->copy()->startOfDay()->diffInDays(today(),false)) : 0;
+                @endphp
+                <article class="dashboard-task-row">
+                    <div class="dashboard-task-copy">
+                        <a class="dashboard-task-title-link" href="{{ route('projects.show', [$task->project_id, 'focus_task'=>$task->id]) }}">{{ $task->title }}</a>
+                        <div class="dashboard-task-meta"><span class="attention-project-name" title="{{ $task->project?->name ?? 'General' }}">{{ $task->project?->name ?? 'General' }}</span></div>
                     </div>
-
-                    <div class="dashboard-task-owner" style="display: flex; flex-direction: column; gap: 1px;">
-                        <small style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #94A3B8; font-weight: 650;">Assignee</small>
-                        @if($task->assignees->isNotEmpty())
-                            <span style="font-size: 12px; font-weight: 550; color: #334155; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ $task->assignees->pluck('name')->join(', ') }}</span>
-                        @else
-                            <span style="font-size: 12px; color: #94A3B8;">Unassigned</span>
-                        @endif
-                    </div>
-
-                    <div class="dashboard-task-due" style="display: flex; flex-direction: column; align-items: flex-end; gap: 1px; text-align: right;">
-                        <small style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: #94A3B8; font-weight: 650;">Due</small>
-                        <span style="font-size: 12px; font-weight: 650; color: {{ $task->isOverdue() ? '#DC2626' : '#334155' }}; white-space: nowrap;">
-                            {{ $task->ends_at?->format('d M Y') ?? 'Not scheduled' }}
-                        </span>
-                    </div>
+                    <div class="attention-assignee {{ $task->assignees->isEmpty()?'is-unassigned':'' }}" title="{{ $task->assignees->isEmpty() ? 'Unassigned' : $task->assignees->pluck('name')->join(', ') }}">{{ $task->assignees->isEmpty() ? 'Unassigned' : $task->assignees->pluck('name')->join(', ') }}</div>
+                    <div class="attention-due {{ $lateDays ? 'is-overdue':'' }}"><time datetime="{{ $task->ends_at?->toDateString() }}">{{ $task->ends_at?->format('d M Y') ?? 'Not scheduled' }}</time>@if($lateDays)<a class="attention-overdue-link" href="{{ route('projects.show', [$task->project_id, 'focus_task'=>$task->id]).'#tasks' }}" aria-label="Open overdue task: {{ $task->title }}">{{ $lateDays }} {{ $lateDays===1?'day':'days' }} overdue</a>@else<small>Planned due date</small>@endif</div>
                 </article>
                 @empty
                 <div class="home-empty" style="padding: 32px 20px; text-align: center;">

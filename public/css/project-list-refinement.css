@@ -1,0 +1,57 @@
+
+/* Compact portfolio list and plain-language project review. */
+[data-page="projects.index"] .page-head{margin-bottom:14px!important}
+[data-page="projects.index"] .page-head h1{font-size:25px!important}
+[data-page="projects.index"] .page-head p{font-size:12px!important;margin-top:4px!important}
+[data-page="projects.index"] .projects-table{width:100%!important;min-width:0!important;table-layout:fixed!important}
+[data-page="projects.index"] .projects-table th:nth-child(1){width:23%}
+[data-page="projects.index"] .projects-table th:nth-child(2){width:20%}
+[data-page="projects.index"] .projects-table th:nth-child(3){width:9%}
+[data-page="projects.index"] .projects-table th:nth-child(4){width:13%}
+[data-page="projects.index"] .projects-table th:nth-child(5){width:10%}
+[data-page="projects.index"] .projects-table th:nth-child(6){width:16%}
+[data-page="projects.index"] .projects-table th:nth-child(7){width:9%}
+[data-page="projects.index"] .projects-table thead th{font-size:11px!important;padding:11px 12px!important}
+[data-page="projects.index"] .projects-table tbody>tr>td{padding:11px 12px!important;font-size:12px!important;line-height:1.4!important;height:auto!important;overflow-wrap:anywhere}
+[data-page="projects.index"] .projects-table .strong-link b{font-size:13px!important;font-weight:600!important;line-height:1.4}
+[data-page="projects.index"] .project-code-sub{font-size:10px!important;margin-top:5px!important;line-height:1.4!important}
+[data-page="projects.index"] .project-lead-list{gap:3px!important}
+[data-page="projects.index"] .project-lead-person{gap:6px!important;line-height:1.4!important}
+[data-page="projects.index"] .project-lead-person strong{font-size:11px!important;font-weight:500!important}
+[data-page="projects.index"] .project-completion{font-size:10px!important;margin:3px 0!important}
+[data-page="projects.index"] .progress-track-wide{height:4px!important;max-width:80px}
+[data-page="projects.index"] .project-health-cell{gap:3px!important}
+[data-page="projects.index"] .projects-table .btn{min-height:29px!important;font-size:10px!important;padding:5px 8px!important;white-space:nowrap}
+[data-page="projects.index"] .projects-table .action-dropdown-toggle{width:28px!important;min-width:28px!important}
+#delay-analysis-modal .pdi-dialog{width:min(960px,calc(100vw - 32px))!important;max-height:90vh!important;border-radius:12px!important}
+#delay-analysis-modal .pdi-header{padding:18px 22px!important}
+#delay-analysis-modal .dam-title{font-size:19px!important;font-weight:650!important}
+#delay-analysis-modal .dam-subtitle{font-size:11px!important;line-height:1.5;margin-top:6px!important}
+#delay-analysis-modal .pdi-body{padding:16px 20px!important;background:#F5F6F7!important}
+#delay-analysis-modal #dam-content{gap:12px!important}
+#delay-analysis-modal .pdi-card{padding:16px!important;border-radius:9px!important;box-shadow:none!important;border:1px solid #E0E7E2!important;margin:0!important}
+#delay-analysis-modal .pdi-card-head{margin-bottom:12px!important;gap:10px!important}
+#delay-analysis-modal .pdi-section-title,#delay-analysis-modal .pdi-section-heading,#delay-analysis-modal h3{font-size:14px!important;font-weight:600!important;margin:0 0 10px!important}
+#delay-analysis-modal .pdi-title-icon{display:none}
+#delay-analysis-modal .pdi-plain-summary{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:12px!important;align-items:center!important}
+#delay-analysis-modal .pdi-plain-summary>div:first-child{grid-column:1}
+#delay-analysis-modal .pdi-plain-summary>div:nth-child(2){grid-column:1;grid-row:2}
+#delay-analysis-modal .pdi-plain-summary>a{grid-column:2;grid-row:1/3;min-height:34px;font-size:12px;padding:8px 12px}
+#delay-analysis-modal .pdi-plain-summary span{font-size:10px!important;margin-bottom:4px!important}
+#delay-analysis-modal .pdi-plain-summary strong{font-size:14px!important;line-height:1.5}
+#delay-analysis-modal .pdi-plain-summary p{font-size:12px!important;line-height:1.5!important;margin:3px 0 0!important}
+#delay-analysis-modal .pdi-explanation-details{margin-top:12px!important;padding-top:10px!important;font-size:11px!important}
+#delay-analysis-modal .pdi-finish-summary{font-size:12px!important;line-height:1.6!important;margin:0 0 12px!important}
+#delay-analysis-modal .pdi-impact-grid{gap:10px!important}
+#delay-analysis-modal .pdi-impact-col{padding:12px!important;border-radius:7px!important;background:#F5F6F7!important}
+#delay-analysis-modal .pdi-impact-label{font-size:11px!important}
+#delay-analysis-modal .pdi-impact-val{font-size:20px!important;margin:6px 0!important}
+#delay-analysis-modal .pdi-impact-sub{font-size:10px!important;line-height:1.5}
+#delay-analysis-modal .pdi-footer{padding:12px 20px!important;gap:8px!important}
+#delay-analysis-modal .pdi-footer .btn{min-height:34px!important;font-size:12px!important}
+.project-review-more{border:1px solid #DFE6E2;background:#FFF;border-radius:8px}
+.project-review-more>summary{padding:13px 16px;cursor:pointer;font-size:12px;color:#315F58;font-weight:600}
+.project-review-more>summary span{font-size:11px;color:#78847E;font-weight:400;margin-left:8px}
+.project-review-more-body{display:grid;gap:12px;padding:0 12px 12px}
+#delay-analysis-modal .pdi-driver-note{font-size:10px!important;line-height:1.6}
+@media(max-width:700px){[data-page="projects.index"] .projects-table{table-layout:auto!important}[data-page="projects.index"] .projects-table tbody>tr>td{padding:7px 0!important}#delay-analysis-modal .pdi-dialog{width:calc(100vw - 16px)!important}#delay-analysis-modal .pdi-body{padding:12px!important}#delay-analysis-modal .pdi-header{padding:15px!important}#delay-analysis-modal .pdi-impact-grid{grid-template-columns:1fr!important}#delay-analysis-modal .pdi-plain-summary{grid-template-columns:1fr!important}#delay-analysis-modal .pdi-plain-summary>a{grid-column:1;grid-row:3;justify-self:start}.project-review-more>summary span{display:block;margin:4px 0 0}}

@@ -35,6 +35,7 @@
     <script defer src="{{ asset('js/critical-explanation.js') }}?v={{ filemtime(public_path('js/critical-explanation.js')) }}"></script>
     <link rel="stylesheet" href="{{ asset('css/app-dialog.css') }}?v={{ filemtime(public_path('css/app-dialog.css')) }}">
     <script src="{{ asset('js/app-dialog.js') }}?v={{ filemtime(public_path('js/app-dialog.js')) }}"></script>
+    <link rel="stylesheet" href="{{ asset('css/interface-system.css') }}?v={{ filemtime(public_path('css/interface-system.css')) }}">
 </head>
 <body data-page="{{ request()->route()?->getName() }}">
     <a class="skip-link" href="#main-content">Skip to content</a>

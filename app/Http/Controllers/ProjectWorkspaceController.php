@@ -9,6 +9,10 @@ use Illuminate\Http\Request;
 
 class ProjectWorkspaceController
 {
+    public function board(Request $request,Project $project,Access $access){abort_unless($access->project($request->user(),$project),403);return redirect(route('projects.show',$project).'#tasks');}
+
+    public function files(Request $request,Project $project,Access $access){abort_unless($access->project($request->user(),$project),403);return redirect(route('projects.show',$project).'#tasks');}
+
     public function tasks(Project $project)
     {
         return redirect()->route('projects.show', [$project, '#tasks']);
