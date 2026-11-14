@@ -58,7 +58,11 @@ class OwnerApprovalWorkflowTest extends TestCase
         $this->assertNull($p->pm_user_id);
         Notification::assertSentTo($owner, ProjectWorkflowNotification::class);
         $ownerView = $this->actingAs($owner)->get(route('projects.show', $p));
-        $ownerView->assertOk()->assertSee('Approve &amp; invite PM', false);
+        $ownerView->assertOk()
+            ->assertSee('Your review is required')
+            ->assertSee('Project Owner: You')
+            ->assertSee('Choose a Project Manager to lead this project.')
+            ->assertSee('Approve &amp; invite PM', false);
         $this->snapshot('workflow-owner-review', $ownerView->getContent());
         $this->get(route('dashboard'))->assertOk()->assertSee('Review &amp; choose PM', false);
         $this->actingAs($outsider)->post(route('projects.owner.respond', $p), ['decision' => 'accept', 'pm_user_id' => $pm->id])->assertForbidden();
@@ -101,7 +105,34 @@ class OwnerApprovalWorkflowTest extends TestCase
         $next = $this->person();
         $this->actingAs($owner)->post(route('projects.owner.respond', $p), ['decision' => 'decline', 'decline_reason' => 'The scope needs revision.'])->assertRedirect();
         $this->assertSame('owner_declined', $p->fresh()->approval_stage);
-        $this->actingAs($pmo)->get(route('dashboard'))->assertOk()->assertSee('The scope needs revision.');
+        $this->actingAs($pmo)->get(route('dashboard'))->assertOk()
+            ->assertSee('The scope needs revision.')
+            ->assertSee('flow-reassignment-panel', false)
+            ->assertSee('Action needed')
+            ->assertSee('Assignments needing reassignment')
+            ->assertSee('<b>Reason:</b> The scope needs revision.', false)
+            ->assertSee('id="workflow-reassignment-project-'.$p->id.'" class="flow-reassignment-item" tabindex="-1"', false)
+            ->assertSee('href="'.route('projects.show',$p).'" aria-label="Open project: '.$p->name.'"', false)
+            ->assertSee('Open project')
+            ->assertSee('action="'.route('projects.workflow.reassign',$p).'"', false)
+            ->assertSee('name="assignment_type"', false)
+            ->assertSee('<option value="owner" selected>', false)
+            ->assertSee('name="assignee_id" required data-directory-picker', false)
+            ->assertSee('Search users or type 2+ characters to add from Azure');
+        $this->actingAs($pmo)->get(route('projects.show',$p))->assertOk()
+            ->assertSee('Owner Declined')
+            ->assertSee('<b>Reason:</b> The scope needs revision.', false)
+            ->assertSee('View on dashboard')
+            ->assertSee('href="'.route('dashboard',['workflow_decisions_page'=>1]).'#workflow-reassignment-project-'.$p->id.'"', false)
+            ->assertDontSee('aria-label="Project approval and setup"', false);
+        $this->actingAs($owner)->get(route('projects.show',$p))->assertOk()
+            ->assertSee('PMO will reassign')
+            ->assertSee('<b>Reason:</b> The scope needs revision.', false)
+            ->assertDontSee('aria-label="Project approval and setup"', false);
+        $this->actingAs($pmo)->get(route('projects.show', [$p, 'reassign' => 1]))->assertOk()
+            ->assertSee('name="pm_user_id" required data-directory-picker data-directory-floating="1"', false)
+            ->assertSee('data-directory-project="'.$p->id.'"', false)
+            ->assertSee('find and add people from Azure');
         Notification::assertSentTo($pmo, ProjectWorkflowNotification::class);
         $this->actingAs($pmo)->post(route('projects.workflow.reassign', $p), ['assignment_type' => 'owner', 'assignee_id' => $next->id])->assertRedirect();
         $this->assertSame($next->id, $p->fresh()->owner_user_id);
@@ -111,7 +142,14 @@ class OwnerApprovalWorkflowTest extends TestCase
         $this->assertSame('pm_declined', $p->fresh()->approval_stage);
         $this->assertSame('I cannot take this schedule.', $p->fresh()->approval_reason);
         Notification::assertSentTo($next, ProjectWorkflowNotification::class);
-        $this->actingAs($next)->get(route('projects.show', $p))->assertOk()->assertSee('I cannot take this schedule.');
+        $this->actingAs($next)->get(route('dashboard'))->assertOk()
+            ->assertSee('Reassign PM');
+        $this->actingAs($pmo)->get(route('dashboard'))->assertOk()
+            ->assertSee('<option value="pm" selected>', false);
+        $this->actingAs($next)->get(route('projects.show', $p))->assertOk()
+            ->assertSee('I cannot take this schedule.')
+            ->assertSee('flow-approval-banner', false)
+            ->assertSee('Change assignment');
         $this->post(route('projects.workflow.reassign', $p), ['assignment_type' => 'pm', 'assignee_id' => $owner->id])->assertRedirect();
         $this->assertSame($owner->id, $p->fresh()->pm_user_id);
         $this->actingAs($pm)->post(route('projects.respond', $p), ['decision' => 'accept'])->assertForbidden();

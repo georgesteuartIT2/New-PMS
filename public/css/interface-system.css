@@ -193,8 +193,10 @@ body:is([data-page="users.index"],[data-page="activity.index"],[data-page="subsi
 #project-workspace #tab-tasks .quick-search-label{max-width:300px;flex:1}
 #project-workspace #tab-tasks .task-quick-filters input,#project-workspace #tab-tasks .task-quick-filters select{height:35px!important;min-height:35px!important;font-size:12px!important;font-weight:400!important;border-radius:7px!important;padding:6px 10px!important}
 #project-workspace #tab-tasks .workspace-result-count{font-size:11px!important;color:#78857D;white-space:nowrap}
-#project-workspace #tab-tasks .workspace-task-actions{display:flex;align-items:center;gap:7px!important;flex-wrap:wrap}
-#project-workspace #tab-tasks .workspace-task-actions>.btn,#project-workspace #tab-tasks .workspace-import-toggle{height:35px!important;min-height:35px!important;font-size:12px!important;font-weight:550!important;padding:6px 11px!important;border-radius:7px!important}
+#project-workspace #tab-tasks .workspace-task-actions{display:flex;align-items:center;gap:0!important;flex-wrap:wrap}
+#project-workspace #tab-tasks .workspace-task-action-group{display:flex;align-items:center;gap:8px}
+#project-workspace #tab-tasks .workspace-task-manage-group{margin-left:10px;padding-left:14px;border-left:1px solid #E1E8E4}
+#project-workspace #tab-tasks .workspace-task-actions .btn,#project-workspace #tab-tasks .workspace-import-toggle{height:35px!important;min-height:35px!important;font-size:12px!important;font-weight:550!important;padding:6px 11px!important;border-radius:7px!important}
 #project-workspace #tab-tasks .project-tasks-full-table{border-collapse:separate!important;border-spacing:0!important}
 #project-workspace #tab-tasks .project-tasks-full-table th{font-size:11px!important;font-weight:550!important;background:#F5F6F7!important;padding:11px 10px!important;color:#687772!important}
 #project-workspace #tab-tasks .project-tasks-full-table td{padding:10px!important;vertical-align:middle!important;line-height:1.45!important}
@@ -220,3 +222,179 @@ body:is([data-page="users.index"],[data-page="activity.index"],[data-page="subsi
 #project-workspace #tab-tasks .project-task-row:hover .btn-delete-task-row,#project-workspace #tab-tasks .btn-delete-task-row:focus-visible{opacity:1}
 @media(min-width:1000px){#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(1){width:32%!important}#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(2){width:16%!important}#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(3){width:8%!important}#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(4),#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(5){width:12%!important}#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(6){width:8%!important}#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(7){width:12%!important}}
 @media(max-width:700px){#project-workspace #tab-tasks .task-quick-filters{width:100%;min-width:0}#project-workspace #tab-tasks .quick-search-label{max-width:none}#project-workspace #tab-tasks .workspace-task-actions{width:100%}#project-workspace #tab-tasks .project-tasks-full-table td{padding:7px 0!important}#project-workspace #tab-tasks .project-task-row.is-subtask td:first-child{padding-left:10px!important}#project-workspace #tab-tasks .project-task-row td:first-child>div{flex-wrap:wrap!important}}
+
+/* Project workspace refinements: clear actions, complete status labels, and calm surfaces. */
+#project-workspace .workspace-overview-card{border-color:#E2E9E5!important;box-shadow:0 4px 16px #23352B08!important}
+#project-workspace .project-tabs-nav{gap:8px!important;border-color:#E4EAE6!important}
+#project-workspace .project-tab-btn{color:#748078!important}
+#project-workspace .project-tab-btn.active{color:#315F58!important}
+#project-workspace .pw-tab-panel{min-width:0}
+#project-workspace #tab-tasks .workspace-task-toolbar{align-items:center!important;gap:12px 20px!important;margin-bottom:14px!important}
+#project-workspace #tab-tasks .task-quick-filters{flex:1 1 540px;min-width:0;gap:10px!important}
+#project-workspace #tab-tasks .quick-search-label{flex:1 1 320px;max-width:420px;min-width:220px}
+#project-workspace #tab-tasks .task-quick-filters input,
+#project-workspace #tab-tasks .task-quick-filters select{height:40px!important;min-height:40px!important;border-color:#DCE5E0!important;border-radius:8px!important;background-color:#FFFFFF!important}
+#project-workspace #tab-tasks .task-quick-filters input:focus,
+#project-workspace #tab-tasks .task-quick-filters select:focus{border-color:#85A99A!important;box-shadow:0 0 0 3px #315F5812!important;outline:0}
+#project-workspace #tab-tasks .workspace-result-count{color:#748078!important;font-size:12px!important}
+#project-workspace #tab-tasks .workspace-task-actions{gap:0!important}
+#project-workspace #tab-tasks .workspace-task-action-group{gap:8px}
+#project-workspace #tab-tasks .workspace-task-actions .btn,
+#project-workspace #tab-tasks .workspace-import-toggle{height:40px!important;min-height:40px!important;padding:7px 13px!important;border-radius:8px!important}
+#project-workspace #tab-tasks .workspace-task-actions .btn-primary{box-shadow:0 2px 5px #315F581A}
+#project-workspace #tab-tasks .workspace-task-actions .btn:not(.btn-primary){border-color:#DCE5E0!important;background:#FFFFFF!important;color:#42564C!important}
+#project-workspace #tab-tasks .workspace-task-actions .btn:not(.btn-primary):hover{background:#F3F7F4!important;border-color:#BCD0C4!important;color:#315F58!important}
+#project-workspace #tab-tasks .workspace-task-create-group [data-add-mode="sub"]{border-color:transparent!important;background:#F0F5F2!important;color:#315F58!important}
+#project-workspace #tab-tasks .workspace-task-create-group [data-add-mode="sub"]:hover{background:#E6F0EA!important;border-color:#D5E4DB!important}
+#project-workspace #tab-tasks .workspace-task-actions .btn,
+#project-workspace #tab-tasks .workspace-import-toggle{white-space:nowrap}
+#project-workspace #tab-tasks .card{border-color:#E1E8E4!important;border-radius:11px!important;box-shadow:0 3px 12px #23352B06!important}
+#project-workspace #tab-tasks .project-tasks-full-table th{background:#F6F8F7!important;color:#66756C!important}
+#project-workspace #tab-tasks .project-tasks-full-table td{border-bottom-color:#EDF1EE!important}
+#project-workspace #tab-tasks .project-task-row:hover td{background:#F7FAF8!important}
+#project-workspace #tab-tasks .project-task-row.is-subtask:hover td{background:#F1F6F3!important}
+#project-workspace #tab-tasks .project-task-row.is-overdue-task:hover td{background:#FFF7F6!important}
+#project-workspace #tab-tasks .project-task-row [data-assignment-cell]{min-width:0}
+#project-workspace #tab-tasks .task-assignee-group{display:flex;align-items:center;gap:7px;min-width:0}
+#project-workspace #tab-tasks .task-assignee-avatar{display:grid;place-items:center;width:25px;height:25px;flex:0 0 25px;border:1px solid #D9E5DE;border-radius:50%;background:#EDF4F0;color:#315F58;font-size:10px;font-weight:650}
+#project-workspace #tab-tasks button.task-assignee-change{appearance:none;padding:0;cursor:pointer;transition:background .15s,border-color .15s,box-shadow .15s}
+#project-workspace #tab-tasks button.task-assignee-change:hover{border-color:#AFC7B8;background:#E3EFE8;box-shadow:0 0 0 3px #315F5812}
+#project-workspace #tab-tasks button.task-assignee-change:focus-visible{outline:2px solid #315F58;outline-offset:2px}
+#project-workspace #tab-tasks .task-assignee-name{flex:1 1 0;min-width:0;overflow:hidden;color:#405249;font-size:11.5px;font-weight:500;line-height:1.35;text-overflow:ellipsis;white-space:nowrap}
+#project-workspace #tab-tasks .task-assignee-extra{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:20px;padding:0 5px;border:1px solid #E1E8E4;border-radius:999px;background:#F7F9F8;color:#66756C;font-size:10px;font-weight:600;white-space:nowrap}
+#project-workspace #tab-tasks .task-add-assignee{display:inline-grid!important;place-items:center;width:27px!important;height:27px!important;min-height:27px!important;flex:0 0 27px;margin:0 0 0 2px!important;padding:0!important;border:1px solid #DCE5E0!important;border-radius:8px!important;background:#FFFFFF!important;color:#52685C!important;cursor:pointer;transition:background .15s,border-color .15s,color .15s,box-shadow .15s}
+#project-workspace #tab-tasks .task-add-assignee:hover{border-color:#AFC7B8!important;background:#EDF4F0!important;color:#315F58!important;box-shadow:0 2px 5px #315F5812}
+#project-workspace #tab-tasks .task-add-assignee:focus-visible,
+#project-workspace #tab-tasks .task-assign-trigger:focus-visible{outline:2px solid #315F58;outline-offset:2px}
+#project-workspace #tab-tasks .task-assign-trigger{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:31px;padding:5px 10px;border:1px solid #DCE5E0;border-radius:8px;background:#FFFFFF;color:#476052;font-size:11px;font-weight:550;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+#project-workspace #tab-tasks .task-assign-trigger:hover{border-color:#AFC7B8;background:#EDF4F0;color:#315F58}
+#project-workspace #tab-tasks .quick-status-select{display:block;width:100%!important;min-width:128px!important;max-width:100%;height:36px!important;min-height:36px!important;padding:5px 28px 5px 10px!important;border:1px solid #DCE5E0!important;border-radius:8px!important;background-color:#FFFFFF!important;color:#3F5148!important;font-size:12px!important;font-weight:500!important;line-height:1.3;white-space:nowrap}
+#project-workspace #tab-tasks .quick-status-select:focus{border-color:#85A99A!important;box-shadow:0 0 0 3px #315F5812!important;outline:0}
+#project-workspace #tab-tasks .task-status-cell{min-width:0}
+#project-workspace #tab-tasks .task-status-cell .quick-status-select{min-width:132px!important}
+#project-workspace #tab-tasks .task-status-cell .uwt-status-pill{font-size:11px!important;padding:5px 9px!important;border-radius:7px!important}
+#project-workspace #tab-tasks .task-status-display{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+#project-workspace #tab-tasks .task-status-auto{padding:2px 6px;border:1px solid #E1E8E4;border-radius:5px;background:#F7F9F8;color:#738078;font-size:9px;font-weight:600;line-height:1.4}
+#project-workspace #tab-tasks .task-row-actions{width:1%;padding:8px 5px!important;text-align:center;vertical-align:middle}
+#project-workspace #tab-tasks .task-row-actions form{margin:0;line-height:1}
+#project-workspace #tab-tasks .task-row-actions .btn-delete-task-row{display:inline-grid;place-items:center;width:30px;height:30px;padding:0!important;border:1px solid transparent!important;border-radius:8px!important;background:transparent!important;color:#849189!important;cursor:pointer}
+#project-workspace #tab-tasks .task-row-actions .btn-delete-task-row:hover{border-color:#F0D8D6!important;background:#FFF5F4!important;color:#B94A43!important}
+#project-workspace #tab-tasks .task-row-actions .btn-delete-task-row:focus-visible{outline:2px solid #315F58;outline-offset:2px}
+#project-workspace #tab-gantt>.card,
+#project-workspace .project-team-workspace>.card{border-color:#E1E8E4!important;border-radius:11px!important;box-shadow:0 3px 12px #23352B06!important}
+#project-workspace #tab-gantt .unified-workplan-card{border-color:#E1E8E4!important;border-radius:9px!important;overflow:hidden}
+#project-workspace #tab-gantt .uwt-header-row{background:#F6F8F7}
+#project-workspace .project-team-workspace .clean-table th{background:#F6F8F7!important;color:#66756C!important}
+#project-workspace .project-team-workspace .clean-table td{border-bottom-color:#EDF1EE!important}
+@media(min-width:1000px){
+ #project-workspace #tab-tasks .project-tasks-full-table th:nth-child(1){width:30%!important}
+ #project-workspace #tab-tasks .project-tasks-full-table th:nth-child(2){width:15%!important}
+ #project-workspace #tab-tasks .project-tasks-full-table th:nth-child(3){width:8%!important}
+ #project-workspace #tab-tasks .project-tasks-full-table th:nth-child(4),
+ #project-workspace #tab-tasks .project-tasks-full-table th:nth-child(5){width:10%!important}
+ #project-workspace #tab-tasks .project-tasks-full-table th:nth-child(6){width:8%!important}
+ #project-workspace #tab-tasks .project-tasks-full-table th:nth-child(7){width:15%!important}
+ #project-workspace #tab-tasks .project-tasks-full-table th:nth-child(8){width:4%!important}
+}
+@media(max-width:700px){
+ #project-workspace #tab-tasks .task-quick-filters{flex:1 1 100%;gap:8px!important}
+ #project-workspace #tab-tasks .quick-search-label{flex:1 1 100%;min-width:0}
+ #project-workspace #tab-tasks .task-quick-filters select{flex:0 0 auto}
+ #project-workspace #tab-tasks .workspace-task-actions{gap:10px!important;flex-wrap:wrap}
+ #project-workspace #tab-tasks .workspace-task-action-group{gap:7px}
+ #project-workspace #tab-tasks .workspace-task-manage-group{margin-left:0;padding-left:0;border-left:0}
+ #project-workspace #tab-tasks .workspace-task-actions .btn,
+ #project-workspace #tab-tasks .workspace-import-toggle{height:38px!important;min-height:38px!important}
+ #project-workspace #tab-tasks .task-status-cell .quick-status-select{min-width:0!important}
+ #project-workspace #tab-tasks .task-row-actions.has-actions{display:flex!important;width:100%!important;grid-column:1/-1;justify-content:flex-end;padding:0 2px 0 0!important}
+ #project-workspace #tab-tasks .task-row-actions.no-actions{display:none!important}
+ #project-workspace #tab-tasks .task-assignee-name{overflow-wrap:anywhere}
+ #project-workspace #tab-tasks .project-task-row td:nth-child(3)::before{content:"Priority"!important}
+ #project-workspace #tab-tasks .project-task-row td:nth-child(4)::before{content:"Starts"!important}
+ #project-workspace #tab-tasks .project-task-row td:nth-child(5)::before{content:"Due"!important}
+ #project-workspace #tab-tasks .project-task-row td:nth-child(6)::before{content:"Progress"!important}
+ #project-workspace #tab-tasks .project-task-row td:nth-child(7)::before{content:"Status"!important;display:block;font-size:10px;color:#748078;margin-bottom:4px}
+}
+
+/* Project task toolbar controls. */
+#project-workspace #tab-tasks .workspace-task-toolbar{justify-content:space-between!important;gap:12px 24px!important}
+#project-workspace #tab-tasks .task-quick-filters{flex:1 1 520px!important;min-width:0!important;gap:10px!important}
+#project-workspace #tab-tasks .quick-search-label{flex:0 1 360px!important;max-width:360px!important;min-width:220px}
+#project-workspace #tab-tasks .task-search-control{position:relative;display:block;width:100%}
+#project-workspace #tab-tasks .task-search-control>svg{position:absolute;top:50%;left:13px;width:16px;height:16px;transform:translateY(-50%);color:#829088;pointer-events:none;stroke-width:1.7}
+#project-workspace #tab-tasks .task-search-control input{width:100%;height:40px!important;min-height:40px!important;padding:0 12px 0 38px!important}
+#project-workspace #tab-tasks .task-quick-filters>label:not(.quick-search-label){flex:0 0 auto}
+#project-workspace #tab-tasks .task-quick-filters select{min-width:132px;height:40px!important;min-height:40px!important;padding:0 30px 0 12px!important}
+#project-workspace #tab-tasks .workspace-result-count{display:inline-flex;align-items:center;justify-content:center;min-height:30px;padding:0 10px;border:1px solid #E5EBE7;border-radius:999px;background:#F7F9F8;color:#6F7D75!important;font-size:11px!important;font-weight:550}
+#project-workspace #tab-tasks .workspace-task-actions{flex:0 0 auto;justify-content:flex-end;gap:0!important;margin-left:0!important}
+#project-workspace #tab-tasks .workspace-task-action-group{gap:8px!important}
+#project-workspace #tab-tasks .workspace-task-manage-group{margin-left:12px;padding-left:20px;border-left:1px solid #E2E9E5}
+#project-workspace #tab-tasks .workspace-task-actions .btn,
+#project-workspace #tab-tasks .workspace-import-toggle{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px!important;min-height:40px!important;padding:0 13px!important;border-radius:8px!important;font-size:12px!important;font-weight:600!important;line-height:1!important;white-space:nowrap;transition:background .15s,border-color .15s,color .15s,box-shadow .15s}
+#project-workspace #tab-tasks .workspace-task-actions .btn svg,
+#project-workspace #tab-tasks .workspace-import-toggle svg{display:block;width:16px;height:16px;flex:0 0 16px;stroke-width:1.7}
+#project-workspace #tab-tasks .workspace-task-actions .btn-primary{background:#315F58!important;border-color:#315F58!important;color:#FFFFFF!important;box-shadow:0 2px 4px #315F581A}
+#project-workspace #tab-tasks .workspace-task-actions .btn-primary:hover{background:#274E48!important;border-color:#274E48!important;box-shadow:0 3px 7px #315F5824}
+#project-workspace #tab-tasks .workspace-task-actions .btn:not(.btn-primary),
+#project-workspace #tab-tasks .workspace-import-toggle{border:1px solid #DCE5E0!important;background:#FFFFFF!important;color:#465A50!important}
+#project-workspace #tab-tasks .workspace-task-actions .btn:not(.btn-primary):hover,
+#project-workspace #tab-tasks .workspace-import-toggle:hover,
+#project-workspace #tab-tasks .workspace-import-toggle[aria-expanded=true]{border-color:#B8CEC1!important;background:#F3F7F4!important;color:#315F58!important}
+#project-workspace #tab-tasks .workspace-task-create-group [data-add-mode="sub"]{border:1px solid #DCE5E0!important;background:#FFFFFF!important;color:#465A50!important}
+#project-workspace #tab-tasks .workspace-task-create-group [data-add-mode="sub"]:hover{border-color:#B8CEC1!important;background:#F3F7F4!important;color:#315F58!important}
+#project-workspace #tab-tasks .workspace-import-toggle{gap:7px!important}
+#project-workspace #tab-tasks .workspace-import-toggle .workspace-import-icon{width:16px;height:16px;flex-basis:16px}
+#project-workspace #tab-tasks .workspace-import-toggle .workspace-import-chevron{width:14px;height:14px;flex-basis:14px;margin-left:2px}
+#project-workspace #tab-tasks .workspace-task-actions .btn:focus-visible,
+#project-workspace #tab-tasks .workspace-import-toggle:focus-visible,
+#project-workspace #tab-tasks .task-quick-filters select:focus-visible,
+#project-workspace #tab-tasks .task-search-control input:focus-visible{outline:2px solid #315F58;outline-offset:2px}
+
+@media(max-width:1100px){
+ #project-workspace #tab-tasks .workspace-task-toolbar{align-items:stretch!important}
+ #project-workspace #tab-tasks .task-quick-filters{flex:1 1 100%!important}
+ #project-workspace #tab-tasks .quick-search-label{flex:1 1 320px!important;max-width:none!important}
+ #project-workspace #tab-tasks .workspace-task-actions{width:100%;margin-left:0;justify-content:flex-start}
+}
+@media(max-width:700px){
+ #project-workspace #tab-tasks .task-quick-filters{display:grid;grid-template-columns:minmax(0,1fr) auto auto;width:100%;gap:8px!important}
+ #project-workspace #tab-tasks .quick-search-label{grid-column:1/-1;min-width:0}
+ #project-workspace #tab-tasks .task-quick-filters select{width:100%;min-width:128px}
+ #project-workspace #tab-tasks .workspace-task-actions{justify-content:flex-start;row-gap:8px}
+ #project-workspace #tab-tasks .workspace-task-manage-group{margin-left:0;padding-left:0;border-left:0}
+ #project-workspace #tab-tasks .workspace-task-actions .btn,
+ #project-workspace #tab-tasks .workspace-import-toggle{height:38px!important;min-height:38px!important;padding:0 11px!important}
+}
+@media(min-width:900px) and (max-width:1499px){
+ #project-workspace #tab-tasks .workspace-task-toolbar{align-items:center!important;flex-wrap:nowrap!important;gap:0 8px!important}
+ #project-workspace #tab-tasks .task-quick-filters{flex:1 1 0!important;flex-wrap:nowrap!important;min-width:0!important;gap:6px!important}
+ #project-workspace #tab-tasks .quick-search-label{flex:1 1 150px!important;max-width:300px!important;min-width:120px!important}
+ #project-workspace #tab-tasks .task-search-control input,
+ #project-workspace #tab-tasks .task-quick-filters select{height:34px!important;min-height:34px!important;font-size:11px!important}
+ #project-workspace #tab-tasks .task-quick-filters select{min-width:90px!important;padding:0 22px 0 8px!important}
+ #project-workspace #tab-tasks .workspace-result-count{min-height:26px;padding:0 7px;font-size:10px!important}
+ #project-workspace #tab-tasks .workspace-task-actions{width:auto!important;flex:0 0 auto;flex-wrap:nowrap;margin-left:0!important}
+ #project-workspace #tab-tasks .workspace-task-action-group{gap:5px!important}
+ #project-workspace #tab-tasks .workspace-task-manage-group{margin-left:6px;padding-left:8px}
+ #project-workspace #tab-tasks .workspace-task-actions .btn,
+ #project-workspace #tab-tasks .workspace-import-toggle{height:34px!important;min-height:34px!important;padding:0 6px!important;gap:5px!important;font-size:11px!important}
+ #project-workspace #tab-tasks .workspace-task-actions .btn svg,
+ #project-workspace #tab-tasks .workspace-import-toggle svg{width:14px;height:14px;flex-basis:14px}
+ #project-workspace #tab-tasks .workspace-import-toggle .workspace-import-chevron{width:12px;height:12px;flex-basis:12px}
+}
+
+.directory-results{max-height:280px;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#C8D6CE transparent;border-color:#DDE7E1;border-radius:12px;box-shadow:0 12px 30px #22272B1A,0 2px 6px #22272B0A;padding:6px}
+.directory-results::-webkit-scrollbar{width:8px}.directory-results::-webkit-scrollbar-thumb{background:#C8D6CE;border:2px solid #FFFFFF;border-radius:8px}
+.directory-person{box-sizing:border-box;display:flex;align-items:center;gap:8px;min-height:44px;padding:2px 8px;border:1px solid transparent;border-radius:8px;background:transparent;transition:background-color .15s,border-color .15s}
+.directory-person:hover{background:#F4F8F5;outline:0}.directory-person:focus-visible{background:#EDF4F1;outline:2px solid #315F58;outline-offset:-2px}
+.directory-person-avatar{display:grid;place-items:center;flex:0 0 24px;width:24px;height:24px;border-radius:50%;background:#EAF3EE;color:#315F58;font-size:9px;font-weight:650;line-height:1}
+.directory-person-copy{display:grid;gap:1px;flex:1;min-width:0}
+.app-shell .directory-person strong{font-size:12px;font-weight:600;line-height:1.25;color:#24332C}
+.app-shell .directory-person small{margin:0;color:#77857D;font-size:11px;line-height:1.25}
+.directory-status:empty{display:none}
+.directory-results-floating{border-radius:12px!important;box-shadow:0 12px 30px #22272B20,0 2px 6px #22272B0A!important;padding:6px!important}
+.directory-results-floating .directory-person{display:flex!important;align-items:center!important;gap:8px!important;min-height:44px!important;padding:2px 8px!important;border-radius:8px!important}
+.directory-results-floating .directory-person-copy{flex:1;min-width:0}
+.directory-results-floating .directory-person-avatar{display:grid;place-items:center;flex:0 0 24px;width:24px;height:24px;border-radius:50%;background:#EAF3EE;color:#315F58;font-size:9px;font-weight:650;line-height:1}
+.directory-results-floating .directory-person:hover{outline:0!important;background:#F4F8F5!important}
+.directory-results-floating .directory-person:focus-visible{outline:2px solid #315F58!important;outline-offset:-2px;background:#EDF4F1!important}

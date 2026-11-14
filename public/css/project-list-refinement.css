@@ -3,6 +3,12 @@
 [data-page="projects.index"] .page-head{margin-bottom:14px!important}
 [data-page="projects.index"] .page-head h1{font-size:25px!important}
 [data-page="projects.index"] .page-head p{font-size:12px!important;margin-top:4px!important}
+[data-page="projects.index"] .page-head .projects-page-actions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:nowrap;gap:10px}
+[data-page="projects.index"] .page-head .projects-page-actions>.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;min-height:40px;padding:0 15px!important;border-radius:8px!important;font-size:12px!important;font-weight:600;line-height:1;white-space:nowrap}
+[data-page="projects.index"] .projects-page-actions>.btn svg{width:16px;height:16px;flex:0 0 16px;stroke-width:1.7}
+[data-page="projects.index"] .projects-page-actions>.btn-outline{border:1px solid #DCE5E0!important;background:#FFFFFF!important;color:#42564C!important}
+[data-page="projects.index"] .projects-page-actions>.btn-outline:hover{border-color:#B8CEC1!important;background:#F3F7F4!important;color:#315F58!important}
+[data-page="projects.index"] .projects-page-actions>.btn-primary{box-shadow:0 2px 5px #315F581A}
 [data-page="projects.index"] .projects-table{width:100%!important;min-width:0!important;table-layout:fixed!important}
 [data-page="projects.index"] .projects-table th:nth-child(1){width:23%}
 [data-page="projects.index"] .projects-table th:nth-child(2){width:20%}
@@ -54,4 +60,16 @@
 .project-review-more>summary span{font-size:11px;color:#78847E;font-weight:400;margin-left:8px}
 .project-review-more-body{display:grid;gap:12px;padding:0 12px 12px}
 #delay-analysis-modal .pdi-driver-note{font-size:10px!important;line-height:1.6}
-@media(max-width:700px){[data-page="projects.index"] .projects-table{table-layout:auto!important}[data-page="projects.index"] .projects-table tbody>tr>td{padding:7px 0!important}#delay-analysis-modal .pdi-dialog{width:calc(100vw - 16px)!important}#delay-analysis-modal .pdi-body{padding:12px!important}#delay-analysis-modal .pdi-header{padding:15px!important}#delay-analysis-modal .pdi-impact-grid{grid-template-columns:1fr!important}#delay-analysis-modal .pdi-plain-summary{grid-template-columns:1fr!important}#delay-analysis-modal .pdi-plain-summary>a{grid-column:1;grid-row:3;justify-self:start}.project-review-more>summary span{display:block;margin:4px 0 0}}
+@media(max-width:700px){
+ [data-page="projects.index"] .page-head .projects-page-actions{justify-content:flex-start;flex-wrap:wrap}
+ [data-page="projects.index"] .page-head .projects-page-actions>.btn{flex:1 1 140px}
+ [data-page="projects.index"] .projects-table{table-layout:auto!important}
+ [data-page="projects.index"] .projects-table tbody>tr>td{padding:7px 0!important}
+ #delay-analysis-modal .pdi-dialog{width:calc(100vw - 16px)!important}
+ #delay-analysis-modal .pdi-body{padding:12px!important}
+ #delay-analysis-modal .pdi-header{padding:15px!important}
+ #delay-analysis-modal .pdi-impact-grid{grid-template-columns:1fr!important}
+ #delay-analysis-modal .pdi-plain-summary{grid-template-columns:1fr!important}
+ #delay-analysis-modal .pdi-plain-summary>a{grid-column:1;grid-row:3;justify-self:start}
+ .project-review-more>summary span{display:block;margin:4px 0 0}
+}

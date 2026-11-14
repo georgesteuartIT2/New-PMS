@@ -465,7 +465,7 @@ class TaskController {
         ]);
 
         $oldUser = User::findOrFail($data['old_user_id']);
-        $newUser = User::findOrFail($data['new_user_id']);
+        $newUser = User::whereKey($data['new_user_id'])->where('account_status', 'active')->where('system_role', 'user')->firstOrFail();
 
         // Validate new user is eligible project member or PM
         $isMember = $task->project->memberships()->where('user_id', $newUser->id)->exists();
@@ -479,8 +479,14 @@ class TaskController {
         }
 
         DB::transaction(function () use ($task, $oldUser, $newUser, $actor, $data) {
-            $task->assignees()->detach($oldUser->id);
-            $task->assignees()->syncWithoutDetaching([
+            $lockedTask = Task::whereKey($task->id)->lockForUpdate()->firstOrFail();
+            abort_unless(
+                $lockedTask->assignees()->where('users.id', $oldUser->id)->exists(),
+                409,
+                'The current assignee has changed. Refresh the task list and try again.'
+            );
+            $lockedTask->assignees()->detach($oldUser->id);
+            $lockedTask->assignees()->syncWithoutDetaching([
                 $newUser->id => [
                     'allocation_percent' => 100,
                     'assigned_at' => now(),
@@ -488,7 +494,7 @@ class TaskController {
             ]);
 
             TaskAssignmentHistory::create([
-                'task_id' => $task->id,
+                'task_id' => $lockedTask->id,
                 'previous_user_id' => $oldUser->id,
                 'new_user_id' => $newUser->id,
                 'changed_by' => $actor->id,
@@ -497,7 +503,7 @@ class TaskController {
                 'created_at' => now(),
             ]);
 
-            Audit::record('task.reassigned', $task, [
+            Audit::record('task.reassigned', $lockedTask, [
                 'from_user' => $oldUser->name,
                 'to_user' => $newUser->name,
                 'reason' => $data['reason'] ?? null,
@@ -510,6 +516,7 @@ class TaskController {
         return response()->json([
             'success' => true,
             'message' => "Task successfully reassigned from {$oldUser->name} to {$newUser->name}.",
+            'assignees' => $task->assignees()->orderBy('name')->get(['users.id', 'users.name']),
         ]);
     }
 

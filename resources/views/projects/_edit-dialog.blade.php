@@ -227,18 +227,23 @@
                 <section class="project-editor-team" aria-labelledby="project-editor-team-title" data-editor-team-count="{{ $editorPeople->count() }}">
                     <div class="project-editor-team-head">
                         <div><h3 id="project-editor-team-title">Assigned team <span>{{ $editorPeople->count() }}</span></h3><p>People assigned to this project and its tasks.</p></div>
-                        @if($canTeam)<button type="button" class="btn btn-outline btn-sm" data-editor-add-member>+ Add person</button>@endif
+                        @if($canTeam)
+                            <button type="button" class="btn btn-outline btn-sm" data-editor-add-member>
+                                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><path d="M10 4v12M4 10h12"></path></svg>
+                                <span>Add person</span>
+                            </button>
+                        @endif
                     </div>
                     @if($canTeam)
                         <input type="hidden" name="edit_team" value="1" form="project-details-edit-form">
-                        <p class="muted">Removing a person also removes their task assignments. The Project Owner and Project Manager are managed separately through the governance workflow.</p>
+                        <p class="muted">Removing a member also removes their task assignments. Project Owner and Manager changes use the approval workflow.</p>
                         <div data-editor-members>
                         @foreach($editorPeople->reject(fn($person)=>in_array($person['user']->id, $leadershipIds, true))->values() as $index=>$person)
                         <div class="project-editor-member" data-editor-member>
-                            <label><span class="workspace-sr-only">Person</span><select data-directory-picker data-directory-project="{{ $project->id }}" data-member-user name="members[{{ $index }}][user_id]" form="project-details-edit-form" required>
+                            <label><span>Person</span><select data-directory-picker data-directory-project="{{ $project->id }}" data-member-user name="members[{{ $index }}][user_id]" form="project-details-edit-form" required>
                             @foreach($users->whereNotIn('id', array_filter([$project->pm_user_id, $project->owner_user_id]))->merge(collect([$person['user']]))->unique('id') as $option)<option value="{{ $option->id }}" @selected($option->id===$person['user']->id)>{{ $option->name }}</option>@endforeach
                             </select></label>
-                            <label><span class="workspace-sr-only">Project role</span><select data-member-role name="members[{{ $index }}][project_role_id]" form="project-details-edit-form" required><option value="">Choose role</option>
+                            <label><span>Project role</span><select data-member-role name="members[{{ $index }}][project_role_id]" form="project-details-edit-form" required><option value="">Choose role</option>
                             @foreach($roles->where('slug','!=','pm') as $role)<option value="{{ $role->id }}" @selected($project->memberships->firstWhere('user_id',$person['user']->id)?->project_role_id===$role->id)>{{ $role->name }}</option>@endforeach
                             </select></label>
                             <button type="button" class="btn btn-ghost" data-editor-remove-member aria-label="Remove person">&times;</button>
@@ -246,8 +251,8 @@
                         @endforeach
                         </div>
                         <template data-editor-member-template><div class="project-editor-member" data-editor-member>
-                            <label><span class="workspace-sr-only">Person</span><select data-directory-picker data-directory-project="{{ $project->id }}" data-member-user form="project-details-edit-form" required><option value="">Choose person</option>@foreach($teamUsers as $option)<option value="{{ $option->id }}">{{ $option->name }}</option>@endforeach</select></label>
-                            <label><span class="workspace-sr-only">Project role</span><select data-member-role form="project-details-edit-form" required><option value="">Choose role</option>@foreach($roles->where('slug','!=','pm') as $role)<option value="{{ $role->id }}">{{ $role->name }}</option>@endforeach</select></label>
+                            <label><span>Person</span><select data-directory-picker data-directory-project="{{ $project->id }}" data-member-user form="project-details-edit-form" required><option value="">Choose person</option>@foreach($teamUsers as $option)<option value="{{ $option->id }}">{{ $option->name }}</option>@endforeach</select></label>
+                            <label><span>Project role</span><select data-member-role form="project-details-edit-form" required><option value="">Choose role</option>@foreach($roles->where('slug','!=','pm') as $role)<option value="{{ $role->id }}">{{ $role->name }}</option>@endforeach</select></label>
                             <button type="button" class="btn btn-ghost" data-editor-remove-member aria-label="Remove person">&times;</button>
                         </div></template>
                     @endif
@@ -278,7 +283,7 @@
     </div>
 
     <footer class="project-editor-footer">
-        <span data-editor-feedback role="status">Project details and assigned team</span>
+        <span data-editor-feedback role="status">Changes will apply to this project.</span>
         <div>
             <button type="button" class="btn btn-ghost" data-close-dialog>Cancel</button>
             <button type="submit" form="project-details-edit-form" class="btn btn-primary">Save changes</button>

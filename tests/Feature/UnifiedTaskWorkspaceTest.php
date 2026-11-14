@@ -79,4 +79,17 @@ class UnifiedTaskWorkspaceTest extends TestCase {
   $this->postJson(route('tasks.bulk-update',$p),['tasks'=>[$task->id=>$row]])->assertOk();
   $this->assertTrue($p->memberships()->where('user_id',$person->id)->exists());$this->assertTrue($task->assignees()->where('users.id',$person->id)->exists());
  }
+
+ public function test_quick_reassignment_replaces_only_the_selected_assignee():void {
+  \Illuminate\Support\Facades\Notification::fake();
+  $pm=$this->person();$old=$this->person();$new=$this->person();$other=$this->person();$p=$this->project($pm);$task=$this->task($p);
+  $team=ProjectRole::create(['name'=>'Team Member','slug'=>'team','default_permissions'=>['project.view','tasks.view_assigned']]);
+  foreach([$old,$new,$other] as $member)ProjectMembership::create(['project_id'=>$p->id,'user_id'=>$member->id,'project_role_id'=>$team->id]);
+  $task->assignees()->attach([$old->id,$other->id]);
+
+  $this->actingAs($pm)->postJson(route('tasks.reassign',$task),['old_user_id'=>$old->id,'new_user_id'=>$new->id])
+   ->assertOk()->assertJsonPath('success',true)->assertJsonCount(2,'assignees');
+
+  $this->assertEqualsCanonicalizing([$new->id,$other->id],$task->fresh()->assignees->pluck('id')->all());
+ }
 }

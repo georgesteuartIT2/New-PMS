@@ -2,11 +2,29 @@
 @section('title', $project->name)
 @section('content')
 @include('projects._delete-dialog')
-@include('projects._workflow')
 @php
     $projectImportLabel=$project->template ? 'Download project template' : 'Download blank template';
     $projectImportUrl=route('tasks.export',['project'=>$project,'starter'=>1]);
+    $workflowIsDeclined=in_array($project->approval_stage,['owner_declined','pm_declined'],true);
+    $workflowCompactRejection=$workflowIsDeclined && (
+        auth()->user()->isPmo()
+        || $project->approval_stage==='owner_declined'
+        || (int)$project->owner_user_id!==auth()->id()
+    );
+    $workflowDashboardUrl=null;
+    if(auth()->user()->isPmo() && $workflowIsDeclined){
+        $workflowItemsAhead=\App\Models\Project::whereIn('approval_stage',['owner_declined','pm_declined'])
+            ->where(function($query) use($project){
+                $query->where('created_at','>',$project->created_at)
+                    ->orWhere(function($query) use($project){
+                        $query->where('created_at',$project->created_at)->where('id','>',$project->id);
+                    });
+            })->count();
+        $workflowDashboardPage=intdiv($workflowItemsAhead,5)+1;
+        $workflowDashboardUrl=route('dashboard',['workflow_decisions_page'=>$workflowDashboardPage]).'#workflow-reassignment-project-'.$project->id;
+    }
 @endphp
+@include('projects._workflow')
 <script defer src="{{ asset('js/project-import.js') }}?v={{ filemtime(public_path('js/project-import.js')) }}"></script>
 @if(app(\App\Services\Access::class)->project(auth()->user(),$project,'assign_tasks') && $project->status!=='archived')
 <template id="project-assignee-options">@foreach(($project->approval_stage==='planning' ? $users : $project->memberships->pluck('user')->push($project->manager)->filter(fn($person)=>$person && $person->account_status==='active')->unique('id')->sortBy('name')) as $person)<option value="{{ $person->id }}">{{ $person->name }}</option>@endforeach</template>
@@ -14,9 +32,12 @@
 <script defer src="{{ asset('js/task-assignment.js') }}?v={{ filemtime(public_path('js/task-assignment.js')) }}"></script>
 
 
-@php $canQuickAssign=app(\App\Services\Access::class)->project(auth()->user(),$project,'assign_tasks') && $project->status!=='archived'; @endphp
-@if($canQuickAssign)
-<div id="task-assignment-config" hidden data-url="{{ route('tasks.assign-selected',$project) }}" data-project="{{ $project->id }}" data-members="{{ $project->memberships->pluck('user_id')->push($project->pm_user_id)->filter()->unique()->values()->toJson() }}"></div>
+@php
+    $canQuickAssign=app(\App\Services\Access::class)->project(auth()->user(),$project,'assign_tasks') && $project->status!=='archived';
+    $canReassignTasks=($canManage || auth()->user()->isPmo()) && $project->status!=='archived';
+@endphp
+@if($canQuickAssign || $canReassignTasks)
+<div id="task-assignment-config" hidden data-url="{{ route('tasks.assign-selected',$project) }}" data-project="{{ $project->id }}" data-can-add-assignee="{{ $canQuickAssign ? '1' : '0' }}" data-members="{{ $project->memberships->pluck('user_id')->push($project->pm_user_id)->filter()->unique()->values()->toJson() }}"></div>
 <dialog id="task-assign-dialog" class="modal task-assign-dialog"><div class="task-assign-dialog-head"><div><h2>Assign tasks</h2><p data-bulk-assign-count></p></div><button type="button" data-close-dialog aria-label="Close">&times;</button></div><label>Person<select data-bulk-assign-person data-members-only="1" data-directory-picker data-directory-project="{{ $project->id }}"><option value="">Search name or email</option>@foreach($users->sortBy(fn($person)=>($project->memberships->contains('user_id',$person->id)||$project->pm_user_id===$person->id?'0':'1').$person->name) as $person)<option value="{{ $person->id }}">{{ $person->name }} ({{ $person->email }})</option>@endforeach</select></label><p data-bulk-assign-hint>Choose a project member, or search for another person.</p><p data-bulk-assign-feedback role="status"></p><footer><button type="button" class="btn btn-outline" data-close-dialog>Cancel</button><button type="button" class="btn btn-primary" data-bulk-assign-save disabled>Assign selected</button></footer></dialog>
 @endif
 <div class="project-workspace-v3" id="project-workspace">
@@ -36,18 +57,34 @@
         </div>
         <div class="pw-head-actions">
             <!-- Project Status Badge -->
-            <span class="project-status-pill status-{{ $project->status }}">
-                <span class="status-dot"></span>
-                <span>
-                    @if($project->status === 'declined')
-                        {{ $project->approval_stage==='owner_declined'?'Owner Declined':'PM Declined' }}
-                    @elseif($project->status === 'pending')
-                        {{ $project->approval_stage==='owner'?'Pending Owner Approval':'Pending PM Approval' }}
-                    @else
-                        {{ ucwords(str_replace('_', ' ', $project->status)) }}
-                    @endif
+            @if($workflowCompactRejection)
+                <div class="workflow-rejection-context" aria-label="Project rejection details">
+                    <div class="workflow-rejection-summary">
+                        <span class="project-status-pill status-declined"><span class="status-dot"></span><span>{{ $project->approval_stage==='owner_declined'?'Owner Declined':'PM Declined' }}</span></span>
+                        @if($project->approval_reason)<span class="workflow-rejection-reason" title="{{ $project->approval_reason }}"><b>Reason:</b> {{ $project->approval_reason }}</span>@endif
+                    </div>
+                    <div class="workflow-rejection-actions">
+                        @if($workflowDashboardUrl)
+                            <a class="workflow-rejection-dashboard-link" href="{{ $workflowDashboardUrl }}" aria-label="View this project in the dashboard reassignment list">View on dashboard &rarr;</a>
+                        @else
+                            <span class="workflow-rejection-next-step">{{ $project->approval_stage==='owner_declined'?'PMO will reassign':'Owner to review' }}</span>
+                        @endif
+                    </div>
+                </div>
+            @else
+                <span class="project-status-pill status-{{ $project->status }}">
+                    <span class="status-dot"></span>
+                    <span>
+                        @if($project->status === 'declined')
+                            {{ $project->approval_stage==='owner_declined'?'Owner Declined':'PM Declined' }}
+                        @elseif($project->status === 'pending')
+                            {{ $project->approval_stage==='owner'?'Pending Owner Approval':'Pending PM Approval' }}
+                        @else
+                            {{ ucwords(str_replace('_', ' ', $project->status)) }}
+                        @endif
+                    </span>
                 </span>
-            </span>
+            @endif
 
             @if(app(\App\Services\Access::class)->project(auth()->user(), $project, 'edit_project') && $project->status !== 'archived')
                 <button type="button" class="btn btn-outline workspace-edit-project" data-show-dialog="project-edit-dialog">Edit project</button>
@@ -249,7 +286,10 @@
             @if($canViewTasks && $tasks->isNotEmpty())
                 <div class="task-quick-filters" role="search" aria-label="Filter project tasks">
                     <label class="quick-search-label"><span class="workspace-sr-only">Find a task</span>
-                        <input type="search" data-task-search placeholder="Find a task or assignee..." autocomplete="off">
+                        <span class="task-search-control">
+                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="8.8" cy="8.8" r="5.8"></circle><path d="m13.2 13.2 4 4"></path></svg>
+                            <input type="search" data-task-search placeholder="Find a task or assignee..." autocomplete="off">
+                        </span>
                     </label>
                     <label><span class="workspace-sr-only">Task status</span>
                         <select data-task-filter>
@@ -265,20 +305,34 @@
             @endif
             @if($canManage)
                 <div class="workspace-task-actions">
-                    <button type="button" class="btn btn-primary" data-show-dialog="add-task-dialog" data-add-mode="main">+ Add task</button>
-                    @if($tasks->isNotEmpty())
-                        <button type="button" class="btn btn-ghost" data-show-dialog="add-task-dialog" data-add-mode="sub">+ Subtask</button>
-                    @endif
-                    
-                    <button type="button" class="btn btn-outline" data-show-dialog="bulk-edit-tasks-dialog" id="open-bulk-edit-btn">Bulk edit</button>
-                    <div class="pw-dropdown-wrap">
-                        <button type="button" class="btn btn-outline pw-dropdown-toggle workspace-import-toggle" aria-label="Import and export tasks" aria-expanded="false" aria-controls="project-import-menu">
-                            Import / export <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg>
+                    <div class="workspace-task-action-group workspace-task-create-group">
+                        <button type="button" class="btn btn-primary" data-show-dialog="add-task-dialog" data-add-mode="main">
+                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><path d="M10 4v12M4 10h12"></path></svg>
+                            <span>Add task</span>
                         </button>
-                        <div class="pw-dropdown-menu align-right workspace-import-menu" id="project-import-menu">
-                            <button type="button" class="pw-dropdown-item" data-show-dialog="import-task-dialog">Import from Excel</button>
-                            <a href="{{ $projectImportUrl }}" class="pw-dropdown-item">{{ $projectImportLabel }}</a>
-                            <a href="{{ route('tasks.export', $project) }}" class="pw-dropdown-item">Export tasks to Excel</a>
+                        @if($tasks->isNotEmpty())
+                            <button type="button" class="btn btn-outline" data-show-dialog="add-task-dialog" data-add-mode="sub">
+                                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><path d="M4 4v12M4 6h5a3 3 0 0 1 3 3v2a3 3 0 0 0 3 3h1"></path><path d="M13 11h5m-2.5-2.5v5"></path></svg>
+                                <span>Add subtask</span>
+                            </button>
+                        @endif
+                    </div>
+                    <div class="workspace-task-action-group workspace-task-manage-group">
+                        <button type="button" class="btn btn-outline" data-show-dialog="bulk-edit-tasks-dialog" id="open-bulk-edit-btn">
+                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><path d="M4 5h12M4 10h12M4 15h12"></path><circle cx="8" cy="5" r="1.5" fill="currentColor" stroke="none"></circle><circle cx="12" cy="10" r="1.5" fill="currentColor" stroke="none"></circle><circle cx="7" cy="15" r="1.5" fill="currentColor" stroke="none"></circle></svg>
+                            <span>Bulk edit</span>
+                        </button>
+                        <div class="pw-dropdown-wrap">
+                            <button type="button" class="btn btn-outline pw-dropdown-toggle workspace-import-toggle" aria-label="Import and export tasks" aria-expanded="false" aria-controls="project-import-menu">
+                                <svg class="workspace-import-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><path d="M10 3v9m0-9L7 6m3-3 3 3M5 11v5a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-5"></path></svg>
+                                <span>Import / export</span>
+                                <svg class="workspace-import-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" aria-hidden="true"><path d="m4 6 4 4 4-4"></path></svg>
+                            </button>
+                            <div class="pw-dropdown-menu align-right workspace-import-menu" id="project-import-menu">
+                                <button type="button" class="pw-dropdown-item" data-show-dialog="import-task-dialog">Import from Excel</button>
+                                <a href="{{ $projectImportUrl }}" class="pw-dropdown-item">{{ $projectImportLabel }}</a>
+                                <a href="{{ route('tasks.export', $project) }}" class="pw-dropdown-item">Export tasks to Excel</a>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -311,13 +365,14 @@
                     <table class="clean-table project-tasks-full-table" style="width: 100%; border-collapse: collapse; text-align: left;">
                         <thead>
                             <tr style="background: #F8FAFC; border-bottom: 1px solid #E2E8F0; font-size: 12px; font-weight: 700; color: #475569;">
-                                <th style="padding: 12px 16px; width: 33%;"> Task / Subtask</th>
-                                <th style="padding: 12px 14px; width: 14%;">Assignee</th>
-                                <th style="padding: 12px 10px; width: 10%;">Priority</th>
-                                <th style="padding: 12px 14px; width: 11%;">Starts<span class="workspace-sr-only">Start Date &amp; Time</span></th>
-                                <th style="padding: 12px 14px; width: 11%;">Due<span class="workspace-sr-only">End Date &amp; Time</span></th>
+                                <th style="padding: 12px 16px; width: 31%;">Task / Subtask</th>
+                                <th style="padding: 12px 14px; width: 16%;">Assignee</th>
+                                <th style="padding: 12px 10px; width: 9%;">Priority</th>
+                                <th style="padding: 12px 14px; width: 10%;">Starts<span class="workspace-sr-only">Start Date &amp; Time</span></th>
+                                <th style="padding: 12px 14px; width: 10%;">Due<span class="workspace-sr-only">End Date &amp; Time</span></th>
                                 <th style="padding: 12px 14px; width: 9%;">Progress</th>
-                                <th style="padding: 12px 16px; width: 12%;">Status</th>
+                                <th style="padding: 12px 16px; width: 11%;">Status</th>
+                                <th class="task-actions-header" style="padding: 12px 8px; width: 4%;"><span class="workspace-sr-only">Task actions</span></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -326,16 +381,19 @@
                                     $wbsNum = $numbers[$task->id] ?? $task->code;
                                     $isSubtask = !empty($task->parent_task_id);
                                     $hasChildren = $tasks->where('parent_task_id', $task->id)->count() > 0;
-                                    $assignees = $task->assignees;
+                                    $assignees = $task->assignees->sortBy('name')->values();
                                     $primaryAssignee = $assignees->first();
                                     $extraCount = max(0, $assignees->count() - 1);
                                     $isOverdue = $task->isOverdue();
                                     $isFocusedTask = (string)request('focus_task') === (string)$task->id;
                                     $canDeleteTask = app(\App\Services\Access::class)->project(auth()->user(),$project,'tasks.delete') && $project->status !== 'archived';
+                                    $canChangeAssignee = $canReassignTasks;
                                 @endphp
                                 <tr id="task-row-{{ $task->id }}"
                                     class="project-task-row {{ $isSubtask ? 'is-subtask' : 'is-main-task' }} {{ $isOverdue ? 'is-overdue-task' : '' }} {{ $isFocusedTask ? 'is-focused-task' : '' }}"
                                     data-task-id="{{ $task->id }}"
+                                    data-can-change-assignee="{{ $canChangeAssignee ? '1' : '0' }}"
+                                    data-reassign-url="{{ route('tasks.reassign', $task) }}"
                                     data-parent="{{ $task->parent_task_id ?? '' }}"
                                     data-is-overdue="{{ $isOverdue ? '1' : '0' }}" data-task-status="{{ $task->status }}" data-task-search-text="{{ $task->title . ' ' . $task->priority . ' ' . $assignees->pluck('name')->join(' ') }}"
                                     style="border-bottom: 1px solid #F1F5F9; transition: background 0.25s, box-shadow 0.25s; {{ $isSubtask ? 'background: #F8FAFC;' : '' }} {{ $isOverdue ? 'background: #FFF8F8;' : '' }}">
@@ -377,16 +435,30 @@
                                     <!-- Column 2: Assignee -->
                                     <td style="padding: 12px 14px; font-size: 13px;" data-assignment-cell="{{ $task->id }}">
                                         @if($primaryAssignee)
-                                            <div style="display: flex; align-items: center; gap: 6px;">
-                                                <span style="color: #22272B; font-weight: 500;">{{ $primaryAssignee->name }}</span>
-                                                @if($canQuickAssign)<button type="button" class="task-add-assignee" data-single-assign="{{ $task->id }}" aria-label="Add an assignee to {{ $task->title }}">+</button>@endif
+                                            <div class="task-assignee-group">
+                                                @if($canChangeAssignee)
+                                                    <button type="button" class="task-assignee-avatar task-assignee-change" data-change-assignee data-task-id="{{ $task->id }}" data-assignee-id="{{ $primaryAssignee->id }}" data-assignee-name="{{ $primaryAssignee->name }}" aria-label="Change assignee from {{ $primaryAssignee->name }}" title="Change assignee">
+                                                        {{ Str::upper(Str::substr($primaryAssignee->name, 0, 1)) }}
+                                                    </button>
+                                                @else
+                                                    <span class="task-assignee-avatar" aria-hidden="true">{{ Str::upper(Str::substr($primaryAssignee->name, 0, 1)) }}</span>
+                                                @endif
+                                                <span class="task-assignee-name" title="{{ $primaryAssignee->name }}">{{ $primaryAssignee->name }}</span>
                                                 @if($extraCount > 0)
-                                                    <span class="pill pill-neutral" title="{{ $assignees->pluck('name')->join(', ') }}" style="font-size: 10px; padding: 1px 5px; cursor: help;">+{{ $extraCount }}</span>
+                                                    <span class="task-assignee-extra" title="{{ $assignees->pluck('name')->join(', ') }}">+{{ $extraCount }}</span>
+                                                @endif
+                                                @if($canQuickAssign && !$canChangeAssignee)
+                                                    <button type="button" class="task-add-assignee" data-single-assign="{{ $task->id }}" aria-label="Add another assignee to {{ $task->title }}" title="Add another assignee">
+                                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M19 8v6m-3-3h6"/></svg>
+                                                    </button>
                                                 @endif
                                             </div>
                                         @else
                                             @if(app(\App\Services\Access::class)->project(auth()->user(),$project,'assign_tasks') && $project->status!=='archived')
-                                                <button type="button" class="btn btn-outline btn-xs" data-single-assign="{{ $task->id }}">+ Assign</button>
+                                                <button type="button" class="task-assign-trigger" data-single-assign="{{ $task->id }}">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M19 8v6m-3-3h6"/></svg>
+                                                    <span>Assign</span>
+                                                </button>
                                             @else
                                                 <span class="muted" style="font-size: 12.5px;">Unassigned</span>
                                             @endif
@@ -460,47 +532,48 @@
                                         </div>
                                     </td>
 
-                                    <!-- Column 7: Status & Actions -->
-                                    <td style="padding: 12px 16px;">
-                                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px;">
-                                            <div>
-                                                @if(!$hasChildren && app(\App\Services\Access::class)->task(auth()->user(),$task,'update') && app(\App\Services\Access::class)->project(auth()->user(),$project,'tasks.update_status') && $project->status==='active')
-                                                    <select class="quick-status-select"
-                                                            data-task-id="{{ $task->id }}"
-                                                            data-update-url="{{ route('tasks.update', $task) }}"
-                                                            data-current-status="{{ $task->status }}"
-                                                            style="{{ $isOverdue ? 'border-color: #FCA5A5; color: #DC2626; font-weight: 600;' : '' }}">
-                                                        @foreach(['todo' => 'To Do', 'in_progress' => 'In Progress', 'on_hold' => 'On Hold', 'completed' => 'Completed'] as $val => $lbl)
-                                                            <option value="{{ $val }}" @selected($task->status === $val)>{{ $lbl }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                @else
-                                                    <div style="display: flex; align-items: center; gap: 5px;">
-                                                        <span class="uwt-status-pill status-{{ $task->status }}" style="font-size: 11px;" @if($hasChildren) title="Parent task status is automatically calculated from its subtasks" @endif>
-                                                            {{ ['todo'=>'To do','in_progress'=>'In progress','on_hold'=>'On hold','completed'=>'Completed'][$task->status] ?? $task->status }}
-                                                        </span>
-                                                        @if($hasChildren)
-                                                            <span style="font-size: 9px; color: #94A3B8; font-weight: 600; cursor: help; background: #F1F5F9; border: 1px solid #E2E8F0; padding: 1px 4px; border-radius: 3px;" title="Parent task status is automatically calculated from its subtasks">Auto</span>
-                                                        @endif
-                                                    </div>
+                                    <!-- Column 7: Status -->
+                                    <td class="task-status-cell" style="padding: 12px 10px;">
+                                        @if(!$hasChildren && app(\App\Services\Access::class)->task(auth()->user(),$task,'update') && app(\App\Services\Access::class)->project(auth()->user(),$project,'tasks.update_status') && $project->status==='active')
+                                            <select class="quick-status-select"
+                                                    data-task-id="{{ $task->id }}"
+                                                    data-update-url="{{ route('tasks.update', $task) }}"
+                                                    data-current-status="{{ $task->status }}"
+                                                    aria-label="Status for {{ $task->title }}"
+                                                    title="Change task status"
+                                                    style="{{ $isOverdue ? 'border-color: #FCA5A5; color: #DC2626; font-weight: 600;' : '' }}">
+                                                @foreach(['todo' => 'To Do', 'in_progress' => 'In Progress', 'on_hold' => 'On Hold', 'completed' => 'Completed'] as $val => $lbl)
+                                                    <option value="{{ $val }}" @selected($task->status === $val)>{{ $lbl }}</option>
+                                                @endforeach
+                                            </select>
+                                        @else
+                                            <div class="task-status-display">
+                                                <span class="uwt-status-pill status-{{ $task->status }}" @if($hasChildren) title="Parent task status is automatically calculated from its subtasks" @endif>
+                                                    {{ ['todo'=>'To do','in_progress'=>'In progress','on_hold'=>'On hold','completed'=>'Completed'][$task->status] ?? $task->status }}
+                                                </span>
+                                                @if($hasChildren)
+                                                    <span class="task-status-auto" title="Parent task status is automatically calculated from its subtasks">Auto</span>
                                                 @endif
                                             </div>
+                                        @endif
+                                    </td>
 
-                                            @if($canDeleteTask)
-                                                <form method="POST" action="{{ route('tasks.destroy', $task) }}" onsubmit="return AppDialog.confirmAction(event,this,'Are you sure you want to delete \'{{ addslashes($task->title) }}\'? @if($hasChildren)All its subtasks will also be deleted. @endif This action cannot be undone.');" style="margin: 0; line-height: 1;">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn-delete-task-row" title="Delete task" style="border: none; background: transparent; color: #94A3B8; cursor: pointer; padding: 3px 5px; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s ease;" onmouseover="this.style.color='#DC2626'; this.style.background='#FEE2E2';" onmouseout="this.style.color='#94A3B8'; this.style.background='transparent';">
-                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                                            <polyline points="3 6 5 6 21 6"></polyline>
-                                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                                            <line x1="10" y1="11" x2="10" y2="17"></line>
-                                                            <line x1="14" y1="11" x2="14" y2="17"></line>
-                                                        </svg>
-                                                    </button>
-                                                </form>
-                                            @endif
-                                        </div>
+                                    <!-- Column 8: Row actions -->
+                                    <td class="task-row-actions {{ $canDeleteTask ? 'has-actions' : 'no-actions' }}">
+                                        @if($canDeleteTask)
+                                            <form method="POST" action="{{ route('tasks.destroy', $task) }}" onsubmit="return AppDialog.confirmAction(event,this,'Are you sure you want to delete \'{{ addslashes($task->title) }}\'? @if($hasChildren)All its subtasks will also be deleted. @endif This action cannot be undone.');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn-delete-task-row" title="Delete task" aria-label="Delete {{ $task->title }}">
+                                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                                        <polyline points="3 6 5 6 21 6"></polyline>
+                                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                                        <line x1="10" y1="11" x2="10" y2="17"></line>
+                                                        <line x1="14" y1="11" x2="14" y2="17"></line>
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                        @endif
                                     </td>
 
                                 </tr>
@@ -1684,8 +1757,8 @@
                 <p class="muted text-sm" style="margin-top: 0; margin-bottom: 12px;">The selected manager will receive an invitation to review, accept, and activate this project.</p>
             @endif
 
-            <label style="display: block; font-weight: 600; font-size: 13px;">Project Manager <span class="required">*</span>
-                <select name="pm_user_id" required style="width: 100%; margin-top: 6px; padding: 8px 10px; border: 1px solid #D1D5DB; border-radius: 6px;">
+            <label style="display: grid; gap: 6px; font-weight: 600; font-size: 13px;">Project Manager <span class="required">*</span>
+                <select name="pm_user_id" required data-directory-picker data-directory-floating="1" data-directory-project="{{ $project->id }}" aria-describedby="pm-reassign-directory-help" style="width: 100%; padding: 8px 10px; border: 1px solid #D1D5DB; border-radius: 6px;">
                     <option value="">Choose an active Project Manager...</option>
                     @foreach($pmCandidates ?? $users as $u)
                         <option value="{{ $u->id }}" @selected($u->id === $project->pm_user_id)>
@@ -1693,6 +1766,7 @@
                         </option>
                     @endforeach
                 </select>
+                <small id="pm-reassign-directory-help" class="muted text-sm">Search system users, or type 2+ characters to find and add people from Azure.</small>
             </label>
             <div class="form-actions mt-16" style="display: flex; justify-content: flex-end; gap: 10px;">
                 <button class="btn btn-ghost" type="button" data-close-dialog>Cancel</button>

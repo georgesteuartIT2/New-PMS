@@ -9,11 +9,16 @@
         <h1>{{ auth()->user()->canViewPortfolio() ? 'Projects' : 'My Projects' }}</h1>
         <p class="muted">{{ auth()->user()->canViewPortfolio() ? 'Track delivery, manage your team and keep projects moving.' : 'Projects you are involved in.' }}</p>
     </div>
-    <div class="inline-actions">
+    <div class="inline-actions projects-page-actions">
         @if(auth()->user()->isPmo())
-
-            <a class="btn btn-ghost" href="{{ route('gantt.portfolio') }}">Portfolio timeline</a>
-            <a class="btn btn-primary" href="{{ route('projects.create') }}">+ New Project</a>
+            <a class="btn btn-outline" href="{{ route('gantt.portfolio') }}">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><path d="M3 5.5h4v3H3zM9 7h8M3 11.5h7v3H3zM13 13h4"></path></svg>
+                Portfolio timeline
+            </a>
+            <a class="btn btn-primary" href="{{ route('projects.create') }}">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><path d="M10 4v12M4 10h12"></path></svg>
+                New Project
+            </a>
         @endif
     </div>
 </div>
