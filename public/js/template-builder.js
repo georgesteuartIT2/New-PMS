@@ -35,7 +35,7 @@
 
         init(config = {}) {
             this.roles = config.roles || [];
-            this.assignmentProject=config.assignmentProject||null;this.assignmentUsers=config.assignmentUsers||[];document.getElementById('smart-task-plan-modal')?.classList.toggle('stp-assignment-mode',!!this.assignmentProject);
+            this.assignmentProject=config.assignmentProject||null;this.assignmentEnabled=!!config.assignmentEnabled||!!this.assignmentProject;this.assignmentUsers=config.assignmentUsers||[];document.getElementById('smart-task-plan-modal')?.classList.toggle('stp-assignment-mode',this.assignmentEnabled);
             this.localPlanSave = config.localPlanSave || null;
             this.canEditSelection = !!config.canEditSelection;
             this.canManage = !!config.canManage;
@@ -666,6 +666,7 @@
                     <span class="stp-toolbar-divider" aria-hidden="true"></span>
                     <button type="button" class="btn btn-outline btn-sm" onclick="SmartTaskPlan.downloadExcel()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 3v13m-5-5 5 5 5-5M4 16v4h16v-4"/></svg>Download Excel template</button>
                     <button type="button" id="stp-btn-upload-excel" class="btn btn-outline btn-sm" onclick="SmartTaskPlan.triggerExcelUpload()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 16V3m-5 5 5-5 5 5M4 15v5h16v-5"/></svg>Upload completed template</button>
+                    ${this.assignmentEnabled?'<button type="button" class="btn btn-outline btn-sm" onclick="SmartTaskPlan.openBulkAssign()">Assign tasks</button>':''}
                 </div>
                 <div class="stp-toolbar-right">
                     <span class="stp-toolbar-hint">Download, fill in, then upload the template.</span>
@@ -673,6 +674,29 @@
                 </div>
             `;
             if(this.dom.summaryCounts)this.dom.toolbar.querySelector('.stp-toolbar-meta').append(this.dom.summaryCounts);
+        },
+
+        openBulkAssign() {
+            document.getElementById('stp-bulk-assign-backdrop')?.remove();
+            const unassigned=this.tasks.filter(task=>!task.assignee_id).length,assigned=this.tasks.length-unassigned;
+            const backdrop=document.createElement('div');backdrop.id='stp-bulk-assign-backdrop';backdrop.className='stp-bulk-assign-backdrop';
+            backdrop.innerHTML=`<section class="stp-bulk-assign-dialog" role="dialog" aria-modal="true" aria-labelledby="stp-bulk-title"><header><div><h3 id="stp-bulk-title">Assign tasks</h3><p>Select once, then apply the person to the tasks you need.</p></div><button type="button" data-bulk-close aria-label="Close">×</button></header><label><b>Assignee</b><select data-bulk-person data-directory-picker data-directory-project="${this.assignmentProject||''}" required><option value="">Search name or email</option>${this.assignmentUsers.map(user=>`<option value="${user.id}">${this.escapeHtml(user.name)} (${this.escapeHtml(user.email)})${user.role_label?' · '+this.escapeHtml(user.role_label):''}</option>`).join('')}</select></label><div class="stp-bulk-summary"><span>${unassigned} unassigned</span><span>${assigned} already assigned</span></div><footer><button type="button" class="btn btn-outline" data-bulk-close>Cancel</button><button type="button" class="btn btn-outline" data-bulk-apply="unassigned" disabled>Assign ${unassigned} unassigned</button><button type="button" class="btn btn-primary" data-bulk-apply="all" disabled>Assign all ${this.tasks.length}</button></footer></section>`;
+            document.body.append(backdrop);const select=backdrop.querySelector('[data-bulk-person]');
+            select.addEventListener('change',()=>backdrop.querySelectorAll('[data-bulk-apply]').forEach(button=>button.disabled=!select.value));
+            backdrop.querySelectorAll('[data-bulk-close]').forEach(button=>button.addEventListener('click',()=>backdrop.remove()));
+            backdrop.addEventListener('pointerdown',event=>{if(event.target===backdrop)backdrop.remove();});
+            backdrop.querySelectorAll('[data-bulk-apply]').forEach(button=>button.addEventListener('click',()=>this.applyBulkAssignee(button.dataset.bulkApply,select,backdrop)));
+            setTimeout(()=>backdrop.querySelector('.directory-picker input')?.focus(),0);
+        },
+
+        async applyBulkAssignee(scope,select,backdrop) {
+            if(!select.value)return;
+            const affected=scope==='all'?this.tasks.length:this.tasks.filter(task=>!task.assignee_id).length;
+            if(scope==='all'&&this.tasks.some(task=>task.assignee_id)&&!await AppDialog.confirm('Replace the current assignees on all '+this.tasks.length+' tasks?'))return;
+            const option=select.selectedOptions[0],label=option?.textContent||'',email=label.match(/\(([^)]+@[^)]+)\)/)?.[1]||'',name=label.replace(/\s*\([^)]*@[^)]*\).*$/,'').trim();
+            this.tasks.forEach(task=>{if(scope==='all'||!task.assignee_id){task.assignee_id=Number(select.value);task.assignee_email=email;task.assignee_name=name;}});
+            this.unsavedChanges=true;backdrop.remove();this.render();this.renderFooter();
+            if(window.AppToast?.success)AppToast.success(affected+' task'+(affected===1?'':'s')+' assigned to '+name+'.');
         },
 
         switchView(type) {
@@ -928,7 +952,7 @@
                                 <th style="width: 140px;">Period Range</th>
                                 <th style="width: 110px;">Working Hours</th>
                                 <th style="width: 120px;">Dependencies</th>
-                                <th style="width: 140px;">Suggested Role</th>
+                                <th style="width: 140px;">Assignee</th>
                                 ${isEditable ? '<th style="width: 80px; text-align: right;">Actions</th>' : ''}
                             </tr>
                         </thead>
@@ -1170,14 +1194,16 @@
                         ` : ''}
                     </td>
                 `;
-                if(this.assignmentProject && isEditable){
-                    const cell=tr.cells[6];cell.textContent='';const select=document.createElement('select');select.dataset.directoryPicker='';select.dataset.directoryProject=this.assignmentProject;select.setAttribute('aria-label','Assignee for task '+t.code);select.add(new Option('Unassigned',''));
-                    this.assignmentUsers.forEach(user=>select.add(new Option(user.name+' ('+user.email+')',user.id)));if(t.assignee_id&&!Array.from(select.options).some(o=>o.value==t.assignee_id))select.add(new Option(t.assignee_email||t.assignee_name||'Selected user',t.assignee_id));select.value=t.assignee_id||'';
+                if(this.assignmentEnabled && isEditable){
+                    const cell=tr.cells[6];cell.textContent='';const select=document.createElement('select');select.dataset.directoryPicker='';select.dataset.directoryProject=this.assignmentProject||'';select.setAttribute('aria-label','Assignee for task '+t.code);select.add(new Option('Unassigned',''));
+                    this.assignmentUsers.forEach(user=>select.add(new Option(user.name+' ('+user.email+')'+(user.role_label?' · '+user.role_label:''),user.id)));if(t.assignee_id&&!Array.from(select.options).some(o=>o.value==t.assignee_id))select.add(new Option(t.assignee_email||t.assignee_name||'Selected user',t.assignee_id));select.value=t.assignee_id||'';
                     select.addEventListener('change',()=>{t.assignee_id=select.value?Number(select.value):null;const label=select.selectedOptions[0]?.textContent||'';t.assignee_email=label.match(/\(([^)]+)\)/)?.[1]||'';t.assignee_name=label;this.unsavedChanges=true;this.renderFooter();});cell.append(select);
+                }else{
+                    const cell=tr.cells[6];cell.textContent='';const empty=document.createElement('span');empty.textContent='—';empty.style.color='#94A3B8';empty.setAttribute('aria-label','Unassigned');cell.append(empty);
                 }
-                const roleHeader=this.dom.tableWrap?.querySelector('thead th:nth-child(7)');if(roleHeader)roleHeader.textContent=this.assignmentProject?'Assignee':'Suggested role';
+                const roleHeader=this.dom.tableWrap?.querySelector('thead th:nth-child(7)');if(roleHeader)roleHeader.textContent='Assignee';
                 tr.classList.toggle('stp-subtask-row',isSubtask);
-                const labels=['Task number','Task name','Start date','Finish date','Duration in working days','Depends on',this.assignmentProject?'Assignee':'Suggested role','Task actions'];
+                const labels=['Task number','Task name','Start date','Finish date','Duration in working days','Depends on','Assignee','Task actions'];
                 [...tr.cells].forEach((cell,column)=>{
                     cell.dataset.label=labels[column];
                     cell.querySelectorAll('input,select').forEach(control=>{
@@ -1685,6 +1711,7 @@
                 working_hours: this.template.working_hours || '09:00 - 17:00',
                 category: this.template.category || 'General',
                 plan_project: this.assignmentProject || '',
+                project_flow: window.PROJECT_TEMPLATE_CONTEXT?.project_flow || '',
                 tasks: JSON.stringify(this.tasks)
             };
 
@@ -1716,6 +1743,8 @@
             const formData = new FormData();
             formData.append('file', file);
             if(this.assignmentProject)formData.append('plan_project',this.assignmentProject);
+            if(window.PROJECT_TEMPLATE_CONTEXT?.project_flow)formData.append('project_flow',window.PROJECT_TEMPLATE_CONTEXT.project_flow);
+            if(window.PROJECT_TEMPLATE_CONTEXT?.select_for_project)formData.append('select_for_project','1');
             formData.append('estimated_duration', this.template.estimated_duration || 14);
             formData.append('duration_unit', this.template.duration_unit || 'working_days');
             formData.append('reference_start_date', this.template.reference_start_date || this.formatDateISO(new Date()));
@@ -1941,7 +1970,7 @@
         /* Save Template to Database */
         saveTemplate(customRedirect = null) {
             if (this.isSavingTemplate) return;
-            if(this.assignmentProject){const invalid=this.dom.tableBody?.querySelector('.directory-picker input:invalid');if(invalid){invalid.reportValidity();invalid.focus();return;}}
+            if(this.assignmentEnabled){const invalid=this.dom.tableBody?.querySelector('.directory-picker input:invalid');if(invalid){invalid.reportValidity();invalid.focus();return;}}
             if (!this.template.name || !this.template.name.trim()) {
                 alert('Please enter a Template Name before saving.');
                 if (this.dom.detailsDrawer) this.dom.detailsDrawer.style.display = 'grid';
@@ -1971,7 +2000,7 @@
                     start_time: t.start_time || '09:00',
                     end_date: t.end_date || null,
                     end_time: t.end_time || '17:00',
-                    assignee_id: this.assignmentProject ? (t.assignee_id || null) : null,
+                    assignee_id: this.assignmentEnabled ? (t.assignee_id || null) : null,
                     suggested_role_id: t.suggested_role_id || null,
                     dependency_code: t.dependency_code || null,
                     priority: t.priority || 'medium',

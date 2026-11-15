@@ -126,17 +126,16 @@
             @if(app(\App\Services\Access::class)->project(auth()->user(), $project, 'edit_project') && $project->status !== 'archived')
                 <button type="button" class="btn btn-outline workspace-edit-project" data-show-dialog="project-edit-dialog">Edit project</button>
             @endif
-            @if($project->approval_stage==='planning' && ((int)$project->owner_user_id===auth()->id() || (int)$project->pm_user_id===auth()->id() || auth()->user()->isPmo()))
+            @php
+                $isSelfManagedPmoProject = auth()->user()->isPmo()
+                    && (int) $project->created_by === auth()->id()
+                    && (int) $project->pm_user_id === auth()->id();
+            @endphp
+            @if(!$isSelfManagedPmoProject && $project->approval_stage==='planning' && ((int)$project->owner_user_id===auth()->id() || (int)$project->pm_user_id===auth()->id() || auth()->user()->isPmo()))
                 <a href="{{ route('projects.plan.setup', $project) }}" class="btn btn-outline" style="display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:12px;padding:0 14px;height:34px;border-radius:8px;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
                     <span>Plan setup</span>
                 </a>
-            @endif
-            @if($project->approval_stage==='planning' && $project->plan_initialized && ((int)$project->owner_user_id===auth()->id() || (int)$project->pm_user_id===auth()->id() || auth()->user()->isPmo()))
-                <button type="button" class="btn btn-primary workspace-review-publish-btn" data-show-dialog="publish-plan-review" style="display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:12px;padding:0 14px;height:34px;border-radius:8px;background:#315F58;color:#FFFFFF;box-shadow:0 2px 6px rgba(49,95,88,.2);">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-                    <span>Review &amp; publish</span>
-                </button>
             @endif
             @if($project->status==='draft' && (auth()->user()->isPmo() || ($project->created_by===auth()->id() && app(\App\Services\Access::class)->hasCompanyPermission(auth()->user(),'projects.create'))))<a href="{{ route('projects.create',['draft'=>$project->id]) }}" class="btn btn-primary">Create project</a>@endif
         </div>
@@ -1458,6 +1457,7 @@
                         <option value="">Unassigned (Assign later...)</option>
                         @foreach($users as $person)<option value="{{ $person->id }}">{{ $person->name }} ({{ $person->email }})</option>@endforeach
                     </select><span id="manual-task-member-confirm" hidden><label style="display:flex;align-items:center;gap:7px;font-size:11px;margin-top:8px"><input type="checkbox" name="add_assignee_to_project" value="1" style="width:14px;min-height:14px;height:14px;accent-color:#315F58">Add this person to the project as a Team Member</label></span>
+                    @if($isPmoOperationalLead)<button type="button" class="text-action assign-task-to-me" data-assign-task-to-me data-user-id="{{ auth()->id() }}" data-user-label="{{ auth()->user()->name }} ({{ auth()->user()->email }})">Assign to me</button>@endif
                     @if($canTeam)
                         <button type="button" class="text-action" id="add-task-open-member-btn" style="font-size: 11px; margin-top: 4px; display: inline-block; padding: 0; background: none; border: none; cursor: pointer; color: #315F58; text-decoration: underline;">
                             + Add Project Member

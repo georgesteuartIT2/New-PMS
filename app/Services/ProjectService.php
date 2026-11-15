@@ -99,6 +99,15 @@ class ProjectService {
       'starts_at'=>$start,'ends_at'=>$end,'sort_order'=>$entry->sort_order,
       'priority'=>$entry->priority,'created_by'=>$actor->id,
      ]);
+     if($entry->assignee_user_id){
+      $assignee=User::whereKey($entry->assignee_user_id)->where('account_status','active')->first();
+      if($assignee?->isPmo() && !in_array((int)$assignee->id,[(int)$p->owner_user_id,(int)$p->pm_user_id],true))$assignee=null;
+      if($assignee){
+       $role=ProjectRole::firstOrCreate(['slug'=>'team'],['name'=>'Team Member']);
+       ProjectMembership::firstOrCreate(['project_id'=>$p->id,'user_id'=>$assignee->id],['project_role_id'=>$role->id]);
+       $task->assignees()->syncWithoutDetaching([$assignee->id]);
+      }
+     }
      $byCode[$entry->code]=[$task,$entry->parent_code,$entry->dependency_code];
     }
     foreach($byCode as [$task,$parent,$dependency]){

@@ -224,8 +224,8 @@
         chooseTemplateBtn?.classList.remove('is-selected');
         chooseTemplateBtn?.setAttribute('aria-pressed', 'false');
         if (errorMsg) errorMsg.hidden = true;
-        if (blankSubpanel) blankSubpanel.style.display = '';
-        if (templateSubpanel) templateSubpanel.style.display = 'none';
+        if (blankSubpanel) blankSubpanel.hidden = false;
+        if (templateSubpanel) templateSubpanel.hidden = true;
         refreshPlanIndicators();
         scheduleDraft();
     });
@@ -242,8 +242,8 @@
             blankBtn?.classList.remove('is-selected');
             blankBtn?.setAttribute('aria-pressed', 'false');
             if (errorMsg) errorMsg.hidden = true;
-            if (blankSubpanel) blankSubpanel.style.display = 'none';
-            if (templateSubpanel) templateSubpanel.style.display = '';
+            if (blankSubpanel) blankSubpanel.hidden = true;
+            if (templateSubpanel) templateSubpanel.hidden = false;
             refreshPlanIndicators();
             scheduleDraft();
             return;

@@ -14,6 +14,12 @@
             <p>Your assignments and the project tasks you monitor, together.</p>
         </div>
     </header>
+    @if($pmoOperationalMode ?? false)
+        <nav class="tw-operational-tabs" aria-label="Task workspace">
+            <a href="{{ route('tasks.mine',['scope'=>'all']) }}" class="{{ $scope==='all' ? 'is-active' : '' }}">All tasks</a>
+            <a href="{{ route('tasks.mine',['scope'=>'assigned']) }}" class="{{ $scope==='assigned' ? 'is-active' : '' }}">My tasks</a>
+        </nav>
+    @endif
     <section class="personal-filter-surface" aria-label="Task filters">
     <nav class="tw-views" aria-label="Filter tasks">
         @foreach($taskViews as $key=>$item)

@@ -15,8 +15,10 @@ class TemplateController {
     private function validatePlanAssignees(Request $request,array $tasks):void {
         if($request->filled('plan_project'))abort_unless($this->planProject($request),403);
         foreach($tasks as $task){if(empty($task['assignee_id']))continue;
-            if(!$this->planProject($request))throw ValidationException::withMessages(['tasks'=>'Task assignees require an authorised project plan.']);
-            if(!\App\Models\User::whereKey($task['assignee_id'])->where('account_status','active')->where('system_role','user')->exists())throw ValidationException::withMessages(['tasks'=>'Choose an active project user as assignee.']);
+            if(!$this->planProject($request) && !$request->boolean('select_for_project') && !$request->filled('project_flow'))throw ValidationException::withMessages(['tasks'=>'Task assignees require an authorised project plan.']);
+            $assignee=\App\Models\User::whereKey($task['assignee_id'])->where('account_status','active')->first();
+            $allowed=$assignee && ($assignee->system_role==='user' || ($assignee->isPmo() && (int)$assignee->id===(int)$request->user()->id));
+            if(!$allowed)throw ValidationException::withMessages(['tasks'=>'Choose an active project user, or yourself when you are managing the project.']);
         }
     }
 
@@ -212,6 +214,9 @@ class TemplateController {
                             'duration_days' => $task->duration_days ?: 1,
                             'suggested_role_id' => $task->suggested_role_id,
                             'suggested_role_name' => $task->suggestedRole?->name,
+                            'assignee_id' => $task->assignee_user_id,
+                            'assignee_email' => $task->assignee?->email,
+                            'assignee_name' => $task->assignee?->name,
                             'dependency_code' => $task->dependency_code,
                             'priority' => $task->priority ?: 'medium',
                         ];
@@ -428,6 +433,9 @@ class TemplateController {
                     'end_time' => $task->end_time ?: '17:00',
                     'suggested_role_id' => $task->suggested_role_id,
                     'suggested_role_name' => $task->suggestedRole?->name,
+                    'assignee_id' => $task->assignee_user_id,
+                    'assignee_email' => $task->assignee?->email,
+                    'assignee_name' => $task->assignee?->name,
                     'dependency_code' => $task->dependency_code,
                     'priority' => $task->priority ?: 'medium',
                     'is_subtask' => !empty($task->parent_code),
@@ -645,8 +653,9 @@ class TemplateController {
                 return response()->json(['success' => false, 'message' => 'Please provide an Excel file or pasted table content.'], 422);
             }
 
-            if($request->filled('plan_project')){
-                abort_unless($this->planProject($request),403);
+            if($request->filled('plan_project') || $request->filled('project_flow') || $request->boolean('select_for_project')){
+                if($request->filled('plan_project'))abort_unless($this->planProject($request),403);
+                else abort_unless($request->user()?->isPmo() || app(Access::class)->hasCompanyPermission($request->user(), 'projects.create'),403);
                 foreach($result['tasks'] as &$task){$email=trim($task['assignee_email']??'');$task['assignee_id']=null;if($email==='')continue;
                     $users=\App\Models\User::where('account_status','active')->where('system_role','user')->where(fn($q)=>$q->where('email',$email)->orWhere('name',$email))->get();
                     if($users->count()!==1){$result['errors'][]='Task '.($task['code']??'').': Assignee "'.$email.'" was not found or is ambiguous. Use an existing user email; add Microsoft users in the picker first.';continue;}
@@ -791,6 +800,7 @@ class TemplateController {
                 'end_date' => !empty($t['end_date']) ? $t['end_date'] : null,
                 'end_time' => !empty($t['end_time']) ? $t['end_time'] : '17:00',
                 'suggested_role_id' => !empty($t['suggested_role_id']) ? $t['suggested_role_id'] : null,
+                'assignee_user_id' => !empty($t['assignee_id']) ? $t['assignee_id'] : null,
                 'dependency_code' => !empty($t['dependency_code']) ? trim($t['dependency_code']) : null,
                 'priority' => !empty($t['priority']) ? $t['priority'] : 'medium',
                 'sort_order' => $idx,

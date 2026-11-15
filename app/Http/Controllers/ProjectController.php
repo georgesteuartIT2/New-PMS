@@ -244,6 +244,7 @@ class ProjectController {
   abort_unless($access->project($request->user(),$project),403);
   $user = $request->user();
   $isPm = $project->pm_user_id === $user->id;
+  $isPmoOperationalLead = $user->isPmo() && in_array($user->id, [$project->pm_user_id, $project->owner_user_id], true);
   $canViewGantt = $access->project($user, $project, 'project.gantt_view');
   $canViewAllTasks = $user->canViewPortfolio() || $isPm || ($access->project($user, $project, 'view_tasks') && in_array($project->status, ['active', 'on_hold', 'completed', 'archived'], true));
 
@@ -315,7 +316,11 @@ class ProjectController {
       'canTeam'=>$access->project($user,$project,'manage_team'),
       'canRequestClosure'=>$access->project($user,$project,'project.closure_request') || $access->project($user,$project,'edit_project'),
       'canApproveClosure'=>$user->isPmo() && $access->project($user,$project,'project.closure_approve'),
-      'users'=>User::where('account_status','active')->where('system_role','user')->orderBy('name')->get(),
+      'users'=>User::where('account_status','active')->where(function($query) use ($user, $isPmoOperationalLead) {
+          $query->where('system_role','user');
+          if ($isPmoOperationalLead) $query->orWhere('id', $user->id);
+      })->orderBy('name')->get(),
+      'isPmoOperationalLead'=>$isPmoOperationalLead,
       'pmCandidates'=>$pmCandidates,
       'roles'=>ProjectRole::orderBy('name')->get(),
       'declinedInvitation'=>$declinedInvitation,

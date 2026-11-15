@@ -1,5 +1,7 @@
 @php
- $planAssignmentUsers=request('plan_project') ? \App\Models\User::where('system_role','user')->where('account_status','active')->orderBy('name')->get(['id','name','email']) : [];
+ $assignmentEnabled=request()->boolean('select_for_project') || request()->filled('project_flow') || request()->filled('plan_project');
+ $planAssignmentUsers=$assignmentEnabled ? \App\Models\User::where('system_role','user')->where('account_status','active')->orderBy('name')->get(['id','name','email']) : collect();
+ if($assignmentEnabled && auth()->user()?->isPmo()) $planAssignmentUsers=$planAssignmentUsers->push(array_merge(auth()->user()->only(['id','name','email']),['role_label'=>'PMO Admin']))->unique('id')->sortBy('name')->values();
 @endphp
 <link rel="stylesheet" href="{{ asset('css/task-plan-dialog.css') }}?v={{ filemtime(public_path('css/task-plan-dialog.css')) }}">
 <!-- Smart Task Plan Modal Component -->
@@ -73,7 +75,7 @@
         <div class="stp-body">
             <!-- Flat Table View Container -->
             <div id="stp-table-wrap" style="padding: 10px 18px 24px;">
-                <table class="stp-table"><caption class="stp-sr-only">Task plan. Edit task names, dates, duration, dependencies and suggested project roles.</caption>
+                <table class="stp-table"><caption class="stp-sr-only">Task plan. Edit task names, dates, duration, dependencies and assignees.</caption>
                     <thead>
                         <tr>
                             <th style="width: 48px; text-align: center;">#</th>
@@ -82,7 +84,7 @@
                             <th style="width: 220px;">Finishes</th>
                             <th style="width: 75px; text-align: center;">Days</th>
                             <th style="width: 145px;">Depends on</th>
-                            <th style="width: 160px;">Suggested role</th>
+                            <th style="width: 160px;">Assignee</th>
                             <th style="width: 135px; text-align: right;"><span class="stp-sr-only">Task actions</span></th>
                         </tr>
                     </thead>
@@ -183,9 +185,9 @@
                         <input type="text" id="task_edit_dependency" placeholder="e.g. 1, 1.1" style="width: 100%; height: 36px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 10px; font-size: 12.5px;">
                         <small style="font-size: 11px; color: #64748B;">Enter task code that must finish first.</small>
                     </div>
-                    <div>
+                    <div hidden>
                         <label style="display: block; font-size: 12px; font-weight: 650; margin-bottom: 5px; color: #22272B;">
-                            Suggested Role
+                            Assignee
                         </label>
                         <select id="task_edit_role" style="width: 100%; height: 36px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 10px; font-size: 12.5px;">
                             <option value="">None</option>
@@ -261,6 +263,7 @@
         if (window.SmartTaskPlan) {
             window.SmartTaskPlan.init({
                 roles: @json($roles ?? []),
+                assignmentEnabled: @json($assignmentEnabled),
                 assignmentProject: @json(request('plan_project') ? (int)request('plan_project') : null),
                 assignmentUsers: @json($planAssignmentUsers),
                 canEditSelection: @json(($selectForProject ?? false) && ($canCreateTemplate ?? false)),

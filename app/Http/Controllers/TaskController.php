@@ -170,7 +170,10 @@ class TaskController {
   $filters=['attention'=>$request->input('attention'),'scope'=>$scope,'filter'=>$request->input('filter','all'),'project_id'=>$request->input('project_id'),'user_id'=>$request->input('user_id'),'status'=>$request->input('status'),'q'=>$request->input('q')];
   $workspace=$service->personalWorkspace($request->user(),$filters);
   if($request->wantsJson())return response()->json(['view'=>$scope,'tab'=>'tasks','filters'=>$filters,'metrics'=>$workspace['metrics'],'tasks'=>$workspace['tasks'],'projects'=>$workspace['projects'],'assignees'=>$workspace['assignees']]);
-  return view('tasks.all',$workspace+['filters'=>$filters,'scope'=>$scope]);
+  $pmoOperationalMode=$request->user()->isPmo() && Project::where(function($query) use ($request) {
+      $query->where('pm_user_id',$request->user()->id)->orWhere('owner_user_id',$request->user()->id);
+  })->whereIn('status',['active','on_hold','completed'])->exists();
+  return view('tasks.all',$workspace+['filters'=>$filters,'scope'=>$scope,'pmoOperationalMode'=>$pmoOperationalMode]);
  }
  public function show(Task $task,Request $request,Access $access){
   abort_unless($access->task($request->user(),$task),403);
@@ -227,8 +230,10 @@ class TaskController {
   $data=$request->validate(['title'=>'required|string|max:200','description'=>'nullable|string|max:3000','parent_task_id'=>'nullable|integer','starts_at'=>'required|date','ends_at'=>'required|date|after:starts_at','priority'=>'required|in:low,medium,high','assigned_user_id'=>'nullable|exists:users,id','files'=>'nullable|array|max:5','files.*'=>'file|max:10240|mimes:pdf,doc,docx,xls,xlsx,csv,txt,jpg,jpeg,png']);
   if(!empty($data['parent_task_id']))abort_unless($project->tasks()->whereKey($data['parent_task_id'])->exists(),422);
   if(!empty($data['assigned_user_id'])){
-   $person=User::whereKey($data['assigned_user_id'])->where('account_status','active')->where('system_role','user')->firstOrFail();
-   $member=(int)$project->pm_user_id===$person->id||$project->memberships()->where('user_id',$person->id)->exists();
+   $person=User::whereKey($data['assigned_user_id'])->where('account_status','active')->firstOrFail();
+   $selfManagingPmo=$person->isPmo() && $person->id===$request->user()->id && in_array($person->id,[$project->pm_user_id,$project->owner_user_id],true);
+   abort_unless($person->system_role==='user'||$selfManagingPmo,422,'Choose an active project user.');
+   $member=$selfManagingPmo||(int)$project->pm_user_id===$person->id||$project->memberships()->where('user_id',$person->id)->exists();
    if(!$member){
     abort_unless($access->project($request->user(),$project,'assign_tasks')&&$access->project($request->user(),$project,'manage_team'),403);
     abort_unless($request->boolean('add_assignee_to_project'),422,'Confirm Add this person to the project before assigning.');
@@ -237,7 +242,7 @@ class TaskController {
     Audit::record('project.member_added',$project,['user_id'=>$person->id,'source'=>'manual_task']);
    }
   }
-  if(!empty($data['assigned_user_id']))abort_unless($project->pm_user_id==$data['assigned_user_id']||$project->memberships()->where('user_id',$data['assigned_user_id'])->exists(),422,'Add this user to the project first.');
+  if(!empty($data['assigned_user_id']))abort_unless($project->pm_user_id==$data['assigned_user_id']||$project->owner_user_id==$data['assigned_user_id']||$project->memberships()->where('user_id',$data['assigned_user_id'])->exists(),422,'Add this user to the project first.');
   $parentId = !empty($data['parent_task_id']) ? (int)$data['parent_task_id'] : null;
   $siblingOrder = ($parentId ? $project->tasks()->where('parent_task_id', $parentId)->count() : $project->tasks()->whereNull('parent_task_id')->count()) + 1;
   $task=Task::create(['project_id'=>$project->id,'code'=>'T'.strtoupper(Str::random(8)),'title'=>$data['title'],'description'=>$data['description']??null,

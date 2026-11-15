@@ -120,3 +120,9 @@ body[data-page="projects.create"] .project-initiate-page .flow-role-row{margin-t
 body[data-page="projects.create"] .project-initiate-page .flow-role-actions{margin-top:10px!important;gap:12px!important}
 body[data-page="projects.create"] .project-initiate-page .flow-btn-add-role{padding:7px 10px!important;min-height:34px!important;font-size:12px!important;background:#FFF!important;color:#315F58!important;border:1px solid #D8E1DD!important;box-shadow:none!important}
 body[data-page="projects.create"] .project-initiate-page [data-show-new-role]{border:0!important;background:transparent!important;padding:6px 0!important;color:#315F58!important;font-size:12px!important;box-shadow:none!important}
+.project-initiate-page .self-managed-project-note{display:flex;align-items:flex-start;gap:10px;margin-top:12px;padding:12px 14px;border:1px solid #BFD8CE;border-radius:8px;background:#F1F8F5;color:#214F46}
+.project-initiate-page .self-managed-project-note[hidden]{display:none}
+.project-initiate-page .self-managed-project-note>span{display:grid;place-items:center;width:22px;height:22px;flex:0 0 22px;border-radius:50%;background:#2F6B5F;color:#FFF;font-size:12px;font-weight:700}
+.project-initiate-page .self-managed-project-note b,.project-initiate-page .self-managed-project-note small{display:block}
+.project-initiate-page .self-managed-project-note b{font-size:13px}
+.project-initiate-page .self-managed-project-note small{margin-top:2px;color:#526C65;font-size:11px;line-height:1.45}

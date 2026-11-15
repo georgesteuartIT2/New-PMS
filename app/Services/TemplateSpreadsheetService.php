@@ -8,7 +8,6 @@ use Illuminate\Validation\ValidationException;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
-use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
@@ -26,7 +25,7 @@ class TemplateSpreadsheetService
         'end_time' => 'End Time',
         'duration_days' => 'Duration (Days)',
         'dependency_code' => 'Predecessor #',
-        'suggested_role' => 'Suggested Role',
+        'suggested_role' => 'Assignee (Email)',
         'description' => 'Description'
     ];
 
@@ -69,7 +68,7 @@ class TemplateSpreadsheetService
             ['5. Start / End Dates', 'Enter reference start and end dates (format YYYY-MM-DD, e.g. 2026-11-09). Dates shift automatically to real project start dates upon project creation.'],
             ['6. Working Hours', 'Optional. Specify 24-hour start and end times (format HH:MM, e.g. 09:00 and 17:00).'],
             ['7. Predecessors', 'Optional. Enter the Task # that must finish before this task starts (e.g. 1). Multiple predecessors can be comma-separated.'],
-            ['8. Suggested Role / Assignee', !empty($templateDetails['plan_project']) ? 'Enter the exact email of an active system user in Assignee (Email). For a new Microsoft user, add them in the project picker first, then upload again. Leave blank for unassigned tasks.' : 'Optional. Choose a suggested project role.'],
+            ['8. Assignee', 'Optional. Enter the exact email of an active system user when assigning this plan to a project. Leave blank for unassigned tasks.'],
             ['9. Description', 'Optional. Add concise task-specific notes in the blank Description column.'],
             ['10. Upload Workbook', 'Save this file and click "Upload Excel" in GS ProjectFlow. Your task plan will be generated automatically!'],
         ];
@@ -121,7 +120,6 @@ class TemplateSpreadsheetService
 
         $colKeys = array_keys(self::COLUMNS);
         $colLabels = array_values(self::COLUMNS);
-        if(!empty($templateDetails['plan_project']))$colLabels[9]='Assignee (Email)';
 
         foreach ($colLabels as $colIdx => $label) {
             $sheet3->setCellValueExplicit([$colIdx + 1, 1], $label, DataType::TYPE_STRING);
@@ -141,7 +139,7 @@ class TemplateSpreadsheetService
             $startPeriod = $t['start_period'] ?? ($periodMap[$startDate] ?? '');
             $endPeriod = $t['end_period'] ?? ($periodMap[$endDate] ?? $startPeriod);
 
-            $roleName = !empty($templateDetails['plan_project']) ? ($t['assignee_email'] ?? '') : ($t['suggested_role_name'] ?? ($t['suggestedRole']?->name ?? ''));
+            $roleName = $t['assignee_email'] ?? ($t['assignee']?->email ?? '');
 
             $rowVals = [
                 $t['code'] ?? '',
@@ -178,24 +176,8 @@ class TemplateSpreadsheetService
         $sheet3->getColumnDimension('G')->setWidth(13); // End Time
         $sheet3->getColumnDimension('H')->setWidth(15); // Duration
         $sheet3->getColumnDimension('I')->setWidth(18); // Predecessor #
-        $sheet3->getColumnDimension('J')->setWidth(24); // Suggested Role
+        $sheet3->getColumnDimension('J')->setWidth(28); // Assignee (Email)
         $sheet3->getColumnDimension('K')->setWidth(40); // Description
-
-        // Add Role Dropdown Validation on Column J
-        $rolesList = ProjectRole::orderBy('name')->pluck('name')->all();
-        if (empty($templateDetails['plan_project']) && !empty($rolesList)) {
-            $roleValidation = new DataValidation();
-            $roleValidation->setType(DataValidation::TYPE_LIST);
-            $roleValidation->setErrorStyle(DataValidation::STYLE_INFORMATION);
-            $roleValidation->setAllowBlank(true);
-            $roleValidation->setShowDropDown(true);
-            $roleFormula = '"' . implode(',', array_slice($rolesList, 0, 15)) . '"';
-            $roleValidation->setFormula1($roleFormula);
-
-            for ($r = 2; $r <= max(100, $taskRow + 50); $r++) {
-                $sheet3->getCell("J{$r}")->setDataValidation(clone $roleValidation);
-            }
-        }
 
         // Set active sheet to TASKS for immediate user focus
         $book->setActiveSheetIndex(2);
@@ -722,7 +704,7 @@ class TemplateSpreadsheetService
             if ($duration < 1) $duration = 1;
             if ($duration > 365) $duration = 365;
 
-            // 7. Suggested Role
+            // 7. Assignee (legacy suggested-role imports remain supported)
             $roleInput = trim($row['suggested_role'] ?? '');
             $roleId = null;
             $roleName = null;

@@ -1,10 +1,4 @@
-@php
- $wfReviewOnly=$project->approval_stage==='planning' && $project->plan_initialized && ((int)$project->owner_user_id===auth()->id() || (int)$project->pm_user_id===auth()->id() || auth()->user()->isPmo());
-@endphp
-@if($wfReviewOnly)
-<link rel="stylesheet" href="{{ asset('css/project-workflow.css') }}?v={{ filemtime(public_path('css/project-workflow.css')) }}">
-@include('projects._publish-review')
-@elseif($project->approval_stage && $project->approval_stage!=='ready' && !($project->approval_stage==='pm' && (int)$project->pm_user_id===auth()->id() && (int)$project->owner_user_id!==auth()->id()) && !$workflowCompactRejection)
+@if($project->approval_stage && $project->approval_stage!=='ready' && !($project->approval_stage==='pm' && (int)$project->pm_user_id===auth()->id() && (int)$project->owner_user_id!==auth()->id()) && !$workflowCompactRejection)
 <link rel="stylesheet" href="{{ asset('css/project-workflow.css') }}?v={{ filemtime(public_path('css/project-workflow.css')) }}">
 @php
  $flowUsers=\App\Models\User::where('system_role','user')->where('account_status','active')->orderBy('name')->get();
@@ -23,8 +17,7 @@
 <dialog class="modal" id="owner-reject-dialog" style="max-width:480px"><form class="flow-form" method="post" action="{{ route('projects.owner.respond',$project) }}">@csrf<h2>Reject project request</h2><input type="hidden" name="decision" value="decline"><label>Reason <span>*</span><textarea name="decline_reason" required minlength="5" maxlength="1000" rows="3" placeholder="Tell PMO why this request needs to change."></textarea></label><footer class="flow-footer"><button type="button" class="btn btn-outline" data-close-dialog>Cancel</button><button class="btn btn-primary">Send rejection</button></footer></form></dialog>
 @endif
 @if($project->approval_stage==='planning' && ($isLead || auth()->user()->isPmo()))
-@if(!$project->plan_initialized)<a href="{{ route('projects.plan.setup',$project) }}" class="btn btn-primary">Set up project &rarr;</a>@else<button type="button" class="btn btn-primary" data-show-dialog="publish-plan-review">Review &amp; publish</button>
-@include('projects._publish-review')@endif
+@if(!$project->plan_initialized)<a href="{{ route('projects.plan.setup',$project) }}" class="btn btn-primary">Set up project &rarr;</a>@endif
 @endif
 @if(in_array($project->approval_stage,['owner_declined','pm_declined']) && (auth()->user()->isPmo() || ($isOwner && $project->approval_stage==='pm_declined')))
 <details class="flow-reassign" @if(request()->boolean('workflow_reassign')) open @endif><summary>Change assignment</summary><form class="flow-inline" method="post" action="{{ route('projects.workflow.reassign',$project) }}">@csrf

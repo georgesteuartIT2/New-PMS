@@ -19,7 +19,8 @@ class TemplateTask extends Model {
         'end_date',
         'end_time',
         'dependency_code',
-        'suggested_role_id'
+        'suggested_role_id',
+        'assignee_user_id'
     ];
 
     protected $casts = [
@@ -35,6 +36,10 @@ class TemplateTask extends Model {
 
     public function suggestedRole(): BelongsTo {
         return $this->belongsTo(ProjectRole::class, 'suggested_role_id');
+    }
+
+    public function assignee(): BelongsTo {
+        return $this->belongsTo(User::class, 'assignee_user_id');
     }
 
     public function isSubtask(): bool {

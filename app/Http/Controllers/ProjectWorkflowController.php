@@ -26,7 +26,7 @@ class ProjectWorkflowController
     private function membership(Project $p, User $u, string $slug, string $name): void
     {
         $role = ProjectRole::firstOrCreate(['slug' => $slug], ['name' => $name]);
-        ProjectMembership::firstOrCreate(['project_id' => $p->id, 'user_id' => $u->id, 'project_role_id' => $role->id]);
+        ProjectMembership::updateOrCreate(['project_id' => $p->id, 'user_id' => $u->id], ['project_role_id' => $role->id]);
     }
 
     private function leaders(Project $p, User $actor): void
@@ -46,7 +46,9 @@ class ProjectWorkflowController
     {
         abort_unless($r->user()->isPmo(), 403);
 
-        return view('projects.initiate', ['subsidiaries' => Subsidiary::where('status', 'active')->orderBy('name')->get(), 'users' => User::where('system_role', 'user')->where('account_status', 'active')->orderBy('name')->get(), 'roles'=>$this->availableRoles($r), 'templates'=>ProjectTemplate::where('status','active')->withCount('tasks')->orderBy('name')->get()]);
+        $users = User::where('system_role', 'user')->where('account_status', 'active')->orderBy('name')->get()->push($r->user())->unique('id')->sortBy('name')->values();
+
+        return view('projects.initiate', ['subsidiaries' => Subsidiary::where('status', 'active')->orderBy('name')->get(), 'users' => $users, 'roles'=>$this->availableRoles($r), 'templates'=>ProjectTemplate::where('status','active')->withCount('tasks')->orderBy('name')->get()]);
     }
 
     public function store(Request $r, ProjectService $service)
@@ -55,10 +57,12 @@ class ProjectWorkflowController
         $r->merge(['plan_mode'=>$r->input('plan_mode','none')]);
         $d = $r->validate(array_merge(['name'=>'required|string|max:160','subsidiary_id'=>'required|exists:subsidiaries,id','description'=>'nullable|string|max:3000','assignment_type'=>'required|in:owner,pm','assignee_id'=>'required|integer|exists:users,id','blank_plan'=>'nullable|json|max:1000000','plan_mode'=>'required|in:none,blank,template','project_template_id'=>'required_if:plan_mode,template|nullable|integer|exists:project_templates,id','starts_on'=>'required_unless:plan_mode,none|nullable|date','ends_on'=>'required_unless:plan_mode,none|nullable|date|after_or_equal:starts_on'], $this->memberRules()));
         $blankPlan=$d['plan_mode']==='blank' && !empty($d['blank_plan']) ? $this->validateBlankPlan($d['blank_plan']) : null;
-        $person = $this->person($d['assignee_id']);
+        $selfManaged = (int) $d['assignee_id'] === (int) $r->user()->id;
+        $person = $selfManaged ? $r->user() : $this->person($d['assignee_id']);
         $p = DB::transaction(function () use ($d, $person, $r, $service, $blankPlan) {
             $sub = Subsidiary::whereKey($d['subsidiary_id'])->where('status', 'active')->lockForUpdate()->firstOrFail();
-            $p = Project::create(['name' => $d['name'], 'description' => $d['description'] ?? null, 'subsidiary_id' => $sub->id, 'code' => $sub->nextProjectCode(), 'created_by' => $r->user()->id, 'starts_on' => today(), 'ends_on' => today(), 'status' => 'pending', 'approval_stage' => $d['assignment_type'] === 'owner' ? 'owner' : 'pm', 'owner_user_id' => $d['assignment_type'] === 'owner' ? $person->id : null]);
+            $selfManaged = (int) $person->id === (int) $r->user()->id;
+            $p = Project::create(['name' => $d['name'], 'description' => $d['description'] ?? null, 'subsidiary_id' => $sub->id, 'code' => $sub->nextProjectCode(), 'created_by' => $r->user()->id, 'starts_on' => today(), 'ends_on' => today(), 'status' => $selfManaged ? 'active' : 'pending', 'approval_stage' => $selfManaged ? 'planning' : ($d['assignment_type'] === 'owner' ? 'owner' : 'pm'), 'owner_user_id' => $d['assignment_type'] === 'owner' ? $person->id : null, 'pm_user_id' => $selfManaged ? $person->id : null]);
             if($d['plan_mode']!=='none'){
                 $template=$d['plan_mode']==='template'?ProjectTemplate::whereKey($d['project_template_id'])->where('status','active')->with('tasks')->firstOrFail():null;
                 $p->update(['starts_on'=>$d['starts_on'],'ends_on'=>$d['ends_on'],'project_template_id'=>$template?->id,'plan_initialized'=>true]);
@@ -66,7 +70,9 @@ class ProjectWorkflowController
                 elseif($blankPlan){$source=new ProjectTemplate(['reference_start_date'=>$blankPlan['reference_start_date']??$d['starts_on'],'working_hours'=>'09:00 - 17:00']);$source->setRelation('tasks',collect($blankPlan['tasks'])->map(fn($task,$i)=>new \App\Models\TemplateTask(array_merge($task,['sort_order'=>$i+1,'priority'=>$task['priority']??'medium']))));$service->applyTemplate($p,$source,$r->user());}
             }
             $this->assignOptionalMembers($p,$d['members']??[],$r);
-            if ($d['assignment_type'] === 'owner') {
+            if ($selfManaged) {
+                $this->membership($p, $person, 'pm', 'Project Manager');
+            } elseif ($d['assignment_type'] === 'owner') {
                 $this->membership($p, $person, 'po', 'Project Owner');
                 DB::afterCommit(fn () => $person->notify(new ProjectWorkflowNotification($p, 'owner_request', 'PMO created '.$p->name.'. Review the project, choose a Project Manager and approve, or reject with a reason.', (string) $p->updated_at, 'project_request_received')));
             } else {
@@ -76,7 +82,9 @@ class ProjectWorkflowController
             return $p;
         });
 
-        return redirect()->route('projects.show', $p)->with('success', 'Project created with code '.$p->code.'. Approval request sent.');
+        return redirect()->route('projects.show', $p)->with('success', $selfManaged
+            ? 'Project created with code '.$p->code.'. You can start managing the project now.'
+            : 'Project created with code '.$p->code.'. Approval request sent.');
     }
 
     public function ownerRespond(Request $r, Project $project, ProjectService $service)
@@ -263,7 +271,7 @@ class ProjectWorkflowController
             return redirect(route('projects.show', $project).'#tasks')->with('success', 'Plan published successfully! In-app notifications sent and team emails queued.');
         }
 
-        return redirect(route('projects.show', $project).'#tasks')->with('success', 'Project roles saved. Review your plan, then publish to notify the team.')->with('open_publish_review', true);
+        return redirect(route('projects.show', $project).'#tasks')->with('success', 'Project roles saved.');
     }
 
     public function templates(Request $r, Project $project)
@@ -363,7 +371,7 @@ class ProjectWorkflowController
             return redirect(route('projects.show', $project).'#tasks')->with('success', 'Plan published successfully! In-app notifications sent and team emails queued.');
         }
 
-        return redirect(route('projects.show', $project).'#tasks')->with('success', 'Plan started. Review it below, then publish to notify your team.')->with('open_publish_review', true);
+        return redirect(route('projects.show', $project).'#tasks')->with('success', 'Plan started successfully.');
     }
 
     public function publish(Request $r, Project $project, ProjectService $service)

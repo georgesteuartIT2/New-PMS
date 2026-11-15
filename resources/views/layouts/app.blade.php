@@ -59,6 +59,9 @@
             @php
                 $navigationIsPmo = auth()->user()->canViewPortfolio();
                 if ($navigationIsPmo) {
+                    $navigationHasOwnProjectWork = auth()->user()->isPmo() && \App\Models\Project::where(function($query) {
+                        $query->where('pm_user_id', auth()->id())->orWhere('owner_user_id', auth()->id());
+                    })->whereIn('status', ['active','on_hold','completed'])->exists();
                     $navigationItems = [
                         ['label' => 'Dashboard', 'url' => route('dashboard'), 'active' => request()->routeIs('dashboard'), 'icon' => 'M3 10.5 12 3l9 7.5V21h-6v-7H9v7H3z'],
                         ['label' => 'Projects', 'url' => route('projects.index'), 'active' => request()->routeIs('projects.*', 'gantt.project', 'roles.*'), 'icon' => 'M3 7V5a1 1 0 0 1 1-1h6l2 3h8a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7z'],
@@ -69,6 +72,14 @@
                         ['label' => 'People', 'url' => route('users.index'), 'active' => request()->routeIs('users.*'), 'icon' => 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8'],
                         ['label' => 'Activity log', 'url' => route('activity.index'), 'active' => request()->routeIs('activity.*'), 'icon' => 'M9 5H5v16h14V5h-4M9 3h6v4H9zM8 12h8M8 16h5'],
                     ];
+                    if ($navigationHasOwnProjectWork) {
+                        array_splice($navigationItems, 4, 0, [[
+                            'label' => 'My Tasks',
+                            'url' => route('tasks.mine', ['scope' => 'assigned']),
+                            'active' => request()->routeIs('tasks.mine') && request('scope') === 'assigned',
+                            'icon' => 'M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11',
+                        ]]);
+                    }
                     if (auth()->user()->isPmo()) {
                         $navigationItems[] = [
                             'label' => 'Settings',

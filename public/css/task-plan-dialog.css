@@ -92,3 +92,11 @@
 #stp-import-confirm-dialog .stp-import-actions .is-destructive{border-color:#A63E37!important;background:#A63E37!important;color:#FFF!important}
 #stp-import-confirm-dialog :focus-visible{outline:2px solid #315F58;outline-offset:2px}
 @media(max-width:600px){#smart-task-plan-modal .stp-toolbar-right{width:100%;justify-content:space-between}#stp-import-confirm-dialog{padding:18px;border-radius:13px}#stp-import-confirm-dialog .stp-import-option{grid-template-columns:18px minmax(0,1fr)}#stp-import-confirm-dialog .stp-import-recommended{grid-column:2;justify-self:start;margin-top:-3px}}
+.stp-bulk-assign-backdrop{position:fixed;inset:0;z-index:10020;display:grid;place-items:center;padding:18px;background:rgba(22,35,30,.52);backdrop-filter:blur(3px)}
+.stp-bulk-assign-dialog{width:min(100%,560px);padding:22px;border:1px solid #DFE8E3;border-radius:16px;background:#FFF;box-shadow:0 24px 70px #142b2433}
+.stp-bulk-assign-dialog header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}
+.stp-bulk-assign-dialog h3{margin:0 0 4px;color:#1E2D27;font-size:20px}.stp-bulk-assign-dialog header p{margin:0;color:#66756F;font-size:12.5px}
+.stp-bulk-assign-dialog header button{border:0;background:transparent;color:#61716A;font-size:25px;line-height:1;cursor:pointer}.stp-bulk-assign-dialog label>b{display:block;margin-bottom:7px;color:#263A31;font-size:12px}
+.stp-bulk-assign-dialog .directory-picker input{width:100%;height:42px}.stp-bulk-summary{display:flex;gap:8px;margin-top:12px}.stp-bulk-summary span{padding:5px 9px;border-radius:20px;background:#F1F5F3;color:#52675F;font-size:11px}
+.stp-bulk-assign-dialog footer{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid #E7ECE9}.stp-bulk-assign-dialog footer .btn{min-height:38px}
+@media(max-width:600px){.stp-bulk-assign-dialog footer{display:grid}.stp-bulk-assign-dialog footer .btn{width:100%}}

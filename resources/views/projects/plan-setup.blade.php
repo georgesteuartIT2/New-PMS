@@ -2,6 +2,7 @@
 @section('title','Prepare project plan')
 @section('content')
 <link rel="stylesheet" href="{{ asset('css/project-workflow.css') }}?v={{ filemtime(public_path('css/project-workflow.css')) }}">
+<link rel="stylesheet" href="{{ asset('css/plan-setup-premium.css') }}?v={{ filemtime(public_path('css/plan-setup-premium.css')) }}">
 @php
  $planStarted = $project->plan_initialized || $project->tasks()->exists();
  $templateLibraryUrl = route('templates.index', ['select_for_project' => 1, 'plan_project' => $project->id]);
@@ -88,7 +89,7 @@
  </div>
 
  <!-- Blank Plan Interactive Tooling Subpanel -->
- <div id="blank-plan-subpanel" class="plan-subpanel" style="{{ $startMode==='blank' ? '' : 'display:none;' }}">
+ <div id="blank-plan-subpanel" class="plan-subpanel" @if($startMode!=='blank') hidden @endif>
   <div class="plan-subpanel-header">
    <div>
     <strong style="font-size:13px; color:#1E293B;">Blank plan task tools</strong>
@@ -109,14 +110,14 @@
    </button>
    <button type="button" class="plan-action-btn is-primary" id="btn-manual-blank-tasks" title="Open task builder to add tasks, durations, and assignees">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    <span id="btn-manual-blank-label">+ Build tasks manually</span>
+    <span id="btn-manual-blank-label">Build tasks manually</span>
    </button>
   </div>
   <input type="file" id="plan-excel-file-input" accept=".xlsx,.xls,.csv" style="display:none;">
  </div>
 
  <!-- Template Subpanel -->
- <div id="template-plan-subpanel" class="plan-template-inline" style="{{ $startMode==='template' ? '' : 'display:none;' }}">
+ <div id="template-plan-subpanel" class="plan-template-inline" @if($startMode!=='template') hidden @endif>
   @if($selectedTemplate)
    <button type="button" class="text-action plan-edit-selected" id="btn-customize-template-tasks">Edit selected tasks &amp; assignees &rarr;</button>
   @else
@@ -168,19 +169,22 @@
  <small>You can change it later in Budget &amp; Closure.</small>
 </label>
 
-@include('projects._optional-roles',['roleProject'=>$project,'roleSectionTitle'=>'Team members'])
+<section class="plan-team-section" aria-labelledby="plan-team-title">
+ <div class="plan-team-heading">
+  <div><h2 id="plan-team-title">Project team <span>Optional</span></h2><p>Add people who need project access. You can skip this and add them later.</p></div>
+  <small>Task assignees join automatically</small>
+ </div>
+ @include('projects._optional-roles',['roleProject'=>$project,'roleSectionTitle'=>'Add team members'])
+</section>
 
 
 <p id="plan-template-error" role="alert" hidden style="color:#DC2626; font-size:12.5px; margin:0;">Please choose a template, or start with a blank plan.</p>
 
 <footer class="flow-footer">
  <p class="flow-footer-note">
-  <span id="plan-draft-status" role="status" data-saved-at="{{ $project->setup_draft_saved_at?->toIso8601String() }}">{{ $project->setup_draft_saved_at ? 'Draft saved at '.$project->setup_draft_saved_at->format('g:i A') : 'Draft not saved yet' }}</span><br>
-  <span id="plan-share-status">{{ $project->plan_published_at ? 'Shared with team '.$project->plan_published_at->format('d M Y') : 'Not yet shared with team' }}</span><br>
-  <span id="plan-unassigned-count">{{ $existingUnassignedTaskCount }} {{ \Illuminate\Support\Str::plural('task', $existingUnassignedTaskCount) }} unassigned</span>
-  <span aria-hidden="true">&middot;</span>
-  <span id="plan-validation-count">Checking validation...</span><br>
-  Team emails and in-app notifications are sent only when you publish.
+  <span class="plan-footer-status-row"><strong id="plan-draft-status" role="status" data-saved-at="{{ $project->setup_draft_saved_at?->toIso8601String() }}">{{ $project->setup_draft_saved_at ? 'Draft saved '.$project->setup_draft_saved_at->format('g:i A') : 'Draft not saved' }}</strong><span id="plan-share-status">{{ $project->plan_published_at ? 'Published '.$project->plan_published_at->format('d M Y') : 'Not published' }}</span></span>
+  <span class="plan-footer-checks"><span id="plan-unassigned-count">{{ $existingUnassignedTaskCount }} {{ \Illuminate\Support\Str::plural('task', $existingUnassignedTaskCount) }} unassigned</span><span aria-hidden="true">&middot;</span><span id="plan-validation-count">Checking validation...</span></span>
+  <small>Notifications are sent only when you publish.</small>
  </p>
  <div class="flow-footer-buttons">
   @if($draftEnabled)

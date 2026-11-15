@@ -22,6 +22,16 @@
         checkbox.checked = false;
         checkbox.required = !!adding;
     });
+    document.querySelector('[data-assign-task-to-me]')?.addEventListener('click', event => {
+        if (!manual) return;
+        const button = event.currentTarget;
+        let option = [...manual.options].find(item => item.value === button.dataset.userId);
+        if (!option) { option = new Option(button.dataset.userLabel, button.dataset.userId); manual.add(option); }
+        manual.value = button.dataset.userId;
+        const input = manual.closest('.directory-picker')?.querySelector('input');
+        if (input) input.value = option.textContent.trim();
+        manual.dispatchEvent(new Event('change', { bubbles: true }));
+    });
 
     document.addEventListener('change', event => {
         const field = event.target.closest('.bulk-assignee-select');

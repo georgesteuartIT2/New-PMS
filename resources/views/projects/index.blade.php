@@ -113,9 +113,10 @@
                     @php
                         $userRoles = isset($access) ? $access->roleLabels(auth()->user(), $project) : ['Member'];
                         $isPm = $project->pm_user_id === auth()->id();
+                        $isSelfManagedPmoProject = auth()->user()->isPmo() && (int) $project->created_by === auth()->id() && (int) $project->pm_user_id === auth()->id();
                         $canViewTasks = auth()->user()->isPmo() || $isPm || (isset($access) && $access->project(auth()->user(), $project, 'view_tasks'));
-                        $isDelayed = $project->approval_stage!=='planning' && (bool) ($project->is_delayed ?? false);
-                        $isAtRisk = $project->approval_stage!=='planning' && (bool) ($project->is_at_risk ?? false);
+                        $isDelayed = ($project->approval_stage!=='planning' || $isSelfManagedPmoProject) && (bool) ($project->is_delayed ?? false);
+                        $isAtRisk = ($project->approval_stage!=='planning' || $isSelfManagedPmoProject) && (bool) ($project->is_at_risk ?? false);
                         $delayDays = (int) ($project->delay_working_days ?? 0);
                         $overdueCount = (int) ($project->overdue_tasks_count ?? 0);
                     @endphp
@@ -188,7 +189,7 @@
                         <td>
                             <div class="project-health-cell">
                                 @if(auth()->user()->canViewPortfolio()) @include('projects._workflow-holder') @endif
-                                @if($project->approval_stage==='planning')<span class="status-pill pill-neutral">Preparing plan</span>
+                                @if($project->approval_stage==='planning' && !$isSelfManagedPmoProject)<span class="status-pill pill-neutral">Preparing plan</span>
                                 @elseif($project->status === 'declined')
                                     <span class="status-pill status-declined" style="background: #FEE2E2; color: #991B1B; font-weight: 600;">{{ $project->approval_stage==='owner_declined'?'Owner Declined':'PM Declined' }}</span>
                                 @elseif($project->status === 'pending')
@@ -212,7 +213,7 @@
                                     @if($overdueCount > 0)
                                         <span class="overdue-count-pill warning">{{ $overdueCount }} Overdue {{ $overdueCount === 1 ? 'Task' : 'Tasks' }}</span>
                                     @endif
-                                @elseif($project->approval_stage!=='planning' && $project->status === 'active' && ($project->tasks_count ?? 0) > 0)
+                                @elseif(($project->approval_stage!=='planning' || $isSelfManagedPmoProject) && $project->status === 'active' && ($project->tasks_count ?? 0) > 0)
                                     <span class="status-pill pill-success" style="font-size: 11px; padding: 1px 7px;">On Track</span>
                                 @endif
                             </div>
@@ -271,8 +272,9 @@
 <div id="projects-grid-container" class="projects-grid-view" style="display: none;">
     @forelse($projects as $project)
         @php
-            $isDelayed = $project->approval_stage!=='planning' && (bool) ($project->is_delayed ?? false);
-            $isAtRisk = $project->approval_stage!=='planning' && (bool) ($project->is_at_risk ?? false);
+            $isSelfManagedPmoProject = auth()->user()->isPmo() && (int) $project->created_by === auth()->id() && (int) $project->pm_user_id === auth()->id();
+            $isDelayed = ($project->approval_stage!=='planning' || $isSelfManagedPmoProject) && (bool) ($project->is_delayed ?? false);
+            $isAtRisk = ($project->approval_stage!=='planning' || $isSelfManagedPmoProject) && (bool) ($project->is_at_risk ?? false);
             $delayDays = (int) ($project->delay_working_days ?? 0);
             $overdueCount = (int) ($project->overdue_tasks_count ?? 0);
         @endphp
@@ -290,7 +292,7 @@
                     <small>{{ $project->code }} @if($project->subsidiary) · {{ $project->subsidiary->name }} @endif</small>
                 </div>
                 <div style="text-align: right;">
-                    @if($project->approval_stage==='planning')<span class="status-pill pill-neutral">Preparing plan</span>
+                    @if($project->approval_stage==='planning' && !$isSelfManagedPmoProject)<span class="status-pill pill-neutral">Preparing plan</span>
                                 @elseif($project->status === 'declined')
                         <span class="status-pill status-declined" style="background: #FEE2E2; color: #991B1B; font-weight: 600;">{{ $project->approval_stage==='owner_declined'?'Owner Declined':'PM Declined' }}</span>
                     @elseif($project->status === 'pending')

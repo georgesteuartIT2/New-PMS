@@ -24,6 +24,76 @@ class OwnerApprovalWorkflowTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_pmo_can_manage_own_project_and_gets_personal_task_workflow_only_as_project_lead(): void
+    {
+        Notification::fake();
+        ProjectRole::create(['name' => 'Project Manager', 'slug' => 'pm']);
+        $pmo = $this->person('pmo');
+        $otherPmo = $this->person('pmo');
+        $sub = Subsidiary::create(['name' => 'PMO delivery', 'code' => 'PMOD', 'status' => 'active', 'created_by' => $pmo->id]);
+        $template = ProjectTemplate::create(['name' => 'PMO assigned plan', 'category' => 'General', 'estimated_duration' => 2, 'duration_unit' => 'working_days', 'reference_start_date' => '2026-11-15', 'status' => 'active', 'created_by' => $pmo->id]);
+        TemplateTask::create(['project_template_id' => $template->id, 'code' => '1', 'title' => 'PMO template task', 'duration_days' => 1, 'start_date' => '2026-11-15', 'end_date' => '2026-11-15', 'assignee_user_id' => $pmo->id]);
+
+        $this->actingAs($pmo)->get(route('projects.create'))
+            ->assertOk()->assertSee('I will manage this project')->assertDontSee('value="self_pm"', false)->assertSee('You (PMO Admin)');
+        $this->post(route('projects.initiate'), [
+            'name' => 'PMO managed delivery',
+            'subsidiary_id' => $sub->id,
+            'assignment_type' => 'pm',
+            'assignee_id' => $pmo->id,
+            'plan_mode' => 'template',
+            'project_template_id' => $template->id,
+            'starts_on' => '2026-11-15',
+            'ends_on' => '2026-11-20',
+        ])->assertRedirect();
+
+        $project = Project::latest('id')->firstOrFail();
+        $this->assertSame($pmo->id, $project->pm_user_id);
+        $this->assertSame('active', $project->status);
+        $this->assertSame('planning', $project->approval_stage);
+        $this->assertSame('pm', $project->memberships()->where('user_id', $pmo->id)->firstOrFail()->role->slug);
+        $this->assertTrue($project->tasks()->where('title', 'PMO template task')->firstOrFail()->assignees()->whereKey($pmo->id)->exists());
+        $this->assertDatabaseMissing('project_invitations', ['project_id' => $project->id]);
+
+        $this->get(route('projects.show', $project))->assertOk()->assertSee('Assign to me')->assertDontSee('<span>Plan setup</span>', false)->assertDontSee('Review &amp; publish', false);
+        $this->get(route('projects.index'))->assertOk()->assertSee('Active')->assertDontSee('Preparing plan')->assertDontSee('With PM');
+        $this->post(route('tasks.store', $project), [
+            'title' => 'PMO own task',
+            'starts_at' => now()->addHour()->format('Y-m-d H:i:s'),
+            'ends_at' => now()->addDay()->format('Y-m-d H:i:s'),
+            'priority' => 'medium',
+            'assigned_user_id' => $pmo->id,
+        ])->assertRedirect();
+        $this->assertTrue(Task::latest('id')->firstOrFail()->assignees->contains('id', $pmo->id));
+        $this->get(route('tasks.mine', ['scope' => 'assigned']))->assertOk()->assertSee('My tasks')->assertSee('PMO own task');
+
+        $this->actingAs($otherPmo)->get(route('dashboard'))->assertOk()->assertDontSee('My Tasks');
+    }
+
+    public function test_self_managed_pmo_owner_is_also_the_acting_manager_without_changing_normal_owner_flow(): void
+    {
+        Notification::fake();
+        ProjectRole::create(['name' => 'Project Manager', 'slug' => 'pm']);
+        ProjectRole::create(['name' => 'Project Owner', 'slug' => 'po']);
+        $pmo = $this->person('pmo');
+        $normalOwner = $this->person();
+        $sub = Subsidiary::create(['name' => 'Owner paths', 'code' => 'OWP', 'status' => 'active', 'created_by' => $pmo->id]);
+
+        $this->actingAs($pmo)->post(route('projects.initiate'), ['name' => 'Self owner project', 'subsidiary_id' => $sub->id, 'assignment_type' => 'owner', 'assignee_id' => $pmo->id, 'plan_mode' => 'none'])->assertRedirect();
+        $self = Project::latest('id')->firstOrFail();
+        $this->assertSame($pmo->id, $self->owner_user_id);
+        $this->assertSame($pmo->id, $self->pm_user_id);
+        $this->assertSame('active', $self->status);
+        $this->assertSame('planning', $self->approval_stage);
+
+        $this->post(route('projects.initiate'), ['name' => 'Normal owner project', 'subsidiary_id' => $sub->id, 'assignment_type' => 'owner', 'assignee_id' => $normalOwner->id, 'plan_mode' => 'none'])->assertRedirect();
+        $normal = Project::latest('id')->firstOrFail();
+        $this->assertSame($normalOwner->id, $normal->owner_user_id);
+        $this->assertNull($normal->pm_user_id);
+        $this->assertSame('pending', $normal->status);
+        $this->assertSame('owner', $normal->approval_stage);
+    }
+
     private function person($role = 'user')
     {
         return User::create(['name' => 'Workflow person', 'email' => uniqid().'@example.test', 'password' => 'secret123', 'system_role' => $role, 'account_status' => 'active', 'must_change_password' => false]);
@@ -378,7 +448,7 @@ class OwnerApprovalWorkflowTest extends TestCase
             ->assertSee('Project Manager')
             ->assertSee('Planning stage')
             ->assertSee('Planning (Unpublished)')
-            ->assertSee('Review & publish', false);
+            ->assertSee('current plan workspace');
 
         // PM edits project details during planning - status stays 'active'
         $this->actingAs($pm)->putJson(route('projects.update', $project), [
@@ -503,18 +573,11 @@ class OwnerApprovalWorkflowTest extends TestCase
         $outsider=$this->person();$this->actingAs($outsider)->postJson(route('templates.store'),array_merge($details,['category'=>'General','tasks'=>$tasks]))->assertForbidden();
     }
 
-    public function test_publish_review_lists_recipients_and_unassigned_tasks():void {
+    public function test_legacy_publish_review_modal_is_removed_and_plan_workspace_owns_publishing():void {
         [$pmo,$pm,$p]=$this->initiate('pm');$this->actingAs($pm)->postJson(route('projects.respond',$p),['decision'=>'accept'])->assertOk();
         $this->post(route('projects.plan.initialize',$p),['mode'=>'blank','starts_on'=>'2026-11-12','ends_on'=>'2026-11-30'])->assertRedirect();
         Task::create(['project_id'=>$p->id,'code'=>'1','title'=>'Needs owner','starts_at'=>'2026-11-12 09:00','ends_at'=>'2026-11-12 17:00','created_by'=>$pm->id]);
-        $reviewPage=$this->get(route('projects.show',$p));$this->snapshot('publish-review-page',$reviewPage->getContent());$reviewPage->assertOk()->assertSee('Review &amp; publish',false)->assertSee('tasks still need an assignee')->assertSee('Needs owner')->assertSee('emails are queued');
-    }
-
-    public function test_review_popup_opens_after_continue_to_tasks_when_plan_has_tasks():void {
-        [$pmo,$pm,$p]=$this->initiate('pm');$this->actingAs($pm)->postJson(route('projects.respond',$p),['decision'=>'accept'])->assertOk();
-        $this->post(route('projects.plan.initialize',$p),['mode'=>'blank','starts_on'=>'2026-11-12','ends_on'=>'2026-11-30'])->assertRedirect()->assertSessionHas('open_publish_review');
-        $this->get(route('projects.show',$p))->assertOk()->assertSee('Ready to publish your plan?')->assertDontSee("d.showModal()",false)->assertSee('Your plan has no tasks yet')->assertSee('Review &amp; publish',false);
-        Task::create(['project_id'=>$p->id,'code'=>'1','title'=>'First task','starts_at'=>'2026-11-12 09:00','ends_at'=>'2026-11-12 17:00','created_by'=>$pm->id]);
-        $this->withSession(['open_publish_review'=>true])->get(route('projects.show',$p))->assertOk()->assertSee("d.showModal()",false)->assertSee('Assignment coverage')->assertSee('Publish &amp; notify team',false);
+        $this->get(route('projects.show',$p))->assertOk()->assertDontSee('Ready to publish your plan?')->assertDontSee('publish-plan-review')->assertDontSee('Review &amp; publish',false);
+        $this->get(route('projects.plan.setup',$p))->assertOk()->assertSee('Publish &amp; notify team',false);
     }
 }
