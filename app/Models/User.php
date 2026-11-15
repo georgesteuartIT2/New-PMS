@@ -17,6 +17,10 @@ class User extends Authenticatable {
  public function subsidiary(){return $this->belongsTo(Subsidiary::class);}
  public function memberships(): HasMany {return $this->hasMany(ProjectMembership::class);}
  public function pmProjects(): HasMany {return $this->hasMany(Project::class, 'pm_user_id');}
+ public function ownedProjects(): HasMany {return $this->hasMany(Project::class, 'owner_user_id');}
+ public function canAccessTeamMonitor(): bool {
+  return app(\App\Services\Access::class)->canAccessTeamMonitor($this);
+ }
  public function assignedTasks(): \Illuminate\Database\Eloquent\Relations\BelongsToMany {return $this->belongsToMany(Task::class, 'task_assignments')->withPivot('allocation_percent','assigned_at');}
  public function tasks(): \Illuminate\Database\Eloquent\Relations\BelongsToMany {return $this->assignedTasks();}
  public function socialAccounts(): HasMany {return $this->hasMany(SocialAccount::class);}

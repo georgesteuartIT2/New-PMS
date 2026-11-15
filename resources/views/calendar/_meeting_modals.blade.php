@@ -1,3 +1,8 @@
+@php
+    $canManageCalendarMeetings = (bool) ($canSchedule ?? $canManageMeetings ?? false)
+        && !auth()->user()->isAdminViewer();
+@endphp
+@if($canManageCalendarMeetings)
 <!-- =========================================================================
      MODAL 1: SCHEDULE MEETING DIALOG (Interactive Microsoft Outlook Free/Busy)
      ========================================================================= -->
@@ -23,7 +28,7 @@
         </div>
 
         <!-- Form Body -->
-        <form method="post" id="schedule-meeting-form" action="{{ isset($project) ? route('meetings.store', $project) : '' }}" style="padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px;">
+        <form method="post" id="schedule-meeting-form" action="{{ isset($project) ? route('meetings.store', $project) : '' }}" data-project-id="{{ $project->id ?? '' }}" style="padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 16px;">
             @csrf
 
             <!-- Project Selector (Shown on Global Calendar, Hidden if already on a Project Calendar) -->
@@ -162,6 +167,7 @@
         </form>
     </div>
 </dialog>
+@endif
 
 <!-- =========================================================================
      MODAL 2: VIEW MEETING DETAILS DIALOG
@@ -231,6 +237,7 @@
 
             <!-- Meeting Action Buttons -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 14px; border-top: 1px solid #E2E8F0;">
+                @if($canManageCalendarMeetings)
                 <div id="view-meeting-manage-actions" style="display: flex; gap: 8px;">
                     <form id="delete-meeting-form" method="post" action="" onsubmit="return AppDialog.confirmAction(event,this,'Cancel and delete this meeting? It will also be removed from Microsoft Outlook Calendar.')">
                         @csrf
@@ -240,6 +247,7 @@
                         </button>
                     </form>
                 </div>
+                @endif
                 <button type="button" class="btn btn-outline" data-close-dialog style="font-weight: 600;">Close</button>
             </div>
         </div>

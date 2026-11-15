@@ -7,7 +7,7 @@
 <div class="page-head">
     <div>
         <h1>{{ auth()->user()->canViewPortfolio() ? 'Projects' : 'My Projects' }}</h1>
-        <p class="muted">{{ auth()->user()->canViewPortfolio() ? 'Track delivery, manage your team and keep projects moving.' : 'Projects you are involved in.' }}</p>
+        <p class="muted">{{ auth()->user()->isAdminViewer() ? 'Monitor delivery, ownership, schedule and progress across the company portfolio.' : (auth()->user()->canViewPortfolio() ? 'Track delivery, manage your team and keep projects moving.' : 'Projects you are involved in.') }}</p>
     </div>
     <div class="inline-actions projects-page-actions">
         @if(auth()->user()->isPmo())

@@ -1,5 +1,5 @@
 @php
- $assignmentEnabled=request()->boolean('select_for_project') || request()->filled('project_flow') || request()->filled('plan_project');
+ $assignmentEnabled=$assignmentEnabled ?? (request()->boolean('select_for_project') || request()->filled('project_flow') || request()->filled('plan_project'));
  $planAssignmentUsers=$assignmentEnabled ? \App\Models\User::where('system_role','user')->where('account_status','active')->orderBy('name')->get(['id','name','email']) : collect();
  if($assignmentEnabled && auth()->user()?->isPmo()) $planAssignmentUsers=$planAssignmentUsers->push(array_merge(auth()->user()->only(['id','name','email']),['role_label'=>'PMO Admin']))->unique('id')->sortBy('name')->values();
 @endphp

@@ -5,7 +5,7 @@
 <div class="page-head" style="margin-bottom: 20px;">
     <div>
         <h1 style="letter-spacing: -0.5px;">People</h1>
-        <p class="muted" style="margin-top: 4px;">Manage your organization's directory, access roles, and project permissions.</p>
+        <p class="muted" style="margin-top: 4px;">{{ auth()->user()->isAdminViewer() ? 'View the company directory, account status and project participation.' : "Manage your organization's directory, access roles, and project permissions." }}</p>
     </div>
     <div class="inline-actions">
         @if(auth()->user()->isPmo())<button class="btn btn-primary" data-show-dialog="user-dialog" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 600;">

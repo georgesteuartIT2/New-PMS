@@ -13,6 +13,9 @@ class RoleDirectoryController
     public function index(Request $request, Access $access)
     {
         $search = trim((string) $request->input('q', ''));
+        $selectedSystemRoleKey = in_array($request->query('system_role'), ['pmo', 'admin_viewer'], true)
+            ? $request->query('system_role')
+            : null;
 
         $rolesQuery = ProjectRole::withCount('memberships')
             ->orderBy('is_system', 'desc')
@@ -35,9 +38,28 @@ class RoleDirectoryController
             $selectedRole = $roles->firstWhere('id', (int) $selectedId) ?? ProjectRole::find($selectedId);
         }
 
-        if (!$selectedRole) {
+        if (!$selectedRole && !$selectedSystemRoleKey) {
             $selectedRole = $roles->first() ?? ProjectRole::first();
         }
+
+        $systemRoles = [
+            'pmo' => [
+                'name' => 'PMO Admin',
+                'description' => 'Full company-wide administration and unrestricted project management access.',
+                'permissions' => array_keys(Access::CATALOG),
+                'users_count' => User::where('system_role', 'pmo')->count(),
+            ],
+            'admin_viewer' => [
+                'name' => 'Admin Viewer',
+                'description' => 'Read-only portfolio monitoring with no create, edit, delete, approval, or settings actions.',
+                'permissions' => [
+                    'projects.view_all', 'reports.portfolio', 'project.view', 'project.gantt_view',
+                    'project.reports_view', 'project.budget_view', 'tasks.view_all', 'tasks.view_assigned',
+                    'tasks.download_attachments', 'tasks.view_critical_path',
+                ],
+                'users_count' => User::where('system_role', 'admin_viewer')->count(),
+            ],
+        ];
 
         // Calculate user and project impact for the selected role
         $affectedUsersCount = 0;
@@ -77,6 +99,9 @@ class RoleDirectoryController
         return view('roles.index', [
             'roles' => $roles,
             'selectedRole' => $selectedRole,
+            'selectedSystemRoleKey' => $selectedSystemRoleKey,
+            'selectedSystemRole' => $selectedSystemRoleKey ? $systemRoles[$selectedSystemRoleKey] : null,
+            'systemRoles' => $systemRoles,
             'groupedCatalog' => $groupedCatalog,
             'affectedUsersCount' => $affectedUsersCount,
             'affectedProjectsCount' => $affectedProjectsCount,

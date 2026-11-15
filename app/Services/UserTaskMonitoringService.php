@@ -32,7 +32,12 @@ class UserTaskMonitoringService
             ->whereIn('status', ['active', 'on_hold'])
             ->get();
 
-        // 2. Projects where user has project membership with monitoring permissions
+        // 2. Projects where user is the Project Owner
+        $ownerProjects = Project::where('owner_user_id', $user->id)
+            ->whereIn('status', ['active', 'on_hold'])
+            ->get();
+
+        // 3. Projects where user has project membership with monitoring permissions
         $memberProjects = Project::whereHas('memberships', fn($m) => $m->where('user_id', $user->id))
             ->whereIn('status', ['active', 'on_hold'])
             ->get()
@@ -46,7 +51,8 @@ class UserTaskMonitoringService
             });
 
         $pmProjects=$pmProjects->filter(fn($project)=>$this->access->project($user,$project,'tasks.view_all'));
-        return $pmProjects->merge($memberProjects)->unique('id')->sortBy('name')->values();
+        $ownerProjects=$ownerProjects->filter(fn($project)=>$this->access->project($user,$project,'tasks.view_all'));
+        return $pmProjects->merge($ownerProjects)->merge($memberProjects)->unique('id')->sortBy('name')->values();
     }
 
     /**

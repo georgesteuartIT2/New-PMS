@@ -50,6 +50,7 @@ class Access {
 
         'project.budget_view' => ['category'=>'project','name'=>'View Project Budget','description'=>'View planned budget, actual spending and expense records.'],
         'project.budget_manage' => ['category'=>'project','name'=>'Manage Project Budget','description'=>'Set the planned budget and record or correct expenses.'],
+        'project.meetings_manage' => ['category'=>'project','name'=>'Manage Project Meetings','description'=>'Check project member availability and schedule, update, or cancel project meetings.'],
         // Task Permissions
         'tasks.view_assigned' => ['category' => 'task', 'name' => 'View Assigned Tasks', 'description' => 'View tasks specifically assigned to the user.'],
         'tasks.view_all' => ['category' => 'task', 'name' => 'View All Tasks in Assigned Project', 'description' => 'View all tasks across the entire project plan regardless of assignment.'],
@@ -253,16 +254,11 @@ class Access {
 
         $canonical = $this->normalize($permission);
         $matching = $this->matchingKeys($permission);
-        if($project->approval_stage && $user->system_role==='user' && in_array($user->id,[$project->owner_user_id,$project->pm_user_id],true)){
-            $read=['project.view','tasks.view_all','tasks.view_assigned','project.gantt_view','project.reports_view','project.budget_view'];
-            if($project->status==='archived' || in_array($project->status,['pending','declined'],true))return in_array($canonical,$read,true);
-            return isset(self::CATALOG[$canonical]) && self::CATALOG[$canonical]['category']!=='company';
-        }
-
         // Project lifecycle checks
         $isPm = ($project->pm_user_id === $user->id);
+        $isOwner = ($project->owner_user_id === $user->id);
 
-        if ($isPm) {
+        if ($isPm || $isOwner) {
             if (in_array($project->status, ['pending', 'declined'], true)) {
                 // Invited PM can review plan, tasks, and Gantt before responding
                 return in_array($canonical, ['project.view', 'tasks.view_all', 'project.gantt_view', 'project.reports_view'], true);
@@ -272,11 +268,11 @@ class Access {
                 return in_array($canonical, ['project.view', 'tasks.view_all', 'project.gantt_view', 'project.reports_view'], true);
             }
 
-            // Check if there is a project-specific restriction for PM role
-            $pmRole = ProjectRole::where('slug', 'pm')->first();
-            if ($pmRole) {
+            // Project leads use the same configurable role policy shown in Roles & access.
+            $leadRole = ProjectRole::where('slug', $isPm ? 'pm' : 'po')->first();
+            if ($leadRole) {
                 $override = ProjectRolePermission::where('project_id', $project->id)
-                    ->where('project_role_id', $pmRole->id)
+                    ->where('project_role_id', $leadRole->id)
                     ->whereIn('permission', $matching)
                     ->first();
 
@@ -284,18 +280,18 @@ class Access {
                     return (bool) $override->allowed;
                 }
 
-                // Check PM role default permissions
-                if (!empty($pmRole->default_permissions)) {
+                // Check the saved default permissions for this lead role.
+                if (!empty($leadRole->default_permissions)) {
                     foreach ($matching as $k) {
-                        if (in_array($k, $pmRole->default_permissions, true)) {
+                        if (in_array($k, $leadRole->default_permissions, true)) {
                             return true;
                         }
                     }
                 }
             }
 
-            // An existing PM role is authoritative, including an empty policy.
-            return $pmRole === null;
+            // An existing lead role is authoritative, including an empty policy.
+            return $leadRole === null;
         }
 
         if($project->approval_stage==='planning')return false;

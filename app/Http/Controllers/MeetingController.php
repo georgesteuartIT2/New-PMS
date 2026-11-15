@@ -14,17 +14,25 @@ class MeetingController
      * Check availability of selected attendees on a specific date.
      * Queries Microsoft Graph Outlook calendar free/busy API with local fallback.
      */
-    public function checkAvailability(Request $request, AzureGraphService $graphService)
+    public function checkAvailability(Request $request, AzureGraphService $graphService, Access $access)
     {
         $validated = $request->validate([
             'date' => 'required|date_format:Y-m-d',
             'attendee_emails' => 'required|array|min:1',
             'attendee_emails.*' => 'required|email',
-            'project_id' => 'nullable|exists:projects,id',
+            'project_id' => 'required|exists:projects,id',
         ]);
+
+        $project = Project::findOrFail($validated['project_id']);
+        abort_unless($access->project($request->user(), $project, 'project.meetings_manage'), 403, 'You cannot manage meetings for this project.');
+
+        $projectEmails = User::whereHas('memberships', fn ($membership) => $membership->where('project_id', $project->id))
+            ->orWhereIn('id', array_filter([$project->pm_user_id, $project->owner_user_id, $project->created_by]))
+            ->pluck('email')->map(fn ($email) => strtolower($email))->all();
 
         $date = $validated['date'];
         $emails = array_map('strtolower', array_unique($validated['attendee_emails']));
+        abort_unless(empty(array_diff($emails, $projectEmails)), 422, 'Availability can only be checked for members of this project.');
 
         // Get schedules from Microsoft Graph and local DB
         $schedules = $graphService->getSchedule($emails, $date);
@@ -96,9 +104,9 @@ class MeetingController
     {
         $user = $request->user();
         abort_unless(
-            $user->isPmo() || $project->pm_user_id === $user->id || $access->canManageTask($user, $project),
+            $access->project($user, $project, 'project.meetings_manage'),
             403,
-            'Only PMO Administrators or the Project Manager can schedule project meetings.'
+            'You do not have permission to schedule meetings for this project.'
         );
 
         $data = $request->validate([
@@ -111,6 +119,11 @@ class MeetingController
             'attendee_ids' => 'required|array|min:1',
             'attendee_ids.*' => 'exists:users,id',
         ]);
+
+        $allowedAttendeeIds = User::whereHas('memberships', fn ($membership) => $membership->where('project_id', $project->id))
+            ->orWhereIn('id', array_filter([$project->pm_user_id, $project->owner_user_id, $project->created_by]))
+            ->pluck('id')->all();
+        abort_unless(empty(array_diff(array_map('intval', $data['attendee_ids']), array_map('intval', $allowedAttendeeIds))), 422, 'Choose attendees from this project team only.');
 
         $startsAt = Carbon::parse("{$data['meeting_date']} {$data['start_time']}:00");
         $endsAt = Carbon::parse("{$data['meeting_date']} {$data['end_time']}:00");
@@ -192,7 +205,7 @@ class MeetingController
     {
         $user = $request->user();
         abort_unless(
-            $user->isPmo() || $meeting->project->pm_user_id === $user->id || $meeting->created_by === $user->id || $access->canManageTask($user, $meeting->project),
+            $access->project($user, $meeting->project, 'project.meetings_manage'),
             403,
             'Unauthorized to edit this meeting.'
         );
@@ -208,6 +221,14 @@ class MeetingController
             'attendee_ids' => 'nullable|array',
             'attendee_ids.*' => 'exists:users,id',
         ]);
+
+        if (isset($data['attendee_ids'])) {
+            $project = $meeting->project;
+            $allowedAttendeeIds = User::whereHas('memberships', fn ($membership) => $membership->where('project_id', $project->id))
+                ->orWhereIn('id', array_filter([$project->pm_user_id, $project->owner_user_id, $project->created_by]))
+                ->pluck('id')->all();
+            abort_unless(empty(array_diff(array_map('intval', $data['attendee_ids']), array_map('intval', $allowedAttendeeIds))), 422, 'Choose attendees from this project team only.');
+        }
 
         $startsAt = Carbon::parse("{$data['meeting_date']} {$data['start_time']}:00");
         $endsAt = Carbon::parse("{$data['meeting_date']} {$data['end_time']}:00");
@@ -256,7 +277,7 @@ class MeetingController
     {
         $user = $request->user();
         abort_unless(
-            $user->isPmo() || $meeting->project->pm_user_id === $user->id || $meeting->created_by === $user->id || $access->canManageTask($user, $meeting->project),
+            $access->project($user, $meeting->project, 'project.meetings_manage'),
             403,
             'Unauthorized to delete this meeting.'
         );

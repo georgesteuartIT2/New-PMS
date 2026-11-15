@@ -190,7 +190,7 @@ class ProjectWorkflowController
         return view('projects.plan-setup', [
             'project' => $project->load('template','memberships.user','memberships.role'),
             'roles' => $this->availableRoles($r),
-            'users' => User::where('system_role','user')->where('account_status','active')->orderBy('name')->get(),
+            'users' => User::where('system_role','user')->where('account_status','active')->orderBy('name')->get()->when($r->user()->isPmo(), fn($users) => $users->push($r->user()))->unique('id')->sortBy('name')->values(),
             'selectedTemplate' => ProjectTemplate::where('status', 'active')->with('tasks')->find((int) ($r->old('project_template_id') ?: $r->query('template_id'))),
             'templates' => ProjectTemplate::where('status', 'active')->withCount('tasks')->orderBy('name')->get(),
         ]);

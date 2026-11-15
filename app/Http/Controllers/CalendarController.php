@@ -36,9 +36,11 @@ class CalendarController
             $accessibleProjectIds = $schedulableProjects->pluck('id');
         } else {
             $pmProjectIds = $user->pmProjects()->whereNotIn('status', ['archived', 'draft'])->pluck('id');
+            $ownerProjectIds = $user->ownedProjects()->whereNotIn('status', ['archived', 'draft'])->pluck('id');
             $memberProjectIds = $user->memberships()->whereHas('project', fn($q) => $q->whereNotIn('status', ['archived', 'draft']))->pluck('project_id');
-            $accessibleProjectIds = $pmProjectIds->merge($memberProjectIds)->unique();
-            $schedulableProjects = Project::whereIn('id', $pmProjectIds)->whereNotIn('status', ['archived', 'draft'])->orderBy('name')->get();
+            $accessibleProjectIds = $pmProjectIds->merge($ownerProjectIds)->merge($memberProjectIds)->unique();
+            $schedulableProjects = Project::whereIn('id', $accessibleProjectIds)->whereNotIn('status', ['archived', 'draft'])->orderBy('name')->get()
+                ->filter(fn ($project) => $access->project($user, $project, 'project.meetings_manage'))->values();
         }
 
         if ($selectedProjectId && in_array((int)$selectedProjectId, $accessibleProjectIds->all(), true)) {
@@ -157,7 +159,7 @@ class CalendarController
         );
 
         $user = $request->user();
-        $canManageMeetings = $user->isPmo() || $project->pm_user_id === $user->id || $access->canManageTask($user, $project);
+        $canManageMeetings = $access->project($user, $project, 'project.meetings_manage');
 
         $monthStr = trim((string) $request->query('month', now()->format('Y-m')));
         if (!preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $monthStr)) {
@@ -188,6 +190,7 @@ class CalendarController
         // Project members list for meeting scheduling
         $projectMembers = User::whereHas('memberships', fn ($m) => $m->where('project_id', $project->id))
             ->orWhere('id', $project->pm_user_id)
+            ->orWhere('id', $project->owner_user_id)
             ->orWhere('id', $project->created_by)
             ->distinct()
             ->orderBy('name')

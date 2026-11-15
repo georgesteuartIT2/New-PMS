@@ -4,7 +4,7 @@ use Illuminate\Database\Seeder;
 use App\Models\ProjectRole;
 class DatabaseSeeder extends Seeder {
  public function run():void {
-  // Seed all 34 standard enterprise permissions
+  // Seed the complete canonical enterprise permission catalog.
   $sort = 1;
   foreach (\App\Services\Access::CATALOG as $key => $info) {
    \App\Models\Permission::updateOrCreate(['key' => $key], [
@@ -15,25 +15,21 @@ class DatabaseSeeder extends Seeder {
    ]);
   }
 
+  $fullProjectAccess = collect(\App\Services\Access::CATALOG)
+   ->reject(fn ($permission) => $permission['category'] === 'company')
+   ->keys()
+   ->values()
+   ->all();
+  $projectViewingAccess = [
+   'project.view', 'project.gantt_view', 'project.reports_view', 'project.budget_view',
+   'tasks.view_all', 'tasks.download_attachments', 'tasks.view_critical_path',
+  ];
+
   $roles = [
-   ['pm', 'Project Manager', [
-    'project.view', 'project.edit', 'project.members_manage', 'project.gantt_view', 'project.schedule_manage', 'project.reports_view', 'project.closure_request',
-    'tasks.view_assigned', 'tasks.view_all', 'tasks.create', 'tasks.edit_assigned', 'tasks.edit_all', 'tasks.assign', 'tasks.delete', 'tasks.update_status', 'tasks.update_progress', 'tasks.upload_attachments', 'tasks.download_attachments', 'tasks.add_comments', 'tasks.report_delays', 'tasks.manage_dependencies', 'tasks.view_critical_path',
-    'approvals.review_changes', 'approvals.review_delays', 'approvals.manage_corrective_actions',
-    'view_project', 'view_tasks', 'view_gantt', 'manage_tasks', 'assign_tasks', 'manage_team', 'edit_project', 'upload_files'
-   ]],
-   ['ps', 'Project Sponsor', [
-    'project.view', 'project.gantt_view', 'project.reports_view', 'tasks.view_all', 'tasks.download_attachments', 'tasks.view_critical_path', 'approvals.review_changes', 'approvals.approve_changes',
-    'view_project', 'view_tasks', 'view_gantt'
-   ]],
-   ['po', 'Project Owner', [
-    'project.view', 'project.gantt_view', 'project.reports_view', 'tasks.view_all', 'tasks.download_attachments', 'tasks.view_critical_path', 'project.closure_approve',
-    'view_project', 'view_tasks', 'view_gantt'
-   ]],
-   ['steering', 'Steering Committee', [
-    'project.view', 'project.gantt_view', 'project.reports_view', 'tasks.view_all', 'tasks.download_attachments', 'tasks.view_critical_path',
-    'view_project', 'view_tasks', 'view_gantt'
-   ]],
+   ['pm', 'Project Manager', $fullProjectAccess],
+   ['ps', 'Project Sponsor', $projectViewingAccess],
+   ['po', 'Project Owner', $fullProjectAccess],
+   ['steering', 'Steering Committee', $projectViewingAccess],
    ['team', 'Team Member', [
     'project.view', 'project.gantt_view',
     'tasks.view_assigned', 'tasks.edit_assigned', 'tasks.update_status', 'tasks.update_progress', 'tasks.upload_attachments', 'tasks.download_attachments', 'tasks.add_comments', 'tasks.report_delays',

@@ -376,7 +376,8 @@ body:is([data-page="users.index"],[data-page="activity.index"],[data-page="subsi
 #project-workspace #tab-tasks .task-search-control input{width:100%;height:40px!important;min-height:40px!important;padding:0 12px 0 38px!important}
 #project-workspace #tab-tasks .task-quick-filters>label:not(.quick-search-label){flex:0 0 auto}
 #project-workspace #tab-tasks .task-quick-filters select{min-width:132px;height:40px!important;min-height:40px!important;padding:0 30px 0 12px!important}
-#project-workspace #tab-tasks .workspace-result-count{display:inline-flex;align-items:center;justify-content:center;min-height:30px;padding:0 10px;border:1px solid #E5EBE7;border-radius:999px;background:#F7F9F8;color:#6F7D75!important;font-size:11px!important;font-weight:550}
+#project-workspace #tab-tasks .workspace-task-column-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
+#project-workspace #tab-tasks .workspace-result-count{color:#87928B!important;font-size:10px!important;font-weight:500;white-space:nowrap;text-transform:none;letter-spacing:0}
 #project-workspace #tab-tasks .workspace-task-actions{flex:0 0 auto;justify-content:flex-end;gap:0!important;margin-left:0!important}
 #project-workspace #tab-tasks .workspace-task-action-group{gap:8px!important}
 #project-workspace #tab-tasks .workspace-task-manage-group{margin-left:12px;padding-left:20px;border-left:1px solid #E2E9E5}
@@ -423,7 +424,7 @@ body:is([data-page="users.index"],[data-page="activity.index"],[data-page="subsi
  #project-workspace #tab-tasks .task-search-control input,
  #project-workspace #tab-tasks .task-quick-filters select{height:34px!important;min-height:34px!important;font-size:11px!important}
  #project-workspace #tab-tasks .task-quick-filters select{min-width:90px!important;padding:0 22px 0 8px!important}
- #project-workspace #tab-tasks .workspace-result-count{min-height:26px;padding:0 7px;font-size:10px!important}
+ #project-workspace #tab-tasks .workspace-result-count{font-size:10px!important}
  #project-workspace #tab-tasks .workspace-task-actions{width:auto!important;flex:0 0 auto;flex-wrap:nowrap;margin-left:0!important}
  #project-workspace #tab-tasks .workspace-task-action-group{gap:5px!important}
  #project-workspace #tab-tasks .workspace-task-manage-group{margin-left:6px;padding-left:8px}
@@ -449,3 +450,11 @@ body:is([data-page="users.index"],[data-page="activity.index"],[data-page="subsi
 .directory-results-floating .directory-person-avatar{display:grid;place-items:center;flex:0 0 24px;width:24px;height:24px;border-radius:50%;background:#EAF3EE;color:#315F58;font-size:9px;font-weight:650;line-height:1}
 .directory-results-floating .directory-person:hover{outline:0!important;background:#F4F8F5!important}
 .directory-results-floating .directory-person:focus-visible{outline:2px solid #315F58!important;outline-offset:-2px;background:#EDF4F1!important}
+
+/* Task table balance: show full priority labels and keep status compact. */
+@media(min-width:1000px){
+ #project-workspace #tab-tasks .project-tasks-full-table th:nth-child(3){width:11%!important}
+ #project-workspace #tab-tasks .project-tasks-full-table th:nth-child(7){width:10%!important}
+ #project-workspace #tab-tasks .quick-priority-select{width:100%!important;min-width:108px!important;padding:0 20px 0 9px!important;font-size:11px!important;letter-spacing:0!important;text-overflow:clip!important}
+ #project-workspace #tab-tasks .task-status-cell .quick-status-select{width:100%!important;min-width:0!important;height:32px!important;min-height:32px!important;padding:4px 24px 4px 8px!important;font-size:11px!important}
+}

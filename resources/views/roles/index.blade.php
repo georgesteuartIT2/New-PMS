@@ -5,35 +5,35 @@
 <!-- Page Header -->
 <div class="page-head">
     <div>
-        <h1>Roles & Permissions</h1>
-        <p class="muted">Choose a project role and check what its members can do.</p>
+        <h1>Roles &amp; access</h1>
+        <p class="muted">Set the default access for each project role. Select a role, adjust its permissions, then save.</p>
     </div>
     <div class="inline-actions">
-        <button type="button" class="btn btn-primary" onclick="toggleNewRoleForm()">+ New Role</button>
+        <button type="button" class="btn btn-primary" id="new-role-trigger" aria-expanded="{{ old('_create_role') ? 'true' : 'false' }}" aria-controls="new-role-card" onclick="toggleNewRoleForm(true)">+ New role</button>
     </div>
 </div>
 
 <!-- Inline New Role Form (Expands upon click, no disruptive modals) -->
-<div id="new-role-card" class="card" style="display: {{ old('_create_role') ? 'block' : 'none' }}; margin-bottom: 24px; border: 1px solid #315F58; background: #FAFDFB;">
+<div id="new-role-card" class="card role-create-panel" role="dialog" aria-modal="true" aria-labelledby="new-role-title" style="display: {{ old('_create_role') ? 'block' : 'none' }};">
     <div class="card-head" style="margin-bottom: 16px;">
         <div>
-            <h2 style="font-size: 16px; margin: 0;">Create Custom Project Role</h2>
-            <p class="muted" style="margin: 2px 0 0 0; font-size: 13px;">Give the role a name and choose its permissions before creating it.</p>
+            <h2 id="new-role-title" style="font-size: 18px; margin: 0;">Create a project role</h2>
+            <p class="muted" style="margin: 3px 0 0; font-size: 12px;">Name the role, then choose only the actions its members should be able to perform.</p>
         </div>
-        <button type="button" class="btn btn-outline btn-xs" onclick="toggleNewRoleForm()">Cancel</button>
+        <button type="button" class="icon-btn role-create-close" onclick="toggleNewRoleForm(false)" aria-label="Close new role form">&times;</button>
     </div>
     <form method="post" action="{{ route('role-directory.store') }}">
         @csrf
         <input type="hidden" name="_create_role" value="1">
         <div style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
-            <label style="flex: 1; min-width: 260px; font-size: 13px; font-weight: 500;">
-                Role Name <span style="color: var(--danger);">*</span>
-                <input type="text" name="name" value="{{ old('_create_role') ? old('name') : '' }}" required placeholder="e.g. Quality Assurance Lead" style="margin-top: 6px; width: 100%;">
+            <label class="role-create-name">
+                Role name <span style="color: var(--danger);">*</span>
+                <input type="text" name="name" value="{{ old('_create_role') ? old('name') : '' }}" required placeholder="Example: Quality Assurance Lead" autocomplete="off">
             </label>
-
         </div>
+        <div class="role-create-guidance"><span aria-hidden="true">i</span><p><b>Start with basic access.</b> “View Project” lets members open the project. Add task, team or approval permissions only when the role needs them.</p></div>
         @include('roles._permission-list',['permissionGroups'=>$groupedCatalog,'selectedPermissions'=>old('_create_role') ? old('permissions',[]) : ['project.view'],'lockedPermissions'=>[],'permissionInputName'=>'permissions[]','permissionInputClass'=>'','permissionCountId'=>null])
-        <div class="new-role-submit"><button type="submit" class="btn btn-primary">Create role</button></div>
+        <div class="new-role-submit"><button type="button" class="btn btn-outline" onclick="toggleNewRoleForm(false)">Cancel</button><button type="submit" class="btn btn-primary">Create role</button></div>
     </form>
 </div>
 
@@ -43,7 +43,6 @@
     <!-- Left Column: Searchable Roles List -->
     <aside class="rbac-sidebar card">
         <div class="rbac-sidebar-head">
-            <h2 style="font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin: 0 0 12px 0;">Available Roles</h2>
             <form method="get" action="{{ route('role-directory.index') }}" class="roles-search-form">
                 <input type="text" name="q" value="{{ $search }}" placeholder="Filter roles..." class="roles-search-input" oninput="filterRolesLive(this.value)">
                 @if($search)
@@ -53,24 +52,40 @@
         </div>
 
         <div class="roles-nav-list" id="roles-nav-list">
+            <h2 class="role-nav-section-title">System roles</h2>
+            @foreach($systemRoles as $key=>$systemRole)
+                <a href="{{ route('role-directory.index', ['system_role'=>$key]) }}" class="role-item-link {{ $selectedSystemRoleKey===$key?'active':'' }}" data-role-name="{{ strtolower($systemRole['name']) }}" data-role-slug="{{ $key }}">
+                    <div class="role-item-info"><span class="role-item-name">{{ $systemRole['name'] }}</span><span class="role-item-meta">{{ $systemRole['users_count'] }} {{ $systemRole['users_count']===1?'user':'users' }}</span></div>
+                    <span class="status-pill pill-neutral">Protected</span>
+                </a>
+            @endforeach
+            <h2 class="role-nav-section-title role-nav-project-title">Project roles</h2>
             @forelse($roles as $role)
                 @php
                     $isActive = $selectedRole && $selectedRole->id === $role->id;
                 @endphp
-                <a href="{{ route('role-directory.index', ['role' => $role->id, 'q' => $search]) }}" 
-                   class="role-item-link {{ $isActive ? 'active' : '' }}" 
-                   data-role-name="{{ strtolower($role->name) }}"
-                   data-role-slug="{{ strtolower($role->slug) }}">
-                    <div class="role-item-info">
-                        <span class="role-item-name">{{ $role->name }}</span>
-                        <span class="role-item-meta">
-                            {{ $role->slug === 'pm' ? 'Project Lead' : ($role->memberships_count . ' ' . ($role->memberships_count === 1 ? 'member' : 'members')) }}
+                <div class="role-nav-entry {{ $isActive ? 'active' : '' }}" data-role-name="{{ strtolower($role->name) }}" data-role-slug="{{ strtolower($role->slug) }}">
+                    <a href="{{ route('role-directory.index', ['role' => $role->id, 'q' => $search]) }}" class="role-item-link {{ $isActive ? 'active' : '' }}" data-role-name="{{ strtolower($role->name) }}" data-role-slug="{{ strtolower($role->slug) }}">
+                        <div class="role-item-info">
+                            <span class="role-item-name">{{ $role->name }}</span>
+                            <span class="role-item-meta">
+                                {{ $role->slug === 'pm' ? 'Project Lead' : ($role->memberships_count . ' ' . ($role->memberships_count === 1 ? 'member' : 'members')) }}
+                            </span>
+                        </div>
+                        <span class="status-pill {{ $role->is_system ? 'pill-neutral' : 'pill-success' }}">
+                            {{ $role->is_system ? 'Built-in' : 'Custom' }}
                         </span>
-                    </div>
-                    <span class="status-pill {{ $role->is_system ? 'pill-neutral' : 'pill-success' }}" style="font-size: 11px; padding: 2px 8px;">
-                        {{ $role->is_system ? 'Built-in' : 'Custom' }}
-                    </span>
-                </a>
+                    </a>
+                    @unless($role->is_system)
+                        <form method="post" action="{{ route('role-directory.delete', $role) }}" class="role-nav-delete-form" onsubmit="return AppDialog.confirmAction(event,this,'Delete the custom role {{ addslashes($role->name) }}? This action cannot be undone.');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="role-nav-delete" aria-label="Delete {{ $role->name }}" title="Delete custom role">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </form>
+                    @endunless
+                </div>
             @empty
                 <div class="empty-state" style="padding: 24px 12px; font-size: 13px;">No roles match your search.</div>
             @endforelse
@@ -79,7 +94,16 @@
 
     <!-- Right Column: Role Details & Permissions Editor -->
     <main class="rbac-editor card">
-        @if($selectedRole)
+        @if($selectedSystemRole)
+            <div class="role-editor-top">
+                <div class="role-editor-titles">
+                    <div><h2>{{ $selectedSystemRole['name'] }}</h2><span class="status-pill pill-neutral">Protected System Role</span></div>
+                    <p class="role-policy-description">{{ $selectedSystemRole['description'] }}</p>
+                </div>
+            </div>
+            <div class="system-role-notice"><b>System-managed access</b><span>This policy is shown for clarity and cannot be edited from project roles.</span></div>
+            @include('roles._permission-list',['permissionGroups'=>$groupedCatalog,'selectedPermissions'=>$selectedSystemRole['permissions'],'lockedPermissions'=>[],'readOnlyPermissions'=>true,'permissionInputName'=>null,'permissionInputClass'=>'','permissionCountId'=>null])
+        @elseif($selectedRole)
             <!-- Role Header & Context -->
             <div class="role-editor-top">
                 <div class="role-editor-titles">
@@ -90,11 +114,11 @@
                         </span>
                         <code style="font-size: 11px; background: #F3F4F6; padding: 2px 6px; border-radius: 4px; color: #4B5563;">{{ $selectedRole->slug }}</code>
                     </div>
-                    <p class="muted" style="font-size: 13px; margin: 0;">
+                    <p class="role-policy-description">
                         @if($selectedRole->is_system)
-                            Built-in role identifier is protected. Choose the actions this project role can perform.
+                            This built-in role cannot be renamed or deleted. You can still control what its members are allowed to do.
                         @else
-                            Custom role. You can rename this role and configure its default permissions policy.
+                            Rename this custom role or change the access its members receive.
                         @endif
                     </p>
                 </div>
@@ -109,13 +133,9 @@
             </div>
 
             <!-- Role Scope & Affected Users Impact Warning -->
-            <div class="role-impact-callout" style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 12px 16px; margin-bottom: 24px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
-                    <div>
-                        <b>Active Impact:</b> Affects <b>{{ $affectedUsersCount }}</b> {{ $affectedUsersCount === 1 ? 'user' : 'users' }} across <b>{{ $affectedProjectsCount }}</b> {{ $affectedProjectsCount === 1 ? 'project' : 'projects' }}.
-                    </div>
-                    <span class="muted" style="font-size: 12px;">Applies after saving. Other roles and project overrides may also grant access.</span>
-                </div>
+            <div class="role-impact-callout">
+                <div class="role-impact-primary"><span>Current use</span><b>{{ $affectedUsersCount }} {{ $affectedUsersCount === 1 ? 'person' : 'people' }}</b><i aria-hidden="true">&middot;</i><b>{{ $affectedProjectsCount }} {{ $affectedProjectsCount === 1 ? 'project' : 'projects' }}</b></div>
+                <p>Saved changes apply to everyone using this role. Another role or a project override may provide additional access.</p>
             </div>
 
             <!-- Permissions Editor Form -->
@@ -137,10 +157,11 @@
 
                 <!-- Single Primary Save Action -->
                 <div class="editor-bottom-bar" style="position: sticky; bottom: 0; background: #FFFFFF; padding: 16px 0; border-top: 1px solid #E5E7EB; display: flex; justify-content: space-between; align-items: center; z-index: 5;">
-                    <div style="font-size: 13px; color: var(--muted);">
-                        Role: <b>{{ $selectedRole->name }}</b>
+                    <div class="role-save-context" style="font-size: 13px; color: var(--muted);">
+                        <span>Editing <b>{{ $selectedRole->name }}</b></span>
+                        <small>Saved permissions apply to every project member with this role.</small>
                     </div>
-                    <button type="submit" class="btn btn-primary" style="min-width: 140px;">Save Changes</button>
+                    <button type="submit" class="btn btn-primary" style="min-width: 140px;">Save permissions</button>
                 </div>
             </form>
         @else
@@ -152,13 +173,13 @@
     </main>
 </div>
 
-<details class="role-access-preview" @if($effectivePreview) open @endif><summary>Check a person's project access</summary>
+<details class="role-access-preview" @if($effectivePreview) open @endif><summary><span>Check a person’s access</span><small>See what someone can do in a specific project</small></summary>
 <!-- Effective Permissions Preview Section -->
 <section class="card" style="margin-top: 32px;">
     <div class="card-head" style="margin-bottom: 20px;">
         <div>
-            <h2 style="font-size: 16px; margin: 0 0 4px 0;">Effective Permissions Preview</h2>
-            <p class="muted" style="margin: 0; font-size: 13px;">Verify what effective permissions a specific user has in a specific project based on role defaults, project-level overrides, and company-wide policies.</p>
+            <h2 style="font-size: 16px; margin: 0 0 4px 0;">Check project access</h2>
+            <p class="muted" style="margin: 0; font-size: 13px;">Choose a person and project. We’ll show what they are allowed to do.</p>
         </div>
     </div>
 
@@ -168,9 +189,9 @@
         
         <div style="display: flex; gap: 12px; flex: 1; flex-wrap: wrap;">
             <label style="font-size: 12px; font-weight: 500; min-width: 220px;">
-                User
+                Person
                 <select name="user_id" required style="margin-top: 4px; width: 100%;">
-                    <option value="">Select a user...</option>
+                    <option value="">Choose a person</option>
                     @foreach($usersList as $u)
                         <option value="{{ $u->id }}" @selected($previewUserId == $u->id)>{{ $u->name }} ({{ $u->email }})</option>
                     @endforeach
@@ -180,7 +201,7 @@
             <label style="font-size: 12px; font-weight: 500; min-width: 240px;">
                 Project
                 <select name="project_id" required style="margin-top: 4px; width: 100%;">
-                    <option value="">Select a project...</option>
+                    <option value="">Choose a project</option>
                     @foreach($projectsList as $p)
                         <option value="{{ $p->id }}" @selected($previewProjectId == $p->id)>{{ $p->code }} · {{ $p->name }}</option>
                     @endforeach
@@ -188,10 +209,20 @@
             </label>
         </div>
 
-        <button type="submit" class="btn btn-outline" style="height: 38px; align-self: flex-end;">Check Effective Permissions</button>
+        <button type="submit" class="btn btn-primary" style="height: 38px; align-self: flex-end;">Show access</button>
     </form>
 
     @if($effectivePreview)
+        @php
+            $previewItems=collect($effectivePreview['permissions'])->flatten(1);
+            $allowedCount=$previewItems->where('allowed',true)->count();
+            $deniedCount=$previewItems->count()-$allowedCount;
+        @endphp
+        <div class="access-friendly-summary">
+            <div class="access-person"><span>{{ strtoupper(mb_substr($effectivePreview['user']->name,0,1)) }}</span><div><b>{{ $effectivePreview['user']->name }}</b><small>{{ $effectivePreview['project']->code }} · {{ $effectivePreview['project']->name }}</small></div></div>
+            <div class="access-summary-count allowed"><b>{{ $allowedCount }}</b><span>Actions allowed</span></div>
+            <div class="access-summary-count denied"><b>{{ $deniedCount }}</b><span>Actions not allowed</span></div>
+        </div>
         <div class="preview-results-box" style="border: 1px solid #E5E7EB; border-radius: 6px; overflow: hidden;">
             <div class="preview-header-summary" style="background: #F3F4F6; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                 <div style="font-size: 13px;">
@@ -208,10 +239,10 @@
                 <table class="clean-table" style="font-size: 13px;">
                     <thead>
                         <tr>
-                            <th style="width: 280px;">Permission</th>
-                            <th style="width: 140px;">Category</th>
-                            <th style="width: 120px;">Effective Access</th>
-                            <th>Resolution Source</th>
+                            <th style="width: 280px;">Action</th>
+                            <th style="width: 140px;">Area</th>
+                            <th style="width: 120px;">Access</th>
+                            <th>Why?</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -227,9 +258,9 @@
                                     </td>
                                     <td>
                                         @if($item['allowed'])
-                                            <span class="status-pill pill-success" style="font-size: 11px; padding: 2px 8px;">Granted</span>
+                                            <span class="status-pill pill-success" style="font-size: 11px; padding: 2px 8px;">Allowed</span>
                                         @else
-                                            <span class="status-pill pill-neutral" style="font-size: 11px; padding: 2px 8px; color: #9CA3AF;">Denied</span>
+                                            <span class="status-pill pill-neutral" style="font-size: 11px; padding: 2px 8px; color: #7A877E;">Not allowed</span>
                                         @endif
                                     </td>
                                     <td style="color: {{ $item['allowed'] ? '#1F2937' : '#6B7280' }}; font-size: 12px;">
@@ -395,15 +426,27 @@
 </style>
 
 <script>
-function toggleNewRoleForm() {
+function toggleNewRoleForm(show) {
     const card = document.getElementById('new-role-card');
-    if (card.style.display === 'none' || !card.style.display) {
+    const trigger = document.getElementById('new-role-trigger');
+    const shouldShow = typeof show === 'boolean' ? show : card.style.display === 'none';
+    if (shouldShow) {
         card.style.display = 'block';
+        document.body.classList.add('role-create-open');
+        trigger?.setAttribute('aria-expanded', 'true');
         card.querySelector('input[name="name"]').focus();
     } else {
         card.style.display = 'none';
+        document.body.classList.remove('role-create-open');
+        trigger?.setAttribute('aria-expanded', 'false');
+        trigger?.focus();
     }
 }
+
+document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && document.getElementById('new-role-card')?.style.display !== 'none') toggleNewRoleForm(false);
+});
+@if(old('_create_role')) document.body.classList.add('role-create-open'); @endif
 
 function filterRolesLive(val) {
     const query = val.toLowerCase().trim();

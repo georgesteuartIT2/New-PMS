@@ -6,13 +6,14 @@
 @php
  $planStarted = $project->plan_initialized || $project->tasks()->exists();
  $templateLibraryUrl = route('templates.index', ['select_for_project' => 1, 'plan_project' => $project->id]);
- $startMode = old('mode', $selectedTemplate ? 'template' : 'blank');
+ $planDraft = json_decode(old('blank_plan', ''), true);
+ $hasBlankDraftTasks = is_array($planDraft['tasks'] ?? null) && count($planDraft['tasks']) > 0;
+ $startMode = $selectedTemplate ? 'template' : ($hasBlankDraftTasks ? 'blank' : '');
  $existingPlanTasks = $project->tasks()->with('assignees:id')->get();
  $existingTaskData = $existingPlanTasks->map(fn($task) => ['id' => $task->id, 'code' => $task->code, 'title' => $task->title, 'parent_task_id' => $task->parent_task_id, 'assignee_id' => $task->assignees->first()?->id])->values();
  $existingTasksCount = $existingPlanTasks->count();
  $existingParentIds = $existingPlanTasks->pluck('parent_task_id')->filter()->unique();
  $existingUnassignedTaskCount = $existingPlanTasks->reject(fn($task) => $existingParentIds->contains($task->id))->filter(fn($task) => $task->assignees->isEmpty())->count();
- $planDraft = json_decode(old('blank_plan', ''), true);
  $draftTaskCount = is_array($planDraft['tasks'] ?? null) ? count($planDraft['tasks']) : 0;
  $hasTasksReady = $draftTaskCount > 0 || ($selectedTemplate ? ($selectedTemplate->tasks->count() > 0) : $existingTasksCount > 0);
  $draftEnabled = $project->approval_stage === 'planning' && !$project->plan_published_at;
@@ -66,8 +67,8 @@
 @else
 <div class="flow-plan-mode-section">
  <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;">
-  <h2 style="font-size:16px; margin:0;">Start your plan</h2>
-  <span style="font-size:12px; color:#64748B;">Pick a starting method</span>
+  <div><h2 style="font-size:16px; margin:0;">Start your plan</h2><p class="plan-method-guidance">Choose <b>Blank plan</b> to build tasks yourself, or <b>Use a template</b> to start from a saved task plan.</p></div>
+  <span style="font-size:12px; color:#64748B;">Choose one to continue</span>
  </div>
  <input type="hidden" name="mode" id="plan-mode" value="{{ $startMode }}">
  <input type="hidden" name="project_template_id" id="plan-template-id" value="{{ $selectedTemplate?->id }}" @disabled(!$selectedTemplate)>
@@ -75,45 +76,40 @@
 
  <div class="flow-choices" role="group" aria-label="Plan type">
   <button type="button" class="flow-choice {{ $startMode==='blank' ? 'is-selected' : '' }}" data-plan-mode="blank" aria-pressed="{{ $startMode==='blank' ? 'true' : 'false' }}">
+   <span class="plan-method-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5a2 2 0 0 1 2-2h8l6 6v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M14 3v6h6M8 14h8M12 10v8"/></svg></span>
    <span>
     <b>Blank plan</b>
-    <small>Add tasks manually or upload Excel.</small>
+    <small>Build and assign tasks in the editor.</small>
    </span>
+   <span class="plan-method-action">Open builder <span aria-hidden="true">&rarr;</span></span>
   </button>
   <a class="flow-choice {{ $startMode==='template' ? 'is-selected' : '' }}" href="{{ $templateLibraryUrl }}" data-choose-template>
+   <span class="plan-method-icon" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
    <span>
     <b>Use a template</b>
-    <small id="template-card-hint">@if($selectedTemplate){{ $selectedTemplate->name }} &middot; <strong>Selected</strong> &middot; <u>Change</u>@else Pick a saved plan or create one (manual or Excel) &rarr;@endif</small>
+    <small id="template-card-hint">@if($selectedTemplate){{ $selectedTemplate->name }} &middot; <strong>Selected</strong> &middot; <u>Change</u>@else Choose a reusable task plan.@endif</small>
    </span>
+   <span class="plan-method-action">Browse library <span aria-hidden="true">&rarr;</span></span>
   </a>
  </div>
 
  <!-- Blank Plan Interactive Tooling Subpanel -->
- <div id="blank-plan-subpanel" class="plan-subpanel" @if($startMode!=='blank') hidden @endif>
+ <div id="blank-plan-subpanel" class="plan-subpanel" hidden>
   <div class="plan-subpanel-header">
    <div>
     <strong style="font-size:13px; color:#1E293B;">Blank plan task tools</strong>
-    <p style="margin:2px 0 0; font-size:12px; color:#64748B;">Download the template, fill in your tasks, then upload it, or add tasks manually.</p>
+    <p style="margin:2px 0 0; font-size:12px; color:#64748B;">Open the task builder to create tasks manually, or download/upload the Excel template inside.</p>
    </div>
    <span id="blank-tasks-status" class="plan-tasks-badge {{ !empty(old('blank_plan')) ? 'is-ready' : '' }}">
     {{ !empty(old('blank_plan')) ? 'Tasks prepared from draft' : 'No tasks prepared yet' }}
    </span>
   </div>
   <div class="plan-actions-group">
-   <a href="{{ route('templates.downloadBlank', ['name' => $project->name, 'plan_project' => $project->id]) }}" class="plan-action-btn" title="Download Excel template for this project">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    Download Excel template
-   </a>
-   <button type="button" class="plan-action-btn" id="btn-upload-plan-excel" title="Upload Excel spreadsheet to populate tasks">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-    Upload completed template
-   </button>
    <button type="button" class="plan-action-btn is-primary" id="btn-manual-blank-tasks" title="Open task builder to add tasks, durations, and assignees">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    <span id="btn-manual-blank-label">Build tasks manually</span>
+    <span id="btn-manual-blank-label">{{ !empty(old('blank_plan')) ? 'Edit prepared tasks' : 'Build tasks manually' }}</span>
    </button>
   </div>
-  <input type="file" id="plan-excel-file-input" accept=".xlsx,.xls,.csv" style="display:none;">
  </div>
 
  <!-- Template Subpanel -->
@@ -182,7 +178,7 @@
 
 <footer class="flow-footer">
  <p class="flow-footer-note">
-  <span class="plan-footer-status-row"><strong id="plan-draft-status" role="status" data-saved-at="{{ $project->setup_draft_saved_at?->toIso8601String() }}">{{ $project->setup_draft_saved_at ? 'Draft saved '.$project->setup_draft_saved_at->format('g:i A') : 'Draft not saved' }}</strong><span id="plan-share-status">{{ $project->plan_published_at ? 'Published '.$project->plan_published_at->format('d M Y') : 'Not published' }}</span></span>
+  <span class="plan-footer-status-row"><strong id="plan-draft-status" role="status" data-saved-at="{{ $project->setup_draft_saved_at?->toIso8601String() }}">{{ $project->setup_draft_saved_at ? 'Draft saved '.$project->setup_draft_saved_at->format('g:i A') : 'Draft not saved' }}</strong><span id="plan-share-status">{{ $project->plan_published_at ? 'Published '.$project->plan_published_at->format('d M Y') : 'Not yet shared with team' }}</span></span>
   <span class="plan-footer-checks"><span id="plan-unassigned-count">{{ $existingUnassignedTaskCount }} {{ \Illuminate\Support\Str::plural('task', $existingUnassignedTaskCount) }} unassigned</span><span aria-hidden="true">&middot;</span><span id="plan-validation-count">Checking validation...</span></span>
   <small>Notifications are sent only when you publish.</small>
  </p>
@@ -201,7 +197,7 @@
 </div>
 
 <!-- Smart Task Plan Engine Modal for in-place creation, Excel import, and template customization -->
-@include('templates.partials.task-plan-modal')
+@include('templates.partials.task-plan-modal',['assignmentEnabled'=>true])
 
 <script>
 window.PROJECT_TEMPLATE_CONTEXT = {

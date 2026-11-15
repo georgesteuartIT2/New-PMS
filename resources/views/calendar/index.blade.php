@@ -125,9 +125,9 @@
                     <!-- 1. Project Meetings (High Priority) -->
                     @foreach($cellMeetings as $meeting)
                         @php
-                            $canManageThisMeeting = auth()->user()->isPmo() || 
-                                $meeting->created_by === auth()->id() || 
-                                ($meeting->project && $meeting->project->pm_user_id === auth()->id());
+                            $canManageThisMeeting = !auth()->user()->isAdminViewer() && (auth()->user()->isPmo() ||
+                                $meeting->created_by === auth()->id() ||
+                                ($meeting->project && $meeting->project->pm_user_id === auth()->id()));
 
                             $meetingData = [
                                 'id' => $meeting->id,

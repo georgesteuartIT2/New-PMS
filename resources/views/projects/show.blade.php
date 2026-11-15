@@ -338,7 +338,6 @@
                         </select>
                     </label>
                     <button type="button" class="btn btn-ghost btn-sm" data-clear-task-filters hidden>Clear</button>
-                    <span class="workspace-result-count" data-task-result-count role="status" aria-live="polite"></span>
                 </div>
             @endif
             @if($canManage)
@@ -403,7 +402,12 @@
                     <table class="clean-table project-tasks-full-table" style="width: 100%; border-collapse: collapse; text-align: left;">
                         <thead>
                             <tr style="background: #F8FAFC; border-bottom: 1px solid #E2E8F0; font-size: 12px; font-weight: 700; color: #475569;">
-                                <th style="padding: 12px 16px; width: 31%;">Task / Subtask</th>
+                                <th style="padding: 12px 16px; width: 31%;">
+                                    <span class="workspace-task-column-heading">
+                                        <span>Task / Subtask</span>
+                                        <span class="workspace-result-count" data-task-result-count role="status" aria-live="polite"></span>
+                                    </span>
+                                </th>
                                 <th style="padding: 12px 14px; width: 16%;">Assignee</th>
                                 <th style="padding: 12px 10px; width: 9%;">Priority</th>
                                 <th style="padding: 12px 14px; width: 10%;">Starts<span class="workspace-sr-only">Start Date &amp; Time</span></th>
@@ -749,6 +753,7 @@
                 @endif
             </div>
 
+            @if($canTeam && $project->status !== 'archived')
             <!-- Inline Add Member Form (Hidden by default, 0 clicks to expand) -->
             <div id="add-member-form-box" style="display: none; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 16px; margin-bottom: 20px;">
                 <form method="post" action="{{ route('projects.members.store', $project) }}" style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
@@ -773,6 +778,7 @@
                     <button type="button" class="btn btn-ghost" style="height: 38px;" onclick="document.getElementById('add-member-form-box').style.display='none'">Cancel</button>
                 </form>
             </div>
+            @endif
 
             <!-- Team Members Table -->
             <div class="table-wrap">

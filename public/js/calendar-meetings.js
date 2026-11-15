@@ -128,7 +128,8 @@ document.addEventListener('DOMContentLoaded', function () {
         },
         body: JSON.stringify({
           date: date,
-          attendee_emails: emails
+          attendee_emails: emails,
+          project_id: projectSelector?.value || scheduleForm?.dataset.projectId || null
         })
       });
 

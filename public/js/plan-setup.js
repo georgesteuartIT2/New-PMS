@@ -134,12 +134,14 @@
         const issues = [];
         if (!String(form.elements.name?.value || '').trim()) issues.push('Project name is required');
         if (!isStarted) {
+            if (!modeInput?.value) issues.push('Choose Blank plan or Use a template');
             const start = startsOnInput?.value || '';
             const end = endsOnInput?.value || '';
             if (!start) issues.push('Start date is required');
             if (!end) issues.push('Target finish is required');
             if (start && end && end < start) issues.push('Target finish must be on or after the start date');
             if (modeInput?.value === 'template' && (!templateInput || templateInput.disabled || !templateInput.value)) issues.push('Choose a project template');
+            if (!modeInput?.value) return issues;
         }
         const tasks = currentPlanTasks();
         if (!tasks.length) {
@@ -165,11 +167,11 @@
         const parentIds = new Set(tasks.map(task => String(task.parent_task_id || '')).filter(Boolean));
         const leaves = tasks.filter(task => !parentReferences.has(String(task.code || '')) && !parentIds.has(String(task.id || '')));
         const unassigned = leaves.filter(task => !task.assignee_id && !task.assigned_user_id && !(Array.isArray(task.assignees) && task.assignees.length)).length;
-        if (unassignedCount) unassignedCount.textContent = unassigned + ' ' + (unassigned === 1 ? 'task' : 'tasks') + ' unassigned';
+        if (unassignedCount) unassignedCount.textContent = tasks.length ? unassigned + ' ' + (unassigned === 1 ? 'task' : 'tasks') + ' unassigned' : 'No tasks added';
         const issues = getPlanValidationIssues();
         if (errorMsg && !issues.length) errorMsg.hidden = true;
         if (validationCount) {
-            validationCount.textContent = issues.length + ' validation ' + (issues.length === 1 ? 'issue' : 'issues');
+            validationCount.textContent = issues.length ? issues[0] + (issues.length > 1 ? ' · +' + (issues.length - 1) + ' more' : '') : 'Ready to publish';
             validationCount.title = issues.join('. ');
         }
         updatePublishBtnState();
@@ -224,10 +226,11 @@
         chooseTemplateBtn?.classList.remove('is-selected');
         chooseTemplateBtn?.setAttribute('aria-pressed', 'false');
         if (errorMsg) errorMsg.hidden = true;
-        if (blankSubpanel) blankSubpanel.hidden = false;
+        if (blankSubpanel) blankSubpanel.hidden = true;
         if (templateSubpanel) templateSubpanel.hidden = true;
         refreshPlanIndicators();
         scheduleDraft();
+        setTimeout(() => manualBlankBtn?.click(), 0);
     });
 
     // Template mode switcher / opener
@@ -273,7 +276,9 @@
         const config = window.PLAN_SETUP_CONFIG || {};
         window.SmartTaskPlan.roles = config.roles || [];
         window.SmartTaskPlan.assignmentProject = config.projectId;
+        window.SmartTaskPlan.assignmentEnabled = true;
         window.SmartTaskPlan.assignmentUsers = config.users || [];
+        document.getElementById('smart-task-plan-modal')?.classList.add('stp-assignment-mode');
         window.SmartTaskPlan.canManage = true;
         window.SmartTaskPlan.canCreateProject = false;
         window.SmartTaskPlan.localPlanSave = function (payload) {
