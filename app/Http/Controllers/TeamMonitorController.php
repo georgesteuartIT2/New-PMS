@@ -148,8 +148,9 @@ class TeamMonitorController
         });
 
         // Send notifications
-        $newUser->notify(new TaskReassignedNotification($task, $actor, 'assigned', $data['reason'] ?? null));
-        $oldUser->notify(new TaskReassignedNotification($task, $actor, 'unassigned', $data['reason'] ?? null));
+        app(\App\Services\InboxService::class)->resolveTaskAssignment($task, $oldUser);
+        $newUser->notify(new TaskReassignedNotification($task, $actor, 'assigned', $data['reason'] ?? null, 'task_reassigned'));
+        $oldUser->notify(new TaskReassignedNotification($task, $actor, 'unassigned', $data['reason'] ?? null, 'task_unassigned'));
 
         return response()->json([
             'success' => true,

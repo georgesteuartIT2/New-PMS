@@ -35,8 +35,9 @@ class DatabaseSeeder extends Seeder {
     'view_project', 'view_tasks', 'view_gantt'
    ]],
    ['team', 'Team Member', [
+    'project.view', 'project.gantt_view',
     'tasks.view_assigned', 'tasks.edit_assigned', 'tasks.update_status', 'tasks.update_progress', 'tasks.upload_attachments', 'tasks.download_attachments', 'tasks.add_comments', 'tasks.report_delays',
-    'view_assigned_tasks', 'update_own_tasks', 'upload_own_files'
+    'view_project', 'view_gantt', 'view_assigned_tasks', 'update_own_tasks', 'upload_own_files'
    ]],
   ];
   foreach($roles as [$slug,$name,$perms]) ProjectRole::updateOrCreate(['slug'=>$slug],['name'=>$name,'is_system'=>true,'default_permissions'=>$perms]);

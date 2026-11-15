@@ -29,6 +29,7 @@
         canCreateProject: false,
         unsavedChanges: false,
         pendingImportTasks: null,
+        pendingImportSummary: null,
         collapsedPeriods: {},
         dom: {},
 
@@ -63,6 +64,11 @@
             this.dom.btnEditMode = document.getElementById('stp-btn-edit-mode');
             this.dom.btnUse = document.getElementById('stp-btn-use');
             this.dom.btnExport = document.getElementById('stp-btn-export');
+            this.dom.importFileCount = document.getElementById('stp-import-file-count');
+            this.dom.importCurrentCount = document.getElementById('stp-import-current-count');
+            this.dom.importImpact = document.getElementById('stp-import-impact');
+            this.dom.importApplyBtn = document.getElementById('stp-import-apply');
+            this.dom.importDialog = document.getElementById('stp-import-confirm-dialog');
 
             this.bindEvents();
         },
@@ -111,6 +117,10 @@
                     }
                 });
             }
+
+            document.querySelectorAll('input[name="stp_import_mode"]').forEach((radio) => {
+                radio.addEventListener('change', () => this.updateImportMode());
+            });
 
             if (this.dom.btnSave) {
                 this.dom.btnSave.addEventListener('click', () => {
@@ -626,7 +636,7 @@
                 this.dom.btnEditMode.style.display = (isView && this.canManage) ? 'inline-block' : 'none';
             }
             if (this.dom.btnExport) {
-                this.dom.btnExport.style.display = ((isView || isSelect) && this.template.id) ? 'inline-block' : 'none';
+                this.dom.btnExport.style.display = (isView && this.template.id) ? 'inline-block' : 'none';
                 if (this.template.id) {
                     this.dom.btnExport.href = `/templates/${this.template.id}/export-excel`;
                     this.dom.btnExport.onclick=this.assignmentProject ? (event)=>{event.preventDefault();this.downloadExcel();}:null;
@@ -653,10 +663,14 @@
             this.dom.toolbar.innerHTML = `
                 <div class="stp-toolbar-left">
                     <button type="button" class="btn btn-primary btn-sm" onclick="SmartTaskPlan.addTaskAtEnd()">+ Add task</button>
-                    <button type="button" class="btn btn-outline btn-sm" onclick="SmartTaskPlan.triggerExcelUpload()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 16V3m-5 5 5-5 5 5M4 15v5h16v-5"/></svg>Upload Excel</button>
-                    <button type="button" class="btn btn-ghost btn-sm" onclick="SmartTaskPlan.downloadExcel()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 3v13m-5-5 5 5 5-5M4 16v4h16v-4"/></svg>Download Excel</button>
+                    <span class="stp-toolbar-divider" aria-hidden="true"></span>
+                    <button type="button" class="btn btn-outline btn-sm" onclick="SmartTaskPlan.downloadExcel()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 3v13m-5-5 5 5 5-5M4 16v4h16v-4"/></svg>Download Excel template</button>
+                    <button type="button" id="stp-btn-upload-excel" class="btn btn-outline btn-sm" onclick="SmartTaskPlan.triggerExcelUpload()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 16V3m-5 5 5-5 5 5M4 15v5h16v-5"/></svg>Upload completed template</button>
                 </div>
-                <div class="stp-toolbar-meta" aria-label="Task count"></div>
+                <div class="stp-toolbar-right">
+                    <span class="stp-toolbar-hint">Download, fill in, then upload the template.</span>
+                    <div class="stp-toolbar-meta" aria-label="Task count"></div>
+                </div>
             `;
             if(this.dom.summaryCounts)this.dom.toolbar.querySelector('.stp-toolbar-meta').append(this.dom.summaryCounts);
         },
@@ -775,7 +789,7 @@
             const subtasks = taskCount - mainTasks;
 
             if (this.dom.summaryCounts) {
-                this.dom.summaryCounts.textContent = `${taskCount} tasks \u00b7 ${mainTasks} main${subtasks ? ` \u00b7 ${subtasks} subtasks` : ''}`;
+                this.dom.summaryCounts.textContent = `${taskCount} ${taskCount === 1 ? 'task' : 'tasks'} \u00b7 ${mainTasks} main ${mainTasks === 1 ? 'task' : 'tasks'}${subtasks ? ` \u00b7 ${subtasks} subtask${subtasks === 1 ? '' : 's'}` : ''}`;
             }
 
             if (this.dom.periodsCountBadge) {
@@ -1737,7 +1751,7 @@
                 if (data.tasks && data.tasks.length > 0) {
                     if (this.tasks.length > 0) {
                         this.pendingImportTasks = data.tasks;
-                        this.showImportConfirmModal(data);
+                        this.showImportConfirmModal(data, file.name);
                     } else {
                         // Draft was empty, apply immediately
                         this.tasks = data.tasks;
@@ -1771,13 +1785,17 @@
 
         showImportSuccessBanner(data) {
             if (!this.dom.importBanner) return;
+            const countLabel = (count, label) => `${count} ${label}${count === 1 ? '' : 's'}`;
+            const taskCount = data.tasks_found || data.tasks.length;
+            const mainTaskCount = data.main_tasks_count || 0;
+            const subtaskCount = data.subtasks_count || 0;
             this.dom.importBanner.style.display = 'block';
             this.dom.importBanner.innerHTML = `
                 <div class="stp-import-preview-box">
                     <div>
                         <b style="color: #166534;">✓ Task Plan Imported Successfully</b>
                         <div style="font-size: 12px; color: #15803D; margin-top: 2px;">
-                            ${data.tasks_found || data.tasks.length} tasks loaded (${data.main_tasks_count || 0} Main Tasks, ${data.subtasks_count || 0} Subtasks, 0 Errors).
+                            ${countLabel(taskCount, 'task')} loaded (${countLabel(mainTaskCount, 'main task')}, ${countLabel(subtaskCount, 'subtask')}, 0 errors).
                         </div>
                     </div>
                     <button type="button" class="btn btn-outline btn-xs" onclick="document.getElementById('stp-import-banner').style.display='none'">Dismiss</button>
@@ -1785,19 +1803,69 @@
             `;
         },
 
-        showImportConfirmModal(data) {
+        showImportConfirmModal(data, fileName = '') {
             const modal = document.getElementById('stp-import-confirm-backdrop');
             const msg = document.getElementById('stp-import-confirm-msg');
             if (!modal || !msg) return;
 
-            msg.textContent = `Uploaded Excel contains ${data.tasks_found || data.tasks.length} tasks. Your current draft already contains ${this.tasks.length} tasks.`;
+            const incomingTasks = data.tasks || [];
+            const existingCodes = new Set(this.tasks.map(task => String(task.code)));
+            const matchingCount = incomingTasks.filter(task => existingCodes.has(String(task.code))).length;
+            this.pendingImportSummary = {
+                incomingCount: incomingTasks.length,
+                currentCount: this.tasks.length,
+                matchingCount,
+                newCount: incomingTasks.length - matchingCount,
+                keptCount: this.tasks.length - matchingCount,
+                removedCount: Math.max(0, this.tasks.length - matchingCount)
+            };
+
+            const fileLabel = fileName ? `"${fileName}"` : 'This Excel file';
+            msg.textContent = `${fileLabel} is ready. Choose how to apply its tasks to your plan.`;
+            if (this.dom.importFileCount) this.dom.importFileCount.textContent = incomingTasks.length;
+            if (this.dom.importCurrentCount) this.dom.importCurrentCount.textContent = this.tasks.length;
+
+            const mergeOption = document.querySelector('input[name="stp_import_mode"][value="merge"]');
+            if (mergeOption) mergeOption.checked = true;
+            this.updateImportMode();
             modal.style.display = 'flex';
+            window.requestAnimationFrame(() => mergeOption?.focus());
+        },
+
+        updateImportMode() {
+            if (!this.pendingImportSummary) return;
+            const mode = document.querySelector('input[name="stp_import_mode"]:checked')?.value || 'merge';
+            const summary = this.pendingImportSummary;
+            const taskLabel = count => `${count} task${count === 1 ? '' : 's'}`;
+            if (this.dom.importDialog) this.dom.importDialog.dataset.importMode = mode;
+
+            if (this.dom.importImpact) {
+                if (mode === 'replace') {
+                    this.dom.importImpact.textContent = `After import, your plan will have ${taskLabel(summary.incomingCount)} from Excel. ${summary.removedCount === 0 ? 'No current tasks will be removed.' : `${taskLabel(summary.removedCount)} not in Excel will be removed.`}`;
+                } else {
+                    const result = [
+                        `After import, your plan will have ${taskLabel(summary.currentCount + summary.newCount)}.`,
+                        `${taskLabel(summary.matchingCount)} will be updated.`,
+                        `${taskLabel(summary.newCount)} will be added.`
+                    ];
+                    if (summary.keptCount > 0) result.push(`${taskLabel(summary.keptCount)} not in Excel will stay unchanged.`);
+                    this.dom.importImpact.textContent = result.join(' ');
+                }
+            }
+            if (this.dom.importApplyBtn) {
+                this.dom.importApplyBtn.textContent = mode === 'replace'
+                    ? `Replace plan with ${taskLabel(summary.incomingCount)}`
+                    : `Update plan with ${taskLabel(summary.incomingCount)}`;
+                this.dom.importApplyBtn.classList.toggle('is-destructive', mode === 'replace');
+            }
         },
 
         cancelImport() {
             this.pendingImportTasks = null;
+            this.pendingImportSummary = null;
             const modal = document.getElementById('stp-import-confirm-backdrop');
             if (modal) modal.style.display = 'none';
+            document.getElementById('stp-btn-upload-excel')?.focus();
         },
 
         confirmImport() {
@@ -1872,6 +1940,7 @@
 
         /* Save Template to Database */
         saveTemplate(customRedirect = null) {
+            if (this.isSavingTemplate) return;
             if(this.assignmentProject){const invalid=this.dom.tableBody?.querySelector('.directory-picker input:invalid');if(invalid){invalid.reportValidity();invalid.focus();return;}}
             if (!this.template.name || !this.template.name.trim()) {
                 alert('Please enter a Template Name before saving.');
@@ -1882,6 +1951,8 @@
 
             const payload = {
                 ...(window.PROJECT_TEMPLATE_CONTEXT || {}),
+                save_as_project_plan: this.mode === 'select' && Boolean(window.PROJECT_TEMPLATE_CONTEXT?.plan_project),
+                project_template_id: this.mode === 'select' && window.PROJECT_TEMPLATE_CONTEXT?.plan_project ? this.template.id : undefined,
                 name: this.template.name.trim(),
                 description: this.template.description || null,
                 category: this.template.category || 'General',
@@ -1913,6 +1984,7 @@
             const url = this.template.id && !saveCopy ? `/templates/${this.template.id}` : '/templates';
             const method = this.template.id && !saveCopy ? 'PUT' : 'POST';
 
+            this.isSavingTemplate = true;
             if (this.dom.btnSave) {
                 this.dom.btnSave.disabled = true;
                 this.dom.btnSave.textContent = customRedirect ? 'Saving & Continuing...' : 'Saving...';
@@ -1936,8 +2008,9 @@
                 if (data.success) {
                     this.unsavedChanges = false;
                     const continuation=(window.PROJECT_TEMPLATE_CONTEXT?.select_for_project && data.template_id) ? this.projectCreateUrl(data.template_id) : null;
-                    window.location.href = continuation || customRedirect || data.redirect || '/templates';
+                    window.location.href = continuation || (data.template_id ? customRedirect : null) || data.redirect || customRedirect || '/templates';
                 } else {
+                    this.isSavingTemplate = false;
                     if (this.dom.btnSave) {
                         this.dom.btnSave.disabled = false;
                         this.dom.btnSave.textContent = (this.mode === 'select' || customRedirect) ? 'Save & Continue with Template →' : 'Save Template';
@@ -1946,11 +2019,13 @@
                         this.dom.btnUse.disabled = false;
                         this.dom.btnUse.textContent = 'Save & Continue with Template →';
                     }
-                    alert('Error saving template: ' + (data.message || 'Please check task inputs.'));
+                    const validationMessage = data.errors ? Object.values(data.errors).flat().join('\n') : data.message;
+                    alert('Error saving template: ' + (validationMessage || 'Please check task inputs.'));
                 }
             })
             .catch(err => {
                 console.error(err);
+                this.isSavingTemplate = false;
                 if (this.dom.btnSave) {
                     this.dom.btnSave.disabled = false;
                     this.dom.btnSave.textContent = (this.mode === 'select' || customRedirect) ? 'Save & Continue with Template →' : 'Save Template';

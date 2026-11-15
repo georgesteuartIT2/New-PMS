@@ -85,13 +85,21 @@
                         ];
                     }
                 } else {
+                    $canAccessTeamMonitor = app(\App\Services\Access::class)->canAccessTeamMonitor(auth()->user());
                     $navigationItems = [
                         ['label' => 'My Workspace', 'url' => route('dashboard'), 'active' => request()->routeIs('dashboard'), 'icon' => 'M3 10.5 12 3l9 7.5V21h-6v-7H9v7H3z'],
                         ['label' => 'My Projects', 'url' => route('projects.index'), 'active' => request()->routeIs('projects.*', 'gantt.project', 'roles.*'), 'icon' => 'M3 7V5a1 1 0 0 1 1-1h6l2 3h8a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7z'],
                         ['label' => 'All Tasks', 'url' => route('tasks.mine'), 'active' => request()->routeIs('tasks.*'), 'icon' => 'M9 6h12M9 12h12M9 18h12M3 6l1 1 2-2M3 12l1 1 2-2M3 18l1 1 2-2'],
-                        ['label' => 'Team Monitor', 'url' => route('team-monitor'), 'active' => request()->routeIs('team-monitor*'), 'icon' => 'M4 19V9M10 19V5M16 19v-7M22 21H2'],
                         ['label' => 'Calendar', 'url' => route('calendar.index'), 'active' => request()->routeIs('calendar.*'), 'icon' => 'M8 3v4M16 3v4M3 10h18M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z'],
                     ];
+                    if ($canAccessTeamMonitor) {
+                        array_splice($navigationItems, 3, 0, [[
+                            'label' => 'Team Monitor',
+                            'url' => route('team-monitor'),
+                            'active' => request()->routeIs('team-monitor*'),
+                            'icon' => 'M4 19V9M10 19V5M16 19v-7M22 21H2',
+                        ]]);
+                    }
                 }
             @endphp
             <nav class="nav nav-primary" aria-label="Main navigation">

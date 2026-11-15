@@ -70,7 +70,8 @@ class TemplateSpreadsheetService
             ['6. Working Hours', 'Optional. Specify 24-hour start and end times (format HH:MM, e.g. 09:00 and 17:00).'],
             ['7. Predecessors', 'Optional. Enter the Task # that must finish before this task starts (e.g. 1). Multiple predecessors can be comma-separated.'],
             ['8. Suggested Role / Assignee', !empty($templateDetails['plan_project']) ? 'Enter the exact email of an active system user in Assignee (Email). For a new Microsoft user, add them in the project picker first, then upload again. Leave blank for unassigned tasks.' : 'Optional. Choose a suggested project role.'],
-            ['9. Upload Workbook', 'Save this file and click "Upload Excel" in GS ProjectFlow. Your task plan will be generated automatically!'],
+            ['9. Description', 'Optional. Add concise task-specific notes in the blank Description column.'],
+            ['10. Upload Workbook', 'Save this file and click "Upload Excel" in GS ProjectFlow. Your task plan will be generated automatically!'],
         ];
 
         foreach ($instructions as $rowIdx => $row) {
@@ -153,7 +154,7 @@ class TemplateSpreadsheetService
                 $t['duration_days'] ?? 1,
                 $t['dependency_code'] ?? '',
                 $roleName,
-                $t['description'] ?? '',
+                '',
             ];
 
             foreach ($rowVals as $cIdx => $val) {
@@ -235,7 +236,6 @@ class TemplateSpreadsheetService
                 'suggested_role_name' => $t->suggestedRole?->name ?? '',
                 'dependency_code' => $t->dependency_code ?? '',
                 'priority' => $t->priority ?: 'medium',
-                'description' => $t->description ?? '',
             ];
         })->all();
 

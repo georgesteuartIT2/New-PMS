@@ -19,7 +19,7 @@ class SettingsController {
   if(!$user->password)throw ValidationException::withMessages(['current_password'=>'Your account uses Microsoft sign-in only.']);
   $data=$request->validate(['current_password'=>'required|string','password'=>'required|string|min:12|confirmed']);
   if(!Hash::check($data['current_password'],$user->password))throw ValidationException::withMessages(['current_password'=>'Current password is incorrect.']);
-  $user->update(['password'=>$data['password'],'must_change_password'=>false]);
+  $user->update(['password'=>$data['password'],'must_change_password'=>false,'default_temporary_password_active'=>false]);
   $request->session()->regenerate();return back()->with('success','Password changed.');
  }
  public function system(Request $request,\App\Services\EmailConfigurationService $email){

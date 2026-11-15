@@ -87,6 +87,51 @@ class TemplateController {
             : null;
     }
 
+    private function saveProjectPlanDraft(Request $request, Project $project, ProjectTemplate $template, array $data, array $tasks) {
+        if (count($tasks) === 0) {
+            throw ValidationException::withMessages(['tasks' => 'Add at least one task before saving the project plan.']);
+        }
+
+        $draftValues = [
+            'mode' => 'template',
+            'project_template_id' => $template->id,
+            'blank_plan' => json_encode([
+                'reference_start_date' => $data['reference_start_date'] ?? null,
+                'tasks' => $tasks,
+            ], JSON_THROW_ON_ERROR),
+        ];
+        foreach (['starts_on', 'ends_on', 'planned_budget'] as $key) {
+            if (array_key_exists($key, $data)) {
+                $draftValues[$key] = $data[$key];
+            }
+        }
+
+        $savedAt = now();
+        DB::transaction(function () use ($request, $project, $draftValues, $savedAt) {
+            $locked = Project::whereKey($project->id)->lockForUpdate()->firstOrFail();
+            abort_unless($this->planProject($request)?->id === $locked->id, 403);
+            $assignmentDrafts = $locked->plan_assignment_drafts ?? [];
+            unset($assignmentDrafts[$draftValues['project_template_id']]);
+            $locked->update([
+                'setup_draft' => array_merge($locked->setup_draft ?? [], $draftValues),
+                'setup_draft_saved_at' => $savedAt,
+                'plan_assignment_drafts' => $assignmentDrafts ?: null,
+            ]);
+        });
+
+        $returnUrl = route('projects.plan.setup', array_merge(
+            $request->only('starts_on', 'ends_on', 'planned_budget'),
+            ['project' => $project->id, 'template_id' => $template->id]
+        ));
+        $message = "Customized tasks from '{$template->name}' saved to this project's draft. The original template was not changed.";
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json(['success' => true, 'message' => $message, 'redirect' => $returnUrl]);
+        }
+
+        return redirect($returnUrl)->with('success', $message);
+    }
+
     /**
      * Templates Library (Screen 01)
      */
@@ -212,6 +257,11 @@ class TemplateController {
      */
     public function store(Request $request) {
         $this->authorizeCreate($request);
+        $planProject = $this->planProject($request);
+        $saveAsProjectPlan = $request->boolean('save_as_project_plan');
+        if ($saveAsProjectPlan) {
+            abort_unless($request->boolean('select_for_project') && $planProject, 403);
+        }
 
         $data = $request->validate([
             'name' => 'required|string|max:160',
@@ -236,11 +286,26 @@ class TemplateController {
             'tasks.*.assignee_id' => 'nullable|integer|exists:users,id',
             'tasks.*.dependency_code' => 'nullable|string|max:60',
             'tasks.*.priority' => 'nullable|in:low,medium,high',
+            'project_template_id' => 'required_if:save_as_project_plan,1|nullable|integer|exists:project_templates,id',
+            'starts_on' => 'nullable|date',
+            'ends_on' => 'nullable|date|after_or_equal:starts_on',
+            'planned_budget' => 'nullable|numeric|min:0|max:9999999999999',
         ]);
 
         $tasks = $data['tasks'] ?? [];
         $this->validateTaskGraph($tasks);
-        $this->validatePlanAssignees($request,$tasks);
+        $this->validatePlanAssignees($request, $tasks);
+
+        if ($saveAsProjectPlan) {
+            $template = ProjectTemplate::whereKey($data['project_template_id'])->where('status', 'active')->firstOrFail();
+
+            return $this->saveProjectPlanDraft($request, $planProject, $template, $data, $tasks);
+        }
+
+        if ($request->boolean('select_for_project') || $planProject) {
+            $data['name'] = ProjectTemplate::uniqueName($data['name']);
+        }
+        $this->ensureUniqueTemplateName($data['name']);
 
         $template = DB::transaction(function() use ($request, $data, $tasks) {
             $tpl = ProjectTemplate::create([
@@ -395,7 +460,13 @@ class TemplateController {
      * Update existing template
      */
     public function update(Request $request, ProjectTemplate $template) {
-        if($request->boolean('select_for_project'))return $this->store($request);
+        if($request->boolean('select_for_project')) {
+            if (is_string($request->input('name'))) {
+                $request->merge(['name' => ProjectTemplate::uniqueName($request->input('name'))]);
+            }
+
+            return $this->store($request);
+        }
 
         $this->authorizeManage($request);
 
@@ -424,6 +495,7 @@ class TemplateController {
             'tasks.*.priority' => 'nullable|in:low,medium,high',
         ]);
 
+        $this->ensureUniqueTemplateName($data['name'], $template->id);
         $tasks = $data['tasks'] ?? [];
         $this->validateTaskGraph($tasks);
         $this->validatePlanAssignees($request,$tasks);
@@ -468,6 +540,21 @@ class TemplateController {
         Audit::record('template.duplicated', $clone, ['original_id' => $template->id, 'name' => $clone->name]);
 
         return redirect()->route('templates.index')->with('success', "Template duplicated as '{$clone->name}'.");
+    }
+
+    private function ensureUniqueTemplateName(string $name, ?int $exceptId = null): void {
+        $query = ProjectTemplate::query()
+            ->whereRaw('LOWER(name) = ?', [Str::lower(trim($name))]);
+
+        if ($exceptId !== null) {
+            $query->where('id', '<>', $exceptId);
+        }
+
+        if ($query->exists()) {
+            throw ValidationException::withMessages([
+                'name' => 'A template with this name already exists. Choose a different name.',
+            ]);
+        }
     }
 
     /**

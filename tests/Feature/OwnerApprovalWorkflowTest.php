@@ -110,7 +110,8 @@ class OwnerApprovalWorkflowTest extends TestCase
             ->assertSee('flow-reassignment-panel', false)
             ->assertSee('Action needed')
             ->assertSee('Assignments needing reassignment')
-            ->assertSee('<b>Reason:</b> The scope needs revision.', false)
+            ->assertSee('Reason')
+            ->assertSee('The scope needs revision.')
             ->assertSee('id="workflow-reassignment-project-'.$p->id.'" class="flow-reassignment-item" tabindex="-1"', false)
             ->assertSee('href="'.route('projects.show',$p).'" aria-label="Open project: '.$p->name.'"', false)
             ->assertSee('Open project')
@@ -143,13 +144,30 @@ class OwnerApprovalWorkflowTest extends TestCase
         $this->assertSame('I cannot take this schedule.', $p->fresh()->approval_reason);
         Notification::assertSentTo($next, ProjectWorkflowNotification::class);
         $this->actingAs($next)->get(route('dashboard'))->assertOk()
-            ->assertSee('Reassign PM');
+            ->assertSee('Assignments needing reassignment')
+            ->assertSee('flow-reassignment-panel', false)
+            ->assertSee('PM rejected')
+            ->assertSee('Rejected by')
+            ->assertSee($pm->name)
+            ->assertSee('Reason')
+            ->assertSee('I cannot take this schedule.')
+            ->assertSee('action="'.route('projects.workflow.reassign',$p).'"', false)
+            ->assertSee('<span>Send request to</span>', false)
+            ->assertSee('<option value="pm" selected>Project Manager</option>', false)
+            ->assertSee('<span>Person</span>', false)
+            ->assertSee('Reassign &amp; send request', false);
         $this->actingAs($pmo)->get(route('dashboard'))->assertOk()
+            ->assertSee('Rejected by')
+            ->assertSee($pm->name)
             ->assertSee('<option value="pm" selected>', false);
         $this->actingAs($next)->get(route('projects.show', $p))->assertOk()
             ->assertSee('I cannot take this schedule.')
-            ->assertSee('flow-approval-banner', false)
-            ->assertSee('Change assignment');
+            ->assertSee('PM Declined')
+            ->assertSee('Rejected by')
+            ->assertSee($pm->name)
+            ->assertSee('View on dashboard')
+            ->assertSee('href="'.route('dashboard',['pm_reassignments_page'=>1]).'#owner-reassignment-project-'.$p->id.'"', false)
+            ->assertDontSee('flow-approval-banner', false);
         $this->post(route('projects.workflow.reassign', $p), ['assignment_type' => 'pm', 'assignee_id' => $owner->id])->assertRedirect();
         $this->assertSame($owner->id, $p->fresh()->pm_user_id);
         $this->actingAs($pm)->post(route('projects.respond', $p), ['decision' => 'accept'])->assertForbidden();
@@ -257,7 +275,13 @@ class OwnerApprovalWorkflowTest extends TestCase
         }
         $this->assertSame($next->id,$project->fresh()->pm_user_id);$this->assertSame(1,$project->invitations()->where('status','pending')->count());
         $this->actingAs($next)->post(route('projects.respond',$project),['decision'=>'decline','decline_reason'=>'Cannot take this assignment.'])->assertRedirect();
-        $this->actingAs($owner)->get(route('projects.show',$project))->assertOk()->assertSee('class="flow-reassign"',false);
+        $this->actingAs($owner)->get(route('projects.show',$project))->assertOk()
+            ->assertSee('PM Declined')
+            ->assertSee('View on dashboard')
+            ->assertSee('href="'.route('dashboard',['pm_reassignments_page'=>1]).'#owner-reassignment-project-'.$project->id.'"',false);
+        $this->get(route('dashboard'))->assertOk()
+            ->assertSee('Assignments needing reassignment')
+            ->assertSee('action="'.route('projects.workflow.reassign',$project).'"',false);
         $this->post(route('projects.workflow.reassign',$project),['assignment_type'=>'pm','assignee_id'=>$owner->id])->assertRedirect();
         $this->actingAs($pmo)->get(route('projects.show',$project))->assertOk()->assertDontSee('class="flow-reassign"',false);
     }
@@ -457,10 +481,12 @@ class OwnerApprovalWorkflowTest extends TestCase
         [$pmo,$pm,$p]=$this->initiate('pm');$member=$this->person();
         $this->actingAs($pm)->postJson(route('projects.respond',$p),['decision'=>'accept'])->assertOk();
         $details=['name'=>'Assigned plan','plan_project'=>$p->id,'estimated_duration'=>2,'duration_unit'=>'working_days','reference_start_date'=>'2026-11-12','working_hours'=>'09:00 - 17:00'];
-        $task=['code'=>'1','title'=>'Assigned task','duration_days'=>1,'start_date'=>'2026-11-12','end_date'=>'2026-11-12','start_time'=>'09:00','end_time'=>'17:00','assignee_email'=>$member->email];
+        $task=['code'=>'1','title'=>'Assigned task','description'=>'Raw task notes should stay out of the download.','duration_days'=>1,'start_date'=>'2026-11-12','end_date'=>'2026-11-12','start_time'=>'09:00','end_time'=>'17:00','assignee_email'=>$member->email];
         $service=app(\App\Services\TemplateSpreadsheetService::class);$book=$service->blankWorkbook($details,[$task]);
         $this->assertSame('Assignee (Email)',$book->getSheetByName('TASKS')->getCell('J1')->getValue());
         $this->assertSame($member->email,$book->getSheetByName('TASKS')->getCell('J2')->getValue());
+        $this->assertSame('Description',$book->getSheetByName('TASKS')->getCell('K1')->getValue());
+        $this->assertSame('',$book->getSheetByName('TASKS')->getCell('K2')->getValue());
         $path=tempnam(sys_get_temp_dir(),'plan_xlsx_');(new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($book))->save($path);
         try{$upload=new \Illuminate\Http\UploadedFile($path,'assigned-plan.xlsx','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',null,true);$this->post(url('/templates/import-preview'),array_merge($details,['file'=>$upload]),['Accept'=>'application/json'])->assertOk()->assertJsonPath('success',true)->assertJsonPath('tasks.0.assignee_id',$member->id);}finally{@unlink($path);}
 

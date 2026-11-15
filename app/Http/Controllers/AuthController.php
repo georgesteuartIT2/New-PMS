@@ -23,7 +23,7 @@ class AuthController {
  public function changePassword(Request $request){
   abort_unless($request->user()->must_change_password && $request->session()->get('auth_method')!=='azure',403);
   $data=$request->validate(['password'=>'required|string|min:12|confirmed']);
-  $request->user()->update(['password'=>Hash::make($data['password']),'must_change_password'=>false]);
+  $request->user()->update(['password'=>Hash::make($data['password']),'must_change_password'=>false,'default_temporary_password_active'=>false]);
   $request->session()->regenerate();
   return redirect()->route('dashboard')->with('success','Your password has been updated.');
  }

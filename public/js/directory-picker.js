@@ -5,6 +5,7 @@
   const wasFocused=document.activeElement===select;const required=select.required;
   const wrap=document.createElement('div');wrap.className='directory-picker';select.after(wrap);wrap.append(select);
   const input=document.createElement('input');input.type='search';input.autocomplete='off';input.placeholder='Search name or email';input.setAttribute('aria-label','Search system or Microsoft people');input.setAttribute('aria-expanded','false');
+  if(select.id){input.id=select.id+'-search';document.querySelectorAll('label[for="'+CSS.escape(select.id)+'"]').forEach(label=>label.htmlFor=input.id);}
   if(select.hasAttribute('aria-describedby'))input.setAttribute('aria-describedby',select.getAttribute('aria-describedby'));
   input.required=required;if(select.hasAttribute('form'))input.setAttribute('form',select.getAttribute('form'));
   const list=document.createElement('div');list.className='directory-results';list.hidden=true;

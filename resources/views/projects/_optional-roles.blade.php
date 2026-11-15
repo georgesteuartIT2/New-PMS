@@ -35,7 +35,7 @@
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flow-hint-icon" aria-hidden="true">
                 <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
             </svg>
-            <p>Search a system user or add someone from Microsoft, then choose their project role. You can also assign people directly to tasks later.</p>
+            <p>Search a name or email, then choose a role. People assigned to tasks are added to the team automatically.</p>
         </div>
 
         @if($roleProject)
@@ -73,7 +73,7 @@
                     <label class="flow-role-col-role">
                         <span class="flow-col-label">Project role</span>
                         <select name="members[{{ $i }}][project_role_id]" data-role-choice class="flow-select-role">
-                            <option value="">Choose a role</option>
+                            <option value="">Choose a role</option><option value="__create_role__">+ Create new role...</option>
                             @foreach($roles as $role)
                                 <option value="{{ $role->id }}" @selected(($member['project_role_id']??'')==$role->id)>{{ $role->name }}</option>
                             @endforeach
@@ -103,7 +103,7 @@
                 <label class="flow-role-col-role">
                     <span class="flow-col-label">Project role</span>
                     <select data-role-choice class="flow-select-role">
-                        <option value="">Choose a role</option>
+                        <option value="">Choose a role</option><option value="__create_role__">+ Create new role...</option>
                         @foreach($roles as $role)
                             <option value="{{ $role->id }}">{{ $role->name }}</option>
                         @endforeach
@@ -121,37 +121,47 @@
         <div class="flow-role-actions">
             <button type="button" class="flow-btn-add-role" data-add-role-row>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                <span>Assign project role</span>
-            </button>
-            <button type="button" class="flow-btn-custom-role" data-show-new-role>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                <span>Create custom role</span>
+                <span>Add person</span>
             </button>
         </div>
 
-        <section data-new-role-panel class="flow-new-role-card" hidden>
-            <div class="flow-new-role-head">
-                <span class="flow-new-role-icon" aria-hidden="true">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                </span>
-                <div>
-                    <h4>Create Custom Project Role</h4>
-                    <p>Define permissions for this role across the project.</p>
+        <div data-new-role-panel class="flow-role-modal" hidden role="dialog" aria-modal="true" aria-labelledby="flow-new-role-title">
+            <button type="button" class="flow-role-modal-backdrop" data-cancel-new-role tabindex="-1" aria-label="Close create role dialog"></button>
+            <section class="flow-new-role-card">
+                <header class="flow-role-modal-header">
+                    <div class="flow-new-role-head">
+                        <span class="flow-new-role-icon" aria-hidden="true">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        </span>
+                        <div>
+                            <h4 id="flow-new-role-title">Create a project role</h4>
+                            <p>Create it once, then assign it to this person.</p>
+                        </div>
+                    </div>
+                    <button type="button" class="flow-role-modal-close" data-cancel-new-role aria-label="Close create role dialog">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+                    </button>
+                </header>
+                <div class="flow-role-modal-body">
+                    <label class="flow-new-role-input-wrap">
+                        <span>Role name <span class="flow-required">*</span></span>
+                        <input type="text" maxlength="80" data-new-role-name placeholder="e.g. QA Lead or Business Analyst" autocomplete="off">
+                    </label>
+                    <div class="flow-new-role-perms">
+                        <div class="flow-role-permission-heading">
+                            <span class="flow-col-label">What can this role do?</span>
+                            <span>Project access is always included.</span>
+                        </div>
+                        @include('roles._permission-list',['permissionGroups'=>$optionalRoleGroups,'selectedPermissions'=>['project.view'],'lockedPermissions'=>['project.view'],'permissionInputName'=>'','permissionInputClass'=>'','permissionCountId'=>null])
+                    </div>
+                    <p data-new-role-error class="flow-role-modal-error" role="alert"></p>
                 </div>
-            </div>
-            <label class="flow-new-role-input-wrap">
-                <span>Role name <span style="color:#DC2626;">*</span></span>
-                <input type="text" maxlength="80" data-new-role-name placeholder="e.g. QA Lead or Business Analyst">
-            </label>
-            <div class="flow-new-role-perms">
-                <span class="flow-col-label">Permissions</span>
-                @include('roles._permission-list',['permissionGroups'=>$optionalRoleGroups,'selectedPermissions'=>['project.view'],'lockedPermissions'=>['project.view'],'permissionInputName'=>'','permissionInputClass'=>'','permissionCountId'=>null])
-            </div>
-            <div class="flow-role-actions" style="margin-top:14px;padding-top:14px;border-top:1px solid #E2E8F0;">
-                <button type="button" class="btn btn-primary btn-sm" data-save-new-role>Save &amp; apply role</button>
-                <button type="button" class="btn btn-outline btn-sm" data-cancel-new-role>Cancel</button>
-            </div>
-        </section>
+                <footer class="flow-role-modal-footer">
+                    <button type="button" class="btn btn-outline" data-cancel-new-role>Cancel</button>
+                    <button type="button" class="btn btn-primary" data-save-new-role>Create &amp; assign role</button>
+                </footer>
+            </section>
+        </div>
 
         <p data-roles-feedback role="status" class="flow-roles-feedback"></p>
     </div>

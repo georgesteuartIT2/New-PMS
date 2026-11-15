@@ -17,7 +17,8 @@ class TaskReassignedNotification extends Notification implements ShouldQueue
         public Task $task,
         public User $changedBy,
         public string $type = 'assigned', // 'assigned' or 'unassigned'
-        public ?string $reason = null
+        public ?string $reason = null,
+        public ?string $eventKey = null
     ) {$this->onQueue('project-notifications');}
 
     public function viaConnections(): array { return ['database'=>'sync']; }
@@ -39,10 +40,13 @@ class TaskReassignedNotification extends Notification implements ShouldQueue
         }
 
         return [
-            'title' => $this->type === 'assigned' ? 'New Task Assignment' : 'Task Reassigned',
+            'event_key' => $this->eventKey ?? ($this->type === 'assigned' ? 'task_assigned' : 'task_unassigned'),
+            'title' => $this->eventKey === 'task_reassigned' ? 'Task reassigned' : ($this->type === 'assigned' ? 'New task assignment' : 'Task assignment changed'),
             'message' => $msg,
             'url' => route('projects.show', [$this->task->project_id,'focus_task'=>$this->task->id], false),
             'project_name' => $this->task->project->name,
+            'project_id' => $this->task->project_id,
+            'task_title' => $this->task->title,
             'action_label' => 'Open task',
             'task_id' => $this->task->id,
             'changed_by' => $this->changedBy->id,

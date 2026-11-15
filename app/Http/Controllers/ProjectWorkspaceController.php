@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Services\Access;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ProjectWorkspaceController
 {
@@ -81,19 +82,81 @@ class ProjectWorkspaceController
         if (!app()->runningUnitTests()) {
             return redirect()->route('projects.show', [$project, '#info']);
         }
-        $canSignOff = $access->project($request->user(), $project, 'edit_project') || $request->user()->isPmo();
-        return view('projects.closure', compact('project', 'canSignOff'));
+        $canSignOff = $access->project($request->user(), $project, 'project.closure_request') || $access->project($request->user(), $project, 'edit_project');
+        $canApprove = $request->user()->isPmo() && $access->project($request->user(), $project, 'project.closure_approve');
+        return view('projects.closure', compact('project', 'canSignOff', 'canApprove'));
     }
 
     public function submitClosure(Request $request, Project $project, Access $access)
     {
-        abort_unless($access->project($request->user(), $project, 'edit_project') || $request->user()->isPmo(), 403);
         $action = $request->input('action', 'request');
-        if ($action === 'request') {
-            $project->update(['status' => 'completed', 'progress' => 100]);
-            \App\Services\Audit::record('project.closure_requested', $project, ['notes' => $request->input('notes')]);
-            return redirect()->route('projects.show', $project)->with('success', 'Project closure submitted and project marked completed.');
+        abort_unless(in_array($action, ['draft', 'request', 'approve'], true), 422, 'Invalid closure action.');
+
+        if ($action === 'approve') {
+            abort_unless($request->user()->isPmo() && $access->project($request->user(), $project, 'project.closure_approve'), 403);
+            DB::transaction(function () use ($request, $project) {
+                $locked = Project::whereKey($project->id)->lockForUpdate()->firstOrFail();
+                abort_unless($locked->closure_status === 'requested', 409, 'This project is not awaiting closure approval.');
+                abort_unless(in_array($locked->status, ['active', 'on_hold'], true), 409, 'Only an active project can be closed.');
+                $locked->update([
+                    'status' => 'completed',
+                    'progress' => 100,
+                    'closure_status' => 'approved',
+                    'closure_approved_by' => $request->user()->id,
+                    'closure_approved_at' => now(),
+                ]);
+                \App\Services\Audit::record('project.closure_approved', $locked);
+            });
+            $project->refresh();
+            app(\App\Services\InboxService::class)->closureApproved($project);
+
+            return redirect()->route('projects.show', $project)->with('success', 'Project closure approved and the project is now closed.');
         }
-        return back()->with('success', 'Closure draft saved.');
+
+        abort_unless(
+            $access->project($request->user(), $project, 'project.closure_request')
+                || $access->project($request->user(), $project, 'edit_project'),
+            403
+        );
+        $data = $request->validate([
+            'notes' => 'nullable|string|max:3000',
+            'tasks_completed' => 'nullable|boolean',
+            'deliverables_submitted' => 'nullable|boolean',
+            'approval_obtained' => 'nullable|boolean',
+        ]);
+        $checklist = [
+            'tasks_completed' => (bool) ($data['tasks_completed'] ?? false),
+            'deliverables_submitted' => (bool) ($data['deliverables_submitted'] ?? false),
+            'approval_obtained' => (bool) ($data['approval_obtained'] ?? false),
+        ];
+
+        if ($action === 'draft') {
+            DB::transaction(function () use ($project, $data, $checklist) {
+                $locked = Project::whereKey($project->id)->lockForUpdate()->firstOrFail();
+                abort_unless(in_array($locked->status, ['active', 'on_hold'], true), 409, 'Only an active project can be prepared for closure.');
+                abort_unless($locked->closure_status !== 'requested', 409, 'A closure request is already awaiting approval.');
+                $locked->update(['closure_status' => 'draft', 'closure_notes' => $data['notes'] ?? null, 'closure_checklist' => $checklist]);
+            });
+
+            return back()->with('success', 'Closure draft saved.');
+        }
+
+        DB::transaction(function () use ($request, $project, $data, $checklist) {
+            $locked = Project::whereKey($project->id)->lockForUpdate()->firstOrFail();
+            abort_unless(in_array($locked->status, ['active', 'on_hold'], true), 409, 'Only an active project can be submitted for closure.');
+            abort_unless($locked->closure_status !== 'requested', 409, 'A closure request is already awaiting approval.');
+            $locked->update([
+                'closure_status' => 'requested',
+                'closure_requested_by' => $request->user()->id,
+                'closure_requested_at' => now(),
+                'closure_notes' => $data['notes'] ?? null,
+                'closure_checklist' => $checklist,
+            ]);
+            \App\Services\Audit::record('project.closure_requested', $locked, ['notes' => $data['notes'] ?? null, 'checklist' => $checklist]);
+        });
+        $project->refresh();
+        app(\App\Services\InboxService::class)->closureRequested($project);
+
+        return redirect()->route('projects.show', $project)->with('success', 'Project closure request sent to PMO for approval.');
     }
 }

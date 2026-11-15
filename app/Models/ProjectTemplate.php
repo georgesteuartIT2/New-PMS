@@ -5,6 +5,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use App\Services\TemplateScheduleService;
 
 class ProjectTemplate extends Model {
@@ -47,6 +48,20 @@ class ProjectTemplate extends Model {
         return $this->status === 'archived';
     }
 
+    public static function uniqueName(string $name): string {
+        $baseName = trim($name);
+        $candidate = $baseName;
+        $copyNumber = 1;
+
+        while (static::query()->whereRaw('LOWER(name) = ?', [Str::lower($candidate)])->exists()) {
+            $suffix = $copyNumber === 1 ? ' (Copy)' : ' (Copy ' . $copyNumber . ')';
+            $candidate = mb_substr($baseName, 0, 160 - mb_strlen($suffix)) . $suffix;
+            $copyNumber++;
+        }
+
+        return $candidate;
+    }
+
     public function formattedDuration(): string {
         $unit = match($this->duration_unit) {
             'working_days' => 'working days',
@@ -66,7 +81,7 @@ class ProjectTemplate extends Model {
     public function duplicate(User $actor): ProjectTemplate {
         return DB::transaction(function() use ($actor) {
             $clone = $this->replicate(['created_at', 'updated_at']);
-            $clone->name = $this->name . ' (Copy)';
+            $clone->name = static::uniqueName($this->name);
             $clone->created_by = $actor->id;
             $clone->status = 'active';
             $clone->save();

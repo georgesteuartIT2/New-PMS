@@ -79,6 +79,7 @@ Route::middleware(['auth','account.active'])->group(function(){
   Route::get('/tasks/team-member/{user}/details',[TaskController::class,'teamMemberDetails'])->name('tasks.team-member.details');
   Route::get('/tasks/{task}/critical-explanation',[TaskController::class,'criticalExplanation'])->name('tasks.critical-explanation');
   Route::get('/tasks/{task}/panel',[TaskController::class,'panel'])->name('tasks.panel');
+  Route::get('/tasks/{task}/delays',[\App\Http\Controllers\TaskDelayController::class,'show'])->name('tasks.delays.show');
   Route::get('/tasks/{task}',[TaskController::class,'show'])->name('tasks.show');
   Route::patch('/tasks/{task}',[TaskController::class,'update'])->name('tasks.update');
   Route::put('/tasks/{task}/details',[TaskController::class,'updateDetails'])->name('tasks.details');

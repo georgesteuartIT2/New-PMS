@@ -12,7 +12,7 @@ class ProjectWorkflowNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public function __construct(public Project $project, public string $kind, public string $message, public string $version)
+    public function __construct(public Project $project, public string $kind, public string $message, public string $version, public string $eventKey = 'project_request_received')
     {
         $this->onQueue('project-notifications');
     }
@@ -44,7 +44,13 @@ class ProjectWorkflowNotification extends Notification implements ShouldQueue
 
     public function toArray(object $person): array
     {
-        return ['type' => 'project_workflow', 'project_id' => $this->project->id, 'project_name' => $this->project->name, 'title' => $this->kind === 'owner_request' ? 'Project owner approval requested' : 'Project assignment update', 'message' => $this->message, 'action_label' => 'Review project', 'url' => route('projects.show', $this->project->id, false)];
+        $title = match ($this->eventKey) {
+            'project_request_accepted' => 'Project request accepted',
+            'project_request_rejected' => 'Project request rejected',
+            'project_reassigned' => 'Project assignment updated',
+            default => $this->kind === 'owner_request' ? 'Project owner approval requested' : 'Project assignment update',
+        };
+        return ['type' => 'project_workflow', 'event_key' => $this->eventKey, 'project_id' => $this->project->id, 'project_name' => $this->project->name, 'title' => $title, 'message' => $this->message, 'action_label' => 'Review project', 'url' => route('projects.show', $this->project->id, false)];
     }
 
     public function toMail(object $person): MailMessage

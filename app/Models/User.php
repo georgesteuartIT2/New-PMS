@@ -4,10 +4,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 class User extends Authenticatable {
+ public const DEFAULT_TEMPORARY_PASSWORD = 'test@123';
  use Notifiable;
- protected $fillable=['name','job_title','email','password','system_role','account_status','must_change_password','subsidiary_id','company_name','weekly_capacity_hours'];
+ protected $fillable=['name','job_title','email','password','system_role','account_status','must_change_password','default_temporary_password_active','subsidiary_id','company_name','weekly_capacity_hours'];
  protected $hidden=['password','remember_token'];
- protected function casts(): array {return ['password'=>'hashed','must_change_password'=>'boolean','email_verified_at'=>'datetime','weekly_capacity_hours'=>'integer'];}
+ protected function casts(): array {return ['password'=>'hashed','must_change_password'=>'boolean','default_temporary_password_active'=>'boolean','email_verified_at'=>'datetime','weekly_capacity_hours'=>'integer'];}
  public function isPmo(): bool {return $this->system_role==='pmo';}
  public function isAdminViewer(): bool {return $this->system_role==='admin_viewer';}
  public function canViewPortfolio(): bool {return $this->isPmo() || $this->isAdminViewer();}

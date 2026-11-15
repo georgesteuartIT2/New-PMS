@@ -7,10 +7,10 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Bus\Queueable;
 class ProjectAssignmentNotification extends Notification implements ShouldQueue {
  use Queueable;
- public function __construct(public Project $project){$this->onQueue('project-notifications');}
+ public function __construct(public Project $project,public string $eventKey='project_request_received'){$this->onQueue('project-notifications');}
  public function viaConnections(): array { return ['database'=>'sync']; }
  public function via(object $notifiable):array{return ['database','mail'];}
- public function toArray(object $notifiable):array{return ['type'=>'project_approval','project_id'=>$this->project->id,'project_name'=>$this->project->name,'action_label'=>'Review project','title'=>'Project approval requested','message'=>'You have been assigned as Project Manager for '.$this->project->name.'. Please review and accept or decline the assignment.','url'=>route('projects.show',$this->project->id,false)];}
+ public function toArray(object $notifiable):array{return ['type'=>'project_approval','event_key'=>$this->eventKey,'project_id'=>$this->project->id,'project_name'=>$this->project->name,'action_label'=>'Review project','title'=>$this->eventKey==='project_reassigned'?'Project assignment updated':'Project approval requested','message'=>'You have been assigned as Project Manager for '.$this->project->name.'. Please review and accept or decline the assignment.','url'=>route('projects.show',$this->project->id,false)];}
  public function shouldSend(object $notifiable,string $channel):bool {
   if($channel!=='mail')return true;
   $project=Project::find($this->project->id);if(!$project || !$notifiable->isActive())return false;

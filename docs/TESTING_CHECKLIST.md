@@ -23,7 +23,8 @@ Test with a clean database and at least these accounts: PMO, PM, Team Member A, 
 - [ ] Project sponsor/team member cannot view pending project even using its direct URL.
 - [ ] Only the invited PM can accept or decline.
 - [ ] Acceptance makes project Active and visible to assigned roles.
-- [ ] Declined project can be reassigned by PMO.
+- [ ] PM-declined project, rejecting PM name and reason are visible to the Owner, who can reassign a PM from the dashboard.
+- [ ] Owner-declined project can be reassigned by PMO.
 - [ ] PM full access is limited to own project, not PMO administration.
 - [ ] Completed/archived status acts according to read-only policy.
 

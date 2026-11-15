@@ -119,6 +119,8 @@ class ProjectService {
  public function assignManager(Project $project,User $user):void {
   abort_if($user->system_role!=='user'||!$user->isActive(),422,'Only an active project user can be a Project Manager.');
   $role=ProjectRole::where('slug','pm')->firstOrFail();
+  $previousManagerId=$project->pm_user_id;
+  if($previousManagerId && (int)$previousManagerId !== (int)$user->id)app(\App\Services\InboxService::class)->resolveProjectRequests($project);
   if($project->pm_user_id && $project->pm_user_id!==$user->id){
    ProjectMembership::where('project_id',$project->id)->where('user_id',$project->pm_user_id)->where('project_role_id',$role->id)->delete();
   }
@@ -126,7 +128,8 @@ class ProjectService {
   ProjectMembership::updateOrCreate(['project_id'=>$project->id,'user_id'=>$user->id],['project_role_id'=>$role->id]);
   ProjectInvitation::where('project_id',$project->id)->where('status','pending')->update(['status'=>'superseded']);
   ProjectInvitation::create(['project_id'=>$project->id,'user_id'=>$user->id,'status'=>'pending']);
-  DB::afterCommit(fn()=>$user->notify(new ProjectAssignmentNotification($project)));
+  $eventKey=$previousManagerId && (int)$previousManagerId !== (int)$user->id ? 'project_reassigned' : 'project_request_received';
+  DB::afterCommit(fn()=>$user->notify(new ProjectAssignmentNotification($project,$eventKey)));
  }
  /** Approved schedule snapshot: existing historical projects require an explicit action. */
  public function captureBaseline(Project $project): void {

@@ -35,7 +35,7 @@ class ProjectTeamDirectoryAndNotificationsTest extends TestCase {
   $project=app(ProjectService::class)->create($data,$admin);
   $notification=$manager->notifications()->first();$this->assertNotNull($notification);$this->assertSame('project_approval',$notification->data['type']);$this->assertSame($project->id,$notification->data['project_id']);$this->assertSame('/projects/'.$project->id,$notification->data['url']);$this->assertNull($notification->read_at);$this->assertSame(1,DB::table('jobs')->count());$this->assertSame(0,$admin->notifications()->count());
   app(ProjectService::class)->create($data+['status_override'=>'draft'],$admin);$this->assertSame(1,$manager->notifications()->count());
-  $r=$this->actingAs($manager)->get(route('notifications.index'));$r->assertOk()->assertSee('Project approval requested')->assertSee('Review project')->assertSee('Mark as read');
+  $r=$this->actingAs($manager)->get(route('notifications.index'));$r->assertOk()->assertSee('Project approval requested')->assertSee('Review project')->assertDontSee('Mark as read');
   $html=preg_replace('#(href|src)="http://localhost/(css|js)/#','$1="file:///'.str_replace('\\','/',base_path()).'/public/$2/',$r->getContent());file_put_contents(storage_path('app/ui-review/notification-request-fixture.html'),$html);
   $this->post(route('notifications.read',$notification->id))->assertRedirect(route('projects.show',$project));$this->assertSame(0,$manager->unreadNotifications()->count());
   $this->actingAs($admin)->post(route('notifications.read',$notification->id))->assertNotFound();

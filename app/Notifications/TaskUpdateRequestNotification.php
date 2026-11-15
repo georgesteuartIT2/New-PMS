@@ -29,12 +29,15 @@ class TaskUpdateRequestNotification extends Notification implements ShouldQueue
     {
         $note = $this->message ? ": \"{$this->message}\"" : '.';
         return [
+            'event_key' => 'task_update_requested',
             'title' => 'Progress Update Requested',
             'message' => "{$this->requester->name} requested a progress update on task '{$this->task->title}' in {$this->task->project->name}{$note}",
             'url' => route('projects.show', [$this->task->project_id,'focus_task'=>$this->task->id], false),
             'project_name' => $this->task->project->name,
+            'project_id' => $this->task->project_id,
             'action_label' => 'Open task',
             'task_id' => $this->task->id,
+            'task_title' => $this->task->title,
             'requester_id' => $this->requester->id,
         ];
     }

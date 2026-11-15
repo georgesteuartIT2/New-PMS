@@ -213,6 +213,16 @@
                                             <input value="{{ $user->email }}" disabled style="background: var(--surface);">
                                         </label>
 
+                                        @if($user->default_temporary_password_active && $user->must_change_password)
+                                            <label>Temporary Password
+                                                <div style="display: flex; align-items: center; gap: 8px;">
+                                                    <code id="temporary-password-user-{{ $user->id }}" style="flex: 1; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); font-size: 14px;">{{ \App\Models\User::DEFAULT_TEMPORARY_PASSWORD }}</code>
+                                                    <button class="btn btn-outline btn-sm" type="button" data-copy="temporary-password-user-{{ $user->id }}">Copy</button>
+                                                </div>
+                                                <small class="muted">Shown only until the user sets a new password at first sign-in.</small>
+                                            </label>
+                                        @endif
+
                                         <!-- Role Selection (User or PMO or Admin Viewer) -->
                                         <label>System Role <span class="required">*</span>
                                             <select name="system_role" {{ ($user->id === 1 || $user->id === auth()->id() || $isLastPmo) ? 'disabled' : '' }}>
@@ -337,6 +347,14 @@
 
             <label>Work Email <span class="required">*</span>
                 <input name="email" id="manual_user_email" type="email" required placeholder="nimal@company.com">
+            </label>
+
+            <label>Temporary Password
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <code id="manual-user-temp-password" style="flex: 1; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); font-size: 14px;">{{ \App\Models\User::DEFAULT_TEMPORARY_PASSWORD }}</code>
+                    <button class="btn btn-outline btn-sm" type="button" data-copy="manual-user-temp-password">Copy</button>
+                </div>
+                <small class="muted">Share this password securely. The user must choose a new password at first sign-in.</small>
             </label>
 
             <!-- Role Selection -->
@@ -638,7 +656,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (dialog && typeof dialog.close === 'function') dialog.close();
 
-                alert(`User created successfully!\n\nName: ${data.user.name}\nEmail: ${data.user.email}\nTemporary Password: ${data.temp_password}\n\nPlease copy this password securely for the user.`);
+                alert(`User created successfully!\n\nName: ${data.user.name}\nEmail: ${data.user.email}\nTemporary password: ${data.temp_password}\n\nThe user must change it at first sign-in. Please share it securely.`);
                 window.location.reload();
             } catch (err) {
                 errorBox.style.display = 'block';

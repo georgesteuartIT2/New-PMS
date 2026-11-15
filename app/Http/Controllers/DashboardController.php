@@ -255,9 +255,7 @@ class DashboardController
                     ->orWhere(fn($sub) => $sub->where(fn($lead)=>$lead->where('pm_user_id',$user->id)->orWhere('owner_user_id',$user->id))->whereIn('status',['pending','declined']));
             })
             ->latest()
-            ->get()
-            ->filter(fn($p) => $access->project($user, $p, 'view_project'))
-            ->values();
+            ->get();
 
         // Tasks assigned to user
         $userTasks = Task::with('project')
@@ -284,15 +282,15 @@ class DashboardController
         // Projects preview formatted with dynamic roles and permissions
         $myProjectsPreview = $userProjects->take(6)->map(function ($p) use ($user, $access) {
             $roles = $access->roleLabels($user, $p);
-            $canViewTasks = $user->isPmo() || $p->pm_user_id === $user->id || $access->project($user, $p, 'view_tasks');
+            $canViewProgress = $access->project($user, $p, 'project.view');
             return [
                 'id' => $p->id,
                 'code' => $p->code,
                 'name' => $p->name,
                 'roles' => implode(', ', $roles),
-                'progress' => $canViewTasks ? (int)$p->progress : null,
-                'completed_tasks' => $canViewTasks ? $p->completed_tasks_count : null,
-                'total_tasks' => $canViewTasks ? $p->tasks_count : null,
+                'progress' => $canViewProgress ? (int)$p->progress : null,
+                'completed_tasks' => $canViewProgress ? $p->completed_tasks_count : null,
+                'total_tasks' => $canViewProgress ? $p->tasks_count : null,
                 'deadline' => $p->ends_on,
                 'status' => $p->status,
                 'status_label' => ucwords(str_replace('_', ' ', $p->status)),

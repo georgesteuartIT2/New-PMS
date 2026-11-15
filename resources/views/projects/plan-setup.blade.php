@@ -6,12 +6,22 @@
  $planStarted = $project->plan_initialized || $project->tasks()->exists();
  $templateLibraryUrl = route('templates.index', ['select_for_project' => 1, 'plan_project' => $project->id]);
  $startMode = old('mode', $selectedTemplate ? 'template' : 'blank');
- $existingTasksCount = $project->tasks()->count();
- $hasTasksReady = $selectedTemplate ? ($selectedTemplate->tasks->count() > 0) : ($existingTasksCount > 0 || !empty(old('blank_plan')));
+ $existingPlanTasks = $project->tasks()->with('assignees:id')->get();
+ $existingTaskData = $existingPlanTasks->map(fn($task) => ['id' => $task->id, 'code' => $task->code, 'title' => $task->title, 'parent_task_id' => $task->parent_task_id, 'assignee_id' => $task->assignees->first()?->id])->values();
+ $existingTasksCount = $existingPlanTasks->count();
+ $existingParentIds = $existingPlanTasks->pluck('parent_task_id')->filter()->unique();
+ $existingUnassignedTaskCount = $existingPlanTasks->reject(fn($task) => $existingParentIds->contains($task->id))->filter(fn($task) => $task->assignees->isEmpty())->count();
+ $planDraft = json_decode(old('blank_plan', ''), true);
+ $draftTaskCount = is_array($planDraft['tasks'] ?? null) ? count($planDraft['tasks']) : 0;
+ $hasTasksReady = $draftTaskCount > 0 || ($selectedTemplate ? ($selectedTemplate->tasks->count() > 0) : $existingTasksCount > 0);
+ $draftEnabled = $project->approval_stage === 'planning' && !$project->plan_published_at;
 @endphp
 <div class="flow-page"><a href="{{ route('projects.show',$project) }}" class="text-action">&larr; {{ $project->name }}</a>
 <header class="flow-heading"><h1>Project plan</h1><p>Prepare tasks, assign your team and publish when ready.</p></header>
-<div class="plan-resume-actions"><button type="button" class="btn btn-primary" onclick="document.getElementById('plan-start-dialog').showModal()">Resume plan setup</button><a class="text-action" href="{{ route('projects.show',$project) }}">Back to project</a></div>
+<div class="plan-resume-actions"><button type="button" id="btn-resume-plan-setup" class="btn btn-primary" onclick="document.getElementById('plan-start-dialog').showModal()">{{ $project->setup_draft_saved_at ? 'Continue saved draft' : 'Resume plan setup' }}</button><a class="text-action" href="{{ route('projects.show',$project) }}">Back to project</a></div>
+<p id="plan-draft-saved-feedback" class="plan-draft-confirmation" role="status" @if(!$project->setup_draft_saved_at) hidden @endif>
+ @if($project->setup_draft_saved_at) Draft saved at {{ $project->setup_draft_saved_at->format('g:i A') }}. Your changes are saved but have not been shared with the team. @endif
+</p>
 
 <dialog id="plan-start-dialog" class="modal flow-plan-dialog" aria-labelledby="plan-start-title">
 <header class="flow-plan-title">
@@ -22,7 +32,7 @@
  <button type="button" class="btn btn-ghost" data-close-dialog aria-label="Close plan setup">&times;</button>
 </header>
 
-<form method="post" id="plan-setup-form" data-draft-url="{{ route('projects.plan.draft',$project) }}" action="{{ $planStarted ? route('projects.plan.options',$project) : route('projects.plan.initialize',$project) }}" data-plan-started="{{ $planStarted?'1':'0' }}" class="flow-form" data-library-url="{{ $templateLibraryUrl }}">
+<form method="post" id="plan-setup-form" data-draft-url="{{ route('projects.plan.draft',$project) }}" data-draft-enabled="{{ $draftEnabled ? '1' : '0' }}" action="{{ $planStarted ? route('projects.plan.options',$project) : route('projects.plan.initialize',$project) }}" data-plan-started="{{ $planStarted?'1':'0' }}" class="flow-form" data-library-url="{{ $templateLibraryUrl }}">
 @csrf
 @if($errors->any())<p class="alert alert-danger" role="alert">{{ $errors->first() }}</p>@endif
 
@@ -43,7 +53,7 @@
  <div class="plan-actions-group">
   <a href="{{ route('templates.downloadBlank', ['name' => $project->name, 'plan_project' => $project->id]) }}" class="plan-action-btn">
    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-   Download Excel sample
+   Download Excel template
   </a>
   <a href="{{ route('projects.show', $project).'#tasks' }}" class="plan-action-btn is-primary">
    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
@@ -72,7 +82,7 @@
   <a class="flow-choice {{ $startMode==='template' ? 'is-selected' : '' }}" href="{{ $templateLibraryUrl }}" data-choose-template>
    <span>
     <b>Use a template</b>
-    <small id="template-card-hint">@if($selectedTemplate){{ $selectedTemplate->name }} &middot; <u>Change</u>@else Pick a saved plan or create one (manual or Excel) &rarr;@endif</small>
+    <small id="template-card-hint">@if($selectedTemplate){{ $selectedTemplate->name }} &middot; <strong>Selected</strong> &middot; <u>Change</u>@else Pick a saved plan or create one (manual or Excel) &rarr;@endif</small>
    </span>
   </a>
  </div>
@@ -82,7 +92,7 @@
   <div class="plan-subpanel-header">
    <div>
     <strong style="font-size:13px; color:#1E293B;">Blank plan task tools</strong>
-    <p style="margin:2px 0 0; font-size:12px; color:#64748B;">Build your schedule now with full Excel import/export or manual task entry.</p>
+    <p style="margin:2px 0 0; font-size:12px; color:#64748B;">Download the template, fill in your tasks, then upload it, or add tasks manually.</p>
    </div>
    <span id="blank-tasks-status" class="plan-tasks-badge {{ !empty(old('blank_plan')) ? 'is-ready' : '' }}">
     {{ !empty(old('blank_plan')) ? 'Tasks prepared from draft' : 'No tasks prepared yet' }}
@@ -91,11 +101,11 @@
   <div class="plan-actions-group">
    <a href="{{ route('templates.downloadBlank', ['name' => $project->name, 'plan_project' => $project->id]) }}" class="plan-action-btn" title="Download Excel template for this project">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    Download Excel sample
+    Download Excel template
    </a>
    <button type="button" class="plan-action-btn" id="btn-upload-plan-excel" title="Upload Excel spreadsheet to populate tasks">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-    Upload Excel plan
+    Upload completed template
    </button>
    <button type="button" class="plan-action-btn is-primary" id="btn-manual-blank-tasks" title="Open task builder to add tasks, durations, and assignees">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -158,18 +168,24 @@
  <small>You can change it later in Budget &amp; Closure.</small>
 </label>
 
-@include('projects._optional-roles',['roleProject'=>$project,'roleSectionTitle'=>'Team & Project roles'])
+@include('projects._optional-roles',['roleProject'=>$project,'roleSectionTitle'=>'Team members'])
 
-<p class="flow-note" style="margin:4px 0 0; font-size:12px; color:#64748B;">
- Review tasks and assignees before publishing. Your team is notified only when you publish.
-</p>
+
 <p id="plan-template-error" role="alert" hidden style="color:#DC2626; font-size:12.5px; margin:0;">Please choose a template, or start with a blank plan.</p>
 
 <footer class="flow-footer">
- <p class="flow-footer-note"><span id="plan-draft-status" role="status">Changes save as a draft.</span><br>
+ <p class="flow-footer-note">
+  <span id="plan-draft-status" role="status" data-saved-at="{{ $project->setup_draft_saved_at?->toIso8601String() }}">{{ $project->setup_draft_saved_at ? 'Draft saved at '.$project->setup_draft_saved_at->format('g:i A') : 'Draft not saved yet' }}</span><br>
+  <span id="plan-share-status">{{ $project->plan_published_at ? 'Shared with team '.$project->plan_published_at->format('d M Y') : 'Not yet shared with team' }}</span><br>
+  <span id="plan-unassigned-count">{{ $existingUnassignedTaskCount }} {{ \Illuminate\Support\Str::plural('task', $existingUnassignedTaskCount) }} unassigned</span>
+  <span aria-hidden="true">&middot;</span>
+  <span id="plan-validation-count">Checking validation...</span><br>
   Team emails and in-app notifications are sent only when you publish.
  </p>
  <div class="flow-footer-buttons">
+  @if($draftEnabled)
+   <button type="button" class="btn btn-outline" id="btn-save-draft-close">Save draft &amp; close</button>
+  @endif
   <button type="submit" name="publish_now" value="1" class="btn btn-primary btn-publish-direct" id="btn-publish-direct" @disabled(!$hasTasksReady)>
    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
    Publish &amp; notify team
@@ -196,6 +212,7 @@ window.PLAN_SETUP_CONFIG = {
     projectName: @json($project->name),
     selectedTemplateId: @json($selectedTemplate?->id),
     selectedTemplateTasks: @json($selectedTemplate?->tasks ?? []),
+    existingTasks: @json($existingTaskData),
     roles: @json($roles->values()),
     users: @json($users->values())
 };

@@ -405,7 +405,7 @@
                 </div>
             </div>
             <div class="dam-header-right">
-                <span id="dam-health-badge" class="dam-health-pill pill-delayed">Delayed</span>
+                <span id="dam-health-badge" class="dam-health-pill pill-delayed" hidden>Delayed</span>
                 <button type="button" class="dam-close-btn" id="dam-close-btn" aria-label="Close delay investigation popup" onclick="closeDelayAnalysis()">✕</button>
             </div>
         </div>
@@ -422,184 +422,46 @@
             <!-- Content Container (Hidden during load) -->
             <div id="dam-content" style="display: none; display: flex; flex-direction: column; gap: 18px;">
                 
-                <!-- SECTION A: Why Is This Project Delayed? -->
-                <div class="pdi-card pdi-section-a">
-                    <div class="pdi-card-head">
-                        <div class="pdi-section-title">
-                            <span class="pdi-title-icon">?</span>
-                            <span>What to check first</span>
-                        </div>
-                        <span id="pdi-explanation-status-pill" class="pdi-micro-pill">Schedule review</span>
-                    </div>
-                    <div class="pdi-plain-summary"><div><span>Task to check first</span><strong id="pdi-first-task">Loading...</strong></div><div><span>Reported reason</span><p id="pdi-plain-reason">No reason has been reported yet.</p></div><a id="pdi-next-task-link" class="btn btn-primary" href="#">Review task &rarr;</a></div>
-                    <details class="pdi-explanation-details"><summary>Read the schedule explanation</summary><div id="pdi-why-delayed-box" class="pdi-explanation-box">
-                        <p id="pdi-why-delayed-text" class="pdi-explanation-text">
-                            Checking the current schedule...
-                        </p>
-                    </div></details>
-                </div>
+                <!-- DELAY STORY: verdict, where it started, who is responsible, what it holds up, result -->
+                <div id="pdi-story" class="pds-story" aria-live="polite"></div>
 
-                <!-- SECTION B: Project Schedule Impact -->
-                <div class="pdi-card pdi-section-b">
-                    <div class="pdi-section-heading">Finish date</div>
-                    <p id="pdi-finish-summary" class="pdi-finish-summary"></p>
-                    <div class="pdi-impact-grid">
-                        <div class="pdi-impact-col">
-                            <div class="pdi-impact-label">Planned finish</div>
-                            <div class="pdi-impact-val" id="dam-approved-deadline">—</div>
-                            <div class="pdi-impact-sub">The agreed project end date</div>
+                <!-- CRITICAL PATH CARD: explicit, visual display of Critical Tasks (0d buffer) -->
+                <section class="pds-critical-card" id="pds-critical-section" aria-labelledby="pds-critical-title">
+                    <div class="pds-critical-head">
+                        <div>
+                            <h3 id="pds-critical-title" style="display: flex; align-items: center; gap: 8px;">
+                                <span>⚡ Critical Path Tasks</span>
+                                <span class="pds-critical-badge">0-Day Buffer</span>
+                            </h3>
+                            <p class="pds-critical-subtitle">These tasks directly determine your project finish date. Any delay here pushes the project deadline.</p>
                         </div>
-                        <div class="pdi-impact-col">
-                            <div class="pdi-impact-label">Estimated finish</div>
-                            <div class="pdi-impact-val" id="dam-forecast-completion">—</div>
-                            <div class="pdi-impact-sub">Estimate based on the current task plan</div>
-                        </div>
-                        <div class="pdi-impact-col">
-                            <div class="pdi-impact-label">Expected delay</div>
-                            <div class="pdi-impact-val text-danger" id="dam-schedule-variance">—</div>
-                            <div class="pdi-impact-sub">Working days later than planned</div>
-                        </div>
+                        <span id="pds-critical-count-pill" class="pds-critical-pill">0 Critical</span>
                     </div>
-                </div>
-
-                <section class="pdi-card pdi-delay-drivers" aria-labelledby="pdi-drivers-heading">
-                    <h3 id="pdi-drivers-heading">Which tasks are affecting this estimate?</h3>
-                    <div id="pdi-delay-drivers"></div>
-                    <p class="pdi-driver-note">Task delays are not added together: some tasks run at the same time. The finish date follows the full task plan. Saturdays and Sundays are excluded from working-day counts.</p>
+                    <div id="pdi-cpm-chain" class="pds-flow" aria-label="Critical task sequence flow"></div>
+                    <p id="pdi-cpm-note" class="pds-note" hidden></p>
+                    <div id="pds-critical-list" class="pds-critical-list"></div>
                 </section>
 
-                <details class="project-review-more"><summary>More schedule details <span>Dependencies and full task lists</span></summary><div class="project-review-more-body">
-                <!-- SECTION C: Critical Path & Affected Dependencies -->
-                <div class="pdi-card pdi-section-c">
-                    <div class="pdi-card-head">
+                <!-- LATE TASKS: one simple list instead of two wide tables -->
+                <section class="pdl" aria-labelledby="pdl-title">
+                    <div class="pdl-head">
                         <div>
-                            <div class="pdi-section-heading" style="margin-bottom: 2px;">Tasks that affect the finish date</div>
-                            <div class="pdi-section-desc">These tasks depend on each other. A delay here can move the project finish date.</div>
+                            <h3 id="pdl-title">Late tasks <span class="pdl-count" id="pdl-count">0</span></h3>
+                            <p>Tap a task to see who is responsible and to record the reason.</p>
                         </div>
-                        <button type="button" class="btn btn-ghost btn-xs pdi-toggle-details-btn" id="pdi-toggle-schedule-details-btn" onclick="toggleScheduleDetails()">
-                            Show Schedule Details ▼
-                        </button>
-                    </div>
-
-                    <!-- Horizontal Sequence Flow -->
-                    <div id="dam-cpm-sequence-flow" class="dam-cpm-flow">
-                        <!-- Populated dynamically by JS -->
-                    </div>
-
-                    <!-- Warning box for missing dependencies or cycle -->
-                    <div id="dam-cpm-warning-box" class="dam-notice-box" style="display: none; margin-top: 10px;">
-                        <span id="dam-cpm-warning-text"></span>
-                    </div>
-
-                    <!-- Impact Explanation -->
-                    <div id="pdi-critical-impact-explanation" class="pdi-impact-explanation">
-                        <!-- Populated by JS -->
-                    </div>
-
-                    <!-- Collapsible Schedule Details Panel -->
-                    <div id="pdi-schedule-details-panel" class="pdi-schedule-details-panel" style="display: none;">
-                        <div class="pdi-details-grid">
-                            <div class="pdi-detail-item">
-                                <div class="pdi-detail-label">Critical Path Duration</div>
-                                <div class="pdi-detail-val" id="pdi-cpm-duration">—</div>
-                            </div>
-                            <div class="pdi-detail-item">
-                                <div class="pdi-detail-label">Critical Tasks Count</div>
-                                <div class="pdi-detail-val" id="pdi-cpm-tasks-count">—</div>
-                            </div>
-                            <div class="pdi-detail-item">
-                                <div class="pdi-detail-label">Task Dependencies</div>
-                                <div class="pdi-detail-val" id="pdi-cpm-links-count">—</div>
-                            </div>
-                            <div class="pdi-detail-item">
-                                <div class="pdi-detail-label">CPM Reliability</div>
-                                <div class="pdi-detail-val" id="pdi-cpm-reliability">—</div>
-                            </div>
+                        <div class="pdl-filter" id="pdl-filter" role="group" aria-label="Filter late tasks">
+                            <button type="button" class="is-active" data-filter="all">All</button>
+                            <button type="button" data-filter="critical">⚡ Critical tasks</button>
+                            <button type="button" data-filter="spare">Has buffer</button>
                         </div>
                     </div>
+                    <div id="pdl-list" class="pdl-list"></div>
+                    <button type="button" id="pdl-more" class="pdl-more" hidden></button>
+                </section>
+
+                <div class="pds-extras">
+                    <details class="pds-explain"><summary>Read the full explanation</summary><div id="pdi-why-delayed-box" class="pdi-explanation-box"><p id="pdi-why-delayed-text" class="pdi-explanation-text">Checking the current schedule...</p></div></details>
                 </div>
-
-                <!-- SECTION D: Delayed Tasks (Mandatory SEPARATE Section) -->
-                <div class="pdi-card pdi-section-d">
-                    <div class="pdi-card-head" style="align-items: flex-end;">
-                        <div>
-                            <div class="pdi-section-heading" style="display: flex; align-items: center; gap: 8px;">
-                                <span>Delayed Tasks</span>
-                                <span class="pdi-count-badge badge-delayed" id="pdi-delayed-count-badge">0</span>
-                            </div>
-                            <div class="pdi-section-desc">
-                                Tasks that finished late or are now expected to finish later than planned.
-                            </div>
-                        </div>
-
-                        <!-- Section D Filters -->
-                        <div class="pdi-filter-group">
-                            <button type="button" class="pdi-filter-btn active" id="pdi-filter-all" onclick="filterDelayedTasks('all')">All Delayed (<span id="pdi-filter-count-all">0</span>)</button>
-                            <button type="button" class="pdi-filter-btn" id="pdi-filter-critical" onclick="filterDelayedTasks('critical')">Affects Project Deadline (<span id="pdi-filter-count-critical">0</span>)</button>
-                            <button type="button" class="pdi-filter-btn" id="pdi-filter-noncritical" onclick="filterDelayedTasks('noncritical')">No Current Impact (<span id="pdi-filter-count-noncritical">0</span>)</button>
-                        </div>
-                    </div>
-
-                    <!-- Delayed Tasks Table -->
-                    <div class="table-wrap pdi-table-wrap">
-                        <table class="clean-table pdi-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 44px;">#</th>
-                                    <th style="width: 220px;">Task / Subtask</th>
-                                    <th style="width: 150px;">Assigned User</th>
-                                    <th style="width: 105px;">Planned Finish</th>
-                                    <th style="width: 105px;">Forecast Finish</th>
-                                    <th style="width: 80px;">Delay</th>
-                                    <th style="width: 175px;">Critical Path Impact</th>
-                                    <th>Detected Problem</th>
-                                    <th style="width: 60px; text-align: center;">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="pdi-delayed-tasks-tbody">
-                                <tr><td colspan="9" class="pdi-empty-row">Loading delayed tasks...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- SECTION E: Overdue Tasks (Mandatory SEPARATE Section) -->
-                <div class="pdi-card pdi-section-e">
-                    <div class="pdi-card-head">
-                        <div>
-                            <div class="pdi-section-heading" style="display: flex; align-items: center; gap: 8px;">
-                                <span>Overdue Tasks</span>
-                                <span class="pdi-count-badge badge-overdue" id="pdi-overdue-count-badge">0</span>
-                            </div>
-                            <div class="pdi-section-desc">
-                                All unfinished tasks whose scheduled finish date/time is already in the past.
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Overdue Tasks Table -->
-                    <div class="table-wrap pdi-table-wrap">
-                        <table class="clean-table pdi-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 44px;">#</th>
-                                    <th style="width: 240px;">Task / Subtask</th>
-                                    <th style="width: 160px;">Assigned To</th>
-                                    <th style="width: 140px;">Due Date &amp; Time</th>
-                                    <th style="width: 110px;">Overdue Duration</th>
-                                    <th style="width: 110px;">Status</th>
-                                    <th style="width: 80px;">Critical</th>
-                                    <th style="width: 60px; text-align: center;">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="pdi-overdue-tasks-tbody">
-                                <tr><td colspan="8" class="pdi-empty-row">Loading overdue tasks...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                </div></details>
             </div>
         </div>
 
@@ -609,7 +471,6 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                 <span>Open Project</span>
             </a>
-            <button type="button" class="btn btn-primary" style="background: #315F58; border-color: #315F58; font-weight: 600; padding: 7px 22px; color: #FFFFFF;" onclick="closeDelayAnalysis()">Close</button>
         </div>
     </div>
 </div>
@@ -1599,53 +1460,227 @@ document.addEventListener('click', (e) => {
 });
 
 let currentInvestigationData = null;
-let currentDelayedFilter = 'all';
-let expandedDelayedTaskIds = new Set();
-let expandedOverdueTaskIds = new Set();
-let isScheduleDetailsVisible = false;
 
-function toggleScheduleDetails() {
-    isScheduleDetailsVisible = !isScheduleDetailsVisible;
-    const panel = document.getElementById('pdi-schedule-details-panel');
-    const btn = document.getElementById('pdi-toggle-schedule-details-btn');
-    if (panel) panel.style.display = isScheduleDetailsVisible ? 'block' : 'none';
-    if (btn) btn.textContent = isScheduleDetailsVisible ? 'Hide Schedule Details ▲' : 'Show Schedule Details ▼';
-}
 
-function filterDelayedTasks(filter) {
-    currentDelayedFilter = filter;
-    ['all', 'critical', 'noncritical'].forEach(f => {
-        const b = document.getElementById(`pdi-filter-${f}`);
-        if (b) b.classList.toggle('active', f === filter);
-    });
-    renderDelayedTasksTable();
-}
+/* =========================================================================
+   DELAY STORY RENDERER
+   Explains in plain language: is the project late, where the delay started,
+   who is responsible, what it is holding up and what it means for the deadline.
+   Uses only recorded facts - it never guesses a cause.
+   ========================================================================= */
+function renderDelayStory(res) {
+    const inv = res.investigation || {};
+    const proj = res.project || {};
+    const summary = res.summary || {};
+    const cpm = res.critical_path || {};
+    const header = inv.header || {};
+    const state = header.health_state || res.health?.key || 'on_track';
+    const planned = summary.approved_deadline || proj.approved_deadline || '—';
+    const estimated = summary.forecast_deadline || inv.section_b?.forecast_completion || planned;
+    const lateDays = Number(inv.section_b?.variance_working_days || 0);
 
-function toggleDelayedDrawer(taskId, event) {
-    if (event) event.stopPropagation();
-    if (expandedDelayedTaskIds.has(taskId)) {
-        expandedDelayedTaskIds.delete(taskId);
-    } else {
-        expandedDelayedTaskIds.add(taskId);
+    const days = n => n + ' working ' + (Number(n) === 1 ? 'day' : 'days');
+    const el = (tag, cls, text) => {
+        const node = document.createElement(tag);
+        if (cls) node.className = cls;
+        if (text !== undefined && text !== null) node.textContent = text;
+        return node;
+    };
+
+    document.getElementById('pdi-why-delayed-text').textContent =
+        inv.section_a?.explanation || summary.diagnostic_summary || 'No schedule explanation is available yet.';
+
+    const root = document.getElementById('pdi-story');
+    root.replaceChildren();
+
+    // ---- Verdict -------------------------------------------------------
+    const verdicts = {
+        delayed: ['bad', 'Past the ' + planned + ' deadline', days(lateDays) + ' overdue and the project is not finished yet'],
+        forecast_late: ['bad', 'Will miss the ' + planned + ' deadline', 'Now expected to finish ' + estimated + ' — ' + days(lateDays) + ' late'],
+        at_risk: ['warn', 'At risk of falling behind', 'Some tasks are late, but the ' + planned + ' deadline still holds for now'],
+        on_track: ['ok', 'On schedule', 'Expected to finish by ' + planned],
+        completed: ['ok', 'Project completed', 'All work is finished.'],
+    };
+    const verdict = verdicts[state] || ['neutral', header.health_badge || 'Not enough schedule data', inv.section_a?.explanation || ''];
+    const tone = verdict[0];
+
+    const verdictBox = el('div', 'pds-verdict is-' + tone);
+    verdictBox.append(el('span', 'pds-dot'));
+    const verdictText = el('div', 'pds-verdict-text');
+    verdictText.append(el('h3', '', verdict[1]));
+    if (verdict[2]) verdictText.append(el('p', '', verdict[2]));
+
+    // Quick stats strip (Claude / Linear style)
+    const statsStrip = el('div', 'pds-stat-strip');
+    const lateCount = (inv.section_d?.tasks || []).length || (res.delayed_section?.count || 0) || (inv.section_e?.tasks || []).length || 0;
+    const critCount = cpm.total_count || cpm.critical_tasks?.length || (cpm.sequence || []).filter(s => s.is_critical).length || 0;
+    const addFilterPill = (filter, cls, label) => {
+        const pill = el('button', 'pds-stat-pill ' + cls, label);
+        pill.type = 'button';
+        pill.dataset.reviewFilter = filter;
+        pill.setAttribute('aria-pressed', 'false');
+        pill.addEventListener('click', () => applyReviewSummaryFilter(filter));
+        statsStrip.append(pill);
+    };
+    if (lateCount > 0) {
+        addFilterPill('all', 'is-late', '🔴 ' + lateCount + ' late ' + (lateCount === 1 ? 'task' : 'tasks'));
     }
-    renderDelayedTasksTable();
-}
-
-function toggleOverdueDrawer(taskId, event) {
-    if (event) event.stopPropagation();
-    if (expandedOverdueTaskIds.has(taskId)) {
-        expandedOverdueTaskIds.delete(taskId);
-    } else {
-        expandedOverdueTaskIds.add(taskId);
+    if (critCount > 0) {
+        addFilterPill('critical', 'is-crit', '⚡ ' + critCount + ' critical (0d buffer)');
     }
-    renderOverdueTasksTable();
+    if (planned && planned !== '—') {
+        const dateText = estimated && estimated !== planned ? planned + ' → ' + estimated : planned;
+        statsStrip.append(el('span', 'pds-stat-pill is-date', '📅 ' + dateText));
+    }
+    verdictText.append(statsStrip);
+    verdictBox.append(verdictText);
+    root.append(verdictBox);
+
+    if (tone === 'ok' || tone === 'neutral') return;
+
+    // ---- Find where the delay started -----------------------------------
+    const delayed = inv.section_d?.tasks || res.delayed_section?.tasks || [];
+    const overdue = inv.section_e?.tasks || res.overdue_section?.tasks || [];
+    const pool = new Map();
+    [...overdue, ...delayed].forEach(t => pool.set(t.id, t));
+
+    let focus =
+        delayed.find(t => t.is_critical && t.is_overdue && !t.is_completed) ||
+        delayed.find(t => t.is_critical && !t.is_completed) ||
+        overdue.find(t => t.is_critical) ||
+        delayed.find(t => t.has_delay_report && !t.is_completed) ||
+        overdue[0] ||
+        delayed.find(t => !t.is_completed) ||
+        null;
+
+    // If that task is itself waiting on a late task, the real start is further up the chain.
+    const seen = new Set();
+    while (focus && !seen.has(focus.id)) {
+        seen.add(focus.id);
+        const upstream = (focus.blocking_predecessors || []).find(p => p.is_overdue && pool.has(p.id) && !seen.has(p.id));
+        if (!upstream) break;
+        focus = pool.get(upstream.id);
+    }
+
+    if (!focus) {
+        root.append(el('p', 'pds-note', 'No single task has been identified as the cause. Open the late-task list under “Full schedule details” to review the task dates.'));
+        return;
+    }
+
+    const projectUrl = new URL(proj.show_url || header.open_project_url || '#', location.origin);
+    const taskUrl = new URL(projectUrl.href);
+    taskUrl.searchParams.set('focus_task', focus.id);
+    taskUrl.hash = 'tasks';
+
+    const steps = el('div', 'pds-steps');
+    const makeStep = (num, title) => {
+        const section = el('section', 'pds-step');
+        const head = el('div', 'pds-step-head');
+        head.append(el('span', 'pds-step-num', num), el('h4', '', title));
+        section.append(head);
+        return section;
+    };
+
+    // ---- 1. Where it started + who is responsible ------------------------
+    const s1 = makeStep('1', 'Where it started');
+    s1.append(el('strong', 'pds-task', (focus.number ? focus.number + ' · ' : '') + focus.title));
+    let when;
+    if (focus.is_overdue) when = days(focus.delay_days) + ' late · was due ' + focus.planned_end;
+    else if (Number(focus.delay_days) > 0 && focus.forecast_end && focus.forecast_end !== focus.planned_end) when = 'Now expected ' + focus.forecast_end + ' instead of ' + focus.planned_end + ' (' + days(focus.delay_days) + ' late)';
+    else when = 'Due ' + focus.planned_end;
+    s1.append(el('p', 'pds-sub', when + ' · ' + focus.progress + '% done'));
+
+    const waiting = (focus.blocking_predecessors || []).map(p => p.title);
+    if (waiting.length) s1.append(el('p', 'pds-sub', 'Waiting for: ' + waiting.slice(0, 2).join(', ') + (waiting.length > 2 ? ' +' + (waiting.length - 2) + ' more' : '')));
+
+    const who = el('dl', 'pds-who');
+    const addRow = (label, value, cls) => {
+        const row = el('div', cls || '');
+        row.append(el('dt', '', label), el('dd', '', value));
+        who.append(row);
+    };
+    const unassigned = !focus.assignees_text || focus.assignees_text === 'Not assigned';
+    addRow('Task owner', unassigned ? 'Nobody is assigned to this task' : focus.assignees_text, unassigned ? 'is-warn' : '');
+    if (unassigned || (focus.confirmed_action_owner && focus.confirmed_action_owner !== focus.assignees_text)) {
+        const manager = proj.manager_name && proj.manager_name !== 'Not assigned' ? proj.manager_name + ' (Project Manager)' : 'Project Manager';
+        addRow('Follow up with', focus.confirmed_action_owner || manager);
+    }
+    if (focus.has_delay_report) {
+        addRow('Reason given', focus.reported_root_cause || 'Reported');
+        if (focus.involved_party && focus.involved_party !== 'Not recorded') addRow('Responsible party', focus.involved_party);
+        if (focus.confirmed_corrective_action) addRow('Plan to fix', focus.confirmed_corrective_action);
+        if (focus.resolution_date && focus.resolution_date !== '—') addRow('New date promised', focus.resolution_date);
+        if (focus.reported_by_name) addRow('Reported by', focus.reported_by_name + (focus.reported_on ? ' · ' + focus.reported_on : ''));
+    } else {
+        addRow('Reason given', 'Nobody has explained this delay yet', 'is-warn');
+    }
+    s1.append(who);
+    steps.append(s1);
+
+    if (!cpm.reliable) {
+        steps.append(el('p', 'pds-note', 'The task links are incomplete, so the system cannot be sure which task is moving the finish date. Check the task dates and dependencies.'));
+    } else {
+        // ---- 2. What it is holding up ----------------------------------
+        const s2 = makeStep('2', 'What it is holding up');
+        const successors = focus.blocked_successors || [];
+        if (successors.length) {
+            const chain = el('div', 'pds-chain');
+            successors.slice(0, 4).forEach((task, index) => {
+                if (index) chain.append(el('span', 'pds-arrow', '→'));
+                chain.append(el('span', 'pds-chip', task.title));
+            });
+            if (successors.length > 4) chain.append(el('span', 'pds-chip is-more', '+' + (successors.length - 4) + ' more'));
+            s2.append(chain);
+            s2.append(el('p', 'pds-sub', successors.length + ' unfinished ' + (successors.length === 1 ? 'task cannot' : 'tasks cannot') + ' finish on time until this is done.'));
+        } else {
+            s2.append(el('p', 'pds-sub', 'No other unfinished task depends on it.'));
+        }
+        steps.append(s2);
+
+        // ---- 3. What it means for the deadline -------------------------
+        const s3 = makeStep('3', 'What it means for the deadline');
+        let result;
+        if (focus.is_critical) {
+            result = 'It has no spare time, so every day it slips moves the project finish date' + (tone === 'bad' && estimated !== planned ? ' (' + planned + ' → ' + estimated + ').' : '.');
+        } else if (focus.critical_impact === 'affects_deadline') {
+            result = 'This delay is longer than the spare time the task had, so the project finish date moves.';
+        } else {
+            result = 'It still has ' + (focus.float_text || 'some') + ' of spare time, so the deadline is not affected yet. It will be if the task slips further.';
+        }
+        s3.append(el('p', 'pds-result', result));
+        steps.append(s3);
+    }
+    root.append(steps);
+
+    // ---- Other tasks also pushing the date -------------------------------
+    const downstreamIds = new Set((focus.blocked_successors || []).map(t => t.id));
+    const others = delayed.filter(t => !t.is_completed && t.id !== focus.id && !seen.has(t.id) && !downstreamIds.has(t.id) && t.critical_impact === 'affects_deadline').slice(0, 3);
+    if (others.length) {
+        const box = el('div', 'pds-others');
+        box.append(el('h4', '', 'Also pushing the date'));
+        others.forEach(task => {
+            const link = new URL(projectUrl.href);
+            link.searchParams.set('focus_task', task.id);
+            link.hash = 'tasks';
+            const row = el('a', 'pds-other');
+            row.href = link.href;
+            row.append(el('span', 'pds-other-title', task.title));
+            row.append(el('span', 'pds-other-meta', (task.assignees_text && task.assignees_text !== 'Not assigned' ? task.assignees_text : 'Nobody assigned') + ' · ' + (task.delay_badge || '')));
+            box.append(row);
+        });
+        root.append(box);
+    }
+
+    // ---- Action ----------------------------------------------------------
+    const actions = el('div', 'pds-actions');
+    const open = el('a', 'btn btn-primary', 'Open this task →');
+    open.href = taskUrl.href;
+    actions.append(open);
+    root.append(actions);
 }
 
 function populateDelayModal(res) {
     currentInvestigationData = res;
-    expandedDelayedTaskIds.clear();
-    expandedOverdueTaskIds.clear();
-    isScheduleDetailsVisible = false;
 
     const proj = res.project || {};
     const health = res.health || {};
@@ -1671,500 +1706,474 @@ function populateDelayModal(res) {
         'pill-success'
     );
 
-    // SECTION A: Why Is This Project Delayed?
-    const whyDelayedText = inv.section_a?.explanation || summary.diagnostic_summary || 'Analyzing schedule data...';
-    document.getElementById('pdi-why-delayed-text').textContent = whyDelayedText;
-    const candidates=inv.section_d?.tasks || res.delayed_section?.tasks || [];
-    const overdueCandidates=inv.section_e?.tasks || res.overdue_section?.tasks || [];
-    const focus=candidates.find(t=>t.is_critical && t.is_overdue) || candidates.find(t=>t.has_delay_report) || overdueCandidates[0] || candidates[0];
-    document.getElementById('pdi-first-task').textContent=focus ? (focus.title || focus.name || 'Review the unfinished tasks below') : 'No delayed tasks identified';
-    document.getElementById('pdi-plain-reason').textContent=(focus?.has_delay_report && focus?.reported_root_cause) || 'No delay reason reported. Ask the task owner for an update.';
-    const nextLink=document.getElementById('pdi-next-task-link');
-    nextLink.href=focus?.id ? new URL((proj.show_url || inv.header?.open_project_url || '#'),location.origin).pathname+'?focus_task='+encodeURIComponent(focus.id)+'#tasks' : (proj.show_url || '#');
-    nextLink.textContent=focus?.id?'Review task \u2192':'Open project \u2192';
+    // Delay story: verdict -> where it started -> who is responsible -> what it holds up -> result
+    renderDelayStory(res);
 
 
-    const explanationPill = document.getElementById('pdi-explanation-status-pill');
-    if (explanationPill) {
-        if (health.is_delayed || inv.header?.health_state === 'delayed' || inv.header?.health_state === 'forecast_late') {
-            explanationPill.textContent = 'Finish date may move';
-            explanationPill.style.background = '#FEE2E2';
-            explanationPill.style.color = '#991B1B';
-        } else if (health.is_at_risk || inv.header?.health_state === 'at_risk') {
-            explanationPill.textContent = 'Needs attention';
-            explanationPill.style.background = '#FEF3C7';
-            explanationPill.style.color = '#92400E';
-        } else {
-            explanationPill.textContent = 'On schedule';
-            explanationPill.style.background = '#E8F5E9';
-            explanationPill.style.color = '#166534';
-        }
+    // Late tasks (one list) and the wrapped chain of linked tasks
+    renderLateTasks(res);
+    renderLinkedChain(res);
+}
+
+/* =========================================================================
+   LATE TASKS
+   One compact list that replaces the old wide "Delayed" and "Overdue"
+   tables. Nothing scrolls sideways; tap a task to see who is responsible
+   and to record the reason right there.
+   ========================================================================= */
+const LATE_PREVIEW_COUNT = 6;
+let lateProjectId = null;
+let lateFilter = 'all';
+let lateShowAll = false;
+let lateHandlersBound = false;
+const openLateIds = new Set();
+
+function applyReviewSummaryFilter(filter) {
+    lateFilter = filter;
+    lateShowAll = true;
+    if (currentInvestigationData) renderLateTasks(currentInvestigationData);
+
+    const lateSection = document.querySelector('#delay-analysis-modal .pdl');
+    lateSection?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function pdEl(tag, cls, text) {
+    const node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (text !== undefined && text !== null) node.textContent = text;
+    return node;
+}
+
+function collectLateTasks(res) {
+    const inv = res.investigation || {};
+    const merged = new Map();
+    const sources = [
+        inv.section_e?.tasks || res.overdue_section?.tasks || [],
+        inv.section_d?.tasks || res.delayed_section?.tasks || [],
+    ];
+    sources.forEach(list => list.forEach(t => {
+        if (!t.is_completed && !merged.has(t.id)) merged.set(t.id, t);
+    }));
+    return [...merged.values()].sort((a, b) => {
+        const aw = a.critical_impact === 'affects_deadline' ? 1 : 0;
+        const bw = b.critical_impact === 'affects_deadline' ? 1 : 0;
+        if (aw !== bw) return bw - aw;
+        return (Number(b.delay_days) || 0) - (Number(a.delay_days) || 0);
+    });
+}
+
+function renderLateTasks(res) {
+    const list = document.getElementById('pdl-list');
+    if (!list) return;
+
+    const projectId = res.project?.id || null;
+    if (lateProjectId !== projectId) {
+        lateProjectId = projectId;
+        lateFilter = 'all';
+        lateShowAll = false;
+        openLateIds.clear();
     }
 
-    // SECTION B: Project Schedule Impact
-    document.getElementById('dam-approved-deadline').textContent = summary.approved_deadline || proj.approved_deadline || '—';
-    document.getElementById('dam-forecast-completion').textContent = summary.forecast_deadline || inv.section_b?.forecast_completion || '—';
-    
-    const schedVar = document.getElementById('dam-schedule-variance');
-    schedVar.textContent = summary.schedule_variance_pill || summary.schedule_variance || 'On schedule';
-    if (health.is_delayed || (health.delay_working_days > 0)) {
-        schedVar.className = 'pdi-impact-val text-danger';
+    if (!lateHandlersBound) {
+        lateHandlersBound = true;
+        document.getElementById('pdl-filter').addEventListener('click', event => {
+            const button = event.target.closest('button[data-filter]');
+            if (!button) return;
+            lateFilter = button.dataset.filter;
+            lateShowAll = false;
+            if (currentInvestigationData) renderLateTasks(currentInvestigationData);
+        });
+        document.getElementById('pdl-more').addEventListener('click', () => {
+            lateShowAll = !lateShowAll;
+            if (currentInvestigationData) renderLateTasks(currentInvestigationData);
+        });
+    }
+
+    const all = collectLateTasks(res);
+    const deadlineOnes = all.filter(t => t.critical_impact === 'affects_deadline' || t.is_critical);
+    const spareOnes = all.filter(t => t.critical_impact !== 'affects_deadline' && !t.is_critical);
+
+    document.getElementById('pdl-count').textContent = all.length;
+    document.querySelectorAll('#pdl-filter button').forEach(button => {
+        const f = button.dataset.filter;
+        const isActive = (f === lateFilter) || (lateFilter === 'deadline' && f === 'critical') || (lateFilter === 'critical' && f === 'deadline');
+        button.classList.toggle('is-active', isActive);
+        if (f === 'all') {
+            button.textContent = 'All (' + all.length + ')';
+        } else if (f === 'critical' || f === 'deadline') {
+            button.textContent = '⚡ Critical tasks (' + deadlineOnes.length + ')';
+            button.hidden = (deadlineOnes.length === 0);
+        } else if (f === 'spare') {
+            button.textContent = 'Has buffer (' + spareOnes.length + ')';
+            button.hidden = (spareOnes.length === 0);
+        }
+    });
+    document.querySelectorAll('[data-review-filter]').forEach(button => {
+        const isActive = button.dataset.reviewFilter === lateFilter;
+        button.classList.toggle('is-active', isActive);
+        button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    });
+    const filterBox = document.getElementById('pdl-filter');
+    if (filterBox) {
+        filterBox.hidden = (all.length === 0);
+    }
+
+    let visibleAll = all;
+    if (lateFilter === 'deadline' || lateFilter === 'critical') {
+        visibleAll = deadlineOnes;
+    } else if (lateFilter === 'spare') {
+        visibleAll = spareOnes;
+    }
+
+    const shown = lateShowAll ? visibleAll : visibleAll.slice(0, LATE_PREVIEW_COUNT);
+
+    list.replaceChildren();
+    if (!visibleAll.length) {
+        list.append(pdEl('p', 'pdl-empty', '✓ No tasks in this category.'));
     } else {
-        schedVar.className = 'pdi-impact-val';
+        shown.forEach(task => list.append(buildLateRow(task, res)));
     }
 
-    const plannedFinish=summary.approved_deadline || proj.approved_deadline;
-    const estimatedFinish=summary.forecast_deadline || inv.section_b?.forecast_completion;
-    const workingDelay=Number(inv.section_b?.variance_working_days || 0);
-    document.getElementById('pdi-finish-summary').textContent=workingDelay>0
-        ? 'The current plan estimates completion on '+estimatedFinish+' instead of '+plannedFinish+' ('+workingDelay+' working '+(workingDelay===1?'day':'days')+' later). This is an estimate, not a changed approved deadline.'
-        : 'Compare the agreed deadline with the current estimate below. The approved deadline stays unchanged.';
-    const drivers=candidates.filter(t=>!t.is_completed && t.is_critical && (t.is_overdue || Number(t.delay_days)>0));
-    const driverBox=document.getElementById('pdi-delay-drivers');
-    driverBox.replaceChildren();
-    if(!cpm.reliable || !drivers.length){
-        const note=document.createElement('p');
-        note.textContent=!cpm.reliable ? 'The task links are incomplete, so the system cannot reliably identify which task is moving the finish date. Review the task dates and dependencies.' : 'No individual delayed task has been identified as the cause of this finish estimate. Review the task schedule before assigning a cause.';
-        driverBox.append(note);
-    } else drivers.forEach(t=>{
-        const row=document.createElement('article');row.className='pdi-driver-row';
-        const body=document.createElement('div');
-        const title=document.createElement('strong');title.textContent=t.title || t.name;body.append(title);
-        const detail=document.createElement('p');
-        detail.textContent=t.is_overdue ? 'Unfinished; planned to finish '+t.planned_end+'. Overdue by '+t.delay_days+' working '+(Number(t.delay_days)===1?'day.':'days.') : 'Planned finish: '+t.planned_end+'. Current task estimate: '+t.forecast_end+'.';body.append(detail);
-        const successors=t.blocked_successors || [];
-        const impact=document.createElement('p');impact.textContent=successors.length ? 'Next dependent work: '+successors.map(x=>x.title).filter(Boolean).join(', ')+'. A later finish here can move that work back.' : 'This task has no spare time in the schedule; a later finish can move the project finish date.';body.append(impact);
-        const reason=document.createElement('p');reason.className='pdi-driver-reason';reason.textContent=t.has_delay_report && t.reported_root_cause ? 'Reported reason: '+t.reported_root_cause : 'Reason for the delay: not reported yet.';body.append(reason);
-        const link=document.createElement('a');link.className='btn btn-outline btn-xs';link.textContent='View task';
-        const target=new URL(proj.show_url || inv.header?.open_project_url,location.origin);target.searchParams.set('focus_task',t.id);target.hash='tasks';link.href=target.href;
-        row.append(body,link);driverBox.append(row);
+    const more = document.getElementById('pdl-more');
+    const hiddenCount = visibleAll.length - LATE_PREVIEW_COUNT;
+    more.hidden = hiddenCount <= 0;
+    more.textContent = lateShowAll ? 'Show fewer' : 'Show ' + hiddenCount + ' more';
+}
+
+function buildLateRow(t, res) {
+    const open = openLateIds.has(t.id);
+    const affects = t.critical_impact === 'affects_deadline' || t.is_critical;
+    const row = pdEl('article', 'pdl-row' + (open ? ' is-open' : ''));
+    row.id = 'task-row-' + t.id;
+
+    const head = pdEl('button', 'pdl-row-head');
+    head.type = 'button';
+    head.setAttribute('aria-expanded', open ? 'true' : 'false');
+
+    head.append(pdEl('span', 'pdl-num', t.number || t.code));
+    const main = pdEl('span', 'pdl-main');
+    main.append(pdEl('strong', '', t.title));
+    const unassigned = !t.assignees_text || t.assignees_text === 'Not assigned';
+    const dueInfo = (unassigned ? '⚠️ Nobody assigned' : t.assignees_text) + ' · due ' + t.planned_end + (t.forecast_end && t.forecast_end !== t.planned_end ? ' (forecast ' + t.forecast_end + ')' : '');
+    main.append(pdEl('small', unassigned ? 'is-warn' : '', dueInfo));
+    head.append(main);
+
+    const side = pdEl('span', 'pdl-side');
+    side.append(pdEl('span', 'pdl-pill', t.delay_badge || ('+' + t.delay_days + ' days')));
+    side.append(pdEl('span', 'pdl-chip ' + (affects ? 'is-deadline' : 'is-spare'), affects ? '⚡ Critical (0d buffer)' : ('🌿 Buffer: ' + (t.float_text || 'spare'))));
+    side.append(pdEl('span', 'pdl-caret'));
+    head.append(side);
+
+    const body = pdEl('div', 'pdl-body');
+    body.hidden = !open;
+    body.append(buildLateBody(t, res));
+
+    head.addEventListener('click', () => {
+        const nowOpen = body.hidden;
+        body.hidden = !nowOpen;
+        row.classList.toggle('is-open', nowOpen);
+        head.setAttribute('aria-expanded', nowOpen ? 'true' : 'false');
+        if (nowOpen) openLateIds.add(t.id); else openLateIds.delete(t.id);
     });
 
-    // SECTION C: Critical Path Sequence Flow
-    const sequenceContainer = document.getElementById('dam-cpm-sequence-flow');
-    const warningBox = document.getElementById('dam-cpm-warning-box');
-    const warningText = document.getElementById('dam-cpm-warning-text');
-    const impactExplanationEl = document.getElementById('pdi-critical-impact-explanation');
+    row.append(head, body);
+    return row;
+}
 
-    const seq = cpm.sequence || [];
-    if (!cpm.has_tasks) {
-        warningBox.style.display = 'block';
-        warningText.textContent = 'No tasks have been added to this project yet.';
-        sequenceContainer.innerHTML = `<span style="font-size: 13px; color: #64748B;">No schedule sequence available.</span>`;
-        if (impactExplanationEl) impactExplanationEl.textContent = 'Add tasks to calculate the Critical Path.';
-    } else if (!cpm.reliable && seq.length === 0) {
-        warningBox.style.display = 'block';
-        warningText.textContent = cpm.warning || 'Critical Path unavailable because task dependency information is incomplete.';
-        sequenceContainer.innerHTML = `<span style="font-size: 13px; color: #64748B;">Critical Path unavailable because task dependency information is incomplete.</span>`;
-        if (impactExplanationEl) impactExplanationEl.textContent = 'Configure dependencies between tasks to enable automatic critical path scheduling.';
+function buildLateBody(t, res) {
+    const wrap = pdEl('div', 'pdl-detail');
+    const facts = pdEl('dl', 'pds-who');
+    const add = (label, value, cls) => {
+        const item = pdEl('div', cls || '');
+        item.append(pdEl('dt', '', label), pdEl('dd', '', value));
+        facts.append(item);
+    };
+
+    const unassigned = !t.assignees_text || t.assignees_text === 'Not assigned';
+    add('Task owner', unassigned ? 'Nobody is assigned' : t.assignees_text, unassigned ? 'is-warn' : '');
+    add('Progress', (t.status_label || t.status) + ' · ' + t.progress + '%');
+    add('Finish date', t.forecast_end && t.forecast_end !== t.planned_end ? t.planned_end + ' → now ' + t.forecast_end : t.planned_end);
+
+    const waiting = (t.blocking_predecessors || []).map(p => p.title);
+    if (waiting.length) add('Waiting for', waiting.slice(0, 2).join(', ') + (waiting.length > 2 ? ' +' + (waiting.length - 2) + ' more' : ''), 'is-wide');
+    const holding = (t.blocked_successors || []).map(s => s.title);
+    if (holding.length) add('Holding up', holding.slice(0, 3).join(', ') + (holding.length > 3 ? ' +' + (holding.length - 3) + ' more' : ''), 'is-wide');
+
+    if (t.has_delay_report) {
+        add('Reason given', t.reported_root_cause || 'Reported', 'is-wide');
+        if (t.involved_party && t.involved_party !== 'Not recorded') add('Responsible party', t.involved_party);
+        if (t.confirmed_action_owner) add('Follow up with', t.confirmed_action_owner);
+        if (t.confirmed_corrective_action) add('Plan to fix', t.confirmed_corrective_action, 'is-wide');
+        if (t.resolution_date && t.resolution_date !== '—') add('New date promised', t.resolution_date);
+        if (t.reported_by_name) add('Reported by', t.reported_by_name + (t.reported_on ? ' · ' + t.reported_on : ''));
     } else {
-        warningBox.style.display = 'none';
-        if (seq.length === 0) {
-            sequenceContainer.innerHTML = `<span style="font-size: 13px; color: #64748B;">No critical sequence identified.</span>`;
-        } else {
-            let flowHtml = '';
-            seq.forEach((node, index) => {
-                const isObj = (typeof node === 'object' && node !== null);
-                const name = isObj ? node.name : node;
-                const isDelayed = isObj ? (node.is_delayed || node.is_overrun || node.status === 'delayed') : false;
-                const isAtRisk = isObj ? (node.status === 'at_risk') : false;
-                const isCompleted = isObj ? (node.status === 'completed') : false;
-
-                const nodeClass = isDelayed ? 'node-delayed' : (isAtRisk ? 'node-risk' : (isCompleted ? 'node-completed' : 'node-ok'));
-
-                flowHtml += `<div class="dam-cpm-node ${nodeClass}">${escapeHtml(name)}</div>`;
-                if (index < seq.length - 1) {
-                    flowHtml += `<div class="dam-cpm-arrow">→</div>`;
-                }
-            });
-            sequenceContainer.innerHTML = flowHtml;
-        }
-
-        if (impactExplanationEl) {
-            impactExplanationEl.textContent = 'This is the linked task sequence, not a list of overdue tasks. A task with no spare time can affect the finish date if it finishes late. See the affected tasks above for the current delays.';
-        }
+        add('Reason given', 'Nobody has explained this delay yet', 'is-warn is-wide');
     }
+    wrap.append(facts);
 
-    // Schedule details
-    const schedDetails = inv.section_c?.schedule_details || {};
-    document.getElementById('pdi-cpm-duration').textContent = (schedDetails.cpm_duration_working_days || 0) + ' working days';
-    document.getElementById('pdi-cpm-tasks-count').textContent = (schedDetails.critical_tasks_count || 0) + ' critical tasks';
-    document.getElementById('pdi-cpm-links-count').textContent = (schedDetails.dependency_links || 0) + ' dependencies';
-    document.getElementById('pdi-cpm-reliability').textContent = cpm.reliable ? 'Reliable (DAG Verified)' : 'Incomplete Links';
-
-    // SECTION D: Delayed Tasks Counts & Table
-    const allDelayed = (inv.section_d?.tasks || delayed.tasks || []);
-    const critDelayed = allDelayed.filter(t => t.is_critical || t.critical_impact === 'affects_deadline');
-    const nonCritDelayed = allDelayed.filter(t => t.critical_impact === 'no_impact');
-
-    document.getElementById('pdi-delayed-count-badge').textContent = allDelayed.length;
-    document.getElementById('pdi-filter-count-all').textContent = allDelayed.length;
-    document.getElementById('pdi-filter-count-critical').textContent = critDelayed.length;
-    document.getElementById('pdi-filter-count-noncritical').textContent = nonCritDelayed.length;
-
-    // Auto-expand first task with delay report or overdue
-    if (allDelayed.length > 0) {
-        const firstToExpand = allDelayed.find(t => t.has_delay_report || t.is_overdue) || allDelayed[0];
-        // Details open only when the user chooses a task.
-    }
-    renderDelayedTasksTable();
-
-    // SECTION E: Overdue Tasks Count & Table
-    const allOverdue = (inv.section_e?.tasks || overdue.tasks || []);
-    document.getElementById('pdi-overdue-count-badge').textContent = allOverdue.length;
-    renderOverdueTasksTable();
-}
-
-function renderDelayedTasksTable() {
-    if (!currentInvestigationData) return;
-    const tbody = document.getElementById('pdi-delayed-tasks-tbody');
-    const allDelayed = (currentInvestigationData.investigation?.section_d?.tasks || currentInvestigationData.delayed_section?.tasks || []);
-
-    let filtered = allDelayed;
-    if (currentDelayedFilter === 'critical') {
-        filtered = allDelayed.filter(t => t.is_critical || t.critical_impact === 'affects_deadline');
-    } else if (currentDelayedFilter === 'noncritical') {
-        filtered = allDelayed.filter(t => t.critical_impact === 'no_impact');
-    }
-
-    if (filtered.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="9" class="pdi-empty-row">
-                    ${allDelayed.length === 0 ? 'No delayed tasks found in this project.' : 'No tasks match the selected filter.'}
-                </td>
-            </tr>
-        `;
-        return;
-    }
-
-    let html = '';
-    filtered.forEach(t => {
-        const isExpanded = expandedDelayedTaskIds.has(t.id);
-        const initials = t.assignee_initials || '—';
-        const avatarBg = (initials === 'NP' || initials.charCodeAt(0) % 2 === 0) ? '#D1E7DD' : '#E0F2FE';
-        const avatarColor = (initials === 'NP' || initials.charCodeAt(0) % 2 === 0) ? '#0F5132' : '#0369A1';
-        const delayBadgeClass = t.delay_days > 0 ? 'dam-delay-pill' : 'dam-delay-pill pill-zero';
-
-        const impactClass = t.critical_impact_class || (t.is_critical ? 'impact-critical' : 'impact-neutral');
-        const impactLabel = t.critical_impact_label || (t.is_critical ? 'Affects Project Deadline' : 'Buffer Absorbed');
-
-        html += `
-            <tr class="pdi-task-row ${isExpanded ? 'is-expanded' : ''}" onclick="toggleDelayedDrawer(${t.id}, event)">
-                <td style="font-weight: 600; color: #64748B;">${escapeHtml(t.number || t.code)}</td>
-                <td>
-                    <div style="font-weight: 700; color: #0F172A;">${escapeHtml(t.title)}</div>
-                    <div style="font-size: 11px; color: #64748B;">${escapeHtml(t.code)}</div>
-                </td>
-                <td>
-                    <div style="display: flex; align-items: center; gap: 7px;">
-                        <span class="dam-avatar-badge" style="background: ${avatarBg}; color: ${avatarColor};">${escapeHtml(initials)}</span>
-                        <span style="font-weight: 500; color: #1E293B;">${escapeHtml(t.assignee_name || t.assignees_text)}</span>
-                    </div>
-                </td>
-                <td style="color: #475569;">${escapeHtml(t.planned_end)}</td>
-                <td style="color: #0F172A; font-weight: 600;">${escapeHtml(t.forecast_end || t.planned_end)}</td>
-                <td>
-                    <span class="${delayBadgeClass}">${escapeHtml(t.delay_badge || ('+' + t.delay_days + ' days'))}</span>
-                </td>
-                <td>
-                    <span class="pdi-impact-badge ${impactClass}">${escapeHtml(impactLabel)}</span>
-                </td>
-                <td>
-                    <div style="color: #334155; font-size: 12px; line-height: 1.35;">${escapeHtml(t.detected_problem)}</div>
-                </td>
-                <td style="text-align: center;">
-                    <button type="button" class="dam-chevron-btn" onclick="toggleDelayedDrawer(${t.id}, event)" aria-label="Toggle details">
-                        ${isExpanded ? '▲' : '▼'}
-                    </button>
-                </td>
-            </tr>
-        `;
-
-        if (isExpanded) {
-            html += `
-                <tr class="pdi-drawer-row">
-                    <td colspan="9" class="pdi-drawer-cell">
-                        <div class="pdi-drawer-grid">
-                            <div class="pdi-drawer-card">
-                                <div class="pdi-drawer-card-label">Assigned Task Owner</div>
-                                <div class="pdi-drawer-card-val" style="font-weight: 600;">
-                                    ${escapeHtml(t.assignee_name || t.assignees_text)}
-                                </div>
-                                <div style="font-size: 11px; color: #64748B; margin-top: 4px;">
-                                    Planned: ${escapeHtml(t.planned_end_time || t.planned_end)}
-                                </div>
-                            </div>
-                            <div class="pdi-drawer-card">
-                                <div class="pdi-drawer-card-label">Detected Schedule Problem</div>
-                                <div class="pdi-drawer-card-val" style="color: #B91C1C;">
-                                    ${escapeHtml(t.detected_problem)}
-                                </div>
-                                <div style="font-size: 11px; color: #64748B; margin-top: 4px;">
-                                    Status: <b>${escapeHtml(t.status_label)}</b> (${t.progress}%)
-                                </div>
-                            </div>
-                            <div class="pdi-drawer-card">
-                                <div class="pdi-drawer-card-label">Dependencies</div>
-                                <div class="pdi-drawer-card-val" style="font-size: 11.5px;">
-                                    ${t.blocking_predecessors && t.blocking_predecessors.length > 0 
-                                        ? `<span style="color: #B45309;">Waiting on: ${escapeHtml(t.blocking_predecessors.map(p => p.title).join(', '))}</span>` 
-                                        : '<span style="color: #64748B;">No blocking predecessor.</span>'}
-                                    <br>
-                                    ${t.blocked_successors && t.blocked_successors.length > 0
-                                        ? `<span style="color: #0F766E;">Blocks: ${escapeHtml(t.blocked_successors.map(s => s.title).join(', '))}</span>`
-                                        : '<span style="color: #64748B;">No downstream task waiting.</span>'}
-                                </div>
-                            </div>
-
-                            <div class="pdi-drawer-card">
-                                <div class="pdi-drawer-card-label">Reported Root Cause</div>
-                                <div class="pdi-drawer-card-val">
-                                    ${t.has_delay_report 
-                                        ? `<b style="color: #0F172A;">${escapeHtml(t.reported_root_cause)}</b>` 
-                                        : '<span style="color: #64748B; font-style: italic;">Underlying reason not reported.</span>'}
-                                </div>
-                                <div style="font-size: 11px; color: #64748B; margin-top: 4px;">
-                                    Involved Party: ${escapeHtml(t.involved_party || 'Not recorded')}
-                                </div>
-                            </div>
-
-                            <div class="pdi-drawer-card">
-                                <div class="pdi-drawer-card-label">Confirmed Corrective Action</div>
-                                <div class="pdi-drawer-card-val">
-                                    ${t.has_delay_report && t.corrective_action !== 'None recorded'
-                                        ? escapeHtml(t.corrective_action)
-                                        : '<span style="color: #64748B; font-style: italic;">None recorded.</span>'}
-                                </div>
-                                <div style="font-size: 11px; color: #64748B; margin-top: 4px;">
-                                    Resolution Target: ${escapeHtml(t.resolution_date || '—')}
-                                </div>
-                            </div>
-
-                            <div class="pdi-drawer-card">
-                                <div class="pdi-drawer-card-label">Action Owner &amp; Status</div>
-                                <div class="pdi-drawer-card-val" style="display: flex; align-items: center; justify-content: space-between;">
-                                    <span>${escapeHtml(t.action_owner || 'None recorded')}</span>
-                                    <span class="pdi-micro-pill" style="font-weight: 700; background: ${t.resolution_status === 'Open' ? '#FEF3C7' : (t.resolution_status === 'Resolved' ? '#DCFCE7' : '#F1F5F9')}; color: ${t.resolution_status === 'Open' ? '#B45309' : (t.resolution_status === 'Resolved' ? '#15803D' : '#475569')};">
-                                        ${escapeHtml(t.resolution_status)}
-                                    </span>
-                                </div>
-                                <div style="margin-top: 8px;">
-                                    ${t.can_add_reason ? `
-                                        <button type="button" class="btn btn-xs ${t.has_delay_report ? 'btn-outline' : 'btn-primary'}" onclick="toggleInlineDelayForm(${t.id}, event)" style="font-size: 11px; padding: 3px 8px; font-weight: 600;">
-                                            ${t.has_delay_report ? '✏️ Edit Delay Reason' : '+ Add Reason & Corrective Action'}
-                                        </button>
-                                    ` : ''}
-                                    ${(t.has_delay_report && t.resolution_status !== 'Resolved' && t.resolve_delay_url) ? `
-                                        <button type="button" class="btn btn-xs btn-outline" onclick="resolveDelayReport(${t.id}, '${t.resolve_delay_url}', event)" style="font-size: 11px; padding: 3px 8px; color: #15803D; border-color: #86EFAC;">
-                                            ✓ Mark Resolved
-                                        </button>
-                                    ` : ''}
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Inline Form for Recording Delay Reason -->
-                        <div id="dam-delay-form-${t.id}" style="display: none; margin-top: 14px; padding: 16px; background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 8px;">
-                            <div style="font-size: 13px; font-weight: 700; color: #0F172A; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
-                                <span>Record Official Delay Reason &amp; Corrective Action</span>
-                            </div>
-                            <form onsubmit="submitDelayReport(event, ${t.id}, '${t.store_delay_url}')" style="display: flex; flex-direction: column; gap: 12px;">
-                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
-                                    <div>
-                                        <label style="font-size: 11px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Reason Category *</label>
-                                        <select name="reason_code" required class="input" style="width: 100%; font-size: 12px; padding: 6px 8px; border: 1px solid #CBD5E1; border-radius: 4px; background: #FFFFFF;">
-                                            <option value="">Select root cause category...</option>
-                                            ${Object.entries(currentInvestigationData.delay_reasons_catalog || {}).map(([k, v]) => `
-                                                <option value="${k}" ${t.open_delay_raw && t.open_delay_raw.reason_code === k ? 'selected' : ''}>${escapeHtml(v)}</option>
-                                            `).join('')}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label style="font-size: 11px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Involved Party Type *</label>
-                                        <select name="responsible_party_type" required class="input" style="width: 100%; font-size: 12px; padding: 6px 8px; border: 1px solid #CBD5E1; border-radius: 4px; background: #FFFFFF;">
-                                            <option value="internal">Internal Department</option>
-                                            <option value="supplier">External Supplier / Vendor</option>
-                                            <option value="department">Other Department</option>
-                                            <option value="external">External Factor</option>
-                                            <option value="unknown">Unknown Party</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
-                                    <div>
-                                        <label style="font-size: 11px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Party Name (Supplier or Department Name)</label>
-                                        <input type="text" name="responsible_party_name" value="${t.open_delay_raw ? escapeHtml(t.open_delay_raw.responsible_party_name || '') : ''}" placeholder="e.g. ABC Traders or Logistics Unit" class="input" style="width: 100%; font-size: 12px; padding: 6px 8px; border: 1px solid #CBD5E1; border-radius: 4px; background: #FFFFFF;">
-                                    </div>
-                                    <div>
-                                        <label style="font-size: 11px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Action Owner</label>
-                                        <select name="action_owner_id" class="input" style="width: 100%; font-size: 12px; padding: 6px 8px; border: 1px solid #CBD5E1; border-radius: 4px; background: #FFFFFF;">
-                                            <option value="">Select owner...</option>
-                                            ${(currentInvestigationData.project_members || []).map(m => `
-                                                <option value="${m.id}" ${t.open_delay_raw && t.open_delay_raw.action_owner_id == m.id ? 'selected' : ''}>${escapeHtml(m.name)}</option>
-                                            `).join('')}
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label style="font-size: 11px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Corrective Action Plan</label>
-                                    <textarea name="details" rows="2" placeholder="Describe the specific action being taken to recover schedule..." class="input" style="width: 100%; font-size: 12px; padding: 6px 8px; border: 1px solid #CBD5E1; border-radius: 4px; background: #FFFFFF;">${t.open_delay_raw ? escapeHtml(t.open_delay_raw.details || '') : ''}</textarea>
-                                </div>
-
-                                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; align-items: flex-end;">
-                                    <div>
-                                        <label style="font-size: 11px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">Revised Expected Resolution Date</label>
-                                        <input type="datetime-local" name="revised_expected_end_at" value="${t.open_delay_raw && t.open_delay_raw.revised_expected_end_at ? t.open_delay_raw.revised_expected_end_at : ''}" class="input" style="width: 100%; font-size: 12px; padding: 6px 8px; border: 1px solid #CBD5E1; border-radius: 4px; background: #FFFFFF;">
-                                    </div>
-                                    <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                                        <button type="button" class="btn btn-ghost btn-xs" onclick="toggleInlineDelayForm(${t.id}, event)" style="font-size: 11px;">Cancel</button>
-                                        <button type="submit" class="btn btn-primary btn-xs" id="dam-submit-btn-${t.id}" style="font-size: 11px; background: #315F58; border-color: #315F58; color: #FFFFFF; font-weight: 600; padding: 6px 16px;">Save Reason &amp; Action</button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        }
-    });
-
-    tbody.innerHTML = html;
-}
-
-function renderOverdueTasksTable() {
-    if (!currentInvestigationData) return;
-    const tbody = document.getElementById('pdi-overdue-tasks-tbody');
-    const allOverdue = (currentInvestigationData.investigation?.section_e?.tasks || currentInvestigationData.overdue_section?.tasks || []);
-
-    if (allOverdue.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="8" class="pdi-empty-row" style="color: #15803D; font-weight: 500;">
-                    ✓ No overdue tasks in this project.
-                </td>
-            </tr>
-        `;
-        return;
-    }
-
-    let html = '';
-    allOverdue.forEach(t => {
-        const isExpanded = expandedOverdueTaskIds.has(t.id);
-        const initials = t.assignee_initials || '—';
-        const avatarBg = (initials === 'NP' || initials.charCodeAt(0) % 2 === 0) ? '#D1E7DD' : '#E0F2FE';
-        const avatarColor = (initials === 'NP' || initials.charCodeAt(0) % 2 === 0) ? '#0F5132' : '#0369A1';
-        const statusClass = 'dam-status-pill status-' + (t.status || 'todo');
-
-        html += `
-            <tr class="pdi-task-row ${isExpanded ? 'is-expanded' : ''}" onclick="toggleOverdueDrawer(${t.id}, event)">
-                <td style="font-weight: 600; color: #64748B;">${escapeHtml(t.number || t.code)}</td>
-                <td>
-                    <div style="font-weight: 700; color: #0F172A;">${escapeHtml(t.title)}</div>
-                    <div style="font-size: 11px; color: #64748B;">${escapeHtml(t.code)}</div>
-                </td>
-                <td>
-                    <div style="display: flex; align-items: center; gap: 7px;">
-                        <span class="dam-avatar-badge" style="background: ${avatarBg}; color: ${avatarColor};">${escapeHtml(initials)}</span>
-                        <span style="font-weight: 500; color: #1E293B;">${escapeHtml(t.assignee_name || t.assignees_text)}</span>
-                    </div>
-                </td>
-                <td style="color: #DC2626; font-weight: 600;">${escapeHtml(t.planned_end_time || t.planned_end)}</td>
-                <td>
-                    <span class="dam-delay-pill">${escapeHtml(t.overdue_duration || (t.delay_days + ' days'))}</span>
-                </td>
-                <td>
-                    <span class="${statusClass}">${escapeHtml(t.status_label || t.status)}</span>
-                </td>
-                <td>
-                    <span style="font-weight: 700; color: ${t.is_critical ? '#DC2626' : '#64748B'};">
-                        ${t.is_critical ? 'Yes (CPM)' : 'No'}
-                    </span>
-                </td>
-                <td style="text-align: center;">
-                    <button type="button" class="dam-chevron-btn" onclick="toggleOverdueDrawer(${t.id}, event)" aria-label="Toggle details">
-                        ${isExpanded ? '▲' : '▼'}
-                    </button>
-                </td>
-            </tr>
-        `;
-
-        if (isExpanded) {
-            html += `
-                <tr class="pdi-drawer-row">
-                    <td colspan="8" class="pdi-drawer-cell">
-                        <div style="display: flex; justify-content: space-between; align-items: center; background: #F8FAFC; padding: 10px 14px; border: 1px solid #E2E8F0; border-radius: 6px;">
-                            <div>
-                                <span style="font-weight: 600; color: #0F172A;">${escapeHtml(t.title)}</span>
-                                <span style="color: #64748B; font-size: 12px; margin-left: 8px;">Progress: <b>${t.progress}%</b> · Float Buffer: <b>${escapeHtml(t.float_text || '0 days')}</b></span>
-                            </div>
-                            <div style="font-size: 12px; color: #334155;">
-                                ${escapeHtml(t.detected_problem || '')}
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        }
-    });
-
-    tbody.innerHTML = html;
-}
-
-function toggleInlineDelayForm(taskId, event) {
-    if (event) event.stopPropagation();
-    const formBox = document.getElementById(`dam-delay-form-${taskId}`);
-    if (formBox) {
-        formBox.style.display = (formBox.style.display === 'none') ? 'block' : 'none';
-    }
-}
-
-function submitDelayReport(event, taskId, url) {
-    event.preventDefault();
-    const form = event.target;
-    const submitBtn = document.getElementById(`dam-submit-btn-${taskId}`);
-    if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Saving...';
-    }
-
-    const formData = new FormData(form);
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            'X-CSRF-TOKEN': csrfToken,
-            'Accept': 'application/json',
-        },
-        body: formData
-    })
-    .then(async res => {
-        if (!res.ok) {
-            const errJson = await res.json().catch(() => ({}));
-            let msg = errJson.message || 'Error saving delay report.';
-            if (errJson.errors) {
-                msg += '\n' + Object.values(errJson.errors).flat().join('\n');
+    const actions = pdEl('div', 'pdl-actions');
+    let formBox = null;
+    if (t.can_add_reason) {
+        const toggle = pdEl('button', 'btn ' + (t.has_delay_report ? 'btn-outline' : 'btn-primary') + ' btn-sm', t.has_delay_report ? 'Edit the reason' : 'Add the reason');
+        toggle.type = 'button';
+        toggle.addEventListener('click', () => {
+            if (!formBox) {
+                formBox = buildReasonForm(t, res, () => { formBox.hidden = true; });
+                wrap.append(formBox);
+            } else {
+                formBox.hidden = !formBox.hidden;
             }
-            throw new Error(msg);
-        }
-        return res.json();
-    })
-    .then(() => {
-        // Refresh project delay analysis modal instantly
-        if (currentDamData && currentDamData.project) {
-            openDelayAnalysis(currentDamData.project.id);
-        }
-    })
-    .catch(err => {
-        alert(err.message || 'Error saving delay report.');
-        if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Save Delay Report';
-        }
+            if (!formBox.hidden) formBox.querySelector('select')?.focus();
+        });
+        actions.append(toggle);
+    }
+    if (t.has_delay_report && t.can_resolve_delay && t.resolution_status !== 'Resolved' && t.resolve_delay_url) {
+        const resolve = pdEl('button', 'btn btn-outline btn-sm pdl-resolve', '✓ Mark resolved');
+        resolve.type = 'button';
+        resolve.addEventListener('click', event => resolveDelayReport(t.id, t.resolve_delay_url, event));
+        actions.append(resolve);
+    }
+    const project = new URL(res.project?.show_url || '#', location.origin);
+    project.searchParams.set('focus_task', t.id);
+    project.hash = 'tasks';
+    const link = pdEl('a', 'pdl-link', 'Open task →');
+    link.href = project.href;
+    actions.append(link);
+    wrap.append(actions);
+    return wrap;
+}
+
+function buildReasonForm(t, res, onCancel) {
+    const raw = t.open_delay_raw || {};
+    const box = pdEl('form', 'pdl-form');
+    box.noValidate = false;
+
+    const field = (label, control, cls) => {
+        const wrapper = pdEl('label', 'pdl-field ' + (cls || ''));
+        wrapper.append(pdEl('span', '', label), control);
+        return wrapper;
+    };
+
+    const reason = pdEl('input');
+    reason.type = 'text';
+    reason.name = 'reason_text';
+    reason.required = true;
+    reason.maxLength = 500;
+    reason.placeholder = 'Type the actual reason for the delay';
+    reason.value = raw.reason_text || '';
+
+    const partyName = pdEl('input');
+    partyName.type = 'text';
+    partyName.name = 'responsible_party_name';
+    partyName.required = true;
+    partyName.maxLength = 160;
+    partyName.placeholder = 'Type the team, person, department or vendor';
+    partyName.value = raw.responsible_party_name || '';
+
+    const partyType = pdEl('input');
+    partyType.type = 'hidden';
+    partyType.name = 'responsible_party_type';
+    partyType.value = raw.responsible_party_type || 'unknown';
+
+    const owner = pdEl('select');
+    owner.name = 'action_owner_id';
+    owner.add(new Option('Choose who follows up…', ''));
+    (res.project_members || []).forEach(member => owner.add(new Option(member.name, member.id, false, Number(raw.action_owner_id) === Number(member.id))));
+
+    const plan = pdEl('textarea');
+    plan.name = 'details';
+    plan.rows = 2;
+    plan.placeholder = 'What will be done to catch up? (optional)';
+    plan.value = raw.details || '';
+
+    const date = pdEl('input');
+    date.type = 'datetime-local';
+    date.name = 'revised_expected_end_at';
+    date.value = raw.revised_expected_end_at || '';
+
+    box.append(
+        field('What is the main reason?', reason, 'is-wide'),
+        field('Whose side is it on?', partyName, 'is-wide'),
+        field('Who follows up?', owner),
+        field('New finish date', date),
+        field('Plan to catch up', plan, 'is-wide'),
+        partyType
+    );
+
+    const footer = pdEl('div', 'pdl-form-actions');
+    const cancel = pdEl('button', 'btn btn-ghost btn-sm', 'Cancel');
+    cancel.type = 'button';
+    cancel.addEventListener('click', onCancel);
+    const save = pdEl('button', 'btn btn-primary btn-sm', 'Save');
+    save.type = 'submit';
+    footer.append(cancel, save);
+    box.append(footer);
+
+    box.addEventListener('submit', event => {
+        event.preventDefault();
+        save.disabled = true;
+        save.textContent = 'Saving…';
+        fetch(t.store_delay_url, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                'Accept': 'application/json',
+            },
+            body: new FormData(box),
+        })
+        .then(async response => {
+            if (!response.ok) {
+                const error = await response.json().catch(() => ({}));
+                let message = error.message || (response.status === 403
+                    ? 'You do not have permission to add a delay reason for this task.'
+                    : 'The reason could not be saved.');
+                if (error.errors) message += '\n' + Object.values(error.errors).flat().join('\n');
+                throw new Error(message);
+            }
+            return response.json();
+        })
+        .then(() => reloadDelayReview())
+        .catch(error => {
+            alert(error.message || 'The reason could not be saved.');
+            save.disabled = false;
+            save.textContent = 'Save';
+        });
     });
+    return box;
+}
+
+function reloadDelayReview() {
+    if (currentAnalysisProjectId) openDelayAnalysis(currentAnalysisProjectId);
+}
+
+/* The chain of linked tasks, shown wrapped so it never needs sideways scrolling. */
+function renderLinkedChain(res) {
+    const holder = document.getElementById('pdi-cpm-chain');
+    const note = document.getElementById('pdi-cpm-note');
+    const box = document.getElementById('pds-critical-section') || document.getElementById('pdl-chain-box');
+    const listHolder = document.getElementById('pds-critical-list');
+    const countPill = document.getElementById('pds-critical-count-pill');
+    if (!holder) return;
+    holder.replaceChildren();
+    if (listHolder) listHolder.replaceChildren();
+    if (note) note.hidden = true;
+
+    const cpm = res.critical_path || {};
+    const sequence = cpm.sequence || [];
+    const allCrit = cpm.all_tasks || cpm.critical_tasks || cpm.tasks || [];
+    const critCount = cpm.total_count || allCrit.length || (sequence.filter(s => s.is_critical).length || sequence.length);
+    const delayedCount = cpm.delayed_count || sequence.filter(s => s.is_delayed).length;
+
+    if (!cpm.has_tasks) {
+        if (box) box.hidden = true;
+        return;
+    }
+    if (box) box.hidden = false;
+
+    if (countPill) {
+        countPill.textContent = critCount + ' Critical ' + (critCount === 1 ? 'task' : 'tasks') + (delayedCount > 0 ? ' (' + delayedCount + ' delayed)' : ' (All on track)');
+        countPill.className = 'pds-critical-pill' + (delayedCount > 0 ? ' is-alert' : '');
+    }
+
+    if (!cpm.reliable && !sequence.length) {
+        if (note) {
+            note.textContent = cpm.warning || 'Dependency links are not configured between tasks yet, so critical path is based on linear sequence.';
+            note.hidden = false;
+        }
+        return;
+    }
+
+    sequence.forEach((node, index) => {
+        if (index) holder.append(pdEl('span', 'pds-arrow', '→'));
+        const late = node.is_delayed || node.is_overrun || node.status === 'delayed';
+        const done = node.status === 'completed';
+        const inProgress = node.status === 'in_progress' || (node.progress > 0 && !done && !late);
+        
+        let statusCls = 'is-pending';
+        let statusIcon = '⚪';
+        let badgeText = '';
+        if (late) {
+            statusCls = 'is-late';
+            statusIcon = '🔴';
+            badgeText = node.delay_days ? '+' + node.delay_days + 'd' : 'Late';
+        } else if (done) {
+            statusCls = 'is-done';
+            statusIcon = '✓';
+            badgeText = 'Done';
+        } else if (inProgress) {
+            statusCls = 'is-active';
+            statusIcon = '⏳';
+            badgeText = (node.progress || 0) + '%';
+        }
+
+        const nodeBtn = pdEl('button', 'pds-node ' + statusCls);
+        nodeBtn.type = 'button';
+        nodeBtn.setAttribute('aria-label', (node.name || node.title) + '. Open task details');
+        nodeBtn.append(
+            pdEl('span', 'pds-node-icon', statusIcon),
+            pdEl('span', 'pds-node-title', node.name || String(node))
+        );
+        if (badgeText) {
+            nodeBtn.append(pdEl('span', 'pds-node-pill', badgeText));
+        }
+
+        nodeBtn.addEventListener('click', () => {
+            const row = document.getElementById('task-row-' + node.id);
+            if (row) {
+                if (lateFilter !== 'all' && row.hidden) {
+                    lateFilter = 'all';
+                    renderLateTasks(res);
+                }
+                const targetRow = document.getElementById('task-row-' + node.id);
+                if (targetRow) {
+                    const rowBody = targetRow.querySelector('.pdl-body');
+                    const rowHead = targetRow.querySelector('.pdl-row-head');
+                    if (rowBody && rowBody.hidden) {
+                        rowBody.hidden = false;
+                        targetRow.classList.add('is-open');
+                        rowHead?.setAttribute('aria-expanded', 'true');
+                        openLateIds.add(node.id);
+                    }
+                    targetRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    targetRow.classList.remove('pds-row-highlight');
+                    void targetRow.offsetWidth;
+                    targetRow.classList.add('pds-row-highlight');
+                }
+            } else {
+                const projectUrl = new URL(res.project?.show_url || '#', location.origin);
+                projectUrl.searchParams.set('focus_task', node.id);
+                projectUrl.hash = 'tasks';
+                window.location.href = projectUrl.href;
+            }
+        });
+
+        holder.append(nodeBtn);
+    });
+
+    if (allCrit.length > 0 && listHolder) {
+        const details = pdEl('details', 'pds-critical-details');
+        const summary = pdEl('summary', '', 'View all critical path task details (' + allCrit.length + ')');
+        const table = pdEl('div', 'pds-critical-table');
+        
+        allCrit.forEach(task => {
+            const r = pdEl('div', 'pds-crit-row');
+            const left = pdEl('div', 'pds-crit-main');
+            left.append(pdEl('span', 'pds-crit-num', task.number || ''));
+            left.append(pdEl('span', 'pds-crit-title', task.title));
+            r.append(left);
+
+            const right = pdEl('div', 'pds-crit-meta');
+            const unassigned = !task.assignees_text || task.assignees_text === 'Not assigned';
+            right.append(pdEl('span', unassigned ? 'is-warn' : '', unassigned ? '⚠️ Unassigned' : task.assignees_text));
+            right.append(pdEl('span', 'pds-crit-due', task.forecast_end && task.forecast_end !== task.planned_end ? task.planned_end + ' → ' + task.forecast_end : task.planned_end));
+            const isLate = task.is_overdue || (Number(task.delay_days) > 0);
+            right.append(pdEl('span', 'pds-node-pill ' + (isLate ? 'is-late' : (task.is_completed ? 'is-done' : 'is-pending')), isLate ? '+' + task.delay_days + 'd' : (task.is_completed ? 'Done' : 'On track')));
+            table.append(r);
+        });
+
+        details.append(summary, table);
+        listHolder.append(details);
+    }
 }
 
 async function resolveDelayReport(taskId, url, event) {
@@ -2187,9 +2196,7 @@ async function resolveDelayReport(taskId, url, event) {
         return res.json();
     })
     .then(() => {
-        if (currentDamData && currentDamData.project) {
-            openDelayAnalysis(currentDamData.project.id);
-        }
+        reloadDelayReview();
     })
     .catch(err => {
         alert(err.message || 'Failed to resolve delay report.');

@@ -149,7 +149,8 @@ class TaskBulkController
 
         // 5. Database transaction for atomic persistence
         $updatedCount = 0;
-        DB::transaction(function() use ($data, $existingTasks, $newDependenciesMap, $project, $projectService, $request, $newMembers, &$updatedCount) {
+        $completedTaskIds = [];
+        DB::transaction(function() use ($data, $existingTasks, $newDependenciesMap, $project, $projectService, $request, $newMembers, &$updatedCount, &$completedTaskIds) {
             if($newMembers){$role=\App\Models\ProjectRole::where('slug','team')->firstOrFail();foreach($newMembers as $person){\App\Models\ProjectMembership::firstOrCreate(['project_id'=>$project->id,'user_id'=>$person->id,'project_role_id'=>$role->id]);Audit::record('project.member_added',$project,['user_id'=>$person->id,'source'=>'bulk_task_edit']);}}
             foreach ($data['tasks'] as $id => $row) {
                 $task = $existingTasks->get($id);
@@ -161,6 +162,7 @@ class TaskBulkController
 
                 $normalized=$task->normalizeProgressInput(['status'=>$row['status'],'progress'=>(int)$row['progress']]);
                 $status=$normalized['status'];$progress=$normalized['progress'];
+                if ($status === 'completed' || $progress >= 100) $completedTaskIds[] = $task->id;
 
                 $task->update([
                     'title' => $row['title'],
@@ -173,10 +175,31 @@ class TaskBulkController
                 // Sync assignees
                 if (!empty($row['assigned_user_id'])) {
                     $uid=(int)$row['assigned_user_id'];$already=$task->assignees()->where('users.id',$uid)->exists();
-                    if(!$already){$task->assignees()->sync([$uid]);if(in_array($project->status,['active','on_hold'])&&$project->approval_stage!=='planning'){ $person=User::findOrFail($uid);DB::afterCommit(fn()=>$person->notify(new \App\Notifications\TaskReassignedNotification($task,$request->user())));}}
+                    if(!$already){
+                        $previousAssigneeIds=$task->assignees()->pluck('users.id');
+                        $task->assignees()->sync([$uid]);
+                        foreach($previousAssigneeIds as $previousId){
+                            $previousUser=User::find($previousId);
+                            if(!$previousUser)continue;
+                            app(\App\Services\InboxService::class)->resolveTaskAssignment($task,$previousUser);
+                            if(in_array($project->status,['active','on_hold'])&&$project->approval_stage!=='planning')DB::afterCommit(fn()=>$previousUser->notify(new \App\Notifications\TaskReassignedNotification($task,$request->user(),'unassigned',null,'task_unassigned')));
+                        }
+                        if(in_array($project->status,['active','on_hold'])&&$project->approval_stage!=='planning'){
+                            $person=User::findOrFail($uid);
+                            $eventKey=$previousAssigneeIds->isNotEmpty()?'task_reassigned':'task_assigned';
+                            DB::afterCommit(fn()=>$person->notify(new \App\Notifications\TaskReassignedNotification($task,$request->user(),'assigned',null,$eventKey)));
+                        }
+                    }
 
                 } else {
+                    $previousAssigneeIds=$task->assignees()->pluck('users.id');
                     $task->assignees()->detach();
+                    foreach($previousAssigneeIds as $previousId){
+                        $previousUser=User::find($previousId);
+                        if(!$previousUser)continue;
+                        app(\App\Services\InboxService::class)->resolveTaskAssignment($task,$previousUser);
+                        if(in_array($project->status,['active','on_hold'])&&$project->approval_stage!=='planning')DB::afterCommit(fn()=>$previousUser->notify(new \App\Notifications\TaskReassignedNotification($task,$request->user(),'unassigned',null,'task_unassigned')));
+                    }
                 }
 
                 // Sync dependencies
@@ -193,6 +216,10 @@ class TaskBulkController
                 'updated_count' => $updatedCount,
             ]);
         });
+
+        foreach (Task::whereIn('id', $completedTaskIds)->get() as $completedTask) {
+            app(\App\Services\InboxService::class)->taskCompleted($completedTask);
+        }
 
         if ($request->wantsJson()) {
             return response()->json([

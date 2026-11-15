@@ -46,7 +46,7 @@ class UserController {
             'subsidiary_id' => 'nullable|exists:subsidiaries,id',
         ]);
 
-        $password = Str::random(22);
+        $password = User::DEFAULT_TEMPORARY_PASSWORD;
         $user = User::create([
             'name' => $data['name'],
             'email' => strtolower(trim($data['email'])),
@@ -54,6 +54,7 @@ class UserController {
             'system_role' => $data['system_role'] ?? 'user',
             'account_status' => 'active',
             'must_change_password' => true,
+            'default_temporary_password_active' => true,
             'subsidiary_id' => $data['subsidiary_id'] ?? null,
         ]);
 
@@ -89,7 +90,7 @@ class UserController {
             'subsidiary_id' => 'nullable|exists:subsidiaries,id',
         ]);
 
-        $password = Str::random(22);
+        $password = User::DEFAULT_TEMPORARY_PASSWORD;
         $user = User::create([
             'name' => $data['name'],
             'email' => strtolower(trim($data['email'])),
@@ -97,6 +98,7 @@ class UserController {
             'system_role' => $data['system_role'] ?? 'user',
             'account_status' => 'active',
             'must_change_password' => true,
+            'default_temporary_password_active' => true,
             'subsidiary_id' => $data['subsidiary_id'] ?? null,
         ]);
 
@@ -154,7 +156,7 @@ class UserController {
     public function resetPassword(Request $request, User $user) {
         abort_if(!$user->password, 403);
         $password = Str::random(22);
-        $user->update(['password' => $password, 'must_change_password' => true]);
+        $user->update(['password' => $password, 'must_change_password' => true, 'default_temporary_password_active' => false]);
         Audit::record('user.temporary_password_reset', $user);
 
         if ($request->expectsJson() || $request->ajax()) {

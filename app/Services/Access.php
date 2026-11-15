@@ -387,7 +387,9 @@ class Access {
             'update'=>$edit && ($has('tasks.update_status') || $has('tasks.update_progress') || $legacy),
             'upload'=>($view || $legacy) && ($has('tasks.upload_attachments') || $legacy),
             'comment'=>($view || $legacy) && ($has('tasks.add_comments') || $legacy),
-            'delay'=>($view || $legacy) && ($has('tasks.report_delays') || $legacy),
+            // Assignees can always raise a blocker on their own work. Reporting
+            // blockers across the wider project remains permission based.
+            'delay'=>($view || $legacy) && ($assigned || $has('tasks.report_delays') || $legacy),
             default=>false,
         };
     }
@@ -396,6 +398,36 @@ class Access {
         return $this->project($user, $project, 'tasks.create') ||
                $this->project($user, $project, 'tasks.edit_all') ||
                $this->project($user, $project, 'manage_tasks');
+    }
+
+    /**
+     * Team Monitor is reserved for portfolio users, project leads, and roles
+     * that have the complete set of project-scoped permissions.
+     */
+    public function hasFullProjectAccess(User $user, Project $project): bool {
+        if (!$user->isActive()) return false;
+        if ($user->canViewPortfolio()) return true;
+        if (in_array($user->id, [$project->pm_user_id, $project->owner_user_id], true)) return true;
+
+        $projectPermissions = collect(self::CATALOG)
+            ->filter(fn($definition) => $definition['category'] !== 'company')
+            ->keys();
+
+        return $projectPermissions->every(fn($permission) => $this->project($user, $project, $permission));
+    }
+
+    public function canAccessTeamMonitor(User $user): bool {
+        if (!$user->isActive()) return false;
+        if ($user->canViewPortfolio()) return true;
+
+        return Project::whereIn('status', ['active', 'on_hold'])
+            ->where(function ($query) use ($user) {
+                $query->where('pm_user_id', $user->id)
+                    ->orWhere('owner_user_id', $user->id)
+                    ->orWhereHas('memberships', fn($membership) => $membership->where('user_id', $user->id));
+            })
+            ->get()
+            ->contains(fn($project) => $this->hasFullProjectAccess($user, $project));
     }
 
     /**

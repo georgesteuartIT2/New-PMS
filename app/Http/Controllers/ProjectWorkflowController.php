@@ -34,11 +34,11 @@ class ProjectWorkflowController
         abort_unless($actor->isActive() && ($actor->isPmo() || ($actor->system_role === 'user' && (int) $p->owner_user_id === $actor->id)), 403);
     }
 
-    private function inform(Project $p, string $message): void
+    private function inform(Project $p, string $message, string $eventKey): void
     {
         $ids = User::where('system_role', 'pmo')->where('account_status', 'active')->pluck('id')->push($p->owner_user_id)->filter()->unique();
         foreach (User::whereIn('id', $ids)->where('account_status', 'active')->get() as $u) {
-            DB::afterCommit(fn () => $u->notify(new ProjectWorkflowNotification($p, 'decision', $message, (string) $p->updated_at)));
+            DB::afterCommit(fn () => $u->notify(new ProjectWorkflowNotification($p, 'decision', $message, (string) $p->updated_at, $eventKey)));
         }
     }
 
@@ -68,7 +68,7 @@ class ProjectWorkflowController
             $this->assignOptionalMembers($p,$d['members']??[],$r);
             if ($d['assignment_type'] === 'owner') {
                 $this->membership($p, $person, 'po', 'Project Owner');
-                DB::afterCommit(fn () => $person->notify(new ProjectWorkflowNotification($p, 'owner_request', 'PMO created '.$p->name.'. Review the project, choose a Project Manager and approve, or reject with a reason.', (string) $p->updated_at)));
+                DB::afterCommit(fn () => $person->notify(new ProjectWorkflowNotification($p, 'owner_request', 'PMO created '.$p->name.'. Review the project, choose a Project Manager and approve, or reject with a reason.', (string) $p->updated_at, 'project_request_received')));
             } else {
                 $service->assignManager($p, $person);
             }Audit::record('project.initiated', $p, ['assignment_type' => $d['assignment_type']]);
@@ -86,14 +86,15 @@ class ProjectWorkflowController
             $p = Project::whereKey($project->id)->lockForUpdate()->firstOrFail();
             abort_unless($r->user()->isActive() && $r->user()->system_role === 'user' && (int) $p->owner_user_id === $r->user()->id, 403);
             abort_unless($p->approval_stage === 'owner' && $p->status === 'pending', 409, 'This request has already changed.');
+            app(\App\Services\InboxService::class)->resolveProjectRequests($p);
             if ($d['decision'] === 'accept') {
                 $pm = $this->person($d['pm_user_id']);
                 $p->update(['approval_stage' => 'pm', 'approval_reason' => null]);
                 $service->assignManager($p, $pm);
-                $this->inform($p, $r->user()->name.' approved the project and requested PM acceptance from '.$pm->name.'.');
+                $this->inform($p, $r->user()->name.' approved the project and requested PM acceptance from '.$pm->name.'.', 'project_request_accepted');
             } else {
                 $p->update(['status' => 'declined', 'approval_stage' => 'owner_declined', 'approval_reason' => $d['decline_reason']]);
-                $this->inform($p, 'Project Owner rejected '.$p->name.': '.$d['decline_reason']);
+                $this->inform($p, 'Project Owner rejected '.$p->name.': '.$d['decline_reason'], 'project_request_rejected');
             }Audit::record('project.owner_'.$d['decision'], $p, ['reason' => $d['decline_reason'] ?? null]);
         });
 
@@ -108,6 +109,7 @@ class ProjectWorkflowController
             $this->leaders($p, $r->user());
             abort_unless(($p->status==='declined' && in_array($p->approval_stage, ['owner_declined', 'pm_declined'], true)), 409, 'Reassignment is available only after the current reviewer rejects the request.');
             if (!$r->user()->isPmo())abort_unless($p->approval_stage==='pm_declined',403);
+            app(\App\Services\InboxService::class)->resolveProjectRequests($p);
             if ($d['assignment_type'] === 'owner') {
                 abort_unless($r->user()->isPmo(), 403);
             }$u = $this->person($d['assignee_id']);
@@ -124,7 +126,7 @@ class ProjectWorkflowController
             } else {
                 $p->update(['approval_stage' => 'pm', 'approval_reason' => null]);
                 $service->assignManager($p, $u);
-            }$this->inform($p, 'Assignment request sent to '.$u->name.' by '.$r->user()->name.'.');
+            }$this->inform($p, 'Assignment request sent to '.$u->name.' by '.$r->user()->name.'.', 'project_reassigned');
             Audit::record('project.workflow_reassigned', $p, ['user_id' => $u->id]);
         });
 
@@ -138,10 +140,11 @@ class ProjectWorkflowController
             $p = Project::whereKey($project->id)->lockForUpdate()->firstOrFail();
             abort_unless($r->user()->isActive() && $r->user()->system_role === 'user' && (int) $p->pm_user_id === $r->user()->id, 403);
             abort_unless($p->approval_stage === 'pm' && $p->status === 'pending', 409, 'This assignment has already changed.');
+            app(\App\Services\InboxService::class)->resolveProjectRequests($p);
             $invite = $p->invitations()->where('user_id', $r->user()->id)->where('status', 'pending')->lockForUpdate()->latest('id')->firstOrFail();
             $invite->update(['status' => $d['decision'] === 'accept' ? 'accepted' : 'declined', 'decline_reason' => $d['decline_reason'] ?? null, 'responded_at' => now()]);
             $p->update(['status' => $d['decision'] === 'accept' ? 'active' : 'declined', 'approval_stage' => $d['decision'] === 'accept' ? 'planning' : 'pm_declined', 'approval_reason' => $d['decline_reason'] ?? null]);
-            $this->inform($p, $r->user()->name.($d['decision'] === 'accept' ? ' accepted '.$p->name.' and is preparing the plan.' : ' rejected '.$p->name.': '.$d['decline_reason']));
+            $this->inform($p, $r->user()->name.($d['decision'] === 'accept' ? ' accepted '.$p->name.' and is preparing the plan.' : ' rejected '.$p->name.': '.$d['decline_reason']), $d['decision'] === 'accept' ? 'project_request_accepted' : 'project_request_rejected');
             Audit::record('project.pm_'.$d['decision'], $p, ['reason' => $d['decline_reason'] ?? null]);
         });
         $url = $d['decision'] === 'accept' ? route('projects.plan.setup', $project) : route('dashboard');
@@ -159,7 +162,23 @@ class ProjectWorkflowController
     {
         $this->planner($r, $project);
 
-        if(!$r->session()->hasOldInput() && $project->setup_draft){$draft=$project->setup_draft;if($r->filled('template_id')){$draft['project_template_id']=$r->integer('template_id');$draft['mode']='template';}foreach(['starts_on','ends_on','planned_budget'] as $key)if($r->filled($key))$draft[$key]=$r->input($key);$r->session()->now('_old_input',$draft);}
+        if (!$r->session()->hasOldInput() && $project->setup_draft) {
+            $draft = $project->setup_draft;
+            if ($r->filled('template_id')) {
+                $templateId = $r->integer('template_id');
+                if ((int) ($draft['project_template_id'] ?? 0) !== $templateId) {
+                    unset($draft['blank_plan']);
+                }
+                $draft['project_template_id'] = $templateId;
+                $draft['mode'] = 'template';
+            }
+            foreach (['starts_on', 'ends_on', 'planned_budget'] as $key) {
+                if ($r->filled($key)) {
+                    $draft[$key] = $r->input($key);
+                }
+            }
+            $r->session()->now('_old_input', $draft);
+        }
         return view('projects.plan-setup', [
             'project' => $project->load('template','memberships.user','memberships.role'),
             'roles' => $this->availableRoles($r),
@@ -172,8 +191,9 @@ class ProjectWorkflowController
     public function saveSetupDraft(Request $r,Project $project){
         $this->planner($r,$project);
         $d=$r->validate(['name'=>'nullable|string|max:160','description'=>'nullable|string|max:3000','mode'=>'nullable|in:blank,template','project_template_id'=>'nullable|integer|exists:project_templates,id','starts_on'=>'nullable|string|max:10','ends_on'=>'nullable|string|max:10','planned_budget'=>'nullable|string|max:30','blank_plan'=>'nullable|json|max:1000000','members'=>'nullable|array|max:100','members.*.user_id'=>'nullable|integer|exists:users,id','members.*.project_role_id'=>'nullable|integer|exists:project_roles,id']);
-        DB::transaction(function()use($r,$project,$d){$p=Project::whereKey($project->id)->lockForUpdate()->firstOrFail();$this->planner($r,$p);$p->update(['setup_draft'=>$d]);});
-        return response()->json(['saved'=>true]);
+        $savedAt=now();
+        DB::transaction(function()use($r,$project,$d,$savedAt){$p=Project::whereKey($project->id)->lockForUpdate()->firstOrFail();$this->planner($r,$p);$p->update(['setup_draft'=>$d,'setup_draft_saved_at'=>$savedAt]);});
+        return response()->json(['saved'=>true,'saved_at'=>$savedAt->toIso8601String()]);
     }
 
     private function validateBlankPlan(string $json): array
@@ -186,6 +206,7 @@ class ProjectWorkflowController
             'tasks.*.start_date'=>'required|date','tasks.*.end_date'=>'required|date|after_or_equal:tasks.*.start_date',
             'tasks.*.start_time'=>'required|date_format:H:i','tasks.*.end_time'=>'required|date_format:H:i',
             'tasks.*.priority'=>'nullable|in:low,medium,high,critical',
+            'tasks.*.assignee_id'=>'nullable|integer|exists:users,id',
         ])->validate();
         $tasks=collect($data['tasks'])->keyBy('code');
         foreach(['parent_code','dependency_code'] as $field){
@@ -228,11 +249,11 @@ class ProjectWorkflowController
             Audit::record('project.plan_options_updated', $p);
 
             if ($r->boolean('publish_now') && $p->tasks()->exists() && $service) {
-                $p->update(['approval_stage' => 'ready', 'plan_published_at' => now(),'setup_draft'=>null]);
+                $p->update(['approval_stage' => 'ready', 'plan_published_at' => now(),'setup_draft'=>null,'setup_draft_saved_at'=>null]);
                 $service->captureBaseline($p);
                 $ids = $p->tasks()->with('assignees')->get()->flatMap(fn ($t) => $t->assignees->pluck('id'))->merge($p->memberships()->pluck('user_id'))->unique()->reject(fn ($id) => (int) $id === (int) $p->pm_user_id);
                 foreach (User::whereIn('id', $ids)->where('account_status', 'active')->where('system_role', 'user')->get() as $u) {
-                    DB::afterCommit(fn () => $u->notify(new ProjectActivatedNotification($p)));
+                    DB::afterCommit(fn () => $u->notify(new ProjectActivatedNotification($p, 'plan_published')));
                 }
                 Audit::record('project.plan_published', $p);
             }
@@ -282,7 +303,7 @@ class ProjectWorkflowController
             'name'=>'sometimes|required|string|max:160','description'=>'sometimes|nullable|string|max:3000',
         ], $this->memberRules()));
 
-        $blankPlan = ($d['mode'] === 'blank' && !empty($d['blank_plan'])) ? $this->validateBlankPlan($d['blank_plan']) : null;
+        $blankPlan = !empty($d['blank_plan']) ? $this->validateBlankPlan($d['blank_plan']) : null;
 
         DB::transaction(function () use ($r, $project, $d, $service, $blankPlan) {
             $p = Project::whereKey($project->id)->lockForUpdate()->firstOrFail();
@@ -290,12 +311,10 @@ class ProjectWorkflowController
             $p->fill(array_intersect_key($d,array_flip(['name','description'])))->save();
             abort_if($p->plan_initialized || $p->tasks()->exists(), 409, 'The plan has already been started. Continue editing its tasks.');
             $template = $d['mode'] === 'template' ? ProjectTemplate::whereKey($d['project_template_id'])->where('status', 'active')->with('tasks')->firstOrFail() : null;
-            $p->update(['starts_on' => $d['starts_on'], 'ends_on' => $d['ends_on'], 'planned_budget' => $d['planned_budget'] ?? null, 'project_template_id' => $template?->id, 'plan_initialized' => true]);
-            if ($template) {
-                $service->applyTemplate($p, $template, $r->user());
-            } elseif ($blankPlan) {
+            $p->update(['starts_on' => $d['starts_on'], 'ends_on' => $d['ends_on'], 'planned_budget' => $d['planned_budget'] ?? null, 'project_template_id' => $template?->id, 'plan_initialized' => true, 'setup_draft' => null, 'setup_draft_saved_at' => null]);
+            if ($blankPlan) {
                 $source = new ProjectTemplate([
-                    'reference_start_date' => $blankPlan['reference_start_date'] ?? $d['starts_on'],
+                    'reference_start_date' => $blankPlan['reference_start_date'] ?? $template?->reference_start_date ?? $d['starts_on'],
                     'working_hours' => '09:00 - 17:00'
                 ]);
                 $source->setRelation('tasks', collect($blankPlan['tasks'])->map(fn ($task, $i) => new \App\Models\TemplateTask(array_merge($task, [
@@ -313,6 +332,8 @@ class ProjectWorkflowController
                         }
                     }
                 }
+            } elseif ($template) {
+                $service->applyTemplate($p, $template, $r->user());
             }
             $assignments = ($p->plan_assignment_drafts ?? [])[$template?->id ?? 0] ?? [];
             foreach ($assignments as $code => $uid) {
@@ -328,11 +349,11 @@ class ProjectWorkflowController
             Audit::record('project.plan_started', $p);
 
             if ($r->boolean('publish_now') && $p->tasks()->exists()) {
-                $p->update(['approval_stage' => 'ready', 'plan_published_at' => now()]);
+                $p->update(['approval_stage' => 'ready', 'plan_published_at' => now(),'setup_draft'=>null,'setup_draft_saved_at'=>null]);
                 $service->captureBaseline($p);
                 $ids = $p->tasks()->with('assignees')->get()->flatMap(fn ($t) => $t->assignees->pluck('id'))->merge($p->memberships()->pluck('user_id'))->unique()->reject(fn ($id) => (int) $id === (int) $p->pm_user_id);
                 foreach (User::whereIn('id', $ids)->where('account_status', 'active')->where('system_role', 'user')->get() as $u) {
-                    DB::afterCommit(fn () => $u->notify(new ProjectActivatedNotification($p)));
+                    DB::afterCommit(fn () => $u->notify(new ProjectActivatedNotification($p, 'plan_published')));
                 }
                 Audit::record('project.plan_published', $p);
             }
@@ -351,11 +372,11 @@ class ProjectWorkflowController
             $p = Project::whereKey($project->id)->lockForUpdate()->firstOrFail();
             $this->planner($r, $p);
             abort_unless($p->plan_initialized && $p->tasks()->exists(), 422, 'Add or import at least one task before saving the plan.');
-            $p->update(['approval_stage' => 'ready', 'plan_published_at' => now()]);
+            $p->update(['approval_stage' => 'ready', 'plan_published_at' => now(),'setup_draft'=>null,'setup_draft_saved_at'=>null]);
             $service->captureBaseline($p);
             $ids = $p->tasks()->with('assignees')->get()->flatMap(fn ($t) => $t->assignees->pluck('id'))->merge($p->memberships()->pluck('user_id'))->unique()->reject(fn ($id) => (int) $id === (int) $p->pm_user_id);
             foreach (User::whereIn('id', $ids)->where('account_status', 'active')->where('system_role', 'user')->get() as $u) {
-                DB::afterCommit(fn () => $u->notify(new ProjectActivatedNotification($p)));
+                DB::afterCommit(fn () => $u->notify(new ProjectActivatedNotification($p, 'plan_published')));
             }Audit::record('project.plan_published', $p);
         });
 

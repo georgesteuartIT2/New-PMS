@@ -187,6 +187,15 @@
 #project-workspace .workflow-rejection-next-step { flex:1 1 auto; min-width:0; color:#7A5A24; font-size:10px; font-weight:600; }
 #project-workspace .workflow-rejection-context .workspace-edit-project { min-height:30px; height:30px; padding:0 8px; font-size:11px; }
 #project-workspace .workflow-rejection-reason { grid-column:1/-1; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; color:#68430D; font-size:11px; line-height:1.35; overflow-wrap:anywhere; }
+#project-workspace .workflow-rejection-meta { grid-column:1/-1; display:grid; gap:7px; min-width:0; }
+#project-workspace .workflow-rejection-reviewer { display:flex; align-items:center; gap:8px; min-width:0; color:#364A42; font-size:11px; line-height:1.3; }
+#project-workspace .workflow-rejection-reviewer-avatar { display:grid; place-items:center; flex:0 0 24px; width:24px; height:24px; border:1px solid #DCE7E2; border-radius:50%; background:#EEF4F1; color:#315F58; font-size:10px; font-weight:700; }
+#project-workspace .workflow-rejection-reviewer>span:last-child { display:grid; min-width:0; }
+#project-workspace .workflow-rejection-reviewer small { color:#687772; font-size:9px; font-weight:650; letter-spacing:.35px; text-transform:uppercase; }
+#project-workspace .workflow-rejection-reviewer strong { color:#263B34; font-size:11px; font-weight:650; overflow-wrap:anywhere; }
+#project-workspace .workflow-rejection-reason-detail { display:flex; align-items:flex-start; gap:8px; min-width:0; padding:6px 8px; border-left:2px solid #D5A64E; border-radius:0 5px 5px 0; background:#FFF8E9; color:#5E5140; font-size:10px; line-height:1.4; }
+#project-workspace .workflow-rejection-reason-detail b { flex:0 0 auto; color:#8B5C13; font-size:9px; letter-spacing:.3px; text-transform:uppercase; }
+#project-workspace .workflow-rejection-reason-detail span { min-width:0; overflow-wrap:anywhere; }
 @media(max-width:600px) { #project-workspace .pw-head-actions:has(.workflow-rejection-context) { flex-wrap:wrap; } #project-workspace .workflow-rejection-context { width:min(440px,100%); } #project-workspace .workflow-rejection-summary { grid-template-columns:1fr; } #project-workspace .workflow-rejection-actions { flex-wrap:wrap; } }
 #project-workspace .pw-head-actions:has(.workflow-rejection-context)>.workspace-edit-project { min-height:30px; height:30px; padding:0 8px; font-size:11px; }
 @media(max-width:600px) { #project-workspace .pw-head-actions:has(.workflow-rejection-context)>.workspace-edit-project { min-height:38px; height:38px; } }
@@ -582,3 +591,97 @@ tr.project-task-row.is-focused-task {
 @media(max-width:600px){#tab-info .budget-metrics>div{padding-left:0}#tab-info .overview-closure-action-box button{width:100%!important}}
 
 .focused-reported-issue td{background:#edf5f0!important}.focused-reported-issue{outline:1px solid #315F58;scroll-margin-top:120px}
+
+/* Risks & issues: action-first, readable without opening task panels. */
+#tab-risks .project-risk-intro{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:4px 0 16px}
+#tab-risks .project-risk-intro h2{margin:0;font-size:19px;color:#22272B}
+#tab-risks .project-risk-intro p{margin:5px 0 0;font-size:12.5px;color:#687772}
+#tab-risks .project-risk-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin-bottom:20px;border:1px solid #e1e7e4;border-radius:10px;overflow:hidden;background:#fff}
+#tab-risks .risk-summary-card{min-width:0;padding:16px 18px;border-right:1px solid #e1e7e4;background:#fff}
+#tab-risks .risk-summary-card:last-child{border-right:0}
+#tab-risks .clean-table tbody tr:hover td{background:#fafcfb}
+#tab-risks .clean-table td{vertical-align:middle}
+.blocker-dialog{width:min(620px,calc(100% - 28px));max-width:620px!important;max-height:min(780px,90vh);overflow:auto;border-radius:14px;padding:24px}
+.blocker-dialog .modal-head{position:sticky;top:-24px;z-index:2;background:#fff;padding:0 0 14px}
+.blocker-dialog form{gap:0!important}
+.blocker-dialog select,.blocker-dialog input,.blocker-dialog textarea{min-height:42px;font-size:13px}
+.blocker-more-fields{margin-top:14px;padding-top:12px;border-top:1px solid #e5eae7}
+.blocker-more-fields summary{cursor:pointer;font-size:12.5px;font-weight:600;color:#315F58}
+.blocker-more-fields label{display:grid;gap:6px;margin-top:12px;font-size:13px;font-weight:600}
+.blocker-more-fields textarea{width:100%;padding:9px 10px;border:1px solid #D1D5DB;border-radius:6px;resize:vertical}
+@media(max-width:900px){#tab-risks .project-risk-summary{grid-template-columns:repeat(2,1fr)}#tab-risks .risk-summary-card:nth-child(2){border-right:0}#tab-risks .risk-summary-card:nth-child(-n+2){border-bottom:1px solid #e1e7e4}}
+@media(max-width:620px){#tab-risks .project-risk-intro{align-items:flex-start;flex-direction:column}#tab-risks .project-risk-intro .btn{width:100%}#tab-risks .project-risk-summary{grid-template-columns:1fr}#tab-risks .risk-summary-card{border-right:0;border-bottom:1px solid #e1e7e4!important}.blocker-dialog{padding:18px}.blocker-dialog .modal-head{top:-18px}.blocker-dialog form>div{grid-template-columns:1fr!important}}
+#tab-risks .risk-reason-cell{padding:10px 14px;min-width:190px}
+#tab-risks .risk-reason-cell b,#tab-risks .risk-reason-cell small{display:block}
+#tab-risks .risk-reason-cell b{font-size:12px;color:#33463d;line-height:1.45}
+#tab-risks .risk-reason-cell b.reason-missing{color:#B45309}
+#tab-risks .risk-reason-cell small{margin-top:3px;font-size:10.5px;color:#7a8881}
+#tab-risks td>.block{display:block;margin-top:3px;font-size:10.5px;font-weight:500;color:#B91C1C}
+#tab-risks .risk-empty-inline{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid #DDE7E1;border-radius:8px;background:#F8FAF9}
+#tab-risks .risk-empty-inline>span{display:grid;place-items:center;flex:0 0 28px;width:28px;height:28px;border-radius:50%;background:#E6F4EC;color:#167044;font-weight:700}
+#tab-risks .risk-empty-inline>div{flex:1;min-width:0}
+#tab-risks .risk-empty-inline b{font-size:12.5px;color:#31443A}
+#tab-risks .risk-empty-inline p{margin:3px 0 0;font-size:11.5px;color:#687772}
+#tab-risks .risk-empty-inline .btn{flex:0 0 auto}
+@media(max-width:700px){#tab-risks .risk-empty-inline{align-items:flex-start;flex-wrap:wrap}#tab-risks .risk-empty-inline .btn{width:100%}}
+
+/* Premium risk workspace: restrained hierarchy and one obvious action per row. */
+#tab-risks{max-width:1500px;margin-inline:auto;padding-top:28px}
+#tab-risks .project-risk-intro{margin:0 0 18px;padding:0 2px}
+#tab-risks .project-risk-intro h2{font-size:20px;font-weight:650;letter-spacing:-.35px}
+#tab-risks .project-risk-intro p{max-width:720px;font-size:12px;line-height:1.6;color:#73827A}
+#tab-risks .project-risk-intro>.btn{min-height:38px;padding:0 15px;border-radius:8px;box-shadow:none}
+#tab-risks .project-risk-summary{margin-bottom:16px;border-color:#DFE6E2;border-radius:10px;box-shadow:0 1px 2px rgba(24,43,35,.025)}
+#tab-risks .risk-summary-card{padding:14px 16px;min-height:86px;border-color:#E7ECE9!important}
+#tab-risks .risk-summary-card>span:first-child{font-size:9.5px!important;font-weight:600!important;letter-spacing:.035em!important;color:#7C8982!important}
+#tab-risks .risk-summary-card>div{font-size:19px!important;margin:6px 0 1px!important;line-height:1.25}
+#tab-risks .risk-summary-card>small{font-size:10.5px!important;color:#7B8881!important}
+#tab-risks .risk-action-card,#tab-risks .risk-blockers-card{padding:18px 20px!important;margin-bottom:16px!important;border-color:#DFE6E2!important;border-radius:10px!important;box-shadow:0 1px 2px rgba(24,43,35,.025)!important}
+#tab-risks .risk-action-card>div:first-child,#tab-risks .risk-blockers-card>div:first-child{margin-bottom:12px!important}
+#tab-risks .risk-action-card h2,#tab-risks .risk-blockers-card h2{font-size:15px!important;font-weight:650!important;letter-spacing:-.15px}
+#tab-risks .risk-action-card h2+p,#tab-risks .risk-blockers-card h2+p{font-size:11px!important;color:#7A8780!important}
+#tab-risks .risk-action-card .table-wrap,#tab-risks .risk-blockers-card .table-wrap{border:1px solid #E7ECE9;border-radius:8px;overflow:auto}
+#tab-risks .risk-action-card table,#tab-risks .risk-blockers-card table{border-collapse:separate;border-spacing:0}
+#tab-risks .risk-action-card table{min-width:980px}
+#tab-risks .risk-blockers-card table{min-width:1050px}
+#tab-risks .risk-action-card thead tr,#tab-risks .risk-blockers-card thead tr{background:#F7F9F8!important}
+#tab-risks .risk-action-card th,#tab-risks .risk-blockers-card th{padding:9px 12px!important;border-bottom:1px solid #E3E9E6!important;font-size:9.5px!important;font-weight:600!important;letter-spacing:.02em;color:#748179!important;white-space:nowrap}
+#tab-risks .risk-action-card td,#tab-risks .risk-blockers-card td{padding:11px 12px!important;border-bottom:1px solid #EDF1EF!important;font-size:11.5px!important;background:#fff}
+#tab-risks .risk-action-card tbody tr:last-child td,#tab-risks .risk-blockers-card tbody tr:last-child td{border-bottom:0!important}
+#tab-risks .risk-action-card tbody tr:hover td,#tab-risks .risk-blockers-card tbody tr:hover td{background:#FAFCFB}
+#tab-risks .risk-action-card .text-action,#tab-risks .risk-blockers-card .text-action{font-size:12px!important;font-weight:620!important;line-height:1.45}
+#tab-risks .risk-action-card .status-pill,#tab-risks .risk-blockers-card .status-pill{font-size:9.5px!important;padding:2px 6px!important;border-radius:5px}
+#tab-risks .risk-action-card .btn,#tab-risks .risk-blockers-card .btn{min-height:32px!important;padding:5px 10px!important;border-radius:7px!important;font-size:10.5px!important;box-shadow:none!important}
+#tab-risks .risk-action-card .btn-primary{background:#315F58!important;border-color:#315F58!important}
+#tab-risks .risk-reason-cell{min-width:180px}
+#tab-risks .risk-reason-cell b{font-size:11.5px}
+#tab-risks .focused-reported-issue{outline:0!important}
+#tab-risks .focused-reported-issue td{background:#F0F6F3!important;border-top:1px solid #BFD2C8!important;border-bottom:1px solid #BFD2C8!important}
+#tab-risks .focused-reported-issue td:first-child{box-shadow:inset 3px 0 #315F58}
+#tab-risks #project-changes{margin-top:4px}
+@media(max-width:900px){#tab-risks{padding-top:20px}#tab-risks .risk-action-card,#tab-risks .risk-blockers-card{padding:15px!important}}
+
+/* Schedule audit: compact baseline facts and a quiet activity history. */
+#project-changes .schedule-change-card{padding:20px!important;border:1px solid #DFE6E2!important;border-radius:10px!important;background:#fff!important;box-shadow:0 1px 2px rgba(24,43,35,.025)!important}
+#project-changes .schedule-change-head{margin-bottom:14px}
+#project-changes .schedule-change-head h2{font-size:15px!important;font-weight:650!important;letter-spacing:-.15px}
+#project-changes .schedule-change-head p{font-size:11px!important;color:#7A8780!important}
+.schedule-baseline-panel{border:1px solid #DDE7E1;border-radius:9px;background:#F8FAF9;margin-bottom:18px;overflow:hidden}
+.schedule-baseline-top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 16px}
+.schedule-baseline-title{display:flex;align-items:center;gap:10px;min-width:0}
+.schedule-baseline-icon{display:grid;place-items:center;flex:0 0 28px;width:28px;height:28px;border-radius:7px;background:#E4F1EA;color:#247153;font-size:12px;font-weight:700}
+.schedule-baseline-title b,.schedule-baseline-title small{display:block}
+.schedule-baseline-title b{font-size:12.5px;font-weight:650;color:#2D4036}
+.schedule-baseline-title small{margin-top:2px;font-size:10.5px;color:#7B8881}
+.schedule-baseline-state .status-pill{padding:4px 9px!important;border-radius:6px!important;font-size:10.5px!important;font-weight:650!important}
+.schedule-baseline-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:0;border-top:1px solid #E3EAE6;background:#fff}
+.schedule-baseline-facts>div{padding:11px 16px;border-right:1px solid #E8EDEA}
+.schedule-baseline-facts>div:last-child{border-right:0}
+.schedule-baseline-facts dt{font-size:9.5px;color:#829087;margin-bottom:4px}
+.schedule-baseline-facts dd{margin:0;font-size:11.5px;font-weight:600;color:#35483E}
+.schedule-activity-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 9px}
+.schedule-activity-head h3{margin:0!important;font-size:12.5px!important;font-weight:650!important;color:#31443A!important}
+.schedule-activity-head span{font-size:9.5px;color:#87938D}
+.schedule-activity-empty{display:flex;align-items:center;gap:9px;padding:11px 13px;border:1px dashed #DCE5E0;border-radius:8px;background:#FCFDFC;color:#849089}
+.schedule-activity-empty span{font-size:13px}.schedule-activity-empty p{margin:0;font-size:10.5px}
+@media(max-width:650px){.schedule-baseline-top{align-items:flex-start;flex-direction:column}.schedule-baseline-facts{grid-template-columns:1fr}.schedule-baseline-facts>div{border-right:0;border-bottom:1px solid #E8EDEA}.schedule-baseline-facts>div:last-child{border-bottom:0}}

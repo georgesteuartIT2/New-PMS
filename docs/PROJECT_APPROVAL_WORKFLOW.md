@@ -4,7 +4,7 @@ New projects created by PMO use the following workflow:
 
 1. PMO enters name, subsidiary and description, then selects a Project Owner or Project Manager. The subsidiary counter generates a unique project code inside a database transaction.
 2. An Owner request appears in the Owner inbox and dashboard. The Owner chooses an active PM and approves, or rejects with a reason.
-3. The nominated PM reviews and accepts or rejects. Rejection is visible to the Owner and PMO. Both can reassign a PM; only PMO can replace an Owner.
+3. The nominated PM reviews and accepts or rejects. Rejection, the PM's name and the reason appear to the Owner and PMO. The Owner dashboard provides an inline PM replacement and resend action; both Owner and PMO can reassign a PM, while only PMO can replace an Owner.
 4. Acceptance opens a thank-you dialog and plan setup. Choose blank or a saved template and enter dates. Template tasks are copied to the project; the shared template is not changed.
 5. Prepare tasks in the project workspace: add manually, upload Excel for review, and assign people. During planning, system/Microsoft directory selection can add the selected person to the project team. Azure additions are saved to the system through the existing verified directory endpoint.
 6. Save & notify team publishes the plan, captures its baseline and queues one project-ready email per active team member. Repeated publication is rejected. Team members cannot open the unpublished plan.
@@ -19,7 +19,7 @@ Database fields: owner_user_id, approval_stage, plan_initialized, plan_published
 
 PM and Owner can use Browse templates inside plan setup to search active plans, preview tasks and choose a template. Entered project dates are retained. The project-scoped read-only endpoints authorize the current leadership and PMO. The library provides no shared-template editing controls; shared template management keeps its existing company permission checks.
 
-Reassignment is offered only after rejection. Pending Owner/PM requests cannot be reassigned through the UI or direct endpoints. After Owner rejection PMO can reassign; after PM rejection the Owner or PMO can reassign.
+Reassignment is offered only after rejection. Pending Owner/PM requests cannot be reassigned through the UI or direct endpoints. After Owner rejection PMO can reassign; after PM rejection the Owner can see the reason and reassign from the dashboard or project page, and PMO can reassign from its dashboard.
 
 ## Budget and template selection / creation during plan setup
 

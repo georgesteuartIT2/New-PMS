@@ -244,6 +244,7 @@ class ProjectController {
   abort_unless($access->project($request->user(),$project),403);
   $user = $request->user();
   $isPm = $project->pm_user_id === $user->id;
+  $canViewGantt = $access->project($user, $project, 'project.gantt_view');
   $canViewAllTasks = $user->canViewPortfolio() || $isPm || ($access->project($user, $project, 'view_tasks') && in_array($project->status, ['active', 'on_hold', 'completed', 'archived'], true));
 
   if ($canViewAllTasks) {
@@ -264,7 +265,11 @@ class ProjectController {
 
   $tasks = TaskTree::treeOrdered($tasks);
 
-  $health = $canViewAllTasks ? $healthService->assess($project) : null;
+  $ganttTasks = $canViewGantt
+      ? TaskTree::treeOrdered($project->tasks()->with(['assignees', 'children', 'openDelay.actionOwner', 'dependencies:id,code,title'])->orderBy('sort_order')->orderBy('id')->get())
+      : collect();
+
+  $health = ($canViewAllTasks || $canViewGantt) ? $healthService->assess($project) : null;
   $remainingCount = max(0, $totalCount - $completedCount);
 
   $files = $canViewAllTasks 
@@ -293,6 +298,8 @@ class ProjectController {
       'project'=>$project->load('owner','manager','subsidiary','memberships.user','memberships.role','template','creator'),
       'tasks'=>$tasks,
       'numbers'=>TaskTree::numbers($tasks),
+      'ganttTasks'=>$ganttTasks,
+      'ganttNumbers'=>TaskTree::numbers($ganttTasks),
       'health'=>$health,
       'completedCount'=>$completedCount,
       'totalCount'=>$totalCount,
@@ -302,9 +309,12 @@ class ProjectController {
       'activities'=>$activities,
       'canViewTasks'=>$canViewAllTasks || $tasks->isNotEmpty(),
       'canViewAllTasks'=>$canViewAllTasks,
+      'canViewGantt'=>$canViewGantt,
       'isScopedTeamMember'=>!$canViewAllTasks,
       'canManage'=>$access->canManageTask($user,$project) && ($user->isPmo() || in_array($project->status, ['draft','pending','active','on_hold'], true)) && $project->status!=='archived',
       'canTeam'=>$access->project($user,$project,'manage_team'),
+      'canRequestClosure'=>$access->project($user,$project,'project.closure_request') || $access->project($user,$project,'edit_project'),
+      'canApproveClosure'=>$user->isPmo() && $access->project($user,$project,'project.closure_approve'),
       'users'=>User::where('account_status','active')->where('system_role','user')->orderBy('name')->get(),
       'pmCandidates'=>$pmCandidates,
       'roles'=>ProjectRole::orderBy('name')->get(),
@@ -316,6 +326,7 @@ class ProjectController {
   abort_unless($access->project($request->user(),$project,'edit_project'),403);
   abort_if($project->status==='archived',403);
   $data=$request->validate(['name'=>'required|string|max:160','description'=>'nullable|string|max:3000','starts_on'=>'required|date','ends_on'=>'required|date|after_or_equal:starts_on','status'=>'required|in:draft,pending,declined,active,on_hold,completed,archived','planned_budget'=>'sometimes|nullable|numeric|decimal:0,2|min:0|max:9999999999999.99']);
+  abort_if($data['status']==='completed' && $project->status!=='completed' && $project->closure_status!=='approved',409,'Submit a closure request and wait for PMO approval before closing the project.');
   if($project->approval_stage==='planning' && $data['status']!=='active')abort(422,'Save and publish the task plan before changing the project lifecycle status.');
   if(array_key_exists('planned_budget',$data))abort_unless($project->canManageBudget($request->user()),403);
   if(!$request->user()->isPmo() && $project->status==='pending')abort(403);
@@ -409,6 +420,7 @@ class ProjectController {
    $locked=Project::whereKey($project->id)->lockForUpdate()->firstOrFail();
    abort_unless($locked->pm_user_id===$request->user()->id,403,'This assignment has changed. Refresh your dashboard.');
    abort_unless($locked->status==='pending',404,'This request has already been answered.');
+   app(\App\Services\InboxService::class)->resolveProjectRequests($locked);
    $project->setRawAttributes($locked->getAttributes(),true);
    $invitation=ProjectInvitation::where('project_id',$project->id)->where('user_id',$request->user()->id)->where('status','pending')->lockForUpdate()->latest('id')->firstOrFail();
    $status=$data['decision']==='accept'?'active':'declined';
@@ -421,7 +433,7 @@ class ProjectController {
     foreach($people as $person)$person->notify(new \App\Notifications\ProjectActivatedNotification($project));
    });
   });
-  foreach(User::where('system_role','pmo')->where('account_status','active')->get() as $pmo)app(\App\Services\InboxService::class)->put($pmo,'pm-response:'.$project->id.':'.$project->updated_at->getTimestamp(),['title'=>$data['decision']==='accept'?'Project accepted by PM':'Project declined by PM','message'=>$request->user()->name.' '.($data['decision']==='accept'?'accepted':'declined').' '.$project->name.'. '.($data['decline_reason']??''),'project_name'=>$project->name,'action_label'=>'View project','url'=>route('projects.show',$project,false)]);
+  foreach(User::where('system_role','pmo')->where('account_status','active')->get() as $pmo)app(\App\Services\InboxService::class)->put($pmo,'pm-response:'.$project->id.':'.$project->updated_at->getTimestamp(),['event_key'=>$data['decision']==='accept'?'project_request_accepted':'project_request_rejected','project_id'=>$project->id,'title'=>$data['decision']==='accept'?'Project accepted by PM':'Project declined by PM','message'=>$request->user()->name.' '.($data['decision']==='accept'?'accepted':'declined').' '.$project->name.'. '.($data['decline_reason']??''),'project_name'=>$project->name,'action_label'=>'View project','url'=>route('projects.show',$project,false)]);
   Audit::record('project.pm_'.$data['decision'],$project, ['reason' => $data['decline_reason'] ?? null]);
   $message=$data['decision']==='accept'?'Project accepted and activated.':'Project declined. PMO can reassign it.';
   if($request->expectsJson()){

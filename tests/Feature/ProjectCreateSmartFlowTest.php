@@ -93,6 +93,10 @@ class ProjectCreateSmartFlowTest extends TestCase
         $response->assertSee('Continue with Template →');
         $response->assertSee('← Return to Create Project');
         $response->assertSee(route('projects.create', ['template_id' => $tpl->id, 'mode' => 'template']));
+        $response->assertSee('Confirm Excel import');
+        $response->assertSee('Update the plan');
+        $response->assertSee('Replace the plan with Excel');
+        $response->assertSee('stp-import-file-count', false);
     }
 
     public function test_project_creation_with_template_shifts_schedule_and_assigns_pm_and_team(): void

@@ -3,6 +3,13 @@ namespace Tests\Feature;
 use Tests\TestCase;use Illuminate\Foundation\Testing\RefreshDatabase;use App\Models\{User,Project,Task};
 class TypedDelayReasonTest extends TestCase {
  use RefreshDatabase;
+ public function test_delay_url_opens_the_project_risk_workflow_instead_of_a_forbidden_page():void {
+ $pm=User::create(['name'=>'Manager','email'=>'risk-manager@example.test','password'=>'secret123','system_role'=>'user','account_status'=>'active','must_change_password'=>false]);
+ $p=Project::create(['name'=>'Delivery','code'=>'RISK1','created_by'=>$pm->id,'pm_user_id'=>$pm->id,'starts_on'=>today(),'ends_on'=>today()->addWeek(),'status'=>'active']);
+ $t=Task::create(['project_id'=>$p->id,'title'=>'Procurement','code'=>'T1','created_by'=>$pm->id,'starts_at'=>now(),'ends_at'=>now()->addDay()]);
+ $expected=route('projects.show',[$p,'focus_task'=>$t->id,'report_blocker'=>1]).'#risks';
+ $this->actingAs($pm)->get(route('tasks.delays.show',$t))->assertRedirect($expected);
+ }
  public function test_typed_reason_is_required_saved_and_visible_to_pmo():void {
  $pm=User::create(['name'=>'Manager','email'=>'manager@example.test','password'=>'secret123','system_role'=>'user','account_status'=>'active','must_change_password'=>false]);
  $p=Project::create(['name'=>'Delivery','code'=>'D1','created_by'=>$pm->id,'pm_user_id'=>$pm->id,'starts_on'=>today(),'ends_on'=>today()->addWeek(),'status'=>'active']);

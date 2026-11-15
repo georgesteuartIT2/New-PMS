@@ -28,7 +28,7 @@
                     Edit Template
                 </button>
                 <a id="stp-btn-export" href="#" class="btn btn-outline btn-sm" style="height: 32px; font-size: 12px; display: none;">
-                    Export Excel
+                    Download Excel template
                 </a>
 
                 <!-- Edit Mode Actions -->
@@ -210,34 +210,49 @@
 </div>
 
 <!-- Import Confirmation / Merge Modal -->
-<div id="stp-import-confirm-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10010; align-items: center; justify-content: center;">
-    <div style="background: #FFFFFF; border-radius: 8px; width: 90%; max-width: 500px; padding: 22px; box-shadow: 0 10px 25px rgba(0,0,0,0.18);">
-        <h3 style="margin: 0 0 8px; font-size: 16px; font-weight: 700; color: #22272B;">Confirm Excel Import</h3>
-        <p id="stp-import-confirm-msg" style="margin: 0 0 16px; font-size: 13px; color: #475569;"></p>
-        
-        <div style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 6px; padding: 12px 14px; margin-bottom: 18px;">
-            <div style="font-size: 12px; font-weight: 650; color: #22272B; margin-bottom: 8px;">Select Import Mode:</div>
-            <label style="display: flex; align-items: flex-start; gap: 8px; margin-bottom: 8px; cursor: pointer; font-size: 12.5px; color: #334155;">
-                <input type="radio" name="stp_import_mode" value="merge" checked style="margin-top: 2px;">
-                <div>
-                    <b>Merge / Update Matching Tasks (Recommended)</b>
-                    <div style="font-size: 11.5px; color: #64748B;">Updates matching task codes, adds new tasks, and preserves existing tasks that were not in Excel.</div>
-                </div>
-            </label>
-            <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer; font-size: 12.5px; color: #334155;">
-                <input type="radio" name="stp_import_mode" value="replace" style="margin-top: 2px;">
-                <div>
-                    <b>Replace Draft Task Plan</b>
-                    <div style="font-size: 11.5px; color: #64748B;">Replaces current draft tasks completely with the tasks from Excel.</div>
-                </div>
-            </label>
+<div id="stp-import-confirm-backdrop" class="stp-import-backdrop" style="display: none;" role="presentation">
+    <section id="stp-import-confirm-dialog" class="stp-import-dialog" role="dialog" aria-modal="true" aria-labelledby="stp-import-title" aria-describedby="stp-import-confirm-msg" tabindex="-1">
+        <div class="stp-import-heading">
+            <span class="stp-import-heading-icon" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V3m-5 5 5-5 5 5M4 15v5h16v-5"/></svg>
+            </span>
+            <div>
+                <span class="stp-import-eyebrow">EXCEL UPLOAD</span>
+                <h3 id="stp-import-title">Confirm Excel import</h3>
+            </div>
+        </div>
+        <p id="stp-import-confirm-msg" class="stp-import-message"></p>
+
+        <div class="stp-import-counts" aria-label="Task count summary">
+            <div><span>In Excel file</span><strong id="stp-import-file-count">0</strong></div>
+            <div><span>In current plan</span><strong id="stp-import-current-count">0</strong></div>
         </div>
 
-        <div style="display: flex; justify-content: flex-end; gap: 8px;">
+        <fieldset class="stp-import-options">
+            <legend>How should we apply the Excel tasks?</legend>
+            <label class="stp-import-option">
+                <input type="radio" name="stp_import_mode" value="merge" checked>
+                <span class="stp-import-option-copy">
+                    <strong>Update the plan</strong>
+                    <small>Matching task codes are updated, new tasks are added, and tasks not in Excel stay in the plan.</small>
+                </span>
+                <span class="stp-import-recommended">Keeps other tasks</span>
+            </label>
+            <label class="stp-import-option stp-import-option-danger">
+                <input type="radio" name="stp_import_mode" value="replace">
+                <span class="stp-import-option-copy">
+                    <strong>Replace the plan with Excel</strong>
+                    <small>Only tasks in this file will remain. Current plan tasks missing from the file will be removed.</small>
+                </span>
+            </label>
+        </fieldset>
+
+        <p id="stp-import-impact" class="stp-import-impact" role="status" aria-live="polite"></p>
+        <div class="stp-import-actions">
             <button type="button" onclick="SmartTaskPlan.cancelImport()" class="btn btn-outline btn-sm">Cancel</button>
-            <button type="button" onclick="SmartTaskPlan.confirmImport()" class="btn btn-primary btn-sm" style="background: #315F58; color: #FFFFFF; font-weight: 650;">Apply Import</button>
+            <button type="button" id="stp-import-apply" onclick="SmartTaskPlan.confirmImport()" class="btn btn-primary btn-sm">Update plan</button>
         </div>
-    </div>
+    </section>
 </div>
 
 <script src="{{ asset('js/template-builder.js') }}?v={{ filemtime(public_path('js/template-builder.js')) }}"></script>

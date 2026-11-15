@@ -15,7 +15,7 @@
         <form id="create-template-form">
             <div class="tc-fields">
                 <label class="tc-name" for="create_template_name">Template Name <span class="tc-required">*</span>
-                    <input type="text" id="create_template_name" name="name" value="{{ old('name','') }}" placeholder="e.g. Network infrastructure upgrade" required maxlength="200" autofocus>
+                    <input type="text" id="create_template_name" name="name" value="{{ old('name','') }}" placeholder="e.g. Network infrastructure upgrade" required maxlength="160" autofocus>
                 </label>
                 <div class="tc-duration">
                     <label for="create_duration">Estimated Duration (Working Days) <span class="tc-required">*</span></label>

@@ -21,6 +21,17 @@ class TaskDelayController
         'other' => 'Other reason',
     ];
 
+    public function show(Request $request, Task $task, Access $access)
+    {
+        abort_unless($access->project($request->user(), $task->project, 'project.view'), 403);
+
+        return redirect(route('projects.show', [
+            $task->project,
+            'focus_task' => $task->id,
+            'report_blocker' => $access->task($request->user(), $task, 'delay') ? 1 : 0,
+        ]).'#risks');
+    }
+
     public function store(Request $request, Task $task, Access $access)
     {
         abort_unless($access->task($request->user(), $task, 'delay'), 403);
@@ -45,7 +56,10 @@ class TaskDelayController
         if (!empty($data['revised_expected_end_at']) && strtotime($data['revised_expected_end_at']) < time() - 86400) {
             throw ValidationException::withMessages(['revised_expected_end_at' => 'The revised target must not be in the distant past.']);
         }
-        $task->delayReports()->where('status', 'open')->update(['status' => 'resolved', 'resolved_at' => now()]);
+        foreach ($task->delayReports()->where('status', 'open')->get() as $previousDelay) {
+            $previousDelay->update(['status' => 'resolved', 'resolved_at' => now()]);
+            app(\App\Services\InboxService::class)->blockerResolved($previousDelay, $request->user());
+        }
         $report = $task->delayReports()->create($data + ['reported_by' => $request->user()->id, 'status' => 'open']);
         app(\App\Services\InboxService::class)->blocker($report);
         Audit::record('task.delay_reported', $task, ['delay_id' => $report->id, 'reason_code' => $report->reason_code]);
@@ -58,7 +72,8 @@ class TaskDelayController
             ]);
         }
 
-        return back()->with('success', 'Delay reported. PMO can now see the reason and follow-up owner.');
+        return redirect(route('projects.show', [$task->project, 'focus_issue' => $report->id]).'#risks')
+            ->with('success', 'Blocker saved. The owner and follow-up action are now visible to the project team.');
     }
 
     public function read(Request $request,TaskDelay $delay,Access $access){
@@ -73,6 +88,7 @@ class TaskDelayController
         abort_unless(in_array($task->project->status, ['active', 'on_hold'], true), 403);
         if ($delay->status !== 'resolved') {
             $delay->update(['status' => 'resolved', 'resolved_at' => now()]);
+            app(\App\Services\InboxService::class)->blockerResolved($delay, $request->user());
             Audit::record('task.delay_resolved', $task, ['delay_id' => $delay->id]);
         }
 

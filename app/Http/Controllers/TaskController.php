@@ -2,16 +2,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\{Project, Task, TaskAttachment, User, TaskUpdateRequest, TaskAssignmentHistory};
-use App\Services\{Access, ProjectService, Audit, TaskTree, UserTaskMonitoringService};
+use App\Services\{Access, ProjectService, Audit, TaskTree, UserTaskMonitoringService, InboxService};
 use App\Notifications\{TaskUpdateRequestNotification, TaskReassignedNotification};
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\{DB, Storage};
 
 class TaskController {
-    public function team(Request $request, UserTaskMonitoringService $monitoringService)
+    public function team(Request $request, UserTaskMonitoringService $monitoringService, Access $access)
     {
         if ($request->user()->isPmo()) return redirect()->route('pmo.team-monitor', $request->except('view','tab'));
+        abort_unless($access->canAccessTeamMonitor($request->user()), 403, 'You do not have permission to access Team Monitor.');
         $request->merge(['view'=>'managed','tab'=>'team']);
         return $this->mine($request, $monitoringService);
     }
@@ -27,6 +28,9 @@ class TaskController {
             return $this->allTasks($request, $monitoringService);
         }
         $user = $request->user();
+        if ($request->input('tab') === 'team') {
+            abort_unless(app(Access::class)->canAccessTeamMonitor($user), 403, 'You do not have permission to access Team Monitor.');
+        }
         $monitoredProjects = $monitoringService->getMonitoredProjects($user);
         $hasMonitoredProjects = $monitoredProjects->isNotEmpty();
 
@@ -194,7 +198,8 @@ class TaskController {
   $nodes=$health['dependency_nodes'];$before=$nodes[$task->id]['predecessors']??[];
   $after=array_keys(array_filter($nodes,fn($node)=>in_array($task->id,$node['predecessors'],true)));
   $linked=$task->project->tasks()->whereIn('id',array_unique(array_merge($before,$after)))->get()->keyBy('id');
-  $names=function($ids)use($linked,$request,$access){return collect($ids)->map(function($id)use($linked,$request,$access){$item=$linked->get($id);return $item && $access->task($request->user(),$item,'view')?['code'=>$item->code,'title'=>$item->title]:['code'=>null,'title'=>'Restricted task'];})->values();};
+  $canViewDependencyNetwork=$access->project($request->user(),$task->project,'project.gantt_view');
+  $names=function($ids)use($linked,$request,$access,$canViewDependencyNetwork){return collect($ids)->map(function($id)use($linked,$request,$access,$canViewDependencyNetwork){$item=$linked->get($id);return $item && ($canViewDependencyNetwork || $access->task($request->user(),$item,'view'))?['code'=>$item->code,'title'=>$item->title]:['code'=>null,'title'=>'Restricted task'];})->values();};
   $reason= !$before && !$after ? 'This task itself is a longest path through the task network.' : (!$before ? 'This task starts a critical dependency chain. Later tasks depend on it.' : (!$after ? 'This task finishes a critical dependency chain and determines the calculated completion.' : 'This task connects earlier and later work on a critical dependency chain.'));
   return response()->json(['critical'=>true,'title'=>$task->title,'reason'=>$reason,'float_minutes'=>$health['cpm_tasks'][$task->id]['float_minutes'],'predecessors'=>$names($before),'successors'=>$names($after),'impact'=>'There is no spare working time in this calculated network. A delay can move its completion if the remaining plan stays unchanged.']);
  }
@@ -281,6 +286,8 @@ class TaskController {
           Audit::record('task.progress_updated',$task,$updateFields);
       }
   });
+  $task->refresh();
+  if($task->status==='completed' || $task->progress>=100)app(InboxService::class)->taskCompleted($task);
   if ($request->wantsJson() || $request->ajax()) {
       $task->refresh();
       $visible=$task->project->tasks()->get()->filter(fn($item)=>$access->task($request->user(),$item,'view'));
@@ -510,8 +517,9 @@ class TaskController {
             ]);
         });
 
-        $newUser->notify(new TaskReassignedNotification($task, $actor, 'assigned', $data['reason'] ?? null));
-        $oldUser->notify(new TaskReassignedNotification($task, $actor, 'unassigned', $data['reason'] ?? null));
+        app(InboxService::class)->resolveTaskAssignment($task, $oldUser);
+        $newUser->notify(new TaskReassignedNotification($task, $actor, 'assigned', $data['reason'] ?? null, 'task_reassigned'));
+        $oldUser->notify(new TaskReassignedNotification($task, $actor, 'unassigned', $data['reason'] ?? null, 'task_unassigned'));
 
         return response()->json([
             'success' => true,

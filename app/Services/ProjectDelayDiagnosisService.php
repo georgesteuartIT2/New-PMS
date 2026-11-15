@@ -43,6 +43,7 @@ class ProjectDelayDiagnosisService
                 'dependencies:id,code,title,starts_at,ends_at,status,progress',
                 'assignees:id,name,email',
                 'openDelay.actionOwner',
+                'openDelay.reporter',
                 'children:id,parent_task_id',
             ])
             ->orderBy('sort_order')
@@ -284,14 +285,24 @@ class ProjectDelayDiagnosisService
             }
 
             $blockedSuccessors = [];
-            $successorIds = $successorsMap[$t->id] ?? [];
-            foreach ($successorIds as $sId) {
-                $suc = $allById->get($sId);
-                if ($suc && $suc->progress < 100) {
+            $successorQueue = $successorsMap[$t->id] ?? [];
+            $seenSuccessors = [];
+            for ($successorIndex = 0; $successorIndex < count($successorQueue); $successorIndex++) {
+                $successorId = $successorQueue[$successorIndex];
+                if (isset($seenSuccessors[$successorId])) {
+                    continue;
+                }
+                $seenSuccessors[$successorId] = true;
+                foreach ($successorsMap[$successorId] ?? [] as $downstreamId) {
+                    $successorQueue[] = $downstreamId;
+                }
+                $successor = $allById->get($successorId);
+                if ($successor && $successor->progress < 100 && $successor->status !== 'completed') {
                     $blockedSuccessors[] = [
-                        'id' => $suc->id,
-                        'code' => $suc->code,
-                        'title' => $suc->title,
+                        'id' => $successor->id,
+                        'code' => $successor->code,
+                        'title' => $successor->title,
+                        'status' => $successor->status,
                     ];
                 }
             }
@@ -389,11 +400,23 @@ class ProjectDelayDiagnosisService
                 'detected_problem' => $detectedProblem,
                 'blocking_predecessors' => $blockingPredecessors,
                 'blocked_successors' => $blockedSuccessors,
+                'blocked_successor_count' => count($blockedSuccessors),
                 'has_delay_report' => $hasReportedRootCause,
                 'open_delay_id' => $openDelay?->id,
                 'reported_root_cause' => $reportedRootCause,
                 'delay_reason' => $hasReportedRootCause ? $reportedRootCause : ($delayReasonText ?? 'Underlying reason not reported'),
                 'involved_party' => $involvedParty ?: 'Not recorded',
+                'reported_by_name' => $openDelay?->reporter?->name,
+                'reported_on' => $openDelay?->created_at?->format('d M Y'),
+                'open_delay_raw' => $openDelay ? [
+                    'reason_code' => $openDelay->reason_code,
+                    'reason_text' => $openDelay->reason_text ?: $openDelay->reason_label,
+                    'responsible_party_type' => $openDelay->responsible_party_type,
+                    'responsible_party_name' => $openDelay->responsible_party_name,
+                    'action_owner_id' => $openDelay->action_owner_id,
+                    'details' => $openDelay->details,
+                    'revised_expected_end_at' => $openDelay->revised_expected_end_at?->format('Y-m-d\TH:i'),
+                ] : null,
                 'corrective_action' => $correctiveAction ?: 'None recorded',
                 'action_owner' => $actionOwner ?: 'None recorded',
                 'confirmed_action_owner' => $hasReportedRootCause && $openDelay->actionOwner ? $openDelay->actionOwner->name : null,
@@ -401,7 +424,15 @@ class ProjectDelayDiagnosisService
                 'has_confirmed_corrective_action' => $hasReportedRootCause && !empty($openDelay->details),
                 'resolution_date' => $resolutionDate ?: '—',
                 'resolution_status' => $resolutionStatus,
-                'can_add_reason' => ($user && ($user->isPmo() || $project->pm_user_id === $user->id || $t->assignees->contains('id', $user->id))) && in_array($project->status, ['active', 'on_hold'], true),
+                // Keep the card action in lock-step with TaskDelayController::store.
+                // Previously the card used a looser role check, so some users saw an
+                // Add reason button which was then rejected with a 403 on save.
+                'can_add_reason' => $user
+                    && in_array($project->status, ['active', 'on_hold'], true)
+                    && app(Access::class)->task($user, $t, 'delay'),
+                'can_resolve_delay' => $user
+                    && in_array($project->status, ['active', 'on_hold'], true)
+                    && app(Access::class)->canManageTask($user, $project),
                 'store_delay_url' => route('tasks.delays.store', $t),
                 'resolve_delay_url' => $openDelay ? route('tasks.delays.resolve', $openDelay) : null,
             ];
@@ -423,13 +454,29 @@ class ProjectDelayDiagnosisService
                 $isPhaseDelayed = $overdueLeaves->contains(fn ($t) => in_array($t->id, $descendantIds, true))
                     || ($rt->progress < 100 && $rt->ends_at && $rt->ends_at->lessThan($asOf));
                 $num = $taskNumbers[$rt->id] ?? '';
+                $isCrit = in_array($rt->id, $criticalIds, true)
+                    || $criticalTasks->contains(fn ($ct) => in_array($ct->id, $descendantIds, true));
+                $rtForecast = $taskForecasts[$rt->id] ?? $rt->ends_at;
+                $rtDelayDays = 0;
+                if ($rt->ends_at && $rt->ends_at->lessThan($asOf) && $rt->progress < 100) {
+                    $rtDelayDays = max(1, (int) $rt->ends_at->diffInWeekdays($asOf));
+                } elseif ($rtForecast && $rt->ends_at && $rtForecast->greaterThan($rt->ends_at) && $rt->progress < 100) {
+                    $rtDelayDays = max(1, (int) $rt->ends_at->diffInWeekdays($rtForecast));
+                }
+
                 $criticalPathSequence[] = [
                     'id' => $rt->id,
                     'number' => $num,
                     'name' => trim($num . ' ' . $rt->title),
+                    'title' => $rt->title,
+                    'is_critical' => $isCrit,
                     'is_delayed' => $isPhaseDelayed,
                     'is_overrun' => $isPhaseDelayed,
-                    'status' => $isPhaseDelayed ? 'delayed' : ($rt->progress >= 100 ? 'completed' : 'on_track'),
+                    'status' => $isPhaseDelayed ? 'delayed' : ($rt->progress >= 100 ? 'completed' : ($rt->progress > 0 ? 'in_progress' : 'pending')),
+                    'progress' => $rt->progress,
+                    'planned_end' => $rt->ends_at ? $rt->ends_at->format('d M Y') : '—',
+                    'forecast_end' => $rtForecast ? $rtForecast->format('d M Y') : '—',
+                    'delay_days' => $rtDelayDays,
                 ];
             }
         } elseif ($criticalTasks->isNotEmpty()) {
@@ -438,15 +485,36 @@ class ProjectDelayDiagnosisService
                 $tForecast = $taskForecasts[$ct->id] ?? null;
                 $isForecastLate = ($ct->progress < 100 && $tForecast && $tForecast->greaterThan($ct->ends_at));
                 $num = $taskNumbers[$ct->id] ?? '';
+                $ctDelayDays = 0;
+                if ($isOverdue && $ct->ends_at) {
+                    $ctDelayDays = max(1, (int) $ct->ends_at->diffInWeekdays($asOf));
+                } elseif ($isForecastLate && $ct->ends_at && $tForecast) {
+                    $ctDelayDays = max(1, (int) $ct->ends_at->diffInWeekdays($tForecast));
+                }
 
                 $criticalPathSequence[] = [
                     'id' => $ct->id,
                     'number' => $num,
                     'name' => trim($num . ' ' . $ct->title),
+                    'title' => $ct->title,
+                    'is_critical' => true,
                     'is_delayed' => ($isOverdue || $isForecastLate),
                     'is_overrun' => ($isOverdue || $isForecastLate),
-                    'status' => ($isOverdue || $isForecastLate) ? 'delayed' : ($ct->progress >= 100 ? 'completed' : 'on_track'),
+                    'status' => ($isOverdue || $isForecastLate) ? 'delayed' : ($ct->progress >= 100 ? 'completed' : ($ct->progress > 0 ? 'in_progress' : 'pending')),
+                    'progress' => $ct->progress,
+                    'planned_end' => $ct->ends_at ? $ct->ends_at->format('d M Y') : '—',
+                    'forecast_end' => $tForecast ? $tForecast->format('d M Y') : ($ct->ends_at ? $ct->ends_at->format('d M Y') : '—'),
+                    'delay_days' => $ctDelayDays,
                 ];
+            }
+        }
+
+        // Format all critical path tasks
+        $criticalTasksData = $criticalTasks->sortBy('starts_at')->map(fn ($t) => $formatTaskRow($t, true))->values()->all();
+        if (empty($criticalTasksData) && $tasks->isNotEmpty()) {
+            $deadlineTasks = collect($delayedTasksData)->filter(fn ($t) => !empty($t['is_critical']) || ($t['critical_impact'] ?? '') === 'affects_deadline');
+            if ($deadlineTasks->isNotEmpty()) {
+                $criticalTasksData = $deadlineTasks->values()->all();
             }
         }
 
@@ -629,7 +697,11 @@ class ProjectDelayDiagnosisService
                 'warning' => $cpmWarning,
                 'sequence' => $criticalPathSequence,
                 'sequence_text' => implode(' → ', array_column($criticalPathSequence, 'name')),
-                'tasks' => array_values(array_filter($delayedTasksData, fn ($t) => !empty($t['is_critical']))),
+                'tasks' => $criticalTasksData ?: array_values(array_filter($delayedTasksData, fn ($t) => !empty($t['is_critical']))),
+                'all_tasks' => $criticalTasksData,
+                'critical_tasks' => $criticalTasksData,
+                'total_count' => count($criticalTasksData),
+                'delayed_count' => count(array_filter($criticalTasksData, fn ($t) => !empty($t['is_overdue']) || (float)($t['delay_days'] ?? 0) > 0)),
             ],
             'overdue_section' => [
                 'summary_text' => !empty($overdueTasksData)
