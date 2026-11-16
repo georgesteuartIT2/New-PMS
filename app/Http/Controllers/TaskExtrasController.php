@@ -7,9 +7,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 class TaskExtrasController {
  public function comment(Request $request,Task $task,Access $access){
-  abort_unless($access->task($request->user(),$task,'view'),403);
+  abort_unless($access->task($request->user(),$task,'comment'),403);
   abort_unless($task->project->status==='active',403);
-  abort_unless($request->user()->isPmo() || $task->project->pm_user_id===$request->user()->id || ($access->role($request->user(),$task->project)?->role?->slug==='team'),403);
   $data=$request->validate(['body'=>'required|string|min:1|max:2000']);
   $comment=$task->comments()->create(['user_id'=>$request->user()->id,'body'=>$data['body']]);
   Audit::record('task.comment_added',$task,['comment_id'=>$comment->id]);
@@ -34,7 +33,7 @@ class TaskExtrasController {
   return back()->with('success','Member unassigned.');
  }
  public function dependency(Request $request,Task $task,Access $access, \App\Services\ProjectService $projectService){
-  abort_unless($access->canManageTask($request->user(),$task->project),403);
+  abort_unless($access->project($request->user(),$task->project,'tasks.manage_dependencies'),403);
   abort_if($task->project->status==='archived',403);
   $data=$request->validate(['depends_on_task_id'=>'required|integer']);
   $dependency=$task->project->tasks()->whereKey($data['depends_on_task_id'])->firstOrFail();
@@ -50,7 +49,7 @@ class TaskExtrasController {
   return back()->with('success','Dependency added.');
  }
  public function removeDependency(Request $request,Task $task,Task $dependency,Access $access, \App\Services\ProjectService $projectService){
-  abort_unless($access->canManageTask($request->user(),$task->project),403);
+  abort_unless($access->project($request->user(),$task->project,'tasks.manage_dependencies'),403);
   abort_unless($task->project_id===$dependency->project_id,404);
   abort_if($task->project->status==='archived',403);
   $task->dependencies()->detach($dependency->id);

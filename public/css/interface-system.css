@@ -74,10 +74,10 @@ body:is([data-page="users.index"],[data-page="activity.index"],[data-page="subsi
 .home-workspace #task-attention .attention-list-heading,.home-workspace #task-attention .dashboard-task-row{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(110px,.42fr) 108px!important;gap:16px!important}.home-workspace #task-attention .attention-list-heading{padding:9px 20px;background:#FAFBFA;border-bottom:1px solid #EDF0EE;font-size:10px;font-weight:600;color:#78857D}.attention-list-heading>span:last-child{text-align:right}.home-workspace #task-attention .dashboard-task-row{padding:10px 20px!important;min-height:64px;box-sizing:border-box}.home-workspace #task-attention .dashboard-task-copy{min-width:0}.home-workspace #task-attention .dashboard-task-title-link{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;line-height:1.45}.home-workspace #task-attention .dashboard-task-meta{display:block;margin-top:3px;min-width:0}.attention-project-name{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;font-size:11px}.attention-assignee{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;line-height:1.5;color:#53635A}.attention-assignee.is-unassigned{color:#8A7657}.home-workspace #task-attention .attention-due small{margin-top:3px}.home-workspace #task-attention .dashboard-task-footer{padding-top:10px!important;padding-bottom:10px!important}@media(max-width:600px){.home-workspace #task-attention .attention-list-heading{display:none!important}.home-workspace #task-attention .dashboard-task-row{grid-template-columns:minmax(0,1fr) 88px!important;gap:3px 12px!important;padding:11px 15px!important}.home-workspace #task-attention .dashboard-task-copy{grid-column:1;grid-row:1}.home-workspace #task-attention .attention-assignee{grid-column:1;grid-row:2;font-size:10px}.home-workspace #task-attention .attention-due{grid-column:2;grid-row:1/3;align-self:center}.home-workspace #task-attention .attention-project-name{font-size:10px}}
 
 .attention-overdue-link{display:block;font-size:10px;line-height:1.5;margin-top:3px;color:#B54B3C;text-decoration:none}.attention-overdue-link:hover{text-decoration:underline;color:#963B2F}.attention-overdue-link:focus-visible{outline:2px solid #315F58;outline-offset:3px;border-radius:3px}
-#project-workspace .project-tasks-full-table{min-width:1100px;table-layout:fixed}#project-workspace .project-tasks-full-table th:nth-child(1){width:34%!important}#project-workspace .project-tasks-full-table th:nth-child(2){width:16%!important}#project-workspace .project-tasks-full-table th:nth-child(3){width:9%!important}#project-workspace .project-tasks-full-table th:nth-child(4),#project-workspace .project-tasks-full-table th:nth-child(5){width:11%!important}#project-workspace .project-tasks-full-table th:nth-child(6){width:8%!important}#project-workspace .project-tasks-full-table th:nth-child(7){width:11%!important}#project-workspace .project-tasks-full-table td{padding:12px!important;vertical-align:middle!important;border-bottom:1px solid #EDF0EE}#project-workspace .project-task-row{background:#FFFFFF!important;box-shadow:none;border-left:0!important}#project-workspace .project-task-row.is-subtask{background:#FAFCFB!important}#project-workspace .project-task-row:hover{background:#F5F9F7!important}#project-workspace .project-task-row.is-focused-task{background:#EDF5EE!important;outline:2px solid #8DAC9C;outline-offset:-2px}#project-workspace .project-tasks-full-table td:first-child>div{flex-wrap:wrap;row-gap:5px!important}#project-workspace .uwt-task-title-link{flex:1 1 180px;min-width:0;overflow-wrap:normal;word-break:normal;font-size:13px!important;font-weight:600!important;line-height:1.5!important}#project-workspace .project-tasks-full-table .quick-priority-select{height:32px!important;min-height:32px!important;font-size:11px!important;border:1px solid #DFE6E1!important;border-left:1px solid #DFE6E1!important;background:#FFFFFF!important;color:#53635A!important;border-radius:6px!important;padding:0 7px!important;width:100%;box-shadow:none!important}#project-workspace .project-tasks-full-table .quick-status-select{min-height:34px!important;font-size:11px!important;border-color:#DDE5DF!important;color:#33463B!important;background:#FFFFFF!important;font-weight:500!important;padding:0 8px!important;width:100%}#project-workspace .project-tasks-full-table .task-progress-fill{background:#315F58!important}#project-workspace .project-tasks-full-table .task-progress-text{color:#53635A!important;font-weight:500!important;font-size:11px!important}#project-workspace .task-end-date-cell .task-date-val{font-size:12px!important;font-weight:500!important;color:#22272B!important}#project-workspace .task-end-date-cell .task-time-val{color:#78857D!important;font-weight:400!important;font-size:10px!important}#project-workspace .task-end-date-cell .badge-overdue{background:transparent!important;border:0!important;color:#B54B3C!important;padding:0!important;font-size:10px!important;font-weight:500!important}#project-workspace .task-end-date-cell>div:nth-child(2){flex-wrap:wrap;gap:4px!important}#project-workspace .project-task-row td .btn{min-height:32px;font-size:11px}#project-workspace .project-tasks-full-table th{font-size:11px!important;padding:12px!important}
+#project-workspace .project-tasks-full-table{min-width:1040px!important;table-layout:fixed;width:100%!important}#project-workspace .project-tasks-full-table td{padding:10px 12px!important;vertical-align:middle!important;border-bottom:1px solid #EDF0EE}#project-workspace .project-task-row{background:#FFFFFF!important;box-shadow:none;border-left:0!important}#project-workspace .project-task-row.is-subtask{background:#FAFCFB!important}#project-workspace .project-task-row:hover{background:#F5F9F7!important}#project-workspace .project-task-row.is-focused-task{background:#EDF5EE!important;outline:2px solid #8DAC9C;outline-offset:-2px}#project-workspace .project-tasks-full-table td:first-child>div{flex-wrap:wrap;row-gap:5px!important}#project-workspace .uwt-task-title-link{flex:1 1 180px;min-width:0;overflow-wrap:normal;word-break:normal;font-size:13px!important;font-weight:600!important;line-height:1.5!important}#project-workspace .project-task-row td .btn{min-height:30px;font-size:11px}#project-workspace .project-tasks-full-table th{font-size:11.5px!important;padding:12px 10px!important}
 
 /* Overdue uses a small slow pulse, keeping the row itself calm. */
-#project-workspace .task-end-date-cell .badge-overdue{display:inline-flex!important;align-items:center;gap:5px!important;color:#BD4238!important;line-height:1.5}#project-workspace .task-end-date-cell .badge-overdue:before{content:'';display:inline-block;width:6px;height:6px;border-radius:50%;background:#D64C43;flex:0 0 6px;animation:task-overdue-pulse 2.4s ease-in-out infinite}@keyframes task-overdue-pulse{0%,100%{box-shadow:0 0 0 0 #D64C4330;opacity:1}50%{box-shadow:0 0 0 4px #D64C4300;opacity:.55}}#project-workspace .project-tasks-full-table{min-width:1080px!important}#project-workspace .project-tasks-full-table th:nth-child(1){width:31%!important}#project-workspace .project-tasks-full-table th:nth-child(2){width:16%!important}#project-workspace .project-tasks-full-table th:nth-child(3){width:9%!important}#project-workspace .project-tasks-full-table th:nth-child(4),#project-workspace .project-tasks-full-table th:nth-child(5){width:12%!important}#project-workspace .project-tasks-full-table th:nth-child(6){width:8%!important}#project-workspace .project-tasks-full-table th:nth-child(7){width:12%!important}#project-workspace .table-wrap:has(.project-tasks-full-table){max-width:100%;overflow-x:auto;scrollbar-width:thin}#project-workspace .project-tasks-full-table td:last-child{min-width:125px}#project-workspace .project-tasks-full-table td:last-child select{max-width:100%;width:100%;text-overflow:ellipsis}
+#project-workspace .task-end-date-cell .badge-overdue{display:inline-flex!important;align-items:center;gap:4px!important;color:#BD4238!important;line-height:1.4}#project-workspace .task-end-date-cell .badge-overdue:before{content:'';display:inline-block;width:5px;height:5px;border-radius:50%;background:#D64C43;flex:0 0 5px;animation:task-overdue-pulse 2.4s ease-in-out infinite}@keyframes task-overdue-pulse{0%,100%{box-shadow:0 0 0 0 #D64C4330;opacity:1}50%{box-shadow:0 0 0 4px #D64C4300;opacity:.55}}#project-workspace .table-wrap:has(.project-tasks-full-table){max-width:100%;overflow-x:auto;scrollbar-width:thin}
 @media(max-width:700px){#project-workspace .project-tasks-full-table{display:block!important;min-width:0!important;width:100%!important}#project-workspace .project-tasks-full-table thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}#project-workspace .project-tasks-full-table tbody{display:block;width:100%}#project-workspace .project-tasks-full-table tr.project-task-row:not([hidden]):not([style*="display: none"]):not([style*="display:none"]){display:grid!important;grid-template-columns:1fr 1fr;gap:0 14px;padding:12px 14px;border-bottom:1px solid #E4EAE6}#project-workspace .project-tasks-full-table tr.project-task-row>td{display:block!important;padding:7px 0!important;border:0!important;min-width:0!important;white-space:normal!important}#project-workspace .project-tasks-full-table tr.project-task-row>td:first-child{grid-column:1/-1;padding-top:0!important;padding-bottom:9px!important}#project-workspace .project-tasks-full-table tr.project-task-row>td:not(:first-child):before{display:block;font-size:10px;font-weight:500;color:#7A8780;margin-bottom:5px}#project-workspace .project-tasks-full-table td:nth-child(2):before{content:'Assignee'}#project-workspace .project-tasks-full-table td:nth-child(3):before{content:'Priority'}#project-workspace .project-tasks-full-table td:nth-child(4):before{content:'Starts'}#project-workspace .project-tasks-full-table td:nth-child(5):before{content:'Due'}#project-workspace .project-tasks-full-table td:nth-child(6):before{content:'Progress'}#project-workspace .project-tasks-full-table td:nth-child(7):before{content:'Status'}#project-workspace .project-tasks-full-table td:first-child>div{flex-wrap:wrap;gap:7px!important}#project-workspace .project-tasks-full-table .uwt-task-title-link{flex-basis:160px;font-size:13px!important}#project-workspace .project-tasks-full-table .quick-priority-select{max-width:150px}#project-workspace .project-tasks-full-table td:last-child{min-width:0!important}#project-workspace .project-tasks-full-table td:last-child select{min-height:36px}#project-workspace .project-tasks-full-table td:nth-child(6)>div{max-width:150px}}
 @media(prefers-reduced-motion:reduce){#project-workspace .task-end-date-cell .badge-overdue:before{animation:none;opacity:1;box-shadow:none}}
 
@@ -338,14 +338,14 @@ body:is([data-page="users.index"],[data-page="activity.index"],[data-page="subsi
 #project-workspace .project-team-workspace .clean-table th{background:#F6F8F7!important;color:#66756C!important}
 #project-workspace .project-team-workspace .clean-table td{border-bottom-color:#EDF1EE!important}
 @media(min-width:1000px){
- #project-workspace #tab-tasks .project-tasks-full-table th:nth-child(1){width:30%!important}
- #project-workspace #tab-tasks .project-tasks-full-table th:nth-child(2){width:15%!important}
- #project-workspace #tab-tasks .project-tasks-full-table th:nth-child(3){width:8%!important}
- #project-workspace #tab-tasks .project-tasks-full-table th:nth-child(4),
- #project-workspace #tab-tasks .project-tasks-full-table th:nth-child(5){width:10%!important}
- #project-workspace #tab-tasks .project-tasks-full-table th:nth-child(6){width:8%!important}
- #project-workspace #tab-tasks .project-tasks-full-table th:nth-child(7){width:15%!important}
- #project-workspace #tab-tasks .project-tasks-full-table th:nth-child(8){width:4%!important}
+ #project-workspace #tab-tasks .project-tasks-full-table th:nth-child(1){width:28%!important;min-width:260px!important}
+ #project-workspace #tab-tasks .project-tasks-full-table th:nth-child(2){width:17%!important;min-width:165px!important}
+ #project-workspace #tab-tasks .project-tasks-full-table th:nth-child(3){width:8.5%!important;min-width:92px!important}
+ #project-workspace #tab-tasks .project-tasks-full-table th:nth-child(4){width:10%!important;min-width:105px!important}
+ #project-workspace #tab-tasks .project-tasks-full-table th:nth-child(5){width:11%!important;min-width:115px!important}
+ #project-workspace #tab-tasks .project-tasks-full-table th:nth-child(6){width:9.5%!important;min-width:105px!important}
+ #project-workspace #tab-tasks .project-tasks-full-table th:nth-child(7){width:13%!important;min-width:130px!important}
+ #project-workspace #tab-tasks .project-tasks-full-table th:nth-child(8){width:3%!important;min-width:36px!important}
 }
 @media(max-width:700px){
  #project-workspace #tab-tasks .task-quick-filters{flex:1 1 100%;gap:8px!important}
@@ -451,10 +451,265 @@ body:is([data-page="users.index"],[data-page="activity.index"],[data-page="subsi
 .directory-results-floating .directory-person:hover{outline:0!important;background:#F4F8F5!important}
 .directory-results-floating .directory-person:focus-visible{outline:2px solid #315F58!important;outline-offset:-2px;background:#EDF4F1!important}
 
-/* Task table balance: show full priority labels and keep status compact. */
-@media(min-width:1000px){
- #project-workspace #tab-tasks .project-tasks-full-table th:nth-child(3){width:11%!important}
- #project-workspace #tab-tasks .project-tasks-full-table th:nth-child(7){width:10%!important}
- #project-workspace #tab-tasks .quick-priority-select{width:100%!important;min-width:108px!important;padding:0 20px 0 9px!important;font-size:11px!important;letter-spacing:0!important;text-overflow:clip!important}
- #project-workspace #tab-tasks .task-status-cell .quick-status-select{width:100%!important;min-width:0!important;height:32px!important;min-height:32px!important;padding:4px 24px 4px 8px!important;font-size:11px!important}
+/* Task table controls: priority dropdown fits the word neatly, and status shows full words without clipping. */
+#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(1){width:28%!important;min-width:260px!important}
+#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(2){width:17%!important;min-width:165px!important}
+#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(3){width:8.5%!important;min-width:92px!important}
+#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(4){width:10%!important;min-width:105px!important}
+#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(5){width:11%!important;min-width:115px!important}
+#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(6){width:9.5%!important;min-width:105px!important}
+#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(7){width:13%!important;min-width:130px!important}
+#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(8){width:3%!important;min-width:36px!important}
+
+#project-workspace #tab-tasks .project-tasks-full-table td:nth-child(2){
+ padding:10px 12px!important;
+}
+
+#project-workspace #tab-tasks .project-tasks-full-table td:nth-child(3){
+ padding:10px 8px!important;
+ vertical-align:middle!important;
+}
+
+#project-workspace #tab-tasks .project-tasks-full-table td:nth-child(4),
+#project-workspace #tab-tasks .project-tasks-full-table td:nth-child(5){
+ padding:10px 12px!important;
+ white-space:nowrap!important;
+ vertical-align:middle!important;
+}
+
+#project-workspace #tab-tasks .project-tasks-full-table td:nth-child(6){
+ padding:10px 10px!important;
+ white-space:nowrap!important;
+ vertical-align:middle!important;
+}
+
+#project-workspace #tab-tasks .quick-priority-select{
+ display:inline-flex!important;
+ align-items:center!important;
+ width:80px!important;
+ min-width:80px!important;
+ max-width:80px!important;
+ height:28px!important;
+ min-height:28px!important;
+ padding:2px 20px 2px 8px!important;
+ font-size:11.5px!important;
+ font-weight:600!important;
+ line-height:1.2!important;
+ border-radius:6px!important;
+ letter-spacing:0!important;
+ box-sizing:border-box!important;
+ cursor:pointer!important;
+ appearance:none!important;
+ -webkit-appearance:none!important;
+ -moz-appearance:none!important;
+ background-color:#FFFFFF!important;
+ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")!important;
+ background-repeat:no-repeat!important;
+ background-position:right 6px center!important;
+ border:1px solid #E2E8F0!important;
+ border-left-width:3.5px!important;
+ outline:none!important;
+}
+
+#project-workspace #tab-tasks .quick-priority-select.priority-select-high,
+#project-workspace #tab-tasks [data-priority="high"] .quick-priority-select{
+ border-color:#FECACA!important;
+ border-left-color:#DC2626!important;
+ color:#B91C1C!important;
+}
+
+#project-workspace #tab-tasks .quick-priority-select.priority-select-medium,
+#project-workspace #tab-tasks [data-priority="medium"] .quick-priority-select{
+ border-color:#FDE68A!important;
+ border-left-color:#D97706!important;
+ color:#B45309!important;
+}
+
+#project-workspace #tab-tasks .quick-priority-select.priority-select-low,
+#project-workspace #tab-tasks [data-priority="low"] .quick-priority-select{
+ border-color:#E2E8F0!important;
+ border-left-color:#64748B!important;
+ color:#475569!important;
+}
+
+#project-workspace #tab-tasks .priority-badge-static{
+ display:inline-flex!important;
+ align-items:center!important;
+ justify-content:center!important;
+ width:auto!important;
+ min-width:65px!important;
+ max-width:80px!important;
+ height:26px!important;
+ padding:2px 8px!important;
+ font-size:11px!important;
+ font-weight:600!important;
+ border-radius:5px!important;
+ border:1px solid #E2E8F0!important;
+ border-left-width:3.5px!important;
+ background:#FFFFFF!important;
+ box-sizing:border-box!important;
+}
+
+#project-workspace #tab-tasks .task-progress-wrap{
+ display:flex!important;
+ align-items:center!important;
+ gap:7px!important;
+ white-space:nowrap!important;
+ flex-shrink:0!important;
+}
+
+#project-workspace #tab-tasks .task-progress-bar{
+ width:44px!important;
+ height:6px!important;
+ background:#E2E8F0!important;
+ border-radius:3px!important;
+ overflow:hidden!important;
+ flex-shrink:0!important;
+}
+
+#project-workspace #tab-tasks .task-progress-text{
+ font-size:11.5px!important;
+ font-weight:600!important;
+ color:#475569!important;
+ min-width:26px!important;
+ flex-shrink:0!important;
+ white-space:nowrap!important;
+}
+
+#project-workspace #tab-tasks .task-status-cell{
+ min-width:130px!important;
+ white-space:nowrap!important;
+ padding:10px 10px!important;
+ vertical-align:middle!important;
+}
+
+#project-workspace #tab-tasks .task-status-cell .quick-status-select{
+ display:inline-block!important;
+ width:100%!important;
+ min-width:116px!important;
+ max-width:126px!important;
+ height:30px!important;
+ min-height:30px!important;
+ padding:2px 22px 2px 9px!important;
+ font-size:11px!important;
+ font-weight:600!important;
+ line-height:1.3!important;
+ white-space:nowrap!important;
+ border-radius:6px!important;
+ box-sizing:border-box!important;
+ cursor:pointer!important;
+ overflow:visible!important;
+ text-overflow:clip!important;
+ appearance:none!important;
+ -webkit-appearance:none!important;
+ -moz-appearance:none!important;
+ background-color:#FFFFFF;
+ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")!important;
+ background-repeat:no-repeat!important;
+ background-position:right 7px center!important;
+}
+
+#project-workspace #tab-tasks select.quick-status-select option{
+ background:#FFFFFF!important;
+ color:#1E293B!important;
+ font-weight:500!important;
+}
+
+#project-workspace #tab-tasks .quick-status-select[data-current-status="todo"],
+#project-workspace #tab-tasks [data-task-status="todo"] .quick-status-select{
+ background-color:#F1F5F9!important;
+ color:#475569!important;
+ border:1px solid #CBD5E1!important;
+}
+
+#project-workspace #tab-tasks .quick-status-select[data-current-status="in_progress"],
+#project-workspace #tab-tasks [data-task-status="in_progress"] .quick-status-select{
+ background-color:#E0F2FE!important;
+ color:#0369A1!important;
+ border:1px solid #7DD3FC!important;
+}
+
+#project-workspace #tab-tasks .quick-status-select[data-current-status="on_hold"],
+#project-workspace #tab-tasks [data-task-status="on_hold"] .quick-status-select{
+ background-color:#FEF3C7!important;
+ color:#B45309!important;
+ border:1px solid #FCD34D!important;
+}
+
+#project-workspace #tab-tasks .quick-status-select[data-current-status="completed"],
+#project-workspace #tab-tasks [data-task-status="completed"] .quick-status-select{
+ background-color:#DCFCE7!important;
+ color:#15803D!important;
+ border:1px solid #86EFAC!important;
+}
+
+#project-workspace #tab-tasks .task-status-display{
+ display:inline-flex!important;
+ align-items:center!important;
+ gap:5px!important;
+ white-space:nowrap!important;
+}
+
+#project-workspace #tab-tasks .task-status-cell .uwt-status-pill{
+ display:inline-flex!important;
+ align-items:center!important;
+ white-space:nowrap!important;
+ font-size:11px!important;
+ font-weight:600!important;
+ padding:3px 8px!important;
+ border-radius:6px!important;
+}
+
+#project-workspace #tab-tasks .task-status-cell .status-todo{
+ background:#F1F5F9!important;
+ color:#475569!important;
+ border:1px solid #CBD5E1!important;
+}
+
+#project-workspace #tab-tasks .task-status-cell .status-in_progress{
+ background:#E0F2FE!important;
+ color:#0369A1!important;
+ border:1px solid #7DD3FC!important;
+}
+
+#project-workspace #tab-tasks .task-status-cell .status-on_hold{
+ background:#FEF3C7!important;
+ color:#B45309!important;
+ border:1px solid #FCD34D!important;
+}
+
+#project-workspace #tab-tasks .task-status-cell .status-completed{
+ background:#DCFCE7!important;
+ color:#15803D!important;
+ border:1px solid #86EFAC!important;
+}
+
+#project-workspace #tab-tasks .task-status-auto{
+ font-size:9.5px!important;
+ font-weight:600!important;
+ background:#F1F5F9!important;
+ color:#64748B!important;
+ border:1px solid #CBD5E1!important;
+ padding:1px 5px!important;
+ border-radius:4px!important;
+ white-space:nowrap!important;
+}
+
+#project-workspace #tab-tasks .task-assignee-name{
+ flex:1 1 auto!important;
+ min-width:0!important;
+ max-width:130px!important;
+ overflow:hidden!important;
+ text-overflow:ellipsis!important;
+ white-space:nowrap!important;
+ font-size:12px!important;
+ font-weight:500!important;
+ color:#334155!important;
+}
+
+#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(8),
+#project-workspace #tab-tasks .project-tasks-full-table td:nth-child(8){
+ padding:10px 6px!important;
+ text-align:center!important;
+ vertical-align:middle!important;
 }

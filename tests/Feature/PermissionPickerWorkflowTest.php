@@ -93,4 +93,32 @@ class PermissionPickerWorkflowTest extends TestCase {
   $this->actingAs($admin)->put(route('role-directory.update',$role),['permissions'=>['tasks.view_assigned']])->assertRedirect();
   $this->actingAs($member)->patchJson(route('tasks.update',$t),['status'=>'completed'])->assertForbidden();
  }
+ public function test_project_overrides_use_full_catalog_and_control_real_actions():void {
+  $admin=$this->user();$member=$this->user('user');$assignee=$this->user('user');
+  $role=ProjectRole::create(['name'=>'Project operator','slug'=>'project_operator','default_permissions'=>[]]);
+  $team=ProjectRole::create(['name'=>'Team Member','slug'=>'team','is_system'=>true,'default_permissions'=>['project.view']]);
+  $project=\App\Models\Project::create(['name'=>'Override policy','code'=>'OVR1','created_by'=>$admin->id,'starts_on'=>today(),'ends_on'=>today()->addWeek(),'status'=>'active','closure_status'=>'requested']);
+  \App\Models\ProjectMembership::create(['project_id'=>$project->id,'user_id'=>$member->id,'project_role_id'=>$role->id]);
+  \App\Models\ProjectMembership::create(['project_id'=>$project->id,'user_id'=>$assignee->id,'project_role_id'=>$team->id]);
+  $task=\App\Models\Task::create(['project_id'=>$project->id,'title'=>'Override task','code'=>'T1','created_by'=>$admin->id,'starts_at'=>now(),'ends_at'=>now()->addDay()]);
+
+  $this->actingAs($admin)->get(route('roles.index',$project))->assertOk()
+   ->assertSee('tasks.add_comments')->assertSee('tasks.manage_dependencies')->assertSee('project.closure_approve')->assertSee('approvals.manage_corrective_actions');
+  $this->put(route('roles.update',$project),['permissions'=>[$role->id=>[
+   'project.view'=>1,'tasks.view_all'=>1,'tasks.add_comments'=>1,
+  ]]])->assertRedirect();
+  $this->assertTrue(app(Access::class)->project($member,$project,'tasks.add_comments'));
+  $this->assertFalse(app(Access::class)->project($member,$project,'tasks.assign'));
+  $this->actingAs($member)->post(route('tasks.comments.store',$task),['body'=>'Permission based comment'])->assertRedirect();
+  $this->postJson(route('tasks.pm-assign',$task),['user_id'=>$assignee->id])->assertForbidden();
+  $this->post(route('projects.closure.submit',$project),['action'=>'approve'])->assertForbidden();
+
+  $this->actingAs($admin)->put(route('roles.update',$project),['permissions'=>[$role->id=>[
+   'project.view'=>1,'tasks.view_all'=>1,'tasks.assign'=>1,'project.closure_approve'=>1,
+  ]]])->assertRedirect();
+  $this->actingAs($member)->post(route('tasks.comments.store',$task),['body'=>'Must be denied'])->assertForbidden();
+  $this->postJson(route('tasks.pm-assign',$task),['user_id'=>$assignee->id])->assertOk();
+  $this->post(route('projects.closure.submit',$project),['action'=>'approve'])->assertRedirect();
+  $this->assertSame('completed',$project->fresh()->status);
+ }
 }

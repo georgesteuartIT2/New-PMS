@@ -64,7 +64,7 @@
                 <td><a class="tw-task-name" href="{{ route('projects.show',[$task->project_id,'focus_task'=>$task->id]) }}">{{ $task->title }}</a><div class="tw-task-context"><span>{{ $task->display_number }}</span><span aria-hidden="true">&middot;</span><a href="{{ route('projects.show',$task->project_id) }}">{{ $task->project->name }}</a></div>
                     @if($task->is_critical && $task->status!=='completed')<div class="tw-task-health">@include('tasks._critical-badge',['task'=>$task])</div>@endif
                 </td>
-                <td>@if(auth()->user()->system_role==='user' && app(\App\Services\Access::class)->project(auth()->user(),$task->project,'tasks.assign') && (int)$task->project->pm_user_id===auth()->id() && $task->assignees->isEmpty() && in_array($task->project->status,['active','on_hold']) && $task->status!=='completed')
+                <td>@if(app(\App\Services\Access::class)->project(auth()->user(),$task->project,'tasks.assign') && $task->assignees->isEmpty() && in_array($task->project->status,['active','on_hold']) && $task->status!=='completed')
                     @php
                         $eligible=$task->project->memberships->pluck('user')->push($task->project->manager)->filter(fn($u)=>$u && $u->account_status==='active' && $u->system_role==='user')->unique('id')->sortBy('name');
                     @endphp

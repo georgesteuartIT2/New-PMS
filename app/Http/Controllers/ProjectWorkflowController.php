@@ -368,7 +368,7 @@ class ProjectWorkflowController
         });
 
         if ($r->boolean('publish_now') && $project->fresh()->plan_published_at) {
-            return redirect(route('projects.show', $project).'#tasks')->with('success', 'Plan published successfully! In-app notifications sent and team emails queued.');
+            return redirect(route('projects.show', $project).'#tasks')->with('success', 'Plan published successfully! In-app notifications and team emails sent.');
         }
 
         return redirect(route('projects.show', $project).'#tasks')->with('success', 'Plan started successfully.');
@@ -388,6 +388,6 @@ class ProjectWorkflowController
             }Audit::record('project.plan_published', $p);
         });
 
-        return redirect(route('projects.show', $project).'#tasks')->with('success','Plan published. In-app notifications were created and team emails were queued for sending.');
+        return redirect(route('projects.show', $project).'#tasks')->with('success','Plan published. In-app notifications and team emails were sent successfully.');
     }
 }

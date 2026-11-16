@@ -35,42 +35,22 @@
 @endif
 
 <!-- Metric Summary Cards -->
-<div class="users-kpi-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; margin-bottom: 22px;">
-    <div class="card" style="padding: 16px 20px; display: flex; align-items: center; gap: 14px; border: 1px solid var(--border); border-radius: 10px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
-        <div style="width: 44px; height: 44px; border-radius: 10px; background: #EEF2F6; color: #334155; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">
-            👥
-        </div>
-        <div>
-            <div style="font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted);">Total People</div>
-            <div id="total-users-counter" style="font-size: 22px; font-weight: 700; color: var(--text); line-height: 1.2; margin-top: 2px;">{{ $totalUsersCount ?? $users->total() }}</div>
-        </div>
+<div class="users-kpi-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+    <div class="card" style="padding: 16px 20px; border: 1px solid var(--border, #E2E8F0); border-radius: 10px; background: #FFFFFF; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+        <div style="font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted, #64748B);">Total People</div>
+        <div id="total-users-counter" style="font-size: 24px; font-weight: 700; color: var(--text, #0F172A); line-height: 1.2; margin-top: 4px;">{{ $totalUsersCount ?? $users->total() }}</div>
     </div>
-    <div class="card" style="padding: 16px 20px; display: flex; align-items: center; gap: 14px; border: 1px solid var(--border); border-radius: 10px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
-        <div style="width: 44px; height: 44px; border-radius: 10px; background: #DCFCE7; color: #166534; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">
-            ✓
-        </div>
-        <div>
-            <div style="font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted);">Active Accounts</div>
-            <div style="font-size: 22px; font-weight: 700; color: #166534; line-height: 1.2; margin-top: 2px;">{{ $activeUsersCount ?? $users->total() }}</div>
-        </div>
+    <div class="card" style="padding: 16px 20px; border: 1px solid var(--border, #E2E8F0); border-radius: 10px; background: #FFFFFF; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+        <div style="font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted, #64748B);">Active Accounts</div>
+        <div style="font-size: 24px; font-weight: 700; color: #166534; line-height: 1.2; margin-top: 4px;">{{ $activeUsersCount ?? $users->total() }}</div>
     </div>
-    <div class="card" style="padding: 16px 20px; display: flex; align-items: center; gap: 14px; border: 1px solid var(--border); border-radius: 10px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
-        <div style="width: 44px; height: 44px; border-radius: 10px; background: #E8F0EE; color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">
-            🛡️
-        </div>
-        <div>
-            <div style="font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted);">PMO Administrators</div>
-            <div style="font-size: 22px; font-weight: 700; color: var(--primary); line-height: 1.2; margin-top: 2px;">{{ $pmoAdminCount }}</div>
-        </div>
+    <div class="card" style="padding: 16px 20px; border: 1px solid var(--border, #E2E8F0); border-radius: 10px; background: #FFFFFF; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+        <div style="font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted, #64748B);">PMO Administrators</div>
+        <div style="font-size: 24px; font-weight: 700; color: var(--primary, #315F58); line-height: 1.2; margin-top: 4px;">{{ $pmoAdminCount }}</div>
     </div>
-    <div class="card" style="padding: 16px 20px; display: flex; align-items: center; gap: 14px; border: 1px solid var(--border); border-radius: 10px; background: #FFFFFF; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
-        <div style="width: 44px; height: 44px; border-radius: 10px; background: #F1F5F9; color: #475569; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">
-            🏢
-        </div>
-        <div>
-            <div style="font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted);">Subsidiaries</div>
-            <div style="font-size: 22px; font-weight: 700; color: var(--text); line-height: 1.2; margin-top: 2px;">{{ $subsidiaries->count() }}</div>
-        </div>
+    <div class="card" style="padding: 16px 20px; border: 1px solid var(--border, #E2E8F0); border-radius: 10px; background: #FFFFFF; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+        <div style="font-size: 11px; font-weight: 650; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted, #64748B);">Subsidiaries</div>
+        <div style="font-size: 24px; font-weight: 700; color: var(--text, #0F172A); line-height: 1.2; margin-top: 4px;">{{ $subsidiaries->count() }}</div>
     </div>
 </div>
 

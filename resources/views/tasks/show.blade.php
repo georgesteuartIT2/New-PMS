@@ -25,14 +25,16 @@
         <p class="muted">{{ $task->code }} · {{ $task->project->name }}</p>
     </div>
 
-    @if($canManage)
+    @if($canManage || $canDelete)
         <div class="inline-actions">
-            <button class="btn btn-outline btn-sm" type="button" data-show-dialog="task-edit-dialog">Edit Task Details</button>
+            @if($canManage)<button class="btn btn-outline btn-sm" type="button" data-show-dialog="task-edit-dialog">Edit Task Details</button>@endif
+            @if($canDelete)
             <form method="post" action="{{ route('tasks.destroy', $task) }}" onsubmit="return AppDialog.confirmAction(event,this,'Delete this task? This action cannot be undone.')">
                 @csrf
                 @method('DELETE')
                 <button class="btn btn-danger-outline btn-sm" type="submit">Delete Task</button>
             </form>
+            @endif
         </div>
     @endif
 </div>
@@ -171,7 +173,7 @@
                                 <span class="muted text-sm" style="font-size: 11.5px;">Planned finish: {{ $dependency->ends_at->format('d M Y') }} · Status: {{ ucwords(str_replace('_', ' ', $dependency->status)) }}</span>
                             </div>
                         </div>
-                        @if($canManage)
+                        @if($canManageDependencies)
                             <form action="{{ route('tasks.dependencies.delete', [$task, $dependency]) }}" method="post" onsubmit="return AppDialog.confirmAction(event,this,'Remove dependency link to {{ $dependency->code }}?')">
                                 @csrf
                                 @method('DELETE')
@@ -187,7 +189,7 @@
             </div>
         @endif
 
-        @if($canManage)
+        @if($canManageDependencies)
             <div class="mt-16" style="padding-top: 14px; border-top: 1px solid var(--border-light, #E1E4E8);">
                 <span class="muted text-sm" style="font-weight: 600; display: block; margin-bottom: 8px;">Add Predecessor Dependency</span>
                 @if(isset($candidateTasks) && $candidateTasks->isNotEmpty())
@@ -230,7 +232,7 @@
                     @endif
                 </div>
             </div>
-            @if($canManage)
+            @if($canResolveDelay)
                 <form method="post" action="{{ route('tasks.delays.resolve', $task->openDelay) }}" style="margin-bottom: 12px;">
                     @csrf
                     @method('PATCH')
@@ -350,7 +352,7 @@
             <p class="muted text-sm">No comments yet.</p>
         @endforelse
 
-        @if($task->project->status === 'active' && ($canManage || $canUpdate))
+        @if($canComment)
             <form method="post" action="{{ route('tasks.comments.store', $task) }}" class="stack mt-16">
                 @csrf
                 <textarea name="body" placeholder="Write a comment or status update..." rows="2" required></textarea>

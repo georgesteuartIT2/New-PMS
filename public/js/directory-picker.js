@@ -47,7 +47,7 @@
       finally{busy=false;input.disabled=false;focusWithoutSearch();if(added)status.textContent='Added to the system and selected. Complete the form to finish assigning.';}
      },true);added++;
     }
-    status.textContent=local.length||added?'Choose a person. Microsoft selections are saved to the system.':'No people found. Try another name or email.';
+    status.textContent=local.length||added?'':'No people found. Try another name or email.';
    }catch(error){if(error.name!=='AbortError'&&current===version)status.textContent=error.message;}
   }
   input.addEventListener('focus',()=>{if(suppressFocusSearch){suppressFocusSearch=false;return;}search();});

@@ -84,7 +84,7 @@ class TaskDelayController
     public function resolve(Request $request, TaskDelay $delay, Access $access)
     {
         $task = $delay->task;
-        abort_unless($access->canManageTask($request->user(), $task->project), 403);
+        abort_unless($access->project($request->user(), $task->project, 'approvals.manage_corrective_actions'), 403);
         abort_unless(in_array($task->project->status, ['active', 'on_hold'], true), 403);
         if ($delay->status !== 'resolved') {
             $delay->update(['status' => 'resolved', 'resolved_at' => now()]);

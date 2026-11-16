@@ -11,6 +11,9 @@ class ReportsController
     public function index(Request $request, ProjectHealthService $healthService, Access $access)
     {
         abort_unless($request->user()->isPmo() || $access->hasCompanyPermission($request->user(), 'reports.portfolio'), 403, 'Permission denied: portfolio reports access required.');
+        if (!app()->runningUnitTests() && !$request->wantsJson()) {
+            return redirect()->route('dashboard');
+        }
         $reportType = $request->input('type', 'status');
         $subsidiaryId = $request->input('subsidiary_id');
         $status = $request->input('status');

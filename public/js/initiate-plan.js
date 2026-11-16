@@ -14,4 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
  document.getElementById('edit-blank-plan').addEventListener('click',()=>{let data;try{data=JSON.parse(blank.value);}catch{}if(data){window.SmartTaskPlan.openEdit(data,data.tasks);}else window.SmartTaskPlan.openCreate({name:form.elements.name.value||'Project task plan',estimated_duration:1,reference_start_date:form.elements.starts_on.value,working_hours:'09:00 - 17:00'});});
  document.querySelectorAll('[data-starting-plan]').forEach(button=>button.addEventListener('click',()=>{document.getElementById(button.dataset.startingPlan==='template'?'browse-starting-template':'edit-blank-plan').click();}));
  form.addEventListener('submit',()=>{try{sessionStorage.removeItem(key);}catch{}});refresh();updatePlanStatus();
+ document.getElementById('initiate-plan-options').open=false;
+ form.querySelectorAll('[data-optional-roles]').forEach(section=>section.open=false);
 });

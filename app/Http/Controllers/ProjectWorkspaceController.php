@@ -83,7 +83,7 @@ class ProjectWorkspaceController
             return redirect()->route('projects.show', [$project, '#info']);
         }
         $canSignOff = $access->project($request->user(), $project, 'project.closure_request') || $access->project($request->user(), $project, 'edit_project');
-        $canApprove = $request->user()->isPmo() && $access->project($request->user(), $project, 'project.closure_approve');
+        $canApprove = $access->project($request->user(), $project, 'project.closure_approve');
         return view('projects.closure', compact('project', 'canSignOff', 'canApprove'));
     }
 
@@ -93,7 +93,7 @@ class ProjectWorkspaceController
         abort_unless(in_array($action, ['draft', 'request', 'approve'], true), 422, 'Invalid closure action.');
 
         if ($action === 'approve') {
-            abort_unless($request->user()->isPmo() && $access->project($request->user(), $project, 'project.closure_approve'), 403);
+            abort_unless($access->project($request->user(), $project, 'project.closure_approve'), 403);
             DB::transaction(function () use ($request, $project) {
                 $locked = Project::whereKey($project->id)->lockForUpdate()->firstOrFail();
                 abort_unless($locked->closure_status === 'requested', 409, 'This project is not awaiting closure approval.');

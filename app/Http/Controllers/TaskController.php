@@ -188,7 +188,14 @@ class TaskController {
   return view('tasks.show',[
       'task'=>$task->load('project.memberships.user','assignees','attachments','comments.user','dependencies','openDelay.actionOwner','delayReports.reporter'), 
       'candidateTasks'=>$candidateTasks,
-      'canManage'=>$access->canManageTask($request->user(),$task->project) && $task->project->status !== 'archived',
+      'canManage'=>$access->project($request->user(),$task->project,'tasks.edit_all') && $task->project->status !== 'archived',
+      'canDelete'=>$access->project($request->user(),$task->project,'tasks.delete') && $task->project->status !== 'archived',
+      'canCreate'=>$access->project($request->user(),$task->project,'tasks.create') && $task->project->status !== 'archived',
+      'canAssign'=>$access->project($request->user(),$task->project,'tasks.assign') && $task->project->status !== 'archived',
+      'canManageDependencies'=>$access->project($request->user(),$task->project,'tasks.manage_dependencies') && $task->project->status !== 'archived',
+      'canComment'=>$access->task($request->user(),$task,'comment') && $task->project->status === 'active',
+      'canReportDelay'=>$access->task($request->user(),$task,'delay') && $task->project->status === 'active',
+      'canResolveDelay'=>$access->project($request->user(),$task->project,'approvals.manage_corrective_actions') && $task->project->status !== 'archived',
       'canUpdate'=>$access->task($request->user(),$task,'update') && $task->project->status==='active',
       'canUpload'=>$access->task($request->user(),$task,'upload') && $task->project->status==='active',
       'delayReasons'=>\App\Http\Controllers\TaskDelayController::REASONS,
@@ -209,7 +216,6 @@ class TaskController {
  public function panel(Task $task,Request $request,Access $access){
   abort_unless($access->task($request->user(),$task,'view'),403);
   $task->load('project.memberships.user','assignees','attachments','comments.user','dependencies', 'openDelay.actionOwner', 'delayReports.reporter');
-  $canManage=$access->canManageTask($request->user(),$task->project);
   $candidateTasks = $task->project->tasks()
       ->where('id', '!=', $task->id)
       ->whereNotIn('id', $task->dependencies->pluck('id'))
@@ -218,7 +224,14 @@ class TaskController {
   return view('tasks._panel',[
    'task'=>$task,
    'candidateTasks'=>$candidateTasks,
-   'canManage'=>$canManage && $task->project->status !== 'archived',
+   'canManage'=>$access->project($request->user(),$task->project,'tasks.edit_all') && $task->project->status !== 'archived',
+   'canDelete'=>$access->project($request->user(),$task->project,'tasks.delete') && $task->project->status !== 'archived',
+   'canCreate'=>$access->project($request->user(),$task->project,'tasks.create') && $task->project->status !== 'archived',
+   'canAssign'=>$access->project($request->user(),$task->project,'tasks.assign') && $task->project->status !== 'archived',
+   'canManageDependencies'=>$access->project($request->user(),$task->project,'tasks.manage_dependencies') && $task->project->status !== 'archived',
+   'canComment'=>$access->task($request->user(),$task,'comment') && $task->project->status === 'active',
+   'canReportDelay'=>$access->task($request->user(),$task,'delay') && $task->project->status === 'active',
+   'canResolveDelay'=>$access->project($request->user(),$task->project,'approvals.manage_corrective_actions') && $task->project->status !== 'archived',
    'canUpdate'=>$access->task($request->user(),$task,'update') && $task->project->status==='active',
    'canUpload'=>$access->task($request->user(),$task,'upload') && $task->project->status==='active',
    'delayReasons'=>\App\Http\Controllers\TaskDelayController::REASONS,
@@ -230,6 +243,7 @@ class TaskController {
   $data=$request->validate(['title'=>'required|string|max:200','description'=>'nullable|string|max:3000','parent_task_id'=>'nullable|integer','starts_at'=>'required|date','ends_at'=>'required|date|after:starts_at','priority'=>'required|in:low,medium,high','assigned_user_id'=>'nullable|exists:users,id','files'=>'nullable|array|max:5','files.*'=>'file|max:10240|mimes:pdf,doc,docx,xls,xlsx,csv,txt,jpg,jpeg,png']);
   if(!empty($data['parent_task_id']))abort_unless($project->tasks()->whereKey($data['parent_task_id'])->exists(),422);
   if(!empty($data['assigned_user_id'])){
+   abort_unless($access->project($request->user(),$project,'tasks.assign'),403);
    $person=User::whereKey($data['assigned_user_id'])->where('account_status','active')->firstOrFail();
    $selfManagingPmo=$person->isPmo() && $person->id===$request->user()->id && in_array($person->id,[$project->pm_user_id,$project->owner_user_id],true);
    abort_unless($person->system_role==='user'||$selfManagingPmo,422,'Choose an active project user.');
@@ -248,7 +262,12 @@ class TaskController {
   $task=Task::create(['project_id'=>$project->id,'code'=>'T'.strtoupper(Str::random(8)),'title'=>$data['title'],'description'=>$data['description']??null,
    'parent_task_id'=>$parentId,'starts_at'=>$data['starts_at'],'ends_at'=>$data['ends_at'],'priority'=>$data['priority'],
    'sort_order'=>$siblingOrder,'created_by'=>$request->user()->id]);
-  if(!empty($data['assigned_user_id'])){$task->assignees()->sync([$data['assigned_user_id']]);app(\App\Services\InboxService::class)->assigned($task,User::findOrFail($data['assigned_user_id']));}
+  if(!empty($data['assigned_user_id'])){
+   $task->assignees()->sync([$data['assigned_user_id']]);
+   $assignedPerson = User::findOrFail($data['assigned_user_id']);
+   app(\App\Services\InboxService::class)->assigned($task,$assignedPerson);
+   DB::afterCommit(fn() => $assignedPerson->notify(new TaskReassignedNotification($task, $request->user(), 'assigned')));
+  }
   foreach($data['files']??[] as $file){
    $path=$file->store('task-attachments/'.$task->id,'local');
    TaskAttachment::create(['task_id'=>$task->id,'uploaded_by'=>$request->user()->id,'path'=>$path,'original_name'=>basename($file->getClientOriginalName()),'mime_type'=>$file->getMimeType(),'size_bytes'=>$file->getSize()]);
@@ -348,6 +367,7 @@ class TaskController {
   ]);
   $data=$task->normalizeProgressInput($data);
   if(array_key_exists('assigned_user_id', $data)){
+      abort_unless($access->project($request->user(),$task->project,'tasks.assign'),403);
       if($data['assigned_user_id']){
           $service->addPlanningMember($task->project,(int)$data['assigned_user_id'],$request->user());
           $task->assignees()->sync([$data['assigned_user_id']]);
@@ -370,13 +390,12 @@ class TaskController {
   Audit::record('task.details_updated',$task);
   return back()->with('success','Task details updated.');
  }
- public function pmAssign(Request $request,Task $task){
-  abort_unless($request->user()->system_role==='user' && (int)$task->project->pm_user_id===$request->user()->id,403);
-  abort_unless(in_array($task->project->status,['active','on_hold'],true) && app(Access::class)->project($request->user(),$task->project,'tasks.assign'),403);
+ public function pmAssign(Request $request,Task $task,Access $access){
+  abort_unless(in_array($task->project->status,['active','on_hold'],true) && $access->project($request->user(),$task->project,'tasks.assign'),403);
   $data=$request->validate(['user_id'=>'required|integer|exists:users,id']);
-  DB::transaction(function()use($request,$task,$data){
+  DB::transaction(function()use($request,$task,$data,$access){
    $project=\App\Models\Project::whereKey($task->project_id)->lockForUpdate()->firstOrFail();
-   abort_unless((int)$project->pm_user_id===$request->user()->id && in_array($project->status,['active','on_hold'],true),403);
+   abort_unless(in_array($project->status,['active','on_hold'],true) && $access->project($request->user(),$project,'tasks.assign'),403);
    $locked=Task::whereKey($task->id)->lockForUpdate()->firstOrFail();
    abort_if($locked->assignees()->exists(),409,'This task already has an assignee. Refresh the list.');
    abort_if($locked->status==='completed' || $locked->progress>=100,422,'This task is already completed.');
@@ -384,6 +403,7 @@ class TaskController {
    abort_unless($person->id===$project->pm_user_id || $project->memberships()->where('user_id',$person->id)->exists(),422,'Choose a member of this project.');
    $locked->assignees()->attach($person->id);Audit::record('task.assigned',$locked,['user_id'=>$person->id]);
    app(\App\Services\InboxService::class)->assigned($locked,$person);
+   DB::afterCommit(fn() => $person->notify(new TaskReassignedNotification($locked, $request->user(), 'assigned')));
   });
   return response()->json(['success'=>true,'message'=>'Task assigned.']);
  }
@@ -393,9 +413,13 @@ class TaskController {
   $data=$request->validate(['user_id'=>['required','integer',\Illuminate\Validation\Rule::exists('users','id')->where('account_status','active')]]);
   app(ProjectService::class)->addPlanningMember($task->project,(int)$data['user_id'],$request->user());
   abort_unless($task->project->pm_user_id==(int)$data['user_id']||$task->project->memberships()->where('user_id',$data['user_id'])->exists(),422,'Add this person to the project team first.');
-  $task->assignees()->syncWithoutDetaching([(int)$data['user_id']]);
-  app(\App\Services\InboxService::class)->assigned($task,User::findOrFail($data['user_id']));
+  $attached = $task->assignees()->syncWithoutDetaching([(int)$data['user_id']]);
+  $person = User::findOrFail($data['user_id']);
+  app(\App\Services\InboxService::class)->assigned($task,$person);
   Audit::record('task.assigned',$task,['user_id'=>(int)$data['user_id']]);
+  if(count($attached['attached'] ?? [])) {
+   DB::afterCommit(fn() => $person->notify(new TaskReassignedNotification($task, $request->user(), 'assigned')));
+  }
   if($request->wantsJson())return response()->json(['success'=>true,'assignees'=>$task->assignees()->orderBy('name')->get(['users.id','users.name'])]);
   return back()->with('success','Task assigned.');
  }
@@ -418,7 +442,7 @@ class TaskController {
     public function requestUpdate(Request $request, Task $task, Access $access)
     {
         $user = $request->user();
-        if (!$user->isPmo() && !$access->canManageTask($user, $task->project)) {
+        if (!$access->project($user, $task->project, 'tasks.edit_all')) {
             abort(403, 'Unauthorized to request updates on this task.');
         }
 
@@ -466,7 +490,7 @@ class TaskController {
     public function reassign(Request $request, Task $task, Access $access)
     {
         $actor = $request->user();
-        if (!$actor->isPmo() && !$access->canManageTask($actor, $task->project)) {
+        if (!$access->project($actor, $task->project, 'tasks.assign')) {
             abort(403, 'Unauthorized to reassign tasks in this project.');
         }
 

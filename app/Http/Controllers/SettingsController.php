@@ -50,4 +50,10 @@ class SettingsController {
   \Illuminate\Support\Facades\Artisan::call('queue:retry',['id'=>[$data['uuid']]]);
   return back()->with('success','Failed notification queued for retry. A running worker is required to send it.');
  }
+
+ public function flushFailedProjectEmails(Request $request){
+  abort_unless($request->user()->isPmo(),403);
+  \Illuminate\Support\Facades\DB::table('failed_jobs')->where('queue','project-notifications')->delete();
+  return back()->with('success','Failed notifications cleared successfully.');
+ }
 }

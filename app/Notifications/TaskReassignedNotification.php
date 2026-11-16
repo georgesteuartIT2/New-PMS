@@ -21,10 +21,10 @@ class TaskReassignedNotification extends Notification implements ShouldQueue
         public ?string $eventKey = null
     ) {$this->onQueue('project-notifications');}
 
-    public function viaConnections(): array { return ['database'=>'sync']; }
+    public function viaConnections(): array { return ['database'=>'sync', 'mail'=>'sync']; }
     public function via(object $notifiable): array
     {
-        return $this->task->project->approval_stage==='planning' ? [] : ['database', 'mail'];
+        return ['database', 'mail'];
     }
 
     public function toArray(object $notifiable): array

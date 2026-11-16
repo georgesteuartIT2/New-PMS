@@ -182,9 +182,9 @@ class TaskBulkController
                             $previousUser=User::find($previousId);
                             if(!$previousUser)continue;
                             app(\App\Services\InboxService::class)->resolveTaskAssignment($task,$previousUser);
-                            if(in_array($project->status,['active','on_hold'])&&$project->approval_stage!=='planning')DB::afterCommit(fn()=>$previousUser->notify(new \App\Notifications\TaskReassignedNotification($task,$request->user(),'unassigned',null,'task_unassigned')));
+                            if(in_array($project->status,['active','on_hold']))DB::afterCommit(fn()=>$previousUser->notify(new \App\Notifications\TaskReassignedNotification($task,$request->user(),'unassigned',null,'task_unassigned')));
                         }
-                        if(in_array($project->status,['active','on_hold'])&&$project->approval_stage!=='planning'){
+                        if(in_array($project->status,['active','on_hold'])){
                             $person=User::findOrFail($uid);
                             $eventKey=$previousAssigneeIds->isNotEmpty()?'task_reassigned':'task_assigned';
                             DB::afterCommit(fn()=>$person->notify(new \App\Notifications\TaskReassignedNotification($task,$request->user(),'assigned',null,$eventKey)));
@@ -198,7 +198,7 @@ class TaskBulkController
                         $previousUser=User::find($previousId);
                         if(!$previousUser)continue;
                         app(\App\Services\InboxService::class)->resolveTaskAssignment($task,$previousUser);
-                        if(in_array($project->status,['active','on_hold'])&&$project->approval_stage!=='planning')DB::afterCommit(fn()=>$previousUser->notify(new \App\Notifications\TaskReassignedNotification($task,$request->user(),'unassigned',null,'task_unassigned')));
+                        if(in_array($project->status,['active','on_hold']))DB::afterCommit(fn()=>$previousUser->notify(new \App\Notifications\TaskReassignedNotification($task,$request->user(),'unassigned',null,'task_unassigned')));
                     }
                 }
 

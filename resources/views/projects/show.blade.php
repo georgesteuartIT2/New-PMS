@@ -402,19 +402,19 @@
                     <table class="clean-table project-tasks-full-table" style="width: 100%; border-collapse: collapse; text-align: left;">
                         <thead>
                             <tr style="background: #F8FAFC; border-bottom: 1px solid #E2E8F0; font-size: 12px; font-weight: 700; color: #475569;">
-                                <th style="padding: 12px 16px; width: 31%;">
+                                <th style="padding: 12px 14px; width: 28%;">
                                     <span class="workspace-task-column-heading">
                                         <span>Task / Subtask</span>
                                         <span class="workspace-result-count" data-task-result-count role="status" aria-live="polite"></span>
                                     </span>
                                 </th>
-                                <th style="padding: 12px 14px; width: 16%;">Assignee</th>
-                                <th style="padding: 12px 10px; width: 9%;">Priority</th>
-                                <th style="padding: 12px 14px; width: 10%;">Starts<span class="workspace-sr-only">Start Date &amp; Time</span></th>
-                                <th style="padding: 12px 14px; width: 10%;">Due<span class="workspace-sr-only">End Date &amp; Time</span></th>
-                                <th style="padding: 12px 14px; width: 9%;">Progress</th>
-                                <th style="padding: 12px 16px; width: 11%;">Status</th>
-                                <th class="task-actions-header" style="padding: 12px 8px; width: 4%;"><span class="workspace-sr-only">Task actions</span></th>
+                                <th style="padding: 12px 12px; width: 17%;">Assignee</th>
+                                <th style="padding: 12px 8px; width: 8.5%;">Priority</th>
+                                <th style="padding: 12px 12px; width: 10%;">Starts<span class="workspace-sr-only">Start Date &amp; Time</span></th>
+                                <th style="padding: 12px 12px; width: 11%;">Due<span class="workspace-sr-only">End Date &amp; Time</span></th>
+                                <th style="padding: 12px 10px; width: 9.5%;">Progress</th>
+                                <th style="padding: 12px 10px; width: 13%;">Status</th>
+                                <th class="task-actions-header" style="padding: 12px 6px; width: 3%;"><span class="workspace-sr-only">Task actions</span></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -530,52 +530,52 @@
                                                     data-update-url="{{ route('tasks.update', $task) }}"
                                                     data-current-priority="{{ $task->priority }}"
                                                     aria-label="Change priority for {{ $task->title }}"
-                                                    style="height: 28px; font-size: 11.5px; padding: 2px 6px 2px 8px; border-radius: 5px; font-weight: 600; cursor: pointer; background: #FFFFFF; border: 1px solid {{ $prioConfig['border'] }}; border-left: 3.5px solid {{ $prioConfig['accent'] }}; color: {{ $prioConfig['text'] }}; outline: none;">
+                                                    style="width: 80px; min-width: 80px; max-width: 80px; height: 28px; font-size: 11.5px; padding: 2px 20px 2px 8px; border-radius: 6px; font-weight: 600; cursor: pointer; background-color: #FFFFFF; background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E&quot;); background-repeat: no-repeat; background-position: right 6px center; appearance: none; -webkit-appearance: none; border: 1px solid {{ $prioConfig['border'] }}; border-left: 3.5px solid {{ $prioConfig['accent'] }}; color: {{ $prioConfig['text'] }}; outline: none; box-sizing: border-box;">
                                                 <option value="low" @selected($task->priority === 'low') style="background: #FFFFFF; color: #1E293B;">Low</option>
                                                 <option value="medium" @selected($task->priority === 'medium') style="background: #FFFFFF; color: #1E293B;">Medium</option>
                                                 <option value="high" @selected($task->priority === 'high') style="background: #FFFFFF; color: #1E293B;">High</option>
                                             </select>
                                         @else
-                                            <span style="font-size: 11px; padding: 2px 8px; border-radius: 5px; font-weight: 600; display: inline-block; background: #FFFFFF; border: 1px solid {{ $prioConfig['border'] }}; border-left: 3.5px solid {{ $prioConfig['accent'] }}; color: {{ $prioConfig['text'] }};">
+                                            <span class="priority-badge-static" style="width: auto; min-width: 65px; height: 26px; font-size: 11px; padding: 2px 8px; border-radius: 5px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; background: #FFFFFF; border: 1px solid {{ $prioConfig['border'] }}; border-left: 3.5px solid {{ $prioConfig['accent'] }}; color: {{ $prioConfig['text'] }}; box-sizing: border-box;">
                                                 {{ ucfirst($task->priority ?? 'medium') }}
                                             </span>
                                         @endif
                                     </td>
 
                                     <!-- Column 4: Start Date & Time -->
-                                    <td style="padding: 12px 14px; font-size: 12.5px;">
-                                        <div style="color: #22272B; font-weight: 500;">{{ $task->starts_at->format('d M Y') }}</div>
-                                        <div class="muted" style="font-size: 11px;">{{ $task->starts_at->format('h:i A') }}</div>
+                                    <td style="padding: 10px 12px; font-size: 12.5px; vertical-align: middle; white-space: nowrap;">
+                                        <div style="color: #1E293B; font-weight: 600; font-size: 12px; line-height: 1.3;">{{ $task->starts_at->format('d M Y') }}</div>
+                                        <div class="muted" style="font-size: 10.5px; line-height: 1.2;">{{ $task->starts_at->format('h:i A') }}</div>
                                     </td>
 
                                     <!-- Column 5: End Date & Time -->
-                                    <td style="padding: 12px 14px; font-size: 12.5px;" class="task-end-date-cell">
+                                    <td style="padding: 10px 12px; font-size: 12.5px; vertical-align: middle; white-space: nowrap;" class="task-end-date-cell">
                                         @if($isOverdue)
-                                            <div class="task-date-val" style="color: #DC2626; font-weight: 700;">{{ $task->ends_at->format('d M Y') }}</div>
-                                            <div style="display: flex; align-items: center; gap: 6px; margin-top: 3px;">
-                                                <span class="task-time-val" style="font-size: 11px; color: #DC2626; font-weight: 500;">{{ $task->ends_at->format('h:i A') }}</span>
-                                                <span class="badge-overdue" style="background: #FEE2E2; color: #DC2626; border: 1px solid #FECACA; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 2px;">
+                                            <div class="task-date-val" style="color: #DC2626; font-weight: 700; font-size: 12px; line-height: 1.3;">{{ $task->ends_at->format('d M Y') }}</div>
+                                            <div style="display: flex; align-items: center; gap: 5px; margin-top: 2px;">
+                                                <span class="task-time-val" style="font-size: 10.5px; color: #DC2626; font-weight: 500;">{{ $task->ends_at->format('h:i A') }}</span>
+                                                <span class="badge-overdue" style="background: #FEE2E2; color: #DC2626; border: 1px solid #FECACA; font-size: 9.5px; font-weight: 700; padding: 1px 5px; border-radius: 4px; display: inline-flex; align-items: center; gap: 2px;">
                                                     Overdue
                                                 </span>
                                             </div>
                                         @else
-                                            <div class="task-date-val" style="color: #22272B; font-weight: 500;">{{ $task->ends_at->format('d M Y') }}</div>
-                                            <div class="muted task-time-val" style="font-size: 11px;">{{ $task->ends_at->format('h:i A') }}</div>
+                                            <div class="task-date-val" style="color: #1E293B; font-weight: 600; font-size: 12px; line-height: 1.3;">{{ $task->ends_at->format('d M Y') }}</div>
+                                            <div class="muted task-time-val" style="font-size: 10.5px; line-height: 1.2;">{{ $task->ends_at->format('h:i A') }}</div>
                                         @endif
                                     </td>
 
                                     <!-- Column 6: Progress -->
-                                    <td style="padding: 12px 14px;">
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <div style="width: 50px; height: 5px; background: #E5E7EB; border-radius: 3px; overflow: hidden; flex-shrink: 0;">
+                                    <td style="padding: 10px 10px; vertical-align: middle; white-space: nowrap;">
+                                        <div class="task-progress-wrap" style="display: flex; align-items: center; gap: 7px; white-space: nowrap;">
+                                            <div class="task-progress-bar" style="width: 44px; height: 6px; background: #E2E8F0; border-radius: 3px; overflow: hidden; flex-shrink: 0;">
                                                 <div class="task-progress-fill" style="width: {{ $task->progress }}%; height: 100%; background: {{ $isOverdue ? '#DC2626' : '#315F58' }}; border-radius: 3px; transition: width 0.2s;"></div>
                                             </div>
-                                            <span class="task-progress-text" style="font-size: 12px; font-weight: 600; color: {{ $isOverdue ? '#DC2626' : '#374151' }};">{{ $task->progress }}%</span>
+                                            <span class="task-progress-text" style="font-size: 11.5px; font-weight: 600; color: {{ $isOverdue ? '#DC2626' : '#475569' }}; min-width: 26px; flex-shrink: 0;">{{ $task->progress }}%</span>
                                         </div>
                                     </td>
 
                                     <!-- Column 7: Status -->
-                                    <td class="task-status-cell" style="padding: 12px 10px;">
+                                    <td class="task-status-cell" style="padding: 10px 10px; vertical-align: middle; white-space: nowrap;">
                                         @if(!$hasChildren && app(\App\Services\Access::class)->task(auth()->user(),$task,'update') && app(\App\Services\Access::class)->project(auth()->user(),$project,'tasks.update_status') && $project->status==='active')
                                             <select class="quick-status-select"
                                                     data-task-id="{{ $task->id }}"
@@ -583,30 +583,30 @@
                                                     data-current-status="{{ $task->status }}"
                                                     aria-label="Status for {{ $task->title }}"
                                                     title="Change task status"
-                                                    style="{{ $isOverdue ? 'border-color: #FCA5A5; color: #DC2626; font-weight: 600;' : '' }}">
+                                                    style="width: 100%; min-width: 116px; max-width: 126px; height: 30px; font-size: 11px; font-weight: 600; padding: 2px 22px 2px 9px; border-radius: 6px; white-space: nowrap; cursor: pointer; appearance: none; -webkit-appearance: none; background-color: #FFFFFF; background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E&quot;); background-repeat: no-repeat; background-position: right 7px center; box-sizing: border-box; {{ $isOverdue ? 'border-color: #FCA5A5; color: #DC2626;' : '' }}">
                                                 @foreach(['todo' => 'To Do', 'in_progress' => 'In Progress', 'on_hold' => 'On Hold', 'completed' => 'Completed'] as $val => $lbl)
                                                     <option value="{{ $val }}" @selected($task->status === $val)>{{ $lbl }}</option>
                                                 @endforeach
                                             </select>
                                         @else
-                                            <div class="task-status-display">
-                                                <span class="uwt-status-pill status-{{ $task->status }}" @if($hasChildren) title="Parent task status is automatically calculated from its subtasks" @endif>
+                                            <div class="task-status-display" style="display: inline-flex; align-items: center; gap: 5px;">
+                                                <span class="uwt-status-pill status-{{ $task->status }}" style="white-space: nowrap;" @if($hasChildren) title="Parent task status is automatically calculated from its subtasks" @endif>
                                                     {{ ['todo'=>'To do','in_progress'=>'In progress','on_hold'=>'On hold','completed'=>'Completed'][$task->status] ?? $task->status }}
                                                 </span>
                                                 @if($hasChildren)
-                                                    <span class="task-status-auto" title="Parent task status is automatically calculated from its subtasks">Auto</span>
+                                                    <span class="task-status-auto" style="font-size: 9.5px; font-weight: 600; background: #F1F5F9; color: #64748B; border: 1px solid #CBD5E1; padding: 1px 5px; border-radius: 4px;" title="Parent task status is automatically calculated from its subtasks">Auto</span>
                                                 @endif
                                             </div>
                                         @endif
                                     </td>
 
                                     <!-- Column 8: Row actions -->
-                                    <td class="task-row-actions {{ $canDeleteTask ? 'has-actions' : 'no-actions' }}">
+                                    <td class="task-row-actions {{ $canDeleteTask ? 'has-actions' : 'no-actions' }}" style="padding: 10px 6px; text-align: center; vertical-align: middle;">
                                         @if($canDeleteTask)
-                                            <form method="POST" action="{{ route('tasks.destroy', $task) }}" onsubmit="return AppDialog.confirmAction(event,this,'Are you sure you want to delete \'{{ addslashes($task->title) }}\'? @if($hasChildren)All its subtasks will also be deleted. @endif This action cannot be undone.');">
+                                            <form method="POST" action="{{ route('tasks.destroy', $task) }}" onsubmit="return AppDialog.confirmAction(event,this,'Are you sure you want to delete \'{{ addslashes($task->title) }}\'? @if($hasChildren)All its subtasks will also be deleted. @endif This action cannot be undone.');" style="display: inline-flex; align-items: center; justify-content: center; margin: 0;">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn-delete-task-row" title="Delete task" aria-label="Delete {{ $task->title }}">
+                                                <button type="submit" class="btn-delete-task-row" title="Delete task" aria-label="Delete {{ $task->title }}" style="padding: 4px; border: none; background: transparent; color: #94A3B8; cursor: pointer; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center;">
                                                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                                         <polyline points="3 6 5 6 21 6"></polyline>
                                                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>

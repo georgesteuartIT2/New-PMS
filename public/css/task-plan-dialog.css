@@ -22,7 +22,7 @@
 #smart-task-plan-modal .stp-table{width:100%;min-width:1360px;table-layout:fixed;border-collapse:separate;border-spacing:0}
 #smart-task-plan-modal .stp-table th{height:34px!important;padding:6px 8px!important;font-size:12px!important;text-transform:none!important;letter-spacing:0!important;font-weight:600!important;background:#F5F6F7!important;color:#52645D!important;border-bottom:1px solid #DFE6E3!important}
 #smart-task-plan-modal .stp-table th:nth-child(1){width:44px!important}
-#smart-task-plan-modal .stp-table th:nth-child(2){width:auto!important;min-width:240px!important}
+#smart-task-plan-modal .stp-table th:nth-child(2){width:280px!important;min-width:240px!important}
 #smart-task-plan-modal .stp-table th:nth-child(3),#smart-task-plan-modal .stp-table th:nth-child(4){width:224px!important}
 #smart-task-plan-modal .stp-table th:nth-child(5){width:70px!important}
 #smart-task-plan-modal .stp-table th:nth-child(6){width:150px!important}

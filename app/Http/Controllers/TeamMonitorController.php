@@ -98,7 +98,7 @@ class TeamMonitorController
         $task = Task::with('project.memberships')->findOrFail($data['task_id']);
 
         // Check permission
-        if (!$actor->canViewPortfolio() && !$this->access->canManageTask($actor, $task->project)) {
+        if (!$this->access->project($actor, $task->project, 'tasks.assign')) {
             abort(403, 'Unauthorized to reassign tasks in this project.');
         }
 

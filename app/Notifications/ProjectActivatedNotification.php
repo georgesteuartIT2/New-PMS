@@ -14,14 +14,15 @@ class ProjectActivatedNotification extends Notification implements ShouldQueue {
  public function shouldSend(object $notifiable,string $channel):bool {
   if($channel!=='mail')return true;
   $project=Project::find($this->project->id);if(!$project || !$notifiable->isActive())return false;
-  return (!$project->approval_stage || $project->approval_stage==='ready') && in_array($project->status,['active','on_hold'],true) && $project->memberships()->where('user_id',$notifiable->id)->exists() && $notifiable->system_role==='user' && (int)$project->pm_user_id!==$notifiable->id;
+  $isMemberOrAssignee = $project->memberships()->where('user_id',$notifiable->id)->exists() || $project->tasks()->whereHas('assignees', fn($q) => $q->where('users.id', $notifiable->id))->exists();
+  return in_array($project->status,['active','on_hold'],true) && $isMemberOrAssignee && (int)$project->pm_user_id!==$notifiable->id;
  }
  public function toMail(object $notifiable):MailMessage {
-  $this->project->loadMissing('manager','subsidiary');
+  $this->project->loadMissing('manager','subsidiary','owner');
   $published=$this->eventKey==='plan_published';
-  return (new MailMessage)->subject(($published?'Project plan published':'Project activated').' | '.$this->project->name.' | GS NexusPM')->view(['html'=>'emails.project-update','text'=>'emails.project-update-text'],[
+  return (new MailMessage)->subject(($published?'Project plan published':'Project activated').' | '.$this->project->name.' | GS ProjectFlow')->view(['html'=>'emails.project-update','text'=>'emails.project-update-text'],[
    'project'=>$this->project,'recipient'=>$notifiable,'eyebrow'=>$published?'Plan published':'Ready to begin','heading'=>$published?'The project plan is published':'Your project is ready to start',
-   'intro'=>$published ? 'The Project Manager published the plan. Review the schedule and your assigned tasks.' : ($this->project->approval_stage ? 'The Project Manager has saved the project plan. You are part of the team. Review the schedule and your assigned tasks.' : 'The Project Manager has accepted this project. You are part of the project team and can now review the plan and your assigned work.'),
+   'intro'=>$published ? 'The Project Manager published the plan for '.$this->project->name.'. Review the schedule and your assigned tasks.' : ($this->project->approval_stage ? 'The Project Manager has saved the project plan. You are part of the team. Review the schedule and your assigned tasks.' : 'The Project Manager has accepted this project. You are part of the project team and can now review the plan and your assigned work.'),
    'actionLabel'=>'Open project','actionUrl'=>route('projects.show',$this->project->id),
    'guidance'=>'Sign in with your work account to view the project. Contact your Project Manager if you need help with your tasks.',
   ]);

@@ -35,12 +35,13 @@
       const res=await fetch(select.dataset.updateUrl,{method:'PATCH',headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]')?.content||''},body:JSON.stringify({priority:select.value})});
       if(!res.ok){const data=await res.json();throw Error(data.message||'Could not save priority.');}
        select.dataset.currentPriority=select.value;
+       select.className='quick-priority-select priority-select-'+select.value;
        const styles={
            high:'border-color:#FECACA;border-left-color:#DC2626;color:#B91C1C;',
            low:'border-color:#E2E8F0;border-left-color:#64748B;color:#475569;',
            medium:'border-color:#FDE68A;border-left-color:#D97706;color:#B45309;'
        };
-       select.style.cssText='height: 28px; font-size: 11.5px; padding: 2px 6px 2px 8px; border-radius: 5px; font-weight: 600; cursor: pointer; background: #FFFFFF; border: 1px solid; border-left-width: 3.5px; outline: none; '+(styles[select.value]||styles.medium);
+       select.style.cssText='width: 80px; min-width: 80px; max-width: 80px; height: 28px; font-size: 11.5px; padding: 2px 20px 2px 8px; border-radius: 6px; font-weight: 600; cursor: pointer; background-color: #FFFFFF; background-image: url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'10\' height=\'10\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'%2364748B\' stroke-width=\'2.5\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3E%3Cpolyline points=\'6 9 12 15 18 9\'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 6px center; appearance: none; -webkit-appearance: none; border: 1px solid; border-left-width: 3.5px; outline: none; box-sizing: border-box; '+(styles[select.value]||styles.medium);
        const feedback=document.getElementById('progress-save-feedback');if(feedback)feedback.textContent='Task priority updated to '+select.value+'.';
   }catch(error){select.value=old;alert(error.message);}finally{select.disabled=false;}
  });

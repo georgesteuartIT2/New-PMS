@@ -5,15 +5,20 @@ namespace App\Http\Controllers;
 use App\Models\{Project, ProjectRole, ProjectRolePermission};
 use App\Services\{Access, Audit};
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class RoleController
 {
     public function index(Project $project, Access $access)
     {
+        $available = collect(Access::CATALOG)
+            ->reject(fn (array $definition) => $definition['category'] === 'company')
+            ->all();
+
         return view('projects.permissions', [
             'project' => $project,
             'roles' => ProjectRole::orderBy('is_system', 'desc')->orderBy('name')->get(),
-            'available' => Access::PERMISSIONS,
+            'available' => $available,
             'catalog' => $access->catalogGrouped(),
             'overrides' => ProjectRolePermission::where('project_id', $project->id)->get()->groupBy('project_role_id'),
         ]);
@@ -27,10 +32,19 @@ class RoleController
 
         $roles = ProjectRole::all();
 
-        foreach ($roles as $role) {
+        DB::transaction(function () use ($roles, $project, $data) {
+            // Replace the complete project policy so legacy aliases cannot
+            // silently override a newly unchecked canonical permission.
+            ProjectRolePermission::where('project_id', $project->id)->delete();
+
+            foreach ($roles as $role) {
             // Check all permissions configured
-            foreach (array_keys(Access::PERMISSIONS) as $permission) {
-                $checked = (bool) data_get($data, "permissions.{$role->id}.{$permission}", false);
+            $projectPermissions = collect(Access::CATALOG)
+                ->reject(fn (array $definition) => $definition['category'] === 'company')
+                ->keys();
+
+            foreach ($projectPermissions as $permission) {
+                $checked = (bool) ($data['permissions'][$role->id][$permission] ?? false);
                 ProjectRolePermission::updateOrCreate(
                     [
                         'project_id' => $project->id,
@@ -42,7 +56,8 @@ class RoleController
                     ]
                 );
             }
-        }
+            }
+        });
 
         Audit::record('project.permissions_updated', $project, [
             'project_code' => $project->code,

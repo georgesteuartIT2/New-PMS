@@ -315,7 +315,7 @@ class ProjectController {
       'canManage'=>$access->canManageTask($user,$project) && ($user->isPmo() || in_array($project->status, ['draft','pending','active','on_hold'], true)) && $project->status!=='archived',
       'canTeam'=>$access->project($user,$project,'manage_team'),
       'canRequestClosure'=>$access->project($user,$project,'project.closure_request') || $access->project($user,$project,'edit_project'),
-      'canApproveClosure'=>$user->isPmo() && $access->project($user,$project,'project.closure_approve'),
+      'canApproveClosure'=>$access->project($user,$project,'project.closure_approve'),
       'users'=>User::where('account_status','active')->where(function($query) use ($user, $isPmoOperationalLead) {
           $query->where('system_role','user');
           if ($isPmoOperationalLead) $query->orWhere('id', $user->id);
@@ -429,7 +429,7 @@ class ProjectController {
    $project->setRawAttributes($locked->getAttributes(),true);
    $invitation=ProjectInvitation::where('project_id',$project->id)->where('user_id',$request->user()->id)->where('status','pending')->lockForUpdate()->latest('id')->firstOrFail();
    $status=$data['decision']==='accept'?'active':'declined';
-   $project->update(['status'=>$status]);
+   $project->update(['status'=>$status,'approval_stage'=>$data['decision']==='accept'?'planning':'pm_declined']);
    if($status==='active' && !$project->baseline_captured_at)$service->captureBaseline($project);
    $invitation->update(['status'=>$data['decision']==='accept'?'accepted':'declined','responded_at'=>now(),'decline_reason'=>$data['decline_reason']??null]);
    if($data['decision']==='accept')DB::afterCommit(function()use($project){
@@ -443,9 +443,9 @@ class ProjectController {
   $message=$data['decision']==='accept'?'Project accepted and activated.':'Project declined. PMO can reassign it.';
   if($request->expectsJson()){
    $request->session()->flash('success',$message);
-   return response()->json(['message'=>$message,'decision'=>$data['decision'],'redirect'=>route('dashboard').'#project-approvals']);
+   return response()->json(['message'=>$message,'decision'=>$data['decision'],'redirect'=>$data['decision']==='accept'?route('projects.plan.setup',$project):route('dashboard').'#project-approvals']);
   }
-  return redirect()->route('dashboard')->with('success',$message);
+  return redirect($data['decision']==='accept'?route('projects.plan.setup',$project):route('dashboard'))->with('success',$message);
  }
  public function addMember(Request $request,Project $project,Access $access){
   abort_unless($access->project($request->user(),$project,'manage_team'),403);

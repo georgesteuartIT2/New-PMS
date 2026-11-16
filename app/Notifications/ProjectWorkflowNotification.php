@@ -31,12 +31,13 @@ class ProjectWorkflowNotification extends Notification implements ShouldQueue
     {
         if (! $person->isActive()) {
             return false;
-        }$p = Project::find($this->project->id);
+        }
+        $p = Project::find($this->project->id);
         if (! $p) {
             return false;
         }
         if ($this->kind === 'owner_request') {
-            return $p->approval_stage === 'owner' && (int) $p->owner_user_id === $person->id && (string) $p->updated_at === $this->version;
+            return $p->approval_stage === 'owner' && (int) $p->owner_user_id === $person->id;
         }
 
         return true;
@@ -55,6 +56,6 @@ class ProjectWorkflowNotification extends Notification implements ShouldQueue
 
     public function toMail(object $person): MailMessage
     {
-        return (new MailMessage)->subject(($this->kind === 'owner_request' ? 'Action required: project owner review' : 'Project assignment update').' | '.$this->project->name)->view(['html' => 'emails.project-update', 'text' => 'emails.project-update-text'], ['project' => $this->project->loadMissing('manager', 'subsidiary'), 'recipient' => $person, 'eyebrow' => 'Project update', 'heading' => $this->kind === 'owner_request' ? 'Review your project owner assignment' : 'Project assignment update', 'intro' => $this->message, 'actionLabel' => 'Review project', 'actionUrl' => route('projects.show', $this->project->id), 'guidance' => 'Sign in to review the details and the next action.']);
+        return (new MailMessage)->subject(($this->kind === 'owner_request' ? 'Action required: project owner review' : 'Project assignment update').' | '.$this->project->name.' | GS ProjectFlow')->view(['html' => 'emails.project-update', 'text' => 'emails.project-update-text'], ['project' => $this->project->loadMissing('manager', 'subsidiary', 'owner'), 'recipient' => $person, 'eyebrow' => 'Project update', 'heading' => $this->kind === 'owner_request' ? 'Review your project owner assignment' : 'Project assignment update', 'intro' => $this->message, 'actionLabel' => 'Review project', 'actionUrl' => route('projects.show', $this->project->id), 'guidance' => 'Sign in to review the details and the next action.']);
     }
 }

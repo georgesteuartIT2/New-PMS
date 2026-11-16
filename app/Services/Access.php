@@ -153,6 +153,25 @@ class Access {
     }
 
     /**
+     * Return the saved permissions for a project role.
+     *
+     * Older PM/Owner records were created before role policies were persisted,
+     * so a NULL policy means "use the built-in full project access". An empty
+     * array is deliberately different: it is an explicit policy saved by an
+     * administrator after clearing every permission.
+     */
+    private function projectRolePermissions(ProjectRole $role): array {
+        if ($role->default_permissions === null && in_array($role->slug, ['pm', 'po'], true)) {
+            return collect(self::CATALOG)
+                ->reject(fn (array $definition) => $definition['category'] === 'company')
+                ->keys()
+                ->all();
+        }
+
+        return $role->default_permissions ?? [];
+    }
+
+    /**
      * Check if user has a company-wide permission (e.g. 'projects.create', 'reports.portfolio')
      */
     public function hasCompanyPermission(User $user, string $permission): bool {
@@ -280,10 +299,11 @@ class Access {
                     return (bool) $override->allowed;
                 }
 
-                // Check the saved default permissions for this lead role.
-                if (!empty($leadRole->default_permissions)) {
+                // Check the saved policy, including the legacy PM/Owner default.
+                $leadPermissions = $this->projectRolePermissions($leadRole);
+                if (!empty($leadPermissions)) {
                     foreach ($matching as $k) {
-                        if (in_array($k, $leadRole->default_permissions, true)) {
+                        if (in_array($k, $leadPermissions, true)) {
                             return true;
                         }
                     }
@@ -333,9 +353,10 @@ class Access {
 
 
             // Check role default permissions
-            if (!empty($role->default_permissions)) {
+            $rolePermissions = $this->projectRolePermissions($role);
+            if (!empty($rolePermissions)) {
                 foreach ($matching as $k) {
-                    if (in_array($k, $role->default_permissions, true)) {
+                    if (in_array($k, $rolePermissions, true)) {
                         if ($project->status === 'archived' && !in_array($canonical, ['project.view', 'tasks.view_all', 'project.gantt_view', 'project.reports_view'], true)) {
                             continue;
                         }

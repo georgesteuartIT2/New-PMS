@@ -26,8 +26,11 @@ class TaskAssignmentController {
    }
    foreach($tasks as $task){
     $new=$task->assignees()->syncWithoutDetaching([$person->id]);
-    if(count($new['attached'])){Audit::record('task.assigned',$task,['user_id'=>$person->id]);
-     if(in_array($locked->status,['active','on_hold'])&&$locked->approval_stage!=='planning')DB::afterCommit(fn()=>$person->notify(new TaskReassignedNotification($task,$request->user())));
+    if(count($new['attached'])){
+     Audit::record('task.assigned',$task,['user_id'=>$person->id]);
+     if(in_array($locked->status,['active','on_hold'])){
+      DB::afterCommit(fn()=>$person->notify(new TaskReassignedNotification($task,$request->user(),'assigned')));
+     }
     }
    }
    return $tasks->map(fn($task)=>['id'=>$task->id,'assignees'=>$task->assignees()->orderBy('name')->get(['users.id','users.name'])]);

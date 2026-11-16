@@ -78,7 +78,7 @@ class TaskMonitorController
     public function requestUpdate(Request $request, Task $task)
     {
         $user = $request->user();
-        if (!$user->canViewPortfolio() && !$this->access->canManageTask($user, $task->project)) {
+        if (!$this->access->project($user, $task->project, 'tasks.edit_all')) {
             abort(403, 'Unauthorized to request updates on this task.');
         }
 

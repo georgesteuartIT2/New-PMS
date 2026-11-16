@@ -13,7 +13,7 @@
 
 <div class="card">
     <div style="background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 6px; padding: 12px 16px; margin-bottom: 20px; font-size: 13px;">
-        <b>Project Scope Overrides:</b> Overrides configured here apply <i>only to this specific project</i> and do not affect company-wide defaults. For example, granting <code>tasks.view_all</code> to Team Members allows them to view all tasks in this project plan without gaining access to edit unrelated tasks or access other company projects.
+        <b>Project-specific access:</b> These settings apply only to this project. Project, task and approval permissions from the main permission catalog are included below. Company-wide administration permissions remain managed in Roles &amp; Access.
     </div>
 
     <form method="post" action="{{ route('roles.update', $project) }}">
@@ -25,7 +25,7 @@
                 <thead>
                     <tr>
                         <th style="min-width: 220px;">Permission</th>
-                        @foreach($roles->where('slug', '!=', 'pm') as $role)
+                        @foreach($roles as $role)
                             <th style="text-align: center; min-width: 130px;">
                                 <div>{{ $role->name }}</div>
                                 <small class="muted" style="font-weight: normal; font-size: 11px;">{{ $role->slug }}</small>
@@ -34,23 +34,24 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($available as $key => $label)
+                    @foreach($available as $key => $definition)
+                        @php
+                            $label = $definition['name'];
+                        @endphp
                         <tr>
                             <td>
                                 <b>{{ $label }}</b>
+                                <div style="font-size: 12px; color: #6B7280; margin-top: 3px;">{{ $definition['description'] }}</div>
                                 <div style="font-size: 11px; color: #6B7280; font-family: monospace;">{{ $key }}</div>
                             </td>
-                            @foreach($roles->where('slug', '!=', 'pm') as $role)
+                            @foreach($roles as $role)
                                 @php
-                                    $current = $overrides->get($role->id)?->firstWhere('permission', $key);
-                                    if ($current === null) {
-                                        // check alias
-                                        $alias = \App\Services\Access::ALIASES[$key] ?? null;
-                                        if ($alias) {
-                                            $current = $overrides->get($role->id)?->firstWhere('permission', $alias);
-                                        }
-                                    }
-                                    $allowed = $current ? (bool)$current->allowed : in_array($key, $role->default_permissions ?? [], true);
+                                    $matchingKeys = app(\App\Services\Access::class)->matchingKeys($key);
+                                    $current = $overrides->get($role->id)?->first(fn($item) => in_array($item->permission, $matchingKeys, true));
+                                    $roleDefaults = $role->default_permissions ?? [];
+                                    $allowed = $current
+                                        ? (bool)$current->allowed
+                                        : collect($matchingKeys)->contains(fn($permission) => in_array($permission, $roleDefaults, true));
                                 @endphp
                                 <td style="text-align: center;">
                                     <input type="checkbox" 

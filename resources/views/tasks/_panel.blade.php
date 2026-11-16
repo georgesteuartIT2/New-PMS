@@ -49,7 +49,7 @@
     <div class="panel-section">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
             <b>Subtasks ({{ $task->children->count() }})</b>
-            @if($canManage)
+            @if($canCreate)
                 <button type="button" class="btn btn-outline btn-xs btn-row-add-subtask" data-parent-id="{{ $task->id }}" data-parent-num="{{ $task->code }}" data-parent-title="{{ $task->title }}">+ Subtask</button>
             @endif
         </div>
@@ -118,14 +118,14 @@
             <label>Progress (%)
                 <input type="number" name="progress" min="0" max="100" value="{{ $task->progress }}">
             </label>
-            <label>Assigned member
+            @if($canAssign)<label>Assigned member
                 <select name="assigned_user_id">
                     <option value="">Unassigned</option>
                     @foreach($task->project->memberships->unique('user_id') as $member)
                         <option value="{{ $member->user_id }}" @selected($task->assignees->pluck('id')->contains($member->user_id))>{{ $member->user?->name }}</option>
                     @endforeach
                 </select>
-            </label>
+            </label>@endif
         </div>
         <label>Description
             <textarea name="description" rows="2">{{ $task->description }}</textarea>
@@ -134,7 +134,7 @@
     </form>
 </details>
 
-<details class="panel-inner-details" data-panel-section="assignment"><summary>Change assignment</summary>
+@if($canAssign)<details class="panel-inner-details" data-panel-section="assignment"><summary>Change assignment</summary>
     <form method="post" action="{{ route('tasks.assign', $task) }}" class="stack">
         @csrf
         <label>Assign another person
@@ -156,6 +156,7 @@
         </form>
     @endforeach
 </details>
+@endif
 @endif
 
 @if($task->baseline_starts_at && $task->baseline_ends_at)
@@ -189,7 +190,7 @@
                         <span style="color: #22272B; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px;">{{ $dependency->title }}</span>
                         <small class="muted" style="display: block; font-size: 11px;">Finishes: {{ $dependency->ends_at->format('d M Y') }}</small>
                     </div>
-                    @if($canManage)
+                    @if($canManageDependencies)
                         <form method="post" action="{{ route('tasks.dependencies.delete', [$task, $dependency]) }}" onsubmit="return AppDialog.confirmAction(event,this,'Remove dependency on {{ $dependency->code }}?')">
                             @csrf
                             @method('DELETE')
@@ -203,7 +204,7 @@
         <p class="muted" style="font-size: 12px; margin-bottom: 8px;">No predecessor dependencies. This task can start independently.</p>
     @endif
 
-    @if($canManage)
+    @if($canManageDependencies)
         @if(isset($candidateTasks) && $candidateTasks->isNotEmpty())
             <form method="post" action="{{ route('tasks.dependencies.store', $task) }}" style="display: flex; gap: 6px; align-items: center; margin-top: 8px;">
                 @csrf
@@ -235,7 +236,7 @@
             <small>Responsible party: {{ $task->openDelay->responsible_party_name ?: ucwords($task->openDelay->responsible_party_type) }}</small>
             @if($task->openDelay->revised_expected_end_at)<small>Revised target: {{ $task->openDelay->revised_expected_end_at->format('d M Y, h:i A') }}</small>@endif
         </div>
-        @if($canManage)
+        @if($canResolveDelay)
             <form method="post" action="{{ route('tasks.delays.resolve', $task->openDelay) }}">
                 @csrf
                 @method('PATCH')
@@ -245,7 +246,7 @@
     @else
         <p class="muted">No blocker has been reported. An overdue date alone does not establish the reason.</p>
     @endif
-    @if($canUpdate)
+    @if($canReportDelay)
         <details class="panel-inner-details">
             <summary>{{ $task->openDelay ? 'Update delay report' : '+ Report a delay' }}</summary>
             <form method="post" action="{{ route('tasks.delays.store', $task) }}" class="stack">
@@ -322,7 +323,7 @@
     @empty
         <p class="muted">No comments yet.</p>
     @endforelse
-    @if($canUpdate)
+    @if($canComment)
         <form method="post" action="{{ route('tasks.comments.store', $task) }}" class="stack">
             @csrf
             <label>Add a comment
@@ -335,7 +336,7 @@
 
 <div class="panel-section" style="display: flex; justify-content: space-between; align-items: center;">
     <a class="text-action" href="{{ route('tasks.show', $task) }}">Open full task page →</a>
-    @if((auth()->user()->isPmo() || (!auth()->user()->isAdminViewer() && $task->project->pm_user_id === auth()->id())) && $task->project->status !== 'archived')
+    @if($canDelete)
         <form method="post" action="{{ route('tasks.destroy', $task) }}" onsubmit="return AppDialog.confirmAction(event,this,'Are you sure you want to delete this task? @if($task->children()->exists())All its subtasks will also be deleted. @endif This cannot be undone.');">
             @csrf
             @method('DELETE')

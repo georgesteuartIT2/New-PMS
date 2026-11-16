@@ -70,7 +70,6 @@
                         ['label' => 'Team Monitor', 'url' => route('pmo.team-monitor'), 'active' => request()->routeIs('pmo.team-monitor*', 'team-monitor*'), 'icon' => 'M4 19V9M10 19V5M16 19v-7M22 21H2'],
                         ['label' => 'Calendar', 'url' => route('calendar.index'), 'active' => request()->routeIs('calendar.*'), 'icon' => 'M8 3v4M16 3v4M3 10h18M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z'],
                         ['label' => 'People', 'url' => route('users.index'), 'active' => request()->routeIs('users.*'), 'icon' => 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8'],
-                        ['label' => 'Reports', 'url' => route('reports.index'), 'active' => request()->routeIs('reports.*', 'gantt.portfolio'), 'icon' => 'M4 19V9M10 19V5M16 19v-7M22 21H2'],
                         ['label' => 'Activity log', 'url' => route('activity.index'), 'active' => request()->routeIs('activity.*'), 'icon' => 'M9 5H5v16h14V5h-4M9 3h6v4H9zM8 12h8M8 16h5'],
                     ];
                     if ($navigationHasOwnProjectWork) {

@@ -11,10 +11,11 @@
 #plan-start-dialog .flow-plan-mode-section{display:grid;gap:10px}
 #plan-start-dialog .flow-plan-mode-section>div:first-child{margin:0!important}#plan-start-dialog .flow-plan-mode-section>div:first-child h2{color:#1D2925;font-size:14px!important}#plan-start-dialog .flow-plan-mode-section>div:first-child span{font-size:10.5px!important}
 #plan-start-dialog .plan-method-guidance{max-width:640px;margin:4px 0 0;color:#6E7D77;font-size:11px;line-height:1.45}#plan-start-dialog .plan-method-guidance b{color:#40544C;font-weight:650}
-#plan-start-dialog .flow-choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0!important}
-#plan-start-dialog .flow-choices .flow-choice{position:relative;display:grid!important;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:11px;min-height:70px!important;padding:11px 13px!important;border:1px solid #DDE5E1!important;border-radius:11px!important;background:#FFF!important;box-shadow:none!important;text-align:left;transition:border-color .15s,background .15s,box-shadow .15s}
+#plan-start-dialog .flow-choices{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:0!important}
+#plan-start-dialog .flow-choices .flow-choice{position:relative;display:flex!important;align-items:flex-start;justify-content:center;flex-direction:column;gap:4px;min-height:64px!important;height:auto!important;padding:9px 12px!important;border:1px solid #DDE5E1!important;border-radius:9px!important;background:#FFF!important;box-shadow:none!important;text-align:left;transition:border-color .15s,background .15s,box-shadow .15s}
+#plan-start-dialog .flow-choices .flow-choice > span{display:flex;flex-direction:column;gap:6px;width:100%}
 #plan-start-dialog .flow-choices .flow-choice:hover{border-color:#9DB8AE!important;background:#FBFDFC!important}#plan-start-dialog .flow-choices .flow-choice.is-selected{border-color:#3C7468!important;background:#F1F7F4!important;box-shadow:0 0 0 1px #3C7468!important}
-#plan-start-dialog .flow-choices b{color:#1D2925;font-size:12.5px}#plan-start-dialog .flow-choices small{margin-top:2px;color:#708079;font-size:10.5px;line-height:1.35}
+#plan-start-dialog .flow-choices b{color:#1D2925;font-size:15px;line-height:1.3;letter-spacing:-.01em}#plan-start-dialog .flow-choices small{margin-top:0;color:#708079;font-size:12px;line-height:1.45}
 #plan-start-dialog .plan-method-icon{display:grid;place-items:center;width:32px;height:32px;border-radius:8px;background:#F0F5F3;color:#426B61}#plan-start-dialog .flow-choice.is-selected .plan-method-icon{background:#DDEDE7;color:#24594E}
 #plan-start-dialog .plan-method-action{display:inline-flex;align-items:center;gap:4px;color:#527168;font-size:10px;font-weight:650;white-space:nowrap}#plan-start-dialog .flow-choice:hover .plan-method-action{color:#24594E}
 #plan-start-dialog #blank-plan-subpanel[hidden],#plan-start-dialog #template-plan-subpanel[hidden]{display:none!important}

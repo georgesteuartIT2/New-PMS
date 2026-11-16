@@ -129,6 +129,7 @@ Route::middleware(['auth','account.active'])->group(function(){
    Route::get('/users/{user}',[\App\Http\Controllers\UserDetailsController::class,'show'])->whereNumber('user')->name('users.show');
    Route::put('/settings/email',[\App\Http\Controllers\SettingsController::class,'updateEmail'])->name('settings.email.update');
    Route::post('/settings/email/retry',[\App\Http\Controllers\SettingsController::class,'retryProjectEmail'])->name('settings.email.retry');
+   Route::post('/settings/email/flush',[\App\Http\Controllers\SettingsController::class,'flushFailedProjectEmails'])->name('settings.email.flush');
    Route::post('/settings/email/test',[\App\Http\Controllers\SettingsController::class,'testEmail'])->middleware('throttle:5,1')->name('settings.email.test');
    Route::get('/settings',[\App\Http\Controllers\SettingsController::class,'system'])->name('settings.system');
    Route::get('/roles',[\App\Http\Controllers\RoleDirectoryController::class,'index'])->name('role-directory.index');
