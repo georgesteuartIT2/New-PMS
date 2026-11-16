@@ -650,6 +650,7 @@ class UserTaskMonitoringService
                 'remaining_effort' => $t->estimated_hours ? round($t->estimated_hours * (1 - $t->progress / 100), 1) . 'h' : 'Not estimated',
                 'can_manage' => $canManage,
                 'eligible_members' => $members,
+                'project_id' => $t->project_id,
                 'panel_url' => route('tasks.panel', $t),
             ];
         })->values()->all();

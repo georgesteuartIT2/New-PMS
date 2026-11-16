@@ -168,13 +168,6 @@
                                                     Duplicate
                                                 </button>
                                             </form>
-                                            <form method="POST" action="{{ route('templates.archive', $template) }}" style="margin: 0;">
-                                                @csrf
-                                                @method('PATCH')
-                                                <button type="submit" style="display: block; width: 100%; text-align: left; padding: 6px 12px; font-size: 12.5px; color: #22272B; background: none; border: none; cursor: pointer;">
-                                                    {{ $template->isArchived() ? 'Restore' : 'Archive' }}
-                                                </button>
-                                            </form>
                                             <hr style="margin: 4px 0; border: none; border-top: 1px solid #E2E8F0;">
                                             <form method="POST" action="{{ route('templates.destroy', $template) }}" style="margin: 0;" onsubmit="return AppDialog.confirmAction(event,this,'Are you sure you want to delete template \'{{ $template->name }}\'?')">
                                                 @csrf

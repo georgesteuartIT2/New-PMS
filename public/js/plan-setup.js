@@ -163,6 +163,27 @@
 
     function refreshPlanIndicators() {
         const tasks = currentPlanTasks();
+        const team = document.getElementById('plan-task-team');
+        if (team) {
+            const people = new Map();
+            tasks.forEach(task => {
+                const id = task.assignee_id || task.assigned_user_id;
+                if (!id) return;
+                const user = (window.PLAN_SETUP_CONFIG?.users || []).find(person => String(person.id) === String(id));
+                const person = people.get(String(id)) || {name:user?.name || task.assignee_name || task.assignee_email || 'Assigned team member',count:0};
+                person.count++;people.set(String(id),person);
+            });
+            team.replaceChildren();team.hidden = !people.size;
+            if (people.size) {
+                const heading = document.createElement('strong');heading.textContent='Team members assigned to tasks';team.append(heading);
+                people.forEach(person => {
+                    const row=document.createElement('div');row.className='plan-task-team-row';
+                    const name=document.createElement('span');name.textContent=person.name;
+                    const detail=document.createElement('small');detail.textContent='Team member · '+person.count+' '+(person.count===1?'task':'tasks');
+                    row.append(name,detail);team.append(row);
+                });
+            }
+        }
         const parentReferences = new Set(tasks.map(task => String(task.parent_code || '')).filter(Boolean));
         const parentIds = new Set(tasks.map(task => String(task.parent_task_id || '')).filter(Boolean));
         const leaves = tasks.filter(task => !parentReferences.has(String(task.code || '')) && !parentIds.has(String(task.id || '')));
@@ -282,6 +303,7 @@
         window.SmartTaskPlan.canManage = true;
         window.SmartTaskPlan.canCreateProject = false;
         window.SmartTaskPlan.localPlanSave = function (payload) {
+            payload = {...(window.PLAN_SETUP_CONFIG?.selectedTemplate || {}), ...payload};
             if (blankPlanData) {
                 blankPlanData.value = JSON.stringify(payload);
             }
@@ -294,9 +316,15 @@
                 manualBlankLabel.textContent = '✏️ Edit prepared tasks (' + (payload.tasks || []).length + ')';
             }
             // Switch to blank mode if not already
-            if (modeInput.value !== 'blank') {
-                blankBtn?.click();
-            }
+            const templateId = window.PLAN_SETUP_CONFIG?.selectedTemplateId || templateInput?.value;
+            const usesTemplate = !!templateId;
+            modeInput.value = usesTemplate ? 'template' : 'blank';
+            if (templateInput) { templateInput.disabled = !usesTemplate; if (usesTemplate) templateInput.value = templateId; }
+            blankBtn?.classList.toggle('is-selected', !usesTemplate);
+            blankBtn?.setAttribute('aria-pressed', String(!usesTemplate));
+            chooseTemplateBtn?.classList.toggle('is-selected', usesTemplate);
+            chooseTemplateBtn?.setAttribute('aria-pressed', String(usesTemplate));
+            if (templateSubpanel) templateSubpanel.hidden = !usesTemplate;
             updatePublishBtnState();
             scheduleDraft();
         };
@@ -393,8 +421,21 @@
         const config = window.PLAN_SETUP_CONFIG || {};
         if (config.selectedTemplateId) {
             let draft;try{draft=JSON.parse(blankPlanData?.value||'null');}catch{}
-            if(draft)window.SmartTaskPlan.openEdit(draft,draft.tasks);
-            else window.SmartTaskPlan.openEdit({id:config.selectedTemplateId},null);
+            const metadata = {
+                name: config.projectName || 'Project plan',
+                estimated_duration: 14,
+                duration_unit: 'working_days',
+                working_hours: '09:00 - 17:00',
+                reference_start_date: startsOnInput?.value || new Date().toISOString().split('T')[0],
+                ...(config.selectedTemplate || {})
+            };
+            if (draft && Array.isArray(draft.tasks)) {
+                const restored = {...metadata, ...draft};
+                restored.name = draft.name || metadata.name;
+                restored.estimated_duration = draft.estimated_duration || metadata.estimated_duration || 14;
+                restored.duration_unit = draft.duration_unit || metadata.duration_unit || 'working_days';
+                window.SmartTaskPlan.openEdit(restored, draft.tasks);
+            } else window.SmartTaskPlan.openEdit(metadata, null);
         }
     });
 

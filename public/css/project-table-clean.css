@@ -1,0 +1,67 @@
+#projects-list-container{border:1px solid #dfe7e2!important;border-radius:12px!important;box-shadow:none!important;overflow:visible}
+#projects-list-container .table-wrap{border-radius:12px;overflow-x:auto}
+#projects-list-container .projects-table{width:100%!important;min-width:1180px!important;border-collapse:collapse;table-layout:fixed!important}
+#projects-list-container .projects-table th:nth-child(1){width:23%!important}
+#projects-list-container .projects-table th:nth-child(2){width:21%!important}
+#projects-list-container .projects-table th:nth-child(3){width:11%!important}
+#projects-list-container .projects-table th:nth-child(4){width:15%!important}
+#projects-list-container .projects-table th:nth-child(5){width:11%!important}
+#projects-list-container .projects-table th:nth-child(6){width:13%!important}
+#projects-list-container .projects-table th:nth-child(7){width:210px!important}
+#projects-list-container .project-title-cell{min-width:0!important;max-width:100%!important}
+#projects-list-container .project-lead-line strong{overflow-wrap:normal!important;word-break:normal!important}
+#projects-list-container .budget-compact-plan{white-space:nowrap!important;font-variant-numeric:tabular-nums}
+#projects-list-container .projects-table th{padding:13px 16px!important;background:#f7f9f8!important;color:#65746d!important;font-size:12px!important;font-weight:600!important;white-space:nowrap;border-bottom:1px solid #e2e8e4}
+#projects-list-container .projects-table td{padding:16px!important;vertical-align:middle!important;border-bottom:1px solid #edf0ee!important;background:#fff!important;font-size:13px;line-height:1.45}
+#projects-list-container .projects-table tbody tr:last-child td{border-bottom:0!important}
+#projects-list-container .projects-table tbody tr:hover td{background:#f8fbf9!important}
+#projects-list-container .strong-link{font-size:14px!important;font-weight:600!important;color:#315f58!important;line-height:1.4}
+#projects-list-container .project-code-sub{margin-top:5px!important;font-size:11px!important;color:#89958f!important;line-height:1.4;font-family:inherit!important}
+#projects-list-container .sub-health-delay,#projects-list-container .sub-health-at-risk{display:none!important}
+#projects-list-container .project-lead-list{display:grid;gap:5px}
+#projects-list-container .project-lead-line{display:grid;grid-template-columns:48px minmax(0,1fr);gap:8px;align-items:baseline}
+#projects-list-container .project-lead-line small{font-size:11px!important;color:#819087!important}
+#projects-list-container .project-lead-line strong{font-size:12px!important;font-weight:500!important;line-height:1.4;color:#33443c}
+#projects-list-container .progress-col-wrap{display:grid!important;grid-template-columns:auto 1fr!important;align-items:center!important;column-gap:7px!important;row-gap:7px!important;min-width:96px;width:100%;max-width:120px}
+#projects-list-container .progress-pct-val{display:block!important;white-space:nowrap!important;font-size:13px!important;font-weight:600;line-height:1.4}
+#projects-list-container .projects-table th:nth-child(3),#projects-list-container .projects-table td:nth-child(3){min-width:140px!important;padding-right:32px!important}
+#projects-list-container .projects-table th:nth-child(4),#projects-list-container .projects-table td:nth-child(4){min-width:170px!important;padding-left:20px!important}
+#projects-list-container .progress-col-wrap .project-completion{display:block!important;white-space:nowrap!important}
+#projects-list-container .budget-compact-plan{max-width:none!important;overflow:visible!important;text-overflow:clip!important;white-space:normal!important;overflow-wrap:normal}
+#projects-list-container .project-completion,#projects-list-container .budget-compact-plan{font-size:11px!important;color:#819087!important;white-space:nowrap}
+#projects-list-container .projects-table .progress-col-wrap .progress-track-wide{display:block!important;grid-column:1/-1!important;width:88px!important;min-width:0!important;max-width:88px!important;height:4px!important;margin:0!important;border-radius:4px;flex:none!important}
+#projects-list-container .projects-table td:has(.progress-col-wrap),#projects-list-container .projects-table th:nth-child(3){width:156px!important;min-width:156px!important;padding-right:40px!important;box-sizing:border-box}
+#projects-list-container .projects-table td:has(.budget-compact),#projects-list-container .projects-table td:has(.budget-not-set),#projects-list-container .projects-table th:nth-child(4){padding-left:24px!important;min-width:184px!important;box-sizing:border-box}
+#projects-list-container .budget-compact{display:grid;gap:4px}
+#projects-list-container .budget-compact-spent strong{font-size:13px!important;font-weight:600!important;font-variant-numeric:tabular-nums}
+#projects-list-container .budget-compact-spent span,#projects-list-container .budget-not-set{font-size:12px!important;color:#87948d!important}
+#projects-list-container .deadline-val{font-size:12px!important;white-space:nowrap;color:#53655b}
+#projects-list-container .project-health-cell{display:flex;flex-direction:column;align-items:flex-start;gap:5px!important}
+#projects-list-container .status-pill{font-size:11px!important;line-height:1.4;padding:3px 8px!important;border-radius:5px!important}
+#projects-list-container .overdue-count-pill{font-size:11px!important;line-height:1.4}
+#projects-list-container .table-actions-cell{display:flex;align-items:center;justify-content:flex-end;gap:8px!important;flex-wrap:wrap;min-width:0}
+#projects-list-container .table-actions-cell>div{flex:0 0 32px}
+#projects-list-container .table-actions-cell>a,#projects-list-container .table-actions-cell>button{flex:0 1 auto;max-width:100%;box-sizing:border-box}
+#projects-list-container .btn-dots{width:32px!important;height:32px!important;min-height:32px!important;border-radius:7px!important}
+#projects-list-container .table-actions-cell .btn{min-height:32px!important;padding:5px 10px!important;font-size:11px!important;border-radius:7px!important;white-space:nowrap}
+@media(max-width:1000px){#projects-list-container .projects-table{min-width:980px}#projects-list-container .projects-table td{padding:12px!important}}
+
+/* Keep every column within the available desktop width. */
+#projects-list-container .projects-table{min-width:980px!important;table-layout:fixed!important}
+#projects-list-container .projects-table th:nth-child(1){width:23%!important}
+#projects-list-container .projects-table th:nth-child(2){width:15%!important}
+#projects-list-container .projects-table th:nth-child(3){width:13%!important}
+#projects-list-container .projects-table th:nth-child(4){width:14%!important}
+#projects-list-container .projects-table th:nth-child(5){width:12%!important}
+#projects-list-container .projects-table th:nth-child(6){width:12%!important}
+#projects-list-container .projects-table th:nth-child(7){width:11%!important;text-align:right}
+#projects-list-container .projects-table th,#projects-list-container .projects-table td{box-sizing:border-box!important;min-width:0!important;padding:14px 12px!important}
+#projects-list-container .projects-table td:nth-child(3),#projects-list-container .projects-table td:nth-child(4){width:auto!important;min-width:0!important;padding:14px 12px!important}
+#projects-list-container .projects-table td:first-child{white-space:normal!important;overflow-wrap:anywhere}
+#projects-list-container .progress-col-wrap{min-width:0!important;max-width:100%!important;grid-template-columns:auto minmax(0,1fr)!important;gap:6px!important}
+#projects-list-container .project-completion{white-space:normal!important}
+#projects-list-container .budget-compact-plan{white-space:normal!important;overflow-wrap:anywhere!important}
+#projects-list-container .project-health-cell .status-pill{max-width:100%;white-space:normal!important;box-sizing:border-box}
+#projects-list-container .table-actions-cell{gap:6px!important;align-items:center}
+#projects-list-container .table-actions-cell .btn{white-space:normal!important;text-align:center;line-height:1.4!important;height:auto!important;overflow:visible!important}
+#projects-list-container .btn-dots{flex-shrink:0;padding:0!important;display:inline-flex;align-items:center;justify-content:center}

@@ -19,7 +19,7 @@ class ProjectWorkflowNotification extends Notification implements ShouldQueue
 
     public function viaConnections(): array
     {
-        return ['database' => 'sync'];
+        return ['database' => 'sync', 'mail' => 'database'];
     }
 
     public function via(object $person): array

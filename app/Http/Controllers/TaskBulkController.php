@@ -30,6 +30,7 @@ class TaskBulkController
             'tasks.*.end_time' => 'required|string',
             'tasks.*.progress' => 'required|integer|min:0|max:100',
             'tasks.*.status' => 'required|in:todo,in_progress,on_hold,completed',
+            'tasks.*.priority' => 'sometimes|required|in:low,medium,high',
             'tasks.*.assigned_user_id' => 'nullable|integer|exists:users,id',
             'tasks.*.add_to_project' => 'sometimes|boolean',
             'tasks.*.dependencies' => 'nullable|array',
@@ -170,6 +171,7 @@ class TaskBulkController
                     'ends_at' => $endsAt,
                     'progress' => $progress,
                     'status' => $status,
+                    'priority' => $row['priority'] ?? $task->priority,
                 ]);
 
                 // Sync assignees

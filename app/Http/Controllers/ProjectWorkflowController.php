@@ -315,6 +315,11 @@ class ProjectWorkflowController
 
         DB::transaction(function () use ($r, $project, $d, $service, $blankPlan) {
             $p = Project::whereKey($project->id)->lockForUpdate()->firstOrFail();
+            // A retry after publishing must not recreate tasks or notify the team twice.
+            if ($p->approval_stage === 'ready' && $p->plan_published_at && $r->boolean('publish_now')) {
+                abort_unless($r->user()->isActive() && ($r->user()->isPmo() || ($r->user()->system_role === 'user' && in_array($r->user()->id, [$p->pm_user_id, $p->owner_user_id], true))), 403);
+                return;
+            }
             $this->planner($r, $p);
             $p->fill(array_intersect_key($d,array_flip(['name','description'])))->save();
             abort_if($p->plan_initialized || $p->tasks()->exists(), 409, 'The plan has already been started. Continue editing its tasks.');

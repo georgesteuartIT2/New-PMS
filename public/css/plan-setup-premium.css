@@ -1,4 +1,5 @@
 /* Focused visual layer for the project plan workspace. */
+#plan-task-team{border:1px solid #e1e8e4;border-radius:9px;padding:12px 14px;font-size:12px}#plan-task-team[hidden]{display:none}#plan-task-team>strong{display:block;margin-bottom:6px;color:#52685e;font-size:11px}.plan-task-team-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 0;border-top:1px solid #eef2ef}.plan-task-team-row small{color:#738379;white-space:nowrap}
 #plan-start-dialog.flow-plan-dialog{width:min(960px,calc(100vw - 40px))!important;max-width:960px!important;height:min(860px,calc(100dvh - 40px));max-height:calc(100dvh - 40px)!important;padding:0!important;overflow:hidden!important;border:1px solid #DDE5E1!important;border-radius:18px!important;background:#FFF!important;box-shadow:0 30px 90px rgba(20,38,32,.24)!important}
 #plan-start-dialog::backdrop{background:rgba(24,36,32,.48)!important;backdrop-filter:blur(4px)}
 #plan-start-dialog .flow-plan-title{position:relative;z-index:3;display:flex;align-items:center;justify-content:space-between;min-height:92px;margin:0!important;padding:22px 28px!important;border-bottom:1px solid #E8EDEA;background:#FFF}

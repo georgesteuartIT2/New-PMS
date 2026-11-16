@@ -27,13 +27,7 @@
                     <input type="date" id="create_reference_start_date" name="reference_start_date" value="{{ old('reference_start_date',date('Y-m-d')) }}" required aria-describedby="reference-date-help">
                     <small id="reference-date-help">Dates shift to the actual start date when a project is created.</small>
                 </label>
-                <label for="create_working_hours">Working Hours
-                    <select id="create_working_hours" name="working_hours">
-                        @foreach(['09:00 - 17:00'=>'09:00 AM - 05:00 PM','08:30 - 17:00'=>'08:30 AM - 05:00 PM','08:00 - 16:30'=>'08:00 AM - 04:30 PM','09:00 - 18:00'=>'09:00 AM - 06:00 PM'] as $value=>$label)
-                            <option value="{{ $value }}" @selected(old('working_hours','09:00 - 17:00')===$value)>{{ $label }}</option>
-                        @endforeach
-                    </select>
-                </label>
+                <input type="hidden" id="create_working_hours" name="working_hours" value="{{ old('working_hours','09:00 - 17:00') }}">
             </div>
             <div class="tc-schedule"><span>Reference schedule</span><strong id="create-schedule-text" aria-live="polite"></strong></div>
             <p id="template-create-error" class="tc-error" role="alert" hidden></p>

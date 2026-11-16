@@ -417,7 +417,10 @@
             const startTime = times[0]?.trim() || '09:00';
             const endTime = times[1]?.trim() || '17:00';
 
-            this.tasks = this.periods.map((p, idx) => {
+            const initialPeriods = details?.initial_task_count
+                ? Array.from({length: details.initial_task_count}, (_, idx) => this.periods[idx % this.periods.length])
+                : this.periods;
+            this.tasks = initialPeriods.map((p, idx) => {
                 const num = String(idx + 1);
                 return {
                     code: num,
@@ -433,7 +436,7 @@
                     duration_days: 1,
                     suggested_role_id: null,
                     suggested_role_name: '',
-                    dependency_code: idx > 0 ? String(idx) : '',
+                    dependency_code: '',
                     priority: 'medium',
                     sort_order: idx
                 };
@@ -722,14 +725,6 @@
                     <input type="text" id="stp_drawer_name" value="${this.escapeHtml(this.template.name || '')}" onchange="SmartTaskPlan.onDetailsChange('name', this.value)">
                 </div>
                 <div>
-                    <label>Category</label>
-                    <select id="stp_drawer_category" onchange="SmartTaskPlan.onDetailsChange('category', this.value)">
-                        ${['General', 'IT & Software', 'Infrastructure', 'Construction', 'Finance', 'Procurement', 'Operations', 'Marketing', 'HR'].map(c => `
-                            <option value="${c}" ${this.template.category === c ? 'selected' : ''}>${c}</option>
-                        `).join('')}
-                    </select>
-                </div>
-                <div>
                     <label>Estimated Duration</label>
                     <div style="display: flex; gap: 6px;">
                         <input type="number" id="stp_drawer_duration" value="${this.template.estimated_duration || 14}" min="1" max="3650" style="width: 75px; text-align: center;" onchange="SmartTaskPlan.onDetailsChange('duration', this.value)">
@@ -744,15 +739,6 @@
                 <div>
                     <label>Reference Start Date</label>
                     <input type="date" id="stp_drawer_start_date" value="${this.template.reference_start_date || this.formatDateISO(new Date())}" onchange="SmartTaskPlan.onDetailsChange('start_date', this.value)">
-                </div>
-                <div>
-                    <label>Working Hours</label>
-                    <select id="stp_drawer_hours" onchange="SmartTaskPlan.onDetailsChange('working_hours', this.value)">
-                        <option value="09:00 - 17:00" ${this.template.working_hours === '09:00 - 17:00' ? 'selected' : ''}>09:00 AM – 05:00 PM (8h)</option>
-                        <option value="08:30 - 17:00" ${this.template.working_hours === '08:30 - 17:00' ? 'selected' : ''}>08:30 AM – 05:00 PM</option>
-                        <option value="08:00 - 16:30" ${this.template.working_hours === '08:00 - 16:30' ? 'selected' : ''}>08:00 AM – 04:30 PM</option>
-                        <option value="09:00 - 18:00" ${this.template.working_hours === '09:00 - 18:00' ? 'selected' : ''}>09:00 AM – 06:00 PM</option>
-                    </select>
                 </div>
             `;
         },

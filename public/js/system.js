@@ -48,11 +48,9 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.querySelectorAll('[data-add-mode]').forEach(button=>button.addEventListener('click',()=>{
     const dialog=document.getElementById('add-task-dialog');
-    const options=dialog?.querySelector('.task-plan-options');
     const parentSelect=dialog?.querySelector('#add-task-parent-select');
     const titleEl=dialog?.querySelector('.modal-head h2');
     const isSub=button.dataset.addMode==='sub';
-    if(options)options.open=isSub;
     if(titleEl)titleEl.textContent=isSub?'Add Subtask':'Add Task';
     if(isSub && parentSelect && !parentSelect.value && parentSelect.options.length>1){
       parentSelect.selectedIndex=1;
@@ -75,8 +73,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (parentSelect && parentId) {
       parentSelect.value = parentId;
     }
-    const details = dialog.querySelector('.task-plan-options');
-    if (details) details.open = true;
     const titleEl = dialog.querySelector('.modal-head h2');
     if (titleEl) {
       titleEl.textContent = 'Add Subtask under ' + (parentNum ? parentNum + ' ' : '') + parentTitle;

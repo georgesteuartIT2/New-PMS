@@ -143,7 +143,7 @@ class DashboardController
             $blockerCount=(clone $blockerQuery)->count();
             $unreadBlockerCount=(clone $blockerQuery)->whereDoesntHave('readers',fn($q)=>$q->where('users.id',$user->id))->count();
             $blockerPreview=(clone $blockerQuery)->with(['task.project','actionOwner'])->withExists(['readers as is_read'=>fn($q)=>$q->where('users.id',$user->id)])->orderByRaw('CASE WHEN action_owner_id IS NULL THEN 0 ELSE 1 END')->oldest()->paginate(5,['*'],'blocker_page');
-            $taskAttentionFilter = in_array($request->query('task_attention'),['critical','blocked']) ? $request->query('task_attention') : 'overdue';
+            $taskAttentionFilter = in_array($request->query('task_attention'),['critical','blocked','unassigned']) ? $request->query('task_attention') : 'overdue';
             if (!$request->has('task_attention') && !$monitoringMetrics['overdue_tasks']) {
                 $taskAttentionFilter = 'critical';
             }
@@ -193,6 +193,7 @@ class DashboardController
 
             return view('dashboard', [
                 'isPmo' => true,
+                'upcomingMeetings' => \App\Models\Meeting::with('project')->where('starts_at','>=',now())->where('status','!=','cancelled')->orderBy('starts_at')->limit(5)->get(),
                 'taskAttention' => $taskAttention,
                 'taskAttentionFilter' => $taskAttentionFilter,
                 'blockerCount'=>$blockerCount,'unreadBlockerCount'=>$unreadBlockerCount,'blockerPreview'=>$blockerPreview,

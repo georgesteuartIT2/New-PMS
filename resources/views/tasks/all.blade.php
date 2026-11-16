@@ -68,7 +68,7 @@
                     @php
                         $eligible=$task->project->memberships->pluck('user')->push($task->project->manager)->filter(fn($u)=>$u && $u->account_status==='active' && $u->system_role==='user')->unique('id')->sortBy('name');
                     @endphp
-                    <label class="tw-inline-assignment"><span class="workspace-sr-only">Assign {{ $task->title }}</span><select data-pm-assign-url="{{ route('tasks.pm-assign',$task) }}"><option value="">Assign person...</option>@foreach($eligible as $person)<option value="{{ $person->id }}">{{ $person->name }}</option>@endforeach</select></label>
+                    <label class="tw-inline-assignment"><span class="workspace-sr-only">Assign {{ $task->title }}</span><select data-pm-assign-url="{{ route('tasks.pm-assign',$task) }}" data-directory-picker data-members-only="1" data-directory-project="{{ $task->project_id }}"><option value="">Assign person...</option>@foreach($eligible as $person)<option value="{{ $person->id }}" data-project-member="1">{{ $person->name }} ({{ $person->email }})</option>@endforeach</select></label>
                     @else<span class="tw-assignee {{ $task->assignees->isEmpty() ? 'is-unassigned' : '' }}">{{ $task->assignees->pluck('name')->join(', ') ?: 'Unassigned' }}</span>@endif</td>
                 <td><div class="tw-involvement">
                     @if($task->is_my_task)<span class="tw-my-task">My task</span>@endif

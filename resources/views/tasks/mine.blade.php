@@ -752,10 +752,10 @@
 
             <div style="margin-bottom: 14px;">
                 <label for="user-reassign-new-user-select" style="display: block; font-size: 12.5px; font-weight: 650; margin-bottom: 4px; color: #22272B;">
-                    New Assignee (Eligible Project Members) <span style="color:#DC2626;">*</span>
+                    New Assignee <span style="color:#DC2626;">*</span>
                 </label>
                 <select id="user-reassign-new-user-select" required style="width: 100%; height: 38px; border: 1px solid #CBD5E1; border-radius: 6px; padding: 0 10px; font-size: 13px; background: #FFFFFF; color: #22272B;"></select>
-                <small style="display:block;font-size:11.5px;color:#64748B;margin-top:3px;">Only authorized team members of this project are eligible.</small>
+                <small style="display:block;font-size:11.5px;color:#64748B;margin-top:3px;">Choose a project member or search by name or email. Other users will be added to the project when reassigned.</small>
             </div>
 
             <div style="margin-bottom: 18px;">
@@ -872,7 +872,7 @@
                                         <div style="display:inline-flex;gap:4px;">
                                             ${t.can_manage ? `
                                                 <button type="button" 
-                                                        onclick="openUserReassignModal(${t.id}, '${escapeHtml(t.title)}', ${data.employee.id}, '${escapeHtml(data.employee.name)}', ${JSON.stringify(t.eligible_members).replace(/"/g, '&quot;')})" 
+                                                        onclick="openUserReassignModal(${t.id}, '${escapeHtml(t.title)}', ${data.employee.id}, '${escapeHtml(data.employee.name)}', ${JSON.stringify(t.eligible_members).replace(/"/g, '&quot;')}, ${t.project_id})" 
                                                         class="btn btn-outline btn-xs" 
                                                         style="font-size:11px;padding:2px 7px;color:#315F58;">
                                                     Reassign
@@ -902,14 +902,23 @@
     /* =========================================================================
        3. REASSIGN TASK MODAL
        ========================================================================= */
-    function openUserReassignModal(taskId, taskTitle, oldUserId, oldUserName, eligibleMembers) {
+    function openUserReassignModal(taskId, taskTitle, oldUserId, oldUserName, eligibleMembers, projectId) {
         document.getElementById('user-reassign-task-id').value = taskId;
         document.getElementById('user-reassign-old-user-id').value = oldUserId;
         document.getElementById('user-reassign-task-display').textContent = taskTitle;
         document.getElementById('user-reassign-old-user-display').textContent = oldUserName;
         document.getElementById('user-reassign-reason').value = '';
 
-        const select = document.getElementById('user-reassign-new-user-select');
+        const previous = document.getElementById('user-reassign-new-user-select');
+        const select = previous.cloneNode(false);
+        const wrapper = previous.closest('.directory-picker');
+        if (wrapper) wrapper.replaceWith(select); else previous.replaceWith(select);
+        delete select.dataset.directoryReady;
+        select.dataset.directoryPicker = '1';
+        select.dataset.membersOnly = '1';
+        select.dataset.directoryProject = projectId || '';
+        select.hidden = false;
+        select.style.display = '';
         select.innerHTML = '<option value="">Select eligible team member...</option>';
 
         if (Array.isArray(eligibleMembers)) {
@@ -917,6 +926,7 @@
                 if (m.id != oldUserId) {
                     const opt = document.createElement('option');
                     opt.value = m.id;
+                    opt.dataset.projectMember = '1';
                     opt.textContent = m.name;
                     select.appendChild(opt);
                 }

@@ -213,14 +213,14 @@ body:is([data-page="users.index"],[data-page="activity.index"],[data-page="subsi
 #bulk-edit-form [data-field=title]{min-width:0!important;width:100%!important;font-size:12px!important;font-weight:500!important}
 #bulk-edit-form .bulk-edit-table td:nth-child(2)>div>span{display:none}
 #bulk-edit-form .bulk-edit-table th:nth-child(1){width:55px!important}#bulk-edit-form .bulk-edit-table th:nth-child(2){width:32%!important}#bulk-edit-form .bulk-edit-table th:nth-child(3){width:19%!important}#bulk-edit-form .bulk-edit-table th:nth-child(4),#bulk-edit-form .bulk-edit-table th:nth-child(6){width:125px!important}#bulk-edit-form .bulk-edit-table th:nth-child(8){width:75px!important}#bulk-edit-form .bulk-edit-table th:nth-child(9){width:120px!important}
-#bulk-edit-tasks-dialog:not(.show-extra-columns) .bulk-edit-table :is(th,td):nth-child(5),#bulk-edit-tasks-dialog:not(.show-extra-columns) .bulk-edit-table :is(th,td):nth-child(7),#bulk-edit-tasks-dialog:not(.show-extra-columns) .bulk-edit-table :is(th,td):nth-child(10){display:none}
+#bulk-edit-tasks-dialog:not(.show-extra-columns) .bulk-edit-table :is(th,td):nth-child(5),#bulk-edit-tasks-dialog:not(.show-extra-columns) .bulk-edit-table :is(th,td):nth-child(7),#bulk-edit-tasks-dialog:not(.show-extra-columns) .bulk-edit-table :is(th,td):nth-child(11){display:none}
 #bulk-edit-form .task-assignment-check{display:inline-block;vertical-align:middle;float:none;margin:0 4px 0 0!important;width:13px!important;height:13px!important;min-height:13px!important}
 #bulk-edit-form .bulk-edit-table td:first-child{white-space:nowrap;padding-left:7px!important;font-size:10px!important}
 #bulk-edit-form .bulk-edit-table td:first-child>span,#bulk-edit-form .bulk-edit-table td:first-child>div{display:none}
 #bulk-edit-tasks-dialog.show-extra-columns .bulk-edit-table{min-width:1450px!important}
-#bulk-edit-form .bulk-edit-table th:nth-child(5),#bulk-edit-form .bulk-edit-table th:nth-child(7){width:105px!important}#bulk-edit-form .bulk-edit-table th:nth-child(10){width:210px!important}
-#bulk-edit-form .bulk-edit-table td:nth-child(10) select{height:28px!important;min-height:28px!important;font-size:10px!important;padding:3px 6px!important}
-#bulk-edit-form .bulk-edit-table td:nth-child(10) .bulk-dep-chip{font-size:10px!important;padding:2px 5px!important}
+#bulk-edit-form .bulk-edit-table th:nth-child(5),#bulk-edit-form .bulk-edit-table th:nth-child(7){width:105px!important}#bulk-edit-form .bulk-edit-table th:nth-child(10){width:110px!important}#bulk-edit-form .bulk-edit-table th:nth-child(11){width:210px!important}
+#bulk-edit-form .bulk-edit-table td:nth-child(11) select{height:28px!important;min-height:28px!important;font-size:10px!important;padding:3px 6px!important}
+#bulk-edit-form .bulk-edit-table td:nth-child(11) .bulk-dep-chip{font-size:10px!important;padding:2px 5px!important}
 #bulk-edit-form>.modal-foot,#bulk-edit-form>footer,#bulk-edit-form>div:last-child{padding:10px 18px!important;min-height:0!important;flex-shrink:0}
 #bulk-edit-form>div:last-child .btn{min-height:33px!important;font-size:12px!important;padding:6px 12px!important}
 @media(min-width:1000px){#project-workspace .project-tasks-full-table{min-width:0!important;table-layout:fixed!important}#project-workspace .project-tasks-full-table td:last-child{min-width:0!important}#project-workspace .project-tasks-full-table td{padding:10px 9px!important}#project-workspace .project-tasks-full-table td:first-child>div{gap:6px!important}#project-workspace .project-tasks-full-table .uwt-task-title-link{flex-basis:120px!important;font-size:12px!important}#project-workspace .project-tasks-full-table .task-date-val{font-size:11px!important}#project-workspace .project-tasks-full-table .quick-status-select{font-size:10px!important;padding:0 5px!important}}
@@ -713,3 +713,28 @@ body:is([data-page="users.index"],[data-page="activity.index"],[data-page="subsi
  text-align:center!important;
  vertical-align:middle!important;
 }
+#add-task-dialog{width:min(640px,calc(100vw - 32px))!important;max-width:640px!important;max-height:calc(100dvh - 40px)!important;padding:0!important;border:1px solid #dce5e0!important;border-radius:14px!important;overflow:hidden!important;box-sizing:border-box}
+#add-task-dialog[open]{display:flex!important;flex-direction:column}
+#add-task-dialog .modal-head{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 24px!important;margin:0!important;border-bottom:1px solid #e6ece8}
+#add-task-dialog .modal-head h2{font-size:20px;line-height:1.4;margin:0;overflow-wrap:anywhere}
+#add-task-dialog>form{display:flex!important;flex-direction:column;min-height:0;overflow:hidden;margin:0!important;gap:0!important}
+#add-task-dialog .manual-task-fields{padding:20px 24px;overflow-y:auto;min-height:0;display:flex;flex-direction:column;gap:18px}
+#add-task-dialog .manual-task-fields label{display:block;margin:0;font-size:12px;font-weight:600;line-height:1.5;color:#40534a;min-width:0}
+#add-task-dialog .manual-task-fields input:not([type=checkbox]),#add-task-dialog .manual-task-fields select,#add-task-dialog .manual-task-fields textarea{box-sizing:border-box;width:100%;margin:6px 0 0!important;min-height:40px!important;height:40px;padding:8px 10px!important;font-size:13px!important;font-weight:400!important;border:1px solid #d5e0d9;border-radius:7px;background:#fff}
+#add-task-dialog .manual-task-fields textarea{height:auto;min-height:80px!important}
+#add-task-dialog .two-fields{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px!important;align-items:start}
+#add-task-dialog .directory-picker{margin-top:6px}
+#add-task-dialog .manual-task-fields .directory-picker input{margin-top:0!important}
+#add-task-dialog .directory-status:empty{display:none}
+#add-task-dialog .task-plan-options,#add-task-dialog .task-extra-options{padding:12px!important;border:1px solid #e0e7e2;border-radius:8px;margin:0!important}
+#add-task-dialog details summary{cursor:pointer;font-size:12px;color:#526b5d}
+#add-task-dialog details[open]>label{margin-top:12px}
+#add-task-dialog .form-actions{flex-shrink:0;display:flex;justify-content:flex-end;gap:10px;padding:16px 24px!important;margin:0!important;border-top:1px solid #e6ece8;background:#fff}
+#add-task-dialog .form-actions .btn{min-height:40px;padding:9px 18px;font-size:12px}
+@media(max-width:540px){#add-task-dialog .two-fields{grid-template-columns:1fr}#add-task-dialog .manual-task-fields{padding:16px}#add-task-dialog .modal-head,#add-task-dialog .form-actions{padding:16px!important}}
+#add-task-dialog .manual-task-assignee .directory-picker{width:100%;min-width:0}
+#add-task-dialog .manual-task-assignee .directory-picker>input{padding-right:28px!important;background-color:#fff!important}
+#add-task-dialog .manual-task-assignee .directory-results{max-height:180px;z-index:110;min-width:0}
+#add-task-dialog .manual-assignee-hint{display:block;margin-top:6px;font-size:10px;font-weight:400;line-height:1.5;color:#78877f}
+#add-task-dialog #manual-task-member-confirm{display:block;margin-top:6px}
+#add-task-dialog #manual-task-member-confirm[hidden]{display:none!important}

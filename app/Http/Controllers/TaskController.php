@@ -400,7 +400,13 @@ class TaskController {
    abort_if($locked->assignees()->exists(),409,'This task already has an assignee. Refresh the list.');
    abort_if($locked->status==='completed' || $locked->progress>=100,422,'This task is already completed.');
    $person=User::whereKey($data['user_id'])->where('account_status','active')->where('system_role','user')->firstOrFail();
-   abort_unless($person->id===$project->pm_user_id || $project->memberships()->where('user_id',$person->id)->exists(),422,'Choose a member of this project.');
+   $member=$person->id===$project->pm_user_id || $person->id===$project->owner_user_id || $project->memberships()->where('user_id',$person->id)->exists();
+   if(!$member){
+    abort_unless($access->project($request->user(),$project,'manage_team'),403,'You do not have permission to add this person to the project.');
+    $role=\App\Models\ProjectRole::firstOrCreate(['slug'=>'team'],['name'=>'Team Member','default_permissions'=>['project.view','tasks.view_assigned','tasks.edit_assigned','tasks.update_status','tasks.update_progress','tasks.upload_attachments','tasks.download_attachments','tasks.add_comments','tasks.report_delays']]);
+    \App\Models\ProjectMembership::firstOrCreate(['project_id'=>$project->id,'user_id'=>$person->id],['project_role_id'=>$role->id]);
+    Audit::record('project.member_added',$project,['user_id'=>$person->id,'source'=>'inline_task_assignment']);
+   }
    $locked->assignees()->attach($person->id);Audit::record('task.assigned',$locked,['user_id'=>$person->id]);
    app(\App\Services\InboxService::class)->assigned($locked,$person);
    DB::afterCommit(fn() => $person->notify(new TaskReassignedNotification($locked, $request->user(), 'assigned')));
@@ -507,7 +513,7 @@ class TaskController {
         $isMember = $task->project->memberships()->where('user_id', $newUser->id)->exists();
         $isPm = ($task->project->pm_user_id === $newUser->id);
 
-        if (!$isMember && !$isPm) {
+        if (!$isMember && !$isPm && !$access->project($actor, $task->project, 'manage_team')) {
             return response()->json([
                 'success' => false,
                 'message' => "{$newUser->name} is not an authorized member of project '{$task->project->name}'. Add them to the project team first.",
@@ -521,6 +527,11 @@ class TaskController {
                 409,
                 'The current assignee has changed. Refresh the task list and try again.'
             );
+            if (!$task->project->memberships()->where('user_id', $newUser->id)->exists() && (int)$task->project->pm_user_id !== $newUser->id) {
+                $role = \App\Models\ProjectRole::firstOrCreate(['slug'=>'team'], ['name'=>'Team Member','default_permissions'=>['project.view','tasks.view_assigned','tasks.edit_assigned','tasks.update_status','tasks.update_progress','tasks.add_comments']]);
+                \App\Models\ProjectMembership::firstOrCreate(['project_id'=>$task->project_id,'user_id'=>$newUser->id], ['project_role_id'=>$role->id]);
+                Audit::record('project.member_added', $task->project, ['user_id'=>$newUser->id,'source'=>'task_reassignment']);
+            }
             $lockedTask->assignees()->detach($oldUser->id);
             $lockedTask->assignees()->syncWithoutDetaching([
                 $newUser->id => [

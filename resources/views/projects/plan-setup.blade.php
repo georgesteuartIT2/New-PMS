@@ -17,6 +17,7 @@
  if (!$selectedTemplate && $draftTaskCount === 0) $startMode = '';
  $hasTasksReady = $draftTaskCount > 0 || ($selectedTemplate ? ($selectedTemplate->tasks->count() > 0) : $existingTasksCount > 0);
  $draftEnabled = $project->approval_stage === 'planning' && !$project->plan_published_at;
+ $selectedTemplateMetadata = $selectedTemplate?->only(['id','name','category','description','estimated_duration','duration_unit','reference_start_date','working_hours','planning_periods']);
 @endphp
 <div class="flow-page"><a href="{{ route('projects.show',$project) }}" class="text-action">&larr; {{ $project->name }}</a>
 <header class="flow-heading"><h1>Project plan</h1><p>Prepare tasks, assign your team and publish when ready.</p></header>
@@ -177,6 +178,7 @@
   <small>Task assignees join automatically</small>
  </div>
  @include('projects._optional-roles',['roleProject'=>$project,'roleSectionTitle'=>'Project roles'])
+ <div id="plan-task-team" aria-live="polite" hidden></div>
 </section>
 
 
@@ -217,6 +219,7 @@ window.PLAN_SETUP_CONFIG = {
     projectId: {{ $project->id }},
     projectName: @json($project->name),
     selectedTemplateId: @json($selectedTemplate?->id),
+    selectedTemplate: @json($selectedTemplateMetadata),
     selectedTemplateTasks: @json($selectedTemplate?->tasks ?? []),
     existingTasks: @json($existingTaskData),
     roles: @json($roles->values()),

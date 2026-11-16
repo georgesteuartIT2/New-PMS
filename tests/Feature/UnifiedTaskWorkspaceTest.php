@@ -26,8 +26,12 @@ class UnifiedTaskWorkspaceTest extends TestCase {
  public function test_inline_assignment_is_pm_only_and_project_scoped():void {
   $pm=$this->person();$member=$this->person();$outsider=$this->person();$p=$this->project($pm);$task=$this->task($p);
   $role=ProjectRole::create(['name'=>'Member','slug'=>'assign-test','default_permissions'=>['project.view']]);ProjectMembership::create(['project_id'=>$p->id,'user_id'=>$member->id,'project_role_id'=>$role->id]);
-  $this->actingAs($pm)->get(route('tasks.mine'))->assertOk()->assertSee('data-pm-assign-url',false)->assertSee($member->name);
-  $this->postJson(route('tasks.pm-assign',$task),['user_id'=>$outsider->id])->assertUnprocessable();
+  $this->actingAs($pm)->get(route('tasks.mine'))->assertOk()->assertSee('data-pm-assign-url',false)->assertSee('data-directory-picker',false)->assertSee($member->name);
+  $this->getJson(route('users.azure',['q'=>$outsider->email,'ajax'=>1,'directory_project_id'=>$p->id]))->assertOk()->assertJsonPath('localResults.0.id',$outsider->id);
+  $this->postJson(route('tasks.pm-assign',$task),['user_id'=>$outsider->id])->assertOk();
+  $this->assertTrue($p->memberships()->where('user_id',$outsider->id)->exists());
+  $this->assertTrue($task->assignees()->where('users.id',$outsider->id)->exists());
+  $task=$this->task($p,'Second unassigned task');
   $this->actingAs($outsider)->postJson(route('tasks.pm-assign',$task),['user_id'=>$member->id])->assertForbidden();
   $this->actingAs($pm)->postJson(route('tasks.pm-assign',$task),['user_id'=>$member->id])->assertOk();
   $this->assertTrue($task->assignees()->where('users.id',$member->id)->exists());

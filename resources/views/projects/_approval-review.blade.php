@@ -20,7 +20,7 @@
     <div class="ar-body">
         <dl class="ar-facts">
             <div>
-                <dt>Schedule</dt>
+                <dt>Deadline</dt>
                 @if($scheduleLater)
                     <dd>You set it after accepting</dd>
                 @else

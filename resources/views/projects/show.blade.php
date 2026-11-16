@@ -253,9 +253,9 @@
         <div class="workspace-schedule">
             <dt>Schedule</dt>
             <dd>
-                @if($project->approval_stage && !$project->plan_initialized)<span>Set by PM after acceptance</span>@else<time datetime="{{ $project->starts_on->format('Y-m-d') }}" aria-label="Start date">{{ $project->starts_on->format('d M Y') }}</time>
+                @if($project->approval_stage && !$project->plan_initialized)<span>Set by PM after acceptance</span>@else<time datetime="{{ $project->starts_on->format('Y-m-d') }}" aria-label="Start date"><strong>{{ $project->starts_on->format('d M Y') }}</strong></time>
                 <span class="workspace-date-separator" aria-hidden="true">&rarr;</span>
-                <time datetime="{{ $project->ends_on->format('Y-m-d') }}" aria-label="Due date">{{ $project->ends_on->format('d M Y') }}</time>@endif
+                <time datetime="{{ $project->ends_on->format('Y-m-d') }}" aria-label="Due date"><strong>{{ $project->ends_on->format('d M Y') }}</strong></time>@endif
             </dd>
         </div>
         <div class="workspace-summary-progress">
@@ -1433,12 +1433,12 @@
         </div>
         <form method="post" action="{{ route('tasks.store', $project) }}" enctype="multipart/form-data" class="stack mt-16">
             @csrf
+            <div class="manual-task-fields">
             <label>Task Name <span class="required">*</span>
                 <input name="title" required maxlength="200" placeholder="e.g. Requirement Gathering">
             </label>
 
-            <details class="task-plan-options"><summary>Task structure</summary>
-            <label>Main Task or Subtask
+            <label>Parent Task
                 <select name="parent_task_id" id="add-task-parent-select">
                     <option value="">Main Task (Top Level)</option>
                     @foreach($tasks as $t)
@@ -1446,7 +1446,6 @@
                     @endforeach
                 </select>
             </label>
-            </details>
 
             <div class="two-fields">
                 <label>Start Date & Time <span class="required">*</span>
@@ -1458,33 +1457,28 @@
             </div>
 
             <div class="two-fields">
-                <label>Assign To
+                <label class="manual-task-assignee">Assign To
                     <select name="assigned_user_id" id="add-task-assignee-select" data-members-only="1" data-directory-picker data-directory-project="{{ $project->id }}">
                         <option value="">Unassigned (Assign later...)</option>
                         @foreach($users as $person)<option value="{{ $person->id }}">{{ $person->name }} ({{ $person->email }})</option>@endforeach
                     </select><span id="manual-task-member-confirm" hidden><label style="display:flex;align-items:center;gap:7px;font-size:11px;margin-top:8px"><input type="checkbox" name="add_assignee_to_project" value="1" style="width:14px;min-height:14px;height:14px;accent-color:#315F58">Add this person to the project as a Team Member</label></span>
                     @if($isPmoOperationalLead)<button type="button" class="text-action assign-task-to-me" data-assign-task-to-me data-user-id="{{ auth()->id() }}" data-user-label="{{ auth()->user()->name }} ({{ auth()->user()->email }})">Assign to me</button>@endif
-                    @if($canTeam)
-                        <button type="button" class="text-action" id="add-task-open-member-btn" style="font-size: 11px; margin-top: 4px; display: inline-block; padding: 0; background: none; border: none; cursor: pointer; color: #315F58; text-decoration: underline;">
-                            + Add Project Member
-                        </button>
-                    @endif
+                    <small class="manual-assignee-hint">Select a project member or search for another person.</small>
                 </label>
                 <label>Priority
                     <select name="priority">
-                        <option value="medium">Normal</option>
-                        <option value="low">Low</option>
                         <option value="high">High</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="low">Low</option>
                     </select>
                 </label>
             </div>
 
-            <details class="task-extra-options"><summary>Add description</summary>
             <label>Description (Optional)
                 <textarea name="description" rows="2" placeholder="Task deliverables or scope..."></textarea>
             </label>
-            </details>
 
+            </div>
             <div class="form-actions mt-16">
                 <button class="btn btn-ghost" type="button" data-close-dialog>Cancel</button>
                 <button class="btn btn-primary" type="submit">Create Task</button>
@@ -1526,6 +1520,7 @@
                             <th style="padding: 10px 8px; width: 95px; border-bottom: 1px solid #CBD5E1;">End Time</th>
                             <th style="padding: 10px 8px; width: 75px; border-bottom: 1px solid #CBD5E1;">Progress</th>
                             <th style="padding: 10px 10px; width: 120px; border-bottom: 1px solid #CBD5E1;">Status</th>
+                            <th class="bulk-priority-heading" style="width:110px;padding:10px;border-bottom:1px solid #CBD5E1;">Priority</th>
                             <th style="padding: 10px 12px; min-width: 200px; border-bottom: 1px solid #CBD5E1;">Dependencies</th>
                         </tr>
                     </thead>
@@ -1655,6 +1650,13 @@
                                     </select>
                                 </td>
 
+                                <td style="padding:8px 10px;border-bottom:1px solid #E2E8F0;">
+                                    <select name="tasks[{{ $task->id }}][priority]" class="bulk-select bulk-field-track" data-task-id="{{ $task->id }}" data-field="priority" aria-label="Priority for {{ $task->title }}" style="width:100%;">
+                                        @foreach(['low'=>'Low','medium'=>'Medium','high'=>'High'] as $value=>$label)
+                                            <option value="{{ $value }}" @selected(($task->priority ?? 'medium') === $value)>{{ $label }}</option>
+                                        @endforeach
+                                    </select>
+                                </td>
                                 <!-- 10. Dependencies (Predecessors) -->
                                 <td style="padding: 8px 12px; border-bottom: 1px solid #E2E8F0;">
                                     <div class="bulk-dep-cell" data-task-id="{{ $task->id }}">

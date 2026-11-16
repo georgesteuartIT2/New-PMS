@@ -7,7 +7,6 @@
     $currentFilter=$filters['filter']??'all';
     $taskViews=['all'=>['All Tasks','total_tasks'],'overdue'=>['Overdue','overdue_tasks'],'critical'=>['Critical Path','critical_tasks'],'due_soon'=>['Due soon','due_soon_tasks'],'unassigned'=>['Unassigned','unassigned_tasks'],'completed'=>['Completed','completed_tasks']];
     if(($summary['blocked_tasks']??0)>0)$taskViews['blocked']=['Blocked','blocked_tasks'];
-    if(($summary['needs_update_tasks']??0)>0)$taskViews['needs_update']=['Needs update','needs_update_tasks'];
     $hasFilters=!empty($filters['q']) || !empty($filters['project_id']) || !empty($filters['user_id']) || !empty($filters['status']) || !empty($filters['subsidiary_id']);
 @endphp
 <div class="task-monitor-workspace task-workspace" style="padding-bottom: 24px;">
@@ -235,7 +234,12 @@
                             <td style="padding: 12px 16px; text-align: right; white-space: nowrap;">
                                 <div style="display: inline-flex; gap: 6px; align-items: center;">
                                     @if(!auth()->user()->isAdminViewer() && $task->progress < 100 && $task->assignees->isEmpty())
-                                        <a href="{{ route('projects.show', [$task->project_id, 'focus_task' => $task->id]) }}#task-row-{{ $task->id }}" class="btn btn-outline btn-xs" style="height: 30px; font-size: 12px; padding: 0 10px; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; font-weight: 600; color: #315F58; border-color: #315F58;" title="Open task in project workplan to assign person">Assign person</a>
+                                        @if(in_array($task->project->status,['active','on_hold']) && app(\App\Services\Access::class)->project(auth()->user(),$task->project,'tasks.assign'))
+                                        <div class="pmo-inline-assignment">
+                                            <select data-directory-picker data-directory-floating="1" data-directory-project="{{ $task->project_id }}" data-pmo-inline-assign="{{ route('tasks.pm-assign',$task) }}" aria-label="Assign {{ $task->title }}"><option value="">Search name or email</option></select>
+                                            <small data-assignment-feedback role="status"></small>
+                                        </div>
+                                        @endif
                                     @endif
                                 </div>
                             </td>
@@ -457,5 +461,18 @@
 </script>
 
 <script defer src="{{ asset('js/project-workspace.js') }}?v={{ filemtime(public_path('js/project-workspace.js')) }}"></script>
+<script>
+document.addEventListener('change',async event=>{
+ const select=event.target.closest('[data-pmo-inline-assign]');if(!select||!select.value)return;
+ const container=select.closest('.directory-picker').parentElement;
+ const feedback=container.querySelector('[data-assignment-feedback]');
+ const input=container.querySelector('input');input.disabled=true;feedback.textContent='Assigning...';
+ try{
+  const response=await fetch(select.dataset.pmoInlineAssign,{method:'POST',headers:{Accept:'application/json','Content-Type':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content},body:JSON.stringify({user_id:select.value})});
+  const result=await response.json();if(!response.ok)throw Error(result.message||'Assignment failed.');
+  location.reload();
+ }catch(error){input.disabled=false;feedback.textContent=error.message;}
+});
+</script>
 @endsection
 

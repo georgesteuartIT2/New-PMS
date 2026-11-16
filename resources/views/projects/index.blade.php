@@ -65,8 +65,8 @@
     @endif
 
     @if(request()->filled('status'))<input type="hidden" name="status" value="{{ request('status') }}">@endif
-    <details class="library-other-statuses"><summary>{{ ['on_hold'=>'On hold','completed'=>'Completed','declined'=>'Declined','archived'=>'Archived'][request('status')] ?? 'Other statuses' }} <span aria-hidden="true">&#8964;</span></summary><div class="library-status-options">
-        @foreach(['on_hold'=>'On hold','completed'=>'Completed','declined'=>'Declined','archived'=>'Archived'] as $value=>$label)
+    <details class="library-other-statuses"><summary>{{ ['on_hold'=>'On hold','completed'=>'Completed','declined'=>'Declined'][request('status')] ?? 'Other statuses' }} <span aria-hidden="true">&#8964;</span></summary><div class="library-status-options">
+        @foreach(['on_hold'=>'On hold','completed'=>'Completed','declined'=>'Declined'] as $value=>$label)
             <a href="{{ route('projects.index',array_merge(request()->except('page','attention','status'),['status'=>$value])) }}" @if(request('status')===$value) aria-current="page" @endif>{{ $label }}</a>
         @endforeach
     </div></details>
@@ -2222,5 +2222,6 @@ function escapeHtml(str) {
 
 @push('scripts')
 <link rel="stylesheet" href="{{ asset('css/project-workspace.css') }}?v={{ filemtime(public_path('css/project-workspace.css')) }}">
+<link rel="stylesheet" href="{{ asset('css/project-table-clean.css') }}?v={{ filemtime(public_path('css/project-table-clean.css')) }}">
 <script defer src="{{ asset('js/project-editor.js') }}?v={{ filemtime(public_path('js/project-editor.js')) }}"></script>
 @endpush

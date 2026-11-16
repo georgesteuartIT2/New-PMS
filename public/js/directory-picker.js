@@ -11,7 +11,16 @@
   const list=document.createElement('div');list.className='directory-results';list.hidden=true;
   const status=document.createElement('small');status.className='directory-status';status.setAttribute('role','status');
   wrap.append(input,list,status);if(select.dataset.directoryFloating){(select.closest('dialog')||document.body).append(list);list.classList.add('directory-results-floating');}
-  function positionList(){if(!select.dataset.directoryFloating)return;const rect=input.getBoundingClientRect();list.style.position='fixed';list.style.width=Math.max(260,Math.min(340,innerWidth-24))+'px';list.style.left=Math.max(8,Math.min(innerWidth-parseFloat(list.style.width)-8,rect.left))+'px';list.style.top=(rect.bottom+4)+'px';list.style.maxHeight=Math.max(120,Math.min(250,innerHeight-rect.bottom-20))+'px';}
+  function positionList(){
+   if(!select.dataset.directoryFloating){
+    wrap.style.position='relative';
+    list.style.position='absolute';
+    list.style.setProperty('top',(input.offsetTop+input.offsetHeight+6)+'px','important');
+    list.style.left='0';list.style.right='0';list.style.marginTop='0';
+    return;
+   }
+   const rect=input.getBoundingClientRect();list.style.position='fixed';list.style.width=Math.max(260,Math.min(340,innerWidth-24))+'px';list.style.left=Math.max(8,Math.min(innerWidth-parseFloat(list.style.width)-8,rect.left))+'px';list.style.top=(rect.bottom+4)+'px';list.style.maxHeight=Math.max(120,Math.min(250,innerHeight-rect.bottom-20))+'px';
+  }
   select.closest('.bulk-edit-scroll')?.addEventListener('scroll',()=>close(),{passive:true});
   select.hidden=true;select.style.display='none';select.required=false;
   if(select.value)input.value=select.selectedOptions[0]?.textContent.trim()||'';
@@ -29,15 +38,20 @@
    if(term.length<2&&!select.dataset.membersOnly){close();status.textContent=term?'Type at least 2 characters to search.':'';return;}
    list.hidden=false;input.setAttribute('aria-expanded','true');positionList();
    const memberConfig=document.getElementById('task-assignment-config');let memberIds=[];try{memberIds=JSON.parse(memberConfig?.dataset.members||'[]').map(Number);}catch{}
-   const local=[...select.options].filter(o=>o.value&&o.textContent.toLowerCase().includes(term.toLowerCase())&&(!select.dataset.membersOnly||term.length>=2||memberIds.includes(Number(o.value)))).sort((a,b)=>Number(memberIds.includes(Number(b.value)))-Number(memberIds.includes(Number(a.value))));
+   const isMember=o=>o.dataset.projectMember==='1'||memberIds.includes(Number(o.value));
+   const local=[...select.options].filter(o=>o.value&&o.textContent.toLowerCase().includes(term.toLowerCase())&&(!select.dataset.membersOnly||term.length>=2||isMember(o))).sort((a,b)=>Number(isMember(b))-Number(isMember(a)));
    local.slice(0,12).forEach(o=>item(o.textContent,'',()=>choose({id:o.value,name:o.textContent})));
    status.textContent=term.length<2?'':'Searching Microsoft...';
    if(term.length<2)return;
    try{
     const url=new URL(config.dataset.searchUrl);url.searchParams.set('q',term);url.searchParams.set('ajax','1');url.searchParams.set('directory_project_id',select.dataset.directoryProject);
     const response=await fetch(url,{headers:{Accept:'application/json'},signal:controller.signal});const data=await response.json();if(current!==version)return;
-    if(!response.ok||data.error)throw Error(data.error?'Microsoft search is unavailable. Existing people are still available.':data.message||'Directory search unavailable.');
+    if(!response.ok)throw Error(data.message||'Directory search unavailable.');
     let added=0;
+    for(const person of data.localResults||[]){
+     if(local.some(o=>String(o.value)===String(person.id)))continue;
+     item(person.name,person.email,()=>choose(person));added++;
+    }
     for(const person of data.results||[]){
      if(!person.email||local.some(o=>o.textContent.toLowerCase().includes(person.email.toLowerCase())))continue;
      item(person.displayName,person.email,async()=>{
@@ -47,7 +61,7 @@
       finally{busy=false;input.disabled=false;focusWithoutSearch();if(added)status.textContent='Added to the system and selected. Complete the form to finish assigning.';}
      },true);added++;
     }
-    status.textContent=local.length||added?'':'No people found. Try another name or email.';
+    status.textContent=local.length||added?'':(data.error?'Microsoft search is unavailable. No matching system users found.':'No people found. Try another name or email.');
    }catch(error){if(error.name!=='AbortError'&&current===version)status.textContent=error.message;}
   }
   input.addEventListener('focus',()=>{if(suppressFocusSearch){suppressFocusSearch=false;return;}search();});

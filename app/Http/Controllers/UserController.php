@@ -220,6 +220,11 @@ class UserController {
         $results = [];
         $error = null;
         $q = trim((string)$request->input('q', ''));
+        $localResults = strlen($q) >= 2 ? User::query()
+            ->where('account_status', 'active')->where('system_role', 'user')
+            ->where(function ($query) use ($q) {
+                $query->where('name', 'like', "%{$q}%")->orWhere('email', 'like', "%{$q}%");
+            })->orderBy('name')->limit(12)->get(['id', 'name', 'email', 'account_status', 'system_role'])->values() : collect();
 
         if ($graph->configured()) {
             try {
@@ -246,6 +251,7 @@ class UserController {
             return response()->json([
                 'q' => $q,
                 'error' => $error,
+                'localResults' => $localResults,
                 'results' => array_values(array_map(function($r) use ($existing, $emailMatches) {
                     $email = strtolower(trim($r['mail'] ?: ($r['userPrincipalName'] ?? '')));
                     $isAdded = in_array($r['id'], $existing, true);

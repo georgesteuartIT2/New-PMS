@@ -100,3 +100,15 @@
 .stp-bulk-assign-dialog .directory-picker input{width:100%;height:42px}.stp-bulk-summary{display:flex;gap:8px;margin-top:12px}.stp-bulk-summary span{padding:5px 9px;border-radius:20px;background:#F1F5F3;color:#52675F;font-size:11px}
 .stp-bulk-assign-dialog footer{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid #E7ECE9}.stp-bulk-assign-dialog footer .btn{min-height:38px}
 @media(max-width:600px){.stp-bulk-assign-dialog footer{display:grid}.stp-bulk-assign-dialog footer .btn{width:100%}}
+#smart-task-plan-backdrop{padding:20px!important;box-sizing:border-box;align-items:center;justify-content:center}
+#smart-task-plan-modal{height: min(780px,calc(100dvh - 40px))!important;display:flex!important;flex-direction:column;overflow:hidden!important;margin:auto;box-sizing:border-box}
+#smart-task-plan-modal .stp-body{flex:1 1 auto!important;min-height:0!important;background:#fafcfb}
+#smart-task-plan-modal #stp-table-wrap{min-height:100%;box-sizing:border-box;background:#fff}
+#smart-task-plan-modal .stp-table thead th{position:sticky;top:0;z-index:2}
+#smart-task-plan-modal .stp-header{display:flex;flex-wrap:wrap;align-items:center}
+#smart-task-plan-modal .stp-title-group{min-width:0;flex:1}
+#smart-task-plan-modal .stp-header-actions{flex-shrink:0}
+#smart-task-plan-modal .stp-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap}
+@media(max-width:700px){#smart-task-plan-modal{height:calc(100dvh - 16px)!important}#smart-task-plan-modal .stp-toolbar-left{gap:6px}#smart-task-plan-modal .stp-toolbar-meta{width:100%}}
+#smart-task-plan-modal #stp-details-drawer{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:16px}
+@media(max-width:700px){#smart-task-plan-modal #stp-details-drawer{grid-template-columns:1fr!important}}

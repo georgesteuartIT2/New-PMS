@@ -36,7 +36,7 @@
         $project->status === 'declined' => ['declined' => 'Declined'],
         $project->status === 'draft' => ['draft' => 'Draft'],
         $project->status === 'pending' => ['pending' => 'Awaiting PM approval'],
-        default => ['active'=>'Active','on_hold'=>'On hold','completed'=>'Completed','archived'=>'Archived'],
+        default => ['active'=>'Active','on_hold'=>'On hold','completed'=>'Completed'],
     };
 
     $leadershipIds = array_filter([$project->pm_user_id, $project->owner_user_id]);

@@ -1,7 +1,8 @@
 @extends('layouts.app')
 @section('title', $isPmo ? 'Dashboard' : 'My Workspace')
 @section('content')
-<div class="home-workspace premium-dashboard">
+<link rel="stylesheet" href="{{ asset('css/dashboard-kpi.css') }}?v={{ filemtime(public_path('css/dashboard-kpi.css')) }}">
+<div class="home-workspace premium-dashboard {{ $isPmo ? 'pmo-dashboard' : 'user-dashboard' }}">
     <div class="page-head">
         <div><span class="workspace-eyebrow">{{ now()->format('l, d M Y') }}@if($isPmo) &middot; Portfolio Health @endif</span><h1>{{ $isPmo ? 'Project Overview' : 'My workspace' }}</h1><p class="muted">{{ $isPmo ? 'See what needs attention, then keep work moving.' : 'Your priorities, projects and upcoming work in one place.' }}</p></div>
         <div class="inline-actions">
@@ -63,9 +64,9 @@
                 </header>
 
                 <nav class="dashboard-task-tabs" aria-label="Tasks needing attention" style="display: flex; gap: 20px; padding: 0 20px; border-bottom: 1px solid var(--border); background: #FAFBFC;">
-                    @foreach(['overdue'=>'Overdue','blocked'=>'Reported blockers','critical'=>'Critical path'] as $key=>$label)
+                    @foreach(['overdue'=>'Overdue','blocked'=>'Reported blockers','critical'=>'Critical path','unassigned'=>'Unassigned'] as $key=>$label)
                         @php
-                            $tabCount = $key==='blocked' ? $blockerCount : ($monitoringMetrics[$key==='critical' ? 'critical_tasks' : 'overdue_tasks'] ?? 0);
+                            $tabCount = $key==='blocked' ? $blockerCount : ($monitoringMetrics[$key.'_tasks'] ?? 0);
                         @endphp
                         <a href="{{ route('dashboard', ['task_attention'=>$key]) }}#task-attention" class="tab-{{ $key }} {{ $taskAttentionFilter===$key ? 'is-active' : '' }}" @if($taskAttentionFilter===$key) aria-current="page" @endif style="display: inline-flex; align-items: center; gap: 6px; padding: 10px 0; text-decoration: none;">
                             <span>{{ $label }}</span>
@@ -124,13 +125,13 @@
                 </article>
                 @empty
                 <div class="home-empty" style="padding: 32px 20px; text-align: center;">
-                    <b style="font-size: 14px; color: #0F172A;">{{ $taskAttentionFilter==='overdue' ? 'No overdue tasks' : 'No unfinished critical-path tasks' }}</b>
-                    <p style="font-size: 12.5px; color: #64748B; margin-top: 4px;">{{ $taskAttentionFilter==='overdue' ? 'Your scheduled tasks are up to date.' : 'Tasks on the critical path will appear here when action is needed.' }}</p>
+                    <b style="font-size: 14px; color: #0F172A;">{{ $taskAttentionFilter==='overdue' ? 'No overdue tasks' : ($taskAttentionFilter==='unassigned' ? 'No unassigned tasks' : 'No unfinished critical-path tasks') }}</b>
+                    <p style="font-size: 12.5px; color: #64748B; margin-top: 4px;">{{ $taskAttentionFilter==='overdue' ? 'Your scheduled tasks are up to date.' : ($taskAttentionFilter==='unassigned' ? 'All tasks have an assignee.' : 'Tasks on the critical path will appear here when action is needed.') }}</p>
                 </div>
                 @endforelse
                 <footer class="dashboard-task-footer" style="padding: 14px 20px; background: #FAFBFC; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #64748B;">
-                    <span>Showing <b>{{ $taskAttention->count() }}</b> of <b>{{ $taskAttention->total() }}</b> {{ $taskAttentionFilter==='overdue' ? 'overdue' : 'critical-path' }} tasks</span>
-                    <a class="text-action" href="{{ route('pmo.task-monitor', ['filter'=>$taskAttentionFilter]) }}" style="font-weight: 600;">View all {{ $taskAttentionFilter==='overdue' ? 'overdue' : 'critical-path' }} tasks ({{ $taskAttention->total() }}) &rarr;</a>
+                    <span>Showing <b>{{ $taskAttention->count() }}</b> of <b>{{ $taskAttention->total() }}</b> {{ $taskAttentionFilter==='overdue' ? 'overdue' : ($taskAttentionFilter==='unassigned' ? 'unassigned' : 'critical-path') }} tasks</span>
+                    <a class="text-action" href="{{ route('pmo.task-monitor', ['filter'=>$taskAttentionFilter]) }}" style="font-weight: 600;">View all {{ $taskAttentionFilter==='overdue' ? 'overdue' : ($taskAttentionFilter==='unassigned' ? 'unassigned' : 'critical-path') }} tasks ({{ $taskAttention->total() }}) &rarr;</a>
                 </footer>
                 @endif
             </section>
@@ -170,19 +171,21 @@
             </section>
         </div>
         <aside class="home-side" aria-label="Upcoming work and shortcuts">
+            @if($isPmo)
+            <section class="home-panel"><header class="home-panel-head"><div><h2>Upcoming meetings</h2><p>Your next scheduled project meetings.</p></div><a class="text-action" href="{{ route('calendar.index') }}">Calendar &rarr;</a></header>
+                @forelse($upcomingMeetings as $meeting)
+                <a class="dashboard-draft-link" href="{{ route('projects.show',$meeting->project_id) }}"><span><b>{{ $meeting->title }}</b><small>{{ $meeting->project?->name }} &middot; {{ $meeting->starts_at->format('d M Y, g:i A') }}</small></span><span aria-hidden="true">&rarr;</span></a>
+                @empty
+                <div style="padding:20px;color:var(--muted)">No upcoming meetings scheduled.</div>
+                @endforelse
+            </section>
+            @endif
             <section class="home-panel"><header class="home-panel-head"><div><h2 id="upcoming-work">{{ $isPmo ? 'Upcoming deadlines' : 'Coming up next' }}</h2><p>Next scheduled task deadlines.</p></div><a class="text-action" href="{{ route('calendar.index') }}">Calendar &rarr;</a></header><div class="home-upcoming">
                 @forelse($homeWork->take(5) as $task)
                     <button type="button" class="home-upcoming-item" data-task-location="{{ route('projects.show', [$task->project_id, 'focus_task'=>$task->id]) }}"><span class="home-date"><strong>{{ $task->ends_at->format('d') }}</strong><small>{{ $task->ends_at->format('M') }}</small></span><span class="home-upcoming-copy"><b>{{ $task->title }}</b><small>{{ $task->project?->name }}</small><span class="{{ $task->isOverdue() ? 'text-danger' : 'muted' }}">{{ $task->isOverdue() ? 'Overdue' : $task->ends_at->diffForHumans() }}</span></span><span aria-hidden="true">&rsaquo;</span></button>
                 @empty<div class="home-empty home-empty-small"><b>No upcoming deadlines</b><p>Your scheduled work will appear here.</p></div>@endforelse
             </div></section>
             @if($isPmo)
-            <section class="home-panel"><header class="home-panel-head"><div><h2>Task Attention</h2><p>Keep assignments and milestones moving.</p></div><a class="text-action" href="{{ route('monitoring.index') }}">Task Monitor →</a></header><div class="home-shortcuts">
-                <a href="{{ route('pmo.task-monitor',['filter'=>'overdue']) }}"><span>Overdue Tasks</span><b>{{ $monitoringMetrics['overdue_tasks']??0 }}</b><span aria-hidden="true">&rarr;</span></a>
-                <a href="{{ route('pmo.task-monitor',['filter'=>'unassigned']) }}"><span>Unassigned</span><b>{{ $monitoringMetrics['unassigned_tasks']??0 }}</b><span aria-hidden="true">&rarr;</span></a>
-                <a href="{{ route('pmo.task-monitor',['filter'=>'critical']) }}"><span>Critical Path</span><b>{{ $monitoringMetrics['critical_tasks']??0 }}</b><span aria-hidden="true">&rarr;</span></a>
-                <a href="{{ route('pmo.task-monitor',['filter'=>'needs_update']) }}"><span>Needs Update</span><b>{{ $monitoringMetrics['needs_update_tasks']??0 }}</b><span aria-hidden="true">&rarr;</span></a>
-                <a href="{{ route('monitoring.index',['tab'=>'team']) }}"><span>Review Workload →</span><span aria-hidden="true">&rarr;</span></a>
-            </div></section>
             @if($draftCount > 0 && auth()->user()->isPmo())
             <section class="home-panel dashboard-drafts"><header class="home-panel-head"><div><h2>Draft projects <span class="quiet-count">{{ $draftCount }}</span></h2><p>Continue when you are ready.</p></div><a class="text-action" href="{{ route('projects.index',['status'=>'draft']) }}">View all &rarr;</a></header>
                 @foreach($draftProjects->take(3) as $draft)<a class="dashboard-draft-link" href="{{ route('projects.create',['draft'=>$draft->id]) }}"><span><b>{{ $draft->name }}</b><small>{{ $draft->manager?->name ?? 'Manager not selected' }}</small></span><span>Continue &rarr;</span></a>@endforeach
