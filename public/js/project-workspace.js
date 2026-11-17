@@ -2,6 +2,7 @@
 (function () {
   'use strict';
 
+
   function escapeHtml(str) { return String(str || '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m])); }
   document.addEventListener('keydown', event => {if(event.key === 'Escape') closeAllDropdowns();});
   // 2. Dropdown Menus (Add Task, Import/Export, Project Actions)
@@ -278,6 +279,26 @@
 
       cell.appendChild(bar);
     }
+    grid.querySelector('.uwt-dependency-lines')?.remove();
+    grid.style.position='relative';
+    const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');
+    svg.classList.add('uwt-dependency-lines');
+    Object.assign(svg.style,{position:'absolute',inset:'0',width:grid.scrollWidth+'px',height:grid.scrollHeight+'px',pointerEvents:'none',overflow:'visible',zIndex:'3'});
+    svg.innerHTML='<defs><marker id="uwt-dependency-arrow" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#718D83"/></marker></defs>';
+    const origin=grid.getBoundingClientRect();
+    for(const task of validTasks){
+      const target=grid.querySelector(`[data-uwt-track="${task.id}"] .uwt-gantt-bar`);if(!target)continue;
+      for(const id of task.dependencies||[]){
+        const source=grid.querySelector(`[data-uwt-track="${id}"] .uwt-gantt-bar`);if(!source)continue;
+        const a=source.getBoundingClientRect(),b=target.getBoundingClientRect();
+        const x1=a.right-origin.left+grid.scrollLeft,y1=a.top+a.height/2-origin.top+grid.scrollTop;
+        const x2=b.left-origin.left+grid.scrollLeft,y2=b.top+b.height/2-origin.top+grid.scrollTop;
+        const path=document.createElementNS(ns,'path');
+        path.setAttribute('d',`M${x1},${y1} H${x1+10} V${y2-12} H${x2-10} V${y2} H${x2}`);
+        path.setAttribute('fill','none');path.setAttribute('stroke','#718D83');path.setAttribute('stroke-width','1.3');path.setAttribute('marker-end','url(#uwt-dependency-arrow)');svg.append(path);
+      }
+    }
+    grid.append(svg);
   }
 
   // Scale buttons

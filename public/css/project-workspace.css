@@ -685,3 +685,12 @@ tr.project-task-row.is-focused-task {
 .schedule-activity-empty{display:flex;align-items:center;gap:9px;padding:11px 13px;border:1px dashed #DCE5E0;border-radius:8px;background:#FCFDFC;color:#849089}
 .schedule-activity-empty span{font-size:13px}.schedule-activity-empty p{margin:0;font-size:10.5px}
 @media(max-width:650px){.schedule-baseline-top{align-items:flex-start;flex-direction:column}.schedule-baseline-facts{grid-template-columns:1fr}.schedule-baseline-facts>div{border-right:0;border-bottom:1px solid #E8EDEA}.schedule-baseline-facts>div:last-child{border-bottom:0}}
+#project-workspace{min-width:0;max-width:100%;box-sizing:border-box}
+#project-workspace #tab-tasks{min-width:0;max-width:100%}
+#project-workspace #tab-tasks .table-wrap{width:100%;max-width:100%;min-width:0}
+#project-workspace #tab-tasks table.project-tasks-full-table :is(th,td){min-width:0!important;box-sizing:border-box;overflow-wrap:anywhere}
+#project-workspace #tab-tasks table.project-tasks-full-table td{padding:10px 8px!important}
+#project-workspace #tab-tasks table.project-tasks-full-table td:first-child{white-space:normal!important}
+#project-workspace #tab-tasks table.project-tasks-full-table td:nth-child(2)>div{min-width:0;max-width:100%}
+#project-workspace #tab-tasks table.project-tasks-full-table :is(select,.task-status-cell){min-width:0!important;max-width:100%!important;box-sizing:border-box}
+#project-workspace #tab-tasks .workspace-task-toolbar{min-width:0;max-width:100%;flex-wrap:wrap}

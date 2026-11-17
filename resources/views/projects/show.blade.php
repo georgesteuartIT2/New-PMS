@@ -410,6 +410,7 @@
                                 </th>
                                 <th style="padding: 12px 12px; width: 17%;">Assignee</th>
                                 <th style="padding: 12px 8px; width: 8.5%;">Priority</th>
+                                <th style="padding:12px 8px;width:110px;">Dependencies</th>
                                 <th style="padding: 12px 12px; width: 10%;">Starts<span class="workspace-sr-only">Start Date &amp; Time</span></th>
                                 <th style="padding: 12px 12px; width: 11%;">Due<span class="workspace-sr-only">End Date &amp; Time</span></th>
                                 <th style="padding: 12px 10px; width: 9.5%;">Progress</th>
@@ -542,6 +543,11 @@
                                         @endif
                                     </td>
 
+                                    <td style="padding:10px 8px;font-size:11px;">
+                                        @forelse($task->dependencies as $dependency)
+                                            <a href="#task-row-{{ $dependency->id }}" title="{{ $dependency->title }}" style="display:inline-block;padding:3px 6px;margin:2px;border:1px solid #DCE5DF;border-radius:4px;color:#315F58;">{{ $numbers[$dependency->id] ?? $dependency->code }}</a>
+                                        @empty<span style="color:#94A3B8;">&mdash;</span>@endforelse
+                                    </td>
                                     <!-- Column 4: Start Date & Time -->
                                     <td style="padding: 10px 12px; font-size: 12.5px; vertical-align: middle; white-space: nowrap;">
                                         <div style="color: #1E293B; font-weight: 600; font-size: 12px; line-height: 1.3;">{{ $task->starts_at->format('d M Y') }}</div>
@@ -1800,9 +1806,12 @@
 @if(auth()->user()->isPmo() && in_array($project->status, ['draft', 'pending', 'declined']))
     <!-- Assign / Reassign PM Dialog -->
     <dialog id="assign-pm-dialog" class="modal" style="max-width: 520px;">
+        @php($reassignOwner = $project->status === 'declined' && $project->approval_stage === 'owner_declined')
         <div class="modal-head">
             <h2 style="margin: 0; font-size: 17px;">
-                @if($project->status === 'declined')
+                @if($reassignOwner)
+                    Reassign Project Owner
+                @elseif($project->status === 'declined')
                     Reassign Project Manager
                 @elseif($project->status === 'pending')
                     Reassign Project Manager
@@ -1812,10 +1821,13 @@
             </h2>
             <button type="button" class="icon-btn" data-close-dialog aria-label="Close">×</button>
         </div>
-        <form method="post" action="{{ route('projects.manager', $project) }}" class="stack mt-16">
+        <form method="post" action="{{ route($reassignOwner ? 'projects.workflow.reassign' : 'projects.manager', $project) }}" class="stack mt-16">
             @csrf
+            @if($reassignOwner)<input type="hidden" name="assignment_type" value="owner">@endif
 
-            @if($project->status === 'declined' && $declinedInvitation)
+            @if($reassignOwner)
+                <p class="muted text-sm">The selected owner will receive a request to review the project and appoint a Project Manager.</p>
+            @elseif($project->status === 'declined' && $declinedInvitation)
                 <div style="background: #FEF2F2; border: 1px solid #FECACA; border-radius: 6px; padding: 10px 14px; font-size: 13px; color: #991B1B; margin-bottom: 12px;">
                     <div style="font-weight: 700;">Previous PM: {{ $declinedInvitation->user?->name ?? $project->manager?->name ?? 'Assigned PM' }} (Declined)</div>
                     @if($declinedInvitation->decline_reason)
@@ -1830,9 +1842,9 @@
                 <p class="muted text-sm" style="margin-top: 0; margin-bottom: 12px;">The selected manager will receive an invitation to review, accept, and activate this project.</p>
             @endif
 
-            <label style="display: grid; gap: 6px; font-weight: 600; font-size: 13px;">Project Manager <span class="required">*</span>
-                <select name="pm_user_id" required data-directory-picker data-directory-floating="1" data-directory-project="{{ $project->id }}" aria-describedby="pm-reassign-directory-help" style="width: 100%; padding: 8px 10px; border: 1px solid #D1D5DB; border-radius: 6px;">
-                    <option value="">Choose an active Project Manager...</option>
+            <label class="project-reassign-person"><span class="project-reassign-label">{{ $reassignOwner ? 'Project Owner' : 'Project Manager' }} <span class="required">*</span></span>
+                <select name="{{ $reassignOwner ? 'assignee_id' : 'pm_user_id' }}" required data-directory-picker data-directory-floating="1" data-directory-project="{{ $project->id }}" aria-describedby="pm-reassign-directory-help" style="width: 100%; padding: 8px 10px; border: 1px solid #D1D5DB; border-radius: 6px;">
+                    <option value="">Choose an active {{ $reassignOwner ? 'Project Owner' : 'Project Manager' }}...</option>
                     @foreach($pmCandidates ?? $users as $u)
                         <option value="{{ $u->id }}" @selected($u->id === $project->pm_user_id)>
                             {{ $u->name }} ({{ $u->email }}){{ $u->id === $project->pm_user_id && $project->status === 'declined' ? ' — Previously Declined' : '' }}
@@ -1969,6 +1981,7 @@
 <script>
 window.gsProjectTimeline = {{ \Illuminate\Support\Js::from($ganttTasks->map(fn($t) => [
     'id' => $t->id,
+    'dependencies' => $t->dependencies->pluck('id')->values()->all(),
     'title' => $t->title,
     'status' => $t->status,
     'start' => $t->starts_at->toIso8601String(),

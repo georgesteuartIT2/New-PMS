@@ -1,5 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
  const form=document.getElementById('initiate-project-form');if(!form)return;
+ function updateSetupGuidance(){
+  const guidance=document.getElementById('optional-setup-guidance');
+  const isOwner=form.querySelector('[name="assignment_type"]:checked')?.value==='owner';
+  if(guidance)guidance.textContent='The PM will prepare the plan '+(isOwner?'once appointed':'after accepting')+'. You can add tasks or people now for the PM to review.';
+ }
+ form.querySelectorAll('[name="assignment_type"]').forEach(input=>input.addEventListener('change',updateSetupGuidance));
+ updateSetupGuidance();
  const mode=form.elements.plan_mode,selected=form.elements.project_template_id,blank=form.elements.blank_plan,summary=document.getElementById('starting-plan-summary');
  const flow=form.dataset.flow||crypto.randomUUID(),key='initiate-project-'+flow;
  const names=['name','description','subsidiary_id','assignment_type','assignee_id','plan_mode','project_template_id','starts_on','ends_on','blank_plan'];
@@ -14,6 +21,16 @@ document.addEventListener('DOMContentLoaded', () => {
  document.getElementById('edit-blank-plan').addEventListener('click',()=>{let data;try{data=JSON.parse(blank.value);}catch{}if(data){window.SmartTaskPlan.openEdit(data,data.tasks);}else window.SmartTaskPlan.openCreate({name:form.elements.name.value||'Project task plan',estimated_duration:1,initial_task_count:10,reference_start_date:form.elements.starts_on.value,working_hours:'09:00 - 17:00'});});
  document.querySelectorAll('[data-starting-plan]').forEach(button=>button.addEventListener('click',()=>{document.getElementById(button.dataset.startingPlan==='template'?'browse-starting-template':'edit-blank-plan').click();}));
  form.addEventListener('submit',()=>{try{sessionStorage.removeItem(key);}catch{}});refresh();updatePlanStatus();
- document.getElementById('initiate-plan-options').open=false;
+ const planSection=document.getElementById('initiate-plan-options');
+ planSection.open=!!window.INITIATE_TEMPLATE;
+ if(window.INITIATE_TEMPLATE){
+  const optionalSection=planSection.closest('.flow-optional-setup');
+  if(optionalSection)optionalSection.open=true;
+  keep();
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+   planSection.scrollIntoView({behavior:'smooth',block:'start'});
+   document.querySelector('[data-starting-plan="template"]')?.focus({preventScroll:true});
+  }));
+ }
  form.querySelectorAll('[data-optional-roles]').forEach(section=>section.open=false);
 });

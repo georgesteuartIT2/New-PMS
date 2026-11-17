@@ -126,3 +126,20 @@ body[data-page="projects.create"] .project-initiate-page [data-show-new-role]{bo
 .project-initiate-page .self-managed-project-note b,.project-initiate-page .self-managed-project-note small{display:block}
 .project-initiate-page .self-managed-project-note b{font-size:13px}
 .project-initiate-page .self-managed-project-note small{margin-top:2px;color:#526C65;font-size:11px;line-height:1.45}
+.project-initiate-page .initiate-planning-notice p{color:#465D51!important;font-size:13px!important;line-height:1.7!important}
+.project-initiate-page .flow-optional-header p,.project-initiate-page .initiate-plan-choice small{color:#52665B!important;font-size:12px!important}
+.project-initiate-page .initiate-plan-skip{color:#5B6F63!important;font-size:12px!important}
+.project-initiate-page #initiate-plan-fields{display:grid!important;grid-template-columns:1fr;gap:16px!important;padding:0!important;margin:18px 0 0!important;background:transparent!important;border:0!important;border-radius:0!important;min-width:0}
+.project-initiate-page #initiate-plan-fields:disabled{display:none!important}
+.project-initiate-page #initiate-plan-fields .flow-role-actions{padding:0!important;margin:0!important;border:0!important;display:flex;align-items:center;flex-wrap:wrap;gap:12px!important}
+.project-initiate-page #edit-blank-plan,.project-initiate-page #browse-starting-template{background:#315F58;color:white;border:1px solid #315F58;font-weight:600}
+.project-initiate-page #starting-plan-summary{font-size:12px!important;font-weight:500;color:#315F58!important}
+.project-initiate-page #initiate-plan-fields .flow-grid{gap:16px!important;margin:0!important}
+.project-initiate-page #initiate-plan-fields .flow-option-hint{color:#5B7063!important;font-size:12px!important;margin:0!important;line-height:1.6}
+.project-initiate-page #browse-starting-template{display:none!important}
+.project-initiate-page .initiate-plan-picker .initiate-plan-choice{position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;min-height:112px;padding:18px!important}
+.project-initiate-page .initiate-plan-choice[data-starting-plan=template]{padding-right:150px!important}
+.project-initiate-page .template-card-action{position:absolute;right:18px;bottom:18px;display:inline-flex;align-items:center;gap:8px;padding:8px 11px;border-radius:6px;background:#315F58;color:#fff;font-size:11px;font-weight:600;line-height:1.5}
+.project-initiate-page .initiate-plan-choice:hover .template-card-action{background:#264D46}
+.project-initiate-page #initiate-plan-fields .flow-role-actions:has(#browse-starting-template:not([hidden])):not(:has(#starting-plan-summary:not(:empty))){display:none!important}
+@media(max-width:700px){.project-initiate-page .initiate-plan-choice[data-starting-plan=template]{padding-right:18px!important;padding-bottom:60px!important}}

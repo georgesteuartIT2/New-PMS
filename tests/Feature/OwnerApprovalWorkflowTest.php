@@ -291,13 +291,16 @@ class OwnerApprovalWorkflowTest extends TestCase
 
     public function test_owner_request_is_in_inbox_without_a_mail_worker(): void
     {
+        config(['mail.default' => 'array']);
+        \Illuminate\Support\Facades\Event::fake([\Illuminate\Mail\Events\MessageSent::class]);
         config(['queue.default' => 'database']);
         $pmo = $this->person('pmo');
         $owner = $this->person();
         $sub = Subsidiary::create(['name' => 'Inbox company', 'code' => 'INB', 'status' => 'active', 'created_by' => $pmo->id]);
         $this->actingAs($pmo)->post(route('projects.initiate'), ['name' => 'Owner inbox request', 'subsidiary_id' => $sub->id, 'assignment_type' => 'owner', 'assignee_id' => $owner->id])->assertRedirect();
         $this->assertSame(1, $owner->notifications()->count());
-        $this->assertSame(1, DB::table('jobs')->count());
+        $this->assertSame(0, DB::table('jobs')->count());
+        \Illuminate\Support\Facades\Event::assertDispatched(\Illuminate\Mail\Events\MessageSent::class, fn ($event) => collect($event->message->getTo())->contains(fn ($address) => $address->getAddress() === $owner->email));
         $this->actingAs($owner)->get(route('notifications.index'))->assertOk()->assertSee('Project owner approval requested')->assertSee('Owner inbox request');
     }
 

@@ -112,7 +112,7 @@ class ProjectService {
     }
     foreach($byCode as [$task,$parent,$dependency]){
      if($parent && isset($byCode[$parent]))$task->update(['parent_task_id'=>$byCode[$parent][0]->id]);
-     if($dependency && isset($byCode[$dependency]))$task->dependencies()->syncWithoutDetaching([$byCode[$dependency][0]->id]);
+     foreach(preg_split('/[,;]+/',(string)$dependency) as $dependencyCode){$dependencyCode=trim($dependencyCode);if($dependencyCode!=='' && isset($byCode[$dependencyCode]))$task->dependencies()->syncWithoutDetaching([$byCode[$dependencyCode][0]->id]);}
     }
  }
  public function addPlanningMember(Project $project,int $id,User $actor):void {

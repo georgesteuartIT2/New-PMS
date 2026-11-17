@@ -54,7 +54,6 @@
     dialog.addEventListener('close',()=>saveDraft());
     window.addEventListener('pagehide',()=>saveDraft());
     document.addEventListener('visibilitychange',()=>{if(document.hidden)saveDraft();});
-    form.addEventListener('submit',()=>{publishing=true;clearTimeout(draftTimer);});
     document.addEventListener('project-plan-draft-change',event=>{if(!event.detail||!window.SmartTaskPlan?.localPlanSave)return;const hidden=document.getElementById('blank-plan-data');if(hidden){hidden.value=JSON.stringify(event.detail);const mode=document.getElementById('plan-mode');const template=document.getElementById('plan-template-id');if(window.PLAN_SETUP_CONFIG?.selectedTemplateId){if(mode)mode.value='template';if(template){template.value=window.PLAN_SETUP_CONFIG.selectedTemplateId;template.disabled=false;}}else{if(mode)mode.value='blank';if(template)template.disabled=true;}scheduleDraft();}});
 
     const isStarted = form.dataset.planStarted === '1';
@@ -162,6 +161,15 @@
     }
 
     function refreshPlanIndicators() {
+        const cardSummary = document.getElementById('blank-plan-card-summary');
+        if (cardSummary) {
+            let tasks = [];
+            try { tasks = JSON.parse(blankPlanData?.value || '{}').tasks || []; } catch {}
+            const count = tasks.length;
+            cardSummary.textContent = count
+                ? count + ' tasks prepared · Click to edit plan'
+                : 'Add tasks manually or import from Excel.';
+        }
         const tasks = currentPlanTasks();
         const team = document.getElementById('plan-task-team');
         if (team) {
@@ -451,6 +459,18 @@
             if (modeInput?.value === 'template' && (!templateInput || !templateInput.value)) chooseTemplateBtn?.focus();
             else form.querySelector(':invalid')?.focus();
             return;
+        }
+        if (publishing) { event.preventDefault(); return; }
+        publishing = true;
+        clearTimeout(draftTimer);
+        if (event.submitter === publishDirectBtn) {
+            const publishFlag = document.createElement('input');
+            publishFlag.type = 'hidden';publishFlag.name = 'publish_now';publishFlag.value = '1';
+            form.append(publishFlag);
+            publishDirectBtn.disabled = true;
+            publishDirectBtn.setAttribute('aria-busy', 'true');
+            publishDirectBtn.textContent = 'Publishing & notifying...';
+            document.getElementById('btn-save-draft-close')?.setAttribute('disabled', '');
         }
     });
 

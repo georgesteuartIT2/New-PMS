@@ -65,3 +65,25 @@
 #projects-list-container .table-actions-cell{gap:6px!important;align-items:center}
 #projects-list-container .table-actions-cell .btn{white-space:normal!important;text-align:center;line-height:1.4!important;height:auto!important;overflow:visible!important}
 #projects-list-container .btn-dots{flex-shrink:0;padding:0!important;display:inline-flex;align-items:center;justify-content:center}
+
+/* Balanced portfolio columns and compact project summaries. */
+#projects-list-container .projects-table th:nth-child(1){width:23%!important}
+#projects-list-container .projects-table th:nth-child(2){width:18%!important}
+#projects-list-container .projects-table th:nth-child(3){width:12%!important}
+#projects-list-container .projects-table th:nth-child(4){width:14%!important}
+#projects-list-container .projects-table th:nth-child(5){width:10%!important}
+#projects-list-container .projects-table th:nth-child(6){width:13%!important}
+#projects-list-container .projects-table th:nth-child(7){width:10%!important}
+#projects-list-container .projects-table tbody td{padding:16px 12px!important;line-height:1.5!important}
+#projects-list-container .project-lead-line{grid-template-columns:36px minmax(0,1fr);gap:6px;align-items:start}
+#projects-list-container .project-lead-line strong{font-size:11px!important;line-height:1.5!important;overflow-wrap:anywhere!important}
+#projects-list-container .project-lead-line small{font-size:10px!important;line-height:1.65}
+#projects-list-container .project-lead-list{gap:6px}
+#projects-list-container .progress-col-wrap{grid-template-columns:auto minmax(0,1fr)!important;gap:5px!important}
+#projects-list-container .project-completion{font-size:10px!important;line-height:1.4}
+#projects-list-container .budget-compact-spent{display:flex;gap:4px;align-items:baseline}
+#projects-list-container .project-health-cell{gap:4px!important;font-size:11px}
+#projects-list-container .project-health-cell .overdue-count-pill{font-size:10px!important}
+#projects-list-container .table-actions-cell{flex-wrap:wrap;gap:5px!important}
+#projects-list-container .table-actions-cell .btn{padding:5px 8px!important;font-size:10px!important}
+#projects-list-container .projects-table thead th{font-size:11px!important;line-height:1.5;white-space:normal!important}

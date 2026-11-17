@@ -452,14 +452,20 @@ body:is([data-page="users.index"],[data-page="activity.index"],[data-page="subsi
 .directory-results-floating .directory-person:focus-visible{outline:2px solid #315F58!important;outline-offset:-2px;background:#EDF4F1!important}
 
 /* Task table controls: priority dropdown fits the word neatly, and status shows full words without clipping. */
-#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(1){width:28%!important;min-width:260px!important}
-#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(2){width:17%!important;min-width:165px!important}
-#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(3){width:8.5%!important;min-width:92px!important}
-#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(4){width:10%!important;min-width:105px!important}
-#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(5){width:11%!important;min-width:115px!important}
-#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(6){width:9.5%!important;min-width:105px!important}
-#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(7){width:13%!important;min-width:130px!important}
-#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(8){width:3%!important;min-width:36px!important}
+#project-workspace #tab-tasks .project-tasks-full-table{table-layout:fixed!important;width:100%!important;min-width:0!important;max-width:100%!important}
+#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(1){width:26%!important;min-width:0!important}
+#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(2){width:16%!important;min-width:0!important}
+#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(3){width:9%!important;min-width:0!important}
+#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(4){width:9%!important;min-width:0!important}
+#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(5){width:10%!important;min-width:0!important}
+#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(6){width:10%!important;min-width:0!important}
+#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(7){width:9%!important;min-width:0!important}
+#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(8){width:11%!important;min-width:0!important}
+#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(9){width:40px!important;min-width:40px!important}
+#project-workspace #tab-tasks .project-tasks-full-table :is(th,td){box-sizing:border-box}
+#project-workspace #tab-tasks .project-tasks-full-table td:nth-child(4){white-space:normal!important;padding:10px 8px!important}
+#project-workspace #tab-tasks .project-tasks-full-table .quick-priority-select{width:100%!important;min-width:0!important;max-width:100%!important}
+#project-workspace #tab-tasks .project-tasks-full-table .quick-status-select{width:100%!important;min-width:0!important;max-width:100%!important;box-sizing:border-box}
 
 #project-workspace #tab-tasks .project-tasks-full-table td:nth-child(2){
  padding:10px 12px!important;
@@ -707,8 +713,8 @@ body:is([data-page="users.index"],[data-page="activity.index"],[data-page="subsi
  color:#334155!important;
 }
 
-#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(8),
-#project-workspace #tab-tasks .project-tasks-full-table td:nth-child(8){
+#project-workspace #tab-tasks .project-tasks-full-table th:nth-child(9),
+#project-workspace #tab-tasks .project-tasks-full-table td:nth-child(9){
  padding:10px 6px!important;
  text-align:center!important;
  vertical-align:middle!important;
@@ -738,3 +744,19 @@ body:is([data-page="users.index"],[data-page="activity.index"],[data-page="subsi
 #add-task-dialog .manual-assignee-hint{display:block;margin-top:6px;font-size:10px;font-weight:400;line-height:1.5;color:#78877f}
 #add-task-dialog #manual-task-member-confirm{display:block;margin-top:6px}
 #add-task-dialog #manual-task-member-confirm[hidden]{display:none!important}
+#assign-pm-dialog{width:min(520px,calc(100vw - 32px))!important;max-height:calc(100dvh - 40px);box-sizing:border-box;padding:24px!important;border:1px solid #DDE6E0;border-radius:12px!important;overflow:visible}
+#assign-pm-dialog .modal-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 0 16px!important;margin:0!important;border-bottom:1px solid #E7ECE9}
+#assign-pm-dialog .modal-head h2{font-size:19px!important;line-height:1.4;margin:0!important}
+#assign-pm-dialog .modal-head .icon-btn{width:30px;height:30px;min-height:30px;padding:0;border-radius:6px;flex-shrink:0}
+#assign-pm-dialog form.stack{display:flex;flex-direction:column;gap:18px!important;margin-top:18px!important}
+#assign-pm-dialog form>p{font-size:12px!important;line-height:1.7!important;margin:0!important;color:#64756B}
+#assign-pm-dialog .project-reassign-person{display:block;font-size:12px;font-weight:500;margin:0}
+#assign-pm-dialog .project-reassign-label{display:block;margin-bottom:7px;color:#354B3E;font-size:12px;font-weight:600}
+#assign-pm-dialog .project-reassign-label .required{display:inline;margin-left:3px;color:#B9483C}
+#assign-pm-dialog .directory-picker{width:100%;margin:0!important}
+#assign-pm-dialog .directory-picker>input{box-sizing:border-box;width:100%;height:42px!important;min-height:42px!important;padding:9px 11px!important;margin:0!important;font-size:13px!important;font-weight:400!important;border:1px solid #D5E0D9;border-radius:7px}
+#assign-pm-dialog #pm-reassign-directory-help{display:block;font-size:11px!important;font-weight:400;line-height:1.6;color:#7C8B81;margin-top:6px}
+#assign-pm-dialog .directory-status:empty{display:none}
+#assign-pm-dialog .form-actions{display:flex;align-items:center;justify-content:flex-end;gap:9px;margin:0!important;padding-top:16px;border-top:1px solid #E7ECE9}
+#assign-pm-dialog .form-actions .btn{font-size:12px!important;min-height:38px;padding:9px 14px;border-radius:7px;line-height:1.4}
+@media(max-width:540px){#assign-pm-dialog{padding:18px!important}#assign-pm-dialog .form-actions{flex-wrap:wrap}}

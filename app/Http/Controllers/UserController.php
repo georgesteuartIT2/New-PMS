@@ -22,7 +22,11 @@ class UserController {
             });
         }
 
-        if ($subId) {
+        if ($subId === 'none') {
+            $query->whereNull('subsidiary_id')->where(fn($q)=>$q->whereNull('company_name')->orWhere('company_name',''));
+        } elseif (is_string($subId) && str_starts_with($subId, 'company:')) {
+            $query->whereNull('subsidiary_id')->where('company_name', substr($subId,8));
+        } elseif ($subId) {
             $query->where('subsidiary_id', $subId);
         }
 
@@ -35,7 +39,8 @@ class UserController {
         $activeUsersCount = User::where('account_status', 'active')->count();
         $pmoAdminCount = User::where('system_role', 'pmo')->count();
 
-        return view('users.index', compact('users', 'subsidiaries', 'totalUsersCount', 'activeUsersCount', 'pmoAdminCount', 'q', 'subId'));
+        $directoryCompanies=User::whereNull('subsidiary_id')->whereNotNull('company_name')->where('company_name','!=','')->distinct()->orderBy('company_name')->pluck('company_name');
+        return view('users.index', compact('users', 'subsidiaries', 'directoryCompanies', 'totalUsersCount', 'activeUsersCount', 'pmoAdminCount', 'q', 'subId'));
     }
 
     public function store(Request $request) {

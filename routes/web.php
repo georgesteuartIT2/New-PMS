@@ -2,6 +2,9 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{AuthController,MicrosoftAuthController,DashboardController,UserController,UserLinkController,ProjectController,RoleController,TemplateController,TaskController,GanttController,NotificationController,TaskImportController};
 Route::redirect('/','/dashboard');
+Route::get('/session-status', function (\Illuminate\Http\Request $request) {
+ return response()->json(['authenticated'=>$request->user() !== null])->header('Cache-Control','private, no-store, no-cache, must-revalidate');
+})->name('session.status');
 Route::middleware('guest')->group(function(){
  Route::get('/login',[AuthController::class,'loginForm'])->name('login');
  Route::post('/login',[AuthController::class,'login'])->name('login.submit');

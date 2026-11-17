@@ -112,3 +112,44 @@
 @media(max-width:700px){#smart-task-plan-modal{height:calc(100dvh - 16px)!important}#smart-task-plan-modal .stp-toolbar-left{gap:6px}#smart-task-plan-modal .stp-toolbar-meta{width:100%}}
 #smart-task-plan-modal #stp-details-drawer{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:16px}
 @media(max-width:700px){#smart-task-plan-modal #stp-details-drawer{grid-template-columns:1fr!important}}
+.stp-bulk-assign-dialog{height:min(720px,calc(100dvh - 32px));max-height:calc(100dvh - 32px);overflow:hidden;box-sizing:border-box;width:min(640px,calc(100vw - 32px))!important;display:flex;flex-direction:column;padding:20px!important}
+.stp-bulk-assign-dialog>header,.stp-bulk-assign-dialog>label,.stp-bulk-assign-dialog>.stp-bulk-summary,.stp-bulk-assign-dialog>footer{flex-shrink:0}
+.stp-bulk-assign-dialog>header{margin-bottom:16px}
+.stp-bulk-assign-dialog>label{display:block}
+.stp-bulk-assign-dialog .directory-picker>input{box-sizing:border-box;height:40px!important;min-height:40px!important;font-size:13px!important;font-weight:400!important;padding:9px 12px!important}
+.stp-bulk-assign-dialog .directory-status:empty{display:none}
+.stp-bulk-task-picker{margin:14px 0 0;display:flex;flex-direction:column;flex:1;min-height:0}
+.stp-recent-people{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.stp-recent-people .btn{font-size:11px;min-height:30px;padding:5px 10px}
+.stp-bulk-task-controls{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px;background:#F4F7F5;font-size:12px}
+.stp-bulk-task-controls label{display:flex!important;align-items:center;gap:6px}
+.stp-bulk-task-picker input[type=checkbox]{width:15px!important;height:15px!important;min-height:15px!important;margin:0;accent-color:#315F58}
+.stp-bulk-task-list{flex:1;min-height:0;max-height:none;overflow:auto;overscroll-behavior:contain;border:1px solid #E1E8E3;border-radius:0 0 6px 6px}
+.stp-bulk-task-list>label{display:flex!important;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid #EDF1EE;font-size:12px}
+.stp-bulk-task-list>label[hidden]{display:none!important}
+.stp-bulk-task-list small{display:block;color:#7A8980;font-size:11px;margin-top:3px}
+.stp-bulk-task-picker [data-bulk-result]{font-size:12px;color:#315F58}
+.stp-bulk-task-picker [data-bulk-result]:empty{display:none}
+.stp-bulk-assign-dialog footer{margin-top:14px;padding-top:14px}
+.stp-bulk-assign-dialog footer .btn{font-size:12px!important;padding:8px 16px!important;min-height:38px!important}
+.stp-bulk-assign-dialog .stp-recent-people:empty{display:none}
+.stp-bulk-assign-dialog .stp-bulk-task-list>label{font-weight:400;line-height:1.5;padding:9px 12px}
+.stp-bulk-assign-dialog .stp-bulk-task-list>label:has(input:checked){background:#EEF6F1}
+.stp-bulk-assign-dialog .stp-bulk-task-controls{flex-shrink:0;border:1px solid #E1E8E3;border-bottom:0;border-radius:6px 6px 0 0;gap:12px}
+.stp-bulk-assign-dialog .stp-bulk-task-controls label{font-size:11px;font-weight:500}
+.stp-bulk-assign-dialog [data-selected-count]{margin-left:auto;font-size:11px;color:#60756A}
+@media(max-width:600px){.stp-bulk-assign-dialog{padding:16px!important}.stp-bulk-assign-dialog footer{display:flex}.stp-bulk-assign-dialog footer .btn{width:auto;flex:1}}
+.stp-bulk-assign-backdrop .stp-bulk-assign-dialog{height:min(760px,calc(100dvh - 32px))!important;padding:18px 22px!important;gap:0!important}
+.stp-bulk-assign-backdrop .stp-bulk-assign-dialog header{margin:0 0 14px!important}
+.stp-bulk-assign-backdrop .stp-bulk-assign-dialog h3{font-size:19px!important;line-height:1.4!important;margin:0 0 4px!important}
+.stp-bulk-assign-backdrop .stp-bulk-assign-dialog header p{font-size:12px!important;line-height:1.5!important}
+.stp-bulk-assign-backdrop .stp-bulk-assign-dialog>label>b{font-size:12px!important;margin-bottom:5px!important}
+.stp-bulk-assign-backdrop .stp-bulk-summary{margin-top:8px!important;gap:6px}
+.stp-bulk-assign-backdrop .stp-bulk-summary span{font-size:10px!important;padding:3px 8px!important}
+.stp-bulk-assign-backdrop .stp-recent-people{flex-shrink:0;margin-bottom:8px!important;gap:5px}
+.stp-bulk-assign-backdrop .stp-recent-people .btn{height:28px!important;min-height:28px!important;padding:4px 9px!important;font-size:10px!important}
+.stp-bulk-assign-backdrop .stp-bulk-task-picker{margin-top:10px!important}
+.stp-bulk-assign-backdrop .stp-bulk-task-list>label{padding:7px 10px!important;min-height:48px;box-sizing:border-box;font-size:12px!important;gap:9px}
+.stp-bulk-assign-backdrop .stp-bulk-task-list small{font-size:10px!important;margin-top:1px!important;line-height:1.4}
+.stp-bulk-assign-backdrop .stp-bulk-task-controls{padding:8px 10px!important}
+.stp-bulk-assign-backdrop .stp-bulk-assign-dialog footer{margin-top:10px!important;padding-top:12px!important}

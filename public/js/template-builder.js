@@ -685,7 +685,29 @@
             const backdrop=document.createElement('div');backdrop.id='stp-bulk-assign-backdrop';backdrop.className='stp-bulk-assign-backdrop';
             backdrop.innerHTML=`<section class="stp-bulk-assign-dialog" role="dialog" aria-modal="true" aria-labelledby="stp-bulk-title"><header><div><h3 id="stp-bulk-title">Assign tasks</h3><p>Select once, then apply the person to the tasks you need.</p></div><button type="button" data-bulk-close aria-label="Close">×</button></header><label><b>Assignee</b><select data-bulk-person data-directory-picker data-directory-project="${this.assignmentProject||''}" required><option value="">Search name or email</option>${this.assignmentUsers.map(user=>`<option value="${user.id}">${this.escapeHtml(user.name)} (${this.escapeHtml(user.email)})${user.role_label?' · '+this.escapeHtml(user.role_label):''}</option>`).join('')}</select></label><div class="stp-bulk-summary"><span>${unassigned} unassigned</span><span>${assigned} already assigned</span></div><footer><button type="button" class="btn btn-outline" data-bulk-close>Cancel</button><button type="button" class="btn btn-outline" data-bulk-apply="unassigned" disabled>Assign ${unassigned} unassigned</button><button type="button" class="btn btn-primary" data-bulk-apply="all" disabled>Assign all ${this.tasks.length}</button></footer></section>`;
             document.body.append(backdrop);const select=backdrop.querySelector('[data-bulk-person]');
-            select.addEventListener('change',()=>backdrop.querySelectorAll('[data-bulk-apply]').forEach(button=>button.disabled=!select.value));
+            const panel=backdrop.querySelector('section');
+            const picker=document.createElement('div');picker.className='stp-bulk-task-picker';
+            picker.innerHTML=`<div class="stp-recent-people"></div><div class="stp-bulk-task-controls"><label><input type="checkbox" data-select-all> Select all</label><label><input type="checkbox" data-unassigned-only> Unassigned only</label><span data-selected-count>0 selected</span></div><div class="stp-bulk-task-list">${this.tasks.map((task,index)=>`<label data-pick-row="${index}"><input type="checkbox" data-pick-task="${index}"><span><b>${this.escapeHtml(task.code)}</b> ${this.escapeHtml(task.title)}<small>${this.escapeHtml(task.assignee_name||task.assignee_email||(task.assignee_id?this.assignmentUsers.find(user=>Number(user.id)===Number(task.assignee_id))?.name:'')||'Unassigned')}</small></span></label>`).join('')}</div><p data-bulk-result role="status"></p>`;
+            panel.insertBefore(picker,panel.querySelector('footer'));
+            const apply=panel.querySelector('[data-bulk-apply="all"]');apply.dataset.bulkApply='selected';apply.textContent='Assign selected';
+            panel.querySelector('[data-bulk-apply="unassigned"]').remove();
+            const boxes=()=>[...picker.querySelectorAll('[data-pick-task]')];
+            const refresh=()=>{const count=boxes().filter(box=>box.checked).length;picker.querySelector('[data-selected-count]').textContent=count+' selected';apply.disabled=!select.value||!count;apply.textContent=count?'Assign '+count+' tasks':'Assign selected';const visible=boxes().filter(box=>!box.closest('label').hidden),checked=visible.filter(box=>box.checked).length,all=picker.querySelector('[data-select-all]');all.checked=visible.length>0&&checked===visible.length;all.indeterminate=checked>0&&checked<visible.length;};
+            picker.addEventListener('change',event=>{
+                if(event.target.matches('[data-select-all]'))boxes().forEach(box=>{if(!box.closest('label').hidden)box.checked=event.target.checked;});
+                if(event.target.matches('[data-unassigned-only]')){boxes().forEach(box=>{const assigned=!!this.tasks[Number(box.dataset.pickTask)].assignee_id;box.closest('label').hidden=event.target.checked&&assigned;box.checked=event.target.checked&&!assigned;});picker.querySelector('.stp-bulk-task-list').scrollTop=0;}
+                refresh();
+            });
+            const renderPeople=()=>{const chips=picker.querySelector('.stp-recent-people');chips.replaceChildren();(this.recentAssignees||[]).forEach(person=>{const chip=document.createElement('button');chip.type='button';chip.className='btn btn-outline';chip.textContent=person.name;chip.addEventListener('click',()=>{let option=[...select.options].find(option=>option.value===String(person.id));if(!option){option=new Option(person.label,person.id);select.add(option);}select.value=String(person.id);const input=select.closest('.directory-picker')?.querySelector('input');if(input)input.value=person.label;select.dispatchEvent(new Event('change'));});chips.append(chip);});};
+            renderPeople();select.addEventListener('change',()=>queueMicrotask(refresh));
+            const unassignedLabel=picker.querySelector('[data-unassigned-only]').parentElement;
+            unassignedLabel.lastChild.textContent=' Select all unassigned';
+            const help=document.createElement('small');help.textContent='Search and choose a person from the results, then select tasks and click Assign.';
+            Object.assign(help.style,{display:'block',fontSize:'11px',color:'#64776B',marginTop:'6px',fontWeight:'400'});
+            panel.querySelector('label').append(help);
+            select.addEventListener('input',refresh);
+            panel.addEventListener('input',event=>{if(event.target.matches('input[type="search"]'))queueMicrotask(refresh);});
+            select.addEventListener('change',refresh);
             backdrop.querySelectorAll('[data-bulk-close]').forEach(button=>button.addEventListener('click',()=>backdrop.remove()));
             backdrop.addEventListener('pointerdown',event=>{if(event.target===backdrop)backdrop.remove();});
             backdrop.querySelectorAll('[data-bulk-apply]').forEach(button=>button.addEventListener('click',()=>this.applyBulkAssignee(button.dataset.bulkApply,select,backdrop)));
@@ -694,6 +716,16 @@
 
         async applyBulkAssignee(scope,select,backdrop) {
             if(!select.value)return;
+            if(scope==='selected'){
+                const indices=[...backdrop.querySelectorAll('[data-pick-task]:checked')].map(box=>Number(box.dataset.pickTask));if(!indices.length)return;
+                if(indices.some(index=>this.tasks[index].assignee_id&&Number(this.tasks[index].assignee_id)!==Number(select.value))&&!await AppDialog.confirm('Replace existing assignees on the selected tasks?'))return;
+                const label=select.selectedOptions[0].textContent,email=label.match(/\(([^)]+@[^)]+)\)/)?.[1]||'',name=label.replace(/\s*\([^)]*@[^)]*\).*$/,'').trim();
+                indices.forEach(index=>Object.assign(this.tasks[index],{assignee_id:Number(select.value),assignee_email:email,assignee_name:name}));
+                this.recentAssignees=[{id:Number(select.value),name,label},...(this.recentAssignees||[]).filter(person=>person.id!==Number(select.value))].slice(0,6);
+                this.unsavedChanges=true;this.render();this.renderFooter();this.openBulkAssign();
+                document.querySelector('[data-bulk-result]').textContent=indices.length+' tasks assigned to '+name+'. Select tasks for the next person.';
+                return;
+            }
             const affected=scope==='all'?this.tasks.length:this.tasks.filter(task=>!task.assignee_id).length;
             if(scope==='all'&&this.tasks.some(task=>task.assignee_id)&&!await AppDialog.confirm('Replace the current assignees on all '+this.tasks.length+' tasks?'))return;
             const option=select.selectedOptions[0],label=option?.textContent||'',email=label.match(/\(([^)]+@[^)]+)\)/)?.[1]||'',name=label.replace(/\s*\([^)]*@[^)]*\).*$/,'').trim();

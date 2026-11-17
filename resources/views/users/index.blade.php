@@ -66,6 +66,10 @@
             <span class="workspace-sr-only">Company</span>
             <select name="subsidiary_id" id="people-company-filter" style="height: 38px; border-radius: 8px; border: 1px solid var(--border); padding: 0 12px; font-size: 13px; background: #FFFFFF;">
                 <option value="">All subsidiaries</option>
+                <option value="none" @selected($subId === 'none')>No subsidiary assigned</option>
+                @foreach($directoryCompanies as $company)
+                    <option value="company:{{ $company }}" @selected($subId === 'company:'.$company)>{{ $company }}</option>
+                @endforeach
                 @foreach($subsidiaries as $sub)
                     <option value="{{ $sub->id }}" @selected($subId == $sub->id)>{{ $sub->name }}</option>
                 @endforeach

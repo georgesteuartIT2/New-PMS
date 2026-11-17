@@ -80,7 +80,7 @@
   <button type="button" class="flow-choice {{ $startMode==='blank' ? 'is-selected' : '' }}" data-plan-mode="blank" aria-pressed="{{ $startMode==='blank' ? 'true' : 'false' }}">
    <span>
     <b>Blank plan</b>
-    <small>Add tasks manually or import from Excel.</small>
+    <small id="blank-plan-card-summary">Add tasks manually or import from Excel.</small>
    </span>
   </button>
   <a class="flow-choice {{ $startMode==='template' ? 'is-selected' : '' }}" href="{{ $templateLibraryUrl }}" data-choose-template>

@@ -218,7 +218,18 @@ class ProjectWorkflowController
         ])->validate();
         $tasks=collect($data['tasks'])->keyBy('code');
         foreach(['parent_code','dependency_code'] as $field){
-            foreach($tasks as $code=>$task){$seen=[(string)$code];$next=$task[$field]??null;while($next){if(!$tasks->has($next)||in_array((string)$next,$seen,true))throw \Illuminate\Validation\ValidationException::withMessages(['blank_plan'=>'Task parents and dependencies must refer to another task without circular links.']);$seen[]=(string)$next;$next=$tasks[$next][$field]??null;}}
+            $visited=[];$active=[];
+            $visit=function($code)use(&$visit,&$visited,&$active,$tasks,$field){
+                $code=(string)$code;
+                if(isset($active[$code])||!$tasks->has($code))throw \Illuminate\Validation\ValidationException::withMessages(['blank_plan'=>'Task parents and dependencies must refer to another task without circular links.']);
+                if(isset($visited[$code]))return;
+                $active[$code]=true;
+                $value=$tasks[$code][$field]??'';
+                $links=$field==='dependency_code'?preg_split('/[,;]+/',(string)$value):[(string)$value];
+                foreach($links as $link){$link=trim($link);if($link!=='')$visit($link);}
+                unset($active[$code]);$visited[$code]=true;
+            };
+            foreach($tasks as $code=>$task)$visit($code);
         }
         return $data;
     }
