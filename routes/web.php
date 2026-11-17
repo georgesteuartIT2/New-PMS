@@ -20,6 +20,8 @@ Route::middleware(['auth','account.active'])->group(function(){
  Route::post('/change-password',[AuthController::class,'changePassword'])->name('password.update');
  Route::middleware(['password.changed','viewer.readonly'])->group(function(){
   Route::get('/dashboard',[DashboardController::class,'index'])->name('dashboard');
+  Route::post('/projects/{project}/handovers',[\App\Http\Controllers\ProjectHandoverController::class,'store'])->name('projects.handovers.store');
+  Route::post('/projects/{project}/handovers/{handover}',[\App\Http\Controllers\ProjectHandoverController::class,'respond'])->name('projects.handovers.respond');
   Route::get('/projects',[ProjectController::class,'index'])->name('projects.index');
   Route::get('/projects/template-schedule',[ProjectController::class,'templateSchedule'])->name('projects.template.schedule');
   Route::get('/reports',[\App\Http\Controllers\ReportsController::class,'index'])->name('reports.index');

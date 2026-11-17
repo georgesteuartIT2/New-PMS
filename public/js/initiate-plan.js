@@ -13,6 +13,12 @@ document.addEventListener('DOMContentLoaded', () => {
  function keep(){const data={};for(const name of names)data[name]=form.elements[name]?.value||'';const option=form.elements.assignee_id.selectedOptions[0];data.person=option?{id:option.value,label:option.textContent}:null;sessionStorage.setItem(key,JSON.stringify(data));}
  if(!window.INITIATE_HAS_OLD){try{const data=JSON.parse(sessionStorage.getItem(key)||'null');if(data){if(data.person?.id&&!Array.from(form.elements.assignee_id.options).some(o=>o.value===data.person.id))form.elements.assignee_id.add(new Option(data.person.label,data.person.id));for(const name of names)if(data[name]!==undefined)form.elements[name].value=data[name];}}catch{}}
  if(window.INITIATE_TEMPLATE){mode.value='template';selected.value=window.INITIATE_TEMPLATE;}
+ try{
+  const customized=JSON.parse(sessionStorage.getItem('project-template-draft-'+flow)||'null');
+  if(customized && String(customized.source_template_id)===String(window.INITIATE_TEMPLATE)){
+   blank.value=JSON.stringify(customized);mode.value='blank';
+  }
+ }catch{}
  function updatePlanStatus(){const status=document.getElementById('initiate-plan-status');if(!status)return;let text='No plan added';if(mode.value==='template')text=selected.value?selected.selectedOptions[0].textContent.trim():'Choose a template';if(mode.value==='blank'){let tasks=[];try{tasks=JSON.parse(blank.value||'{}').tasks||[];}catch{}text=tasks.length?'Blank plan - '+tasks.length+' tasks':'Blank plan - No tasks added';}status.textContent=text;document.querySelector('#initiate-plan-options [data-setup-action]').textContent=mode.value==='none'?'Set up':'Edit';}
  mode.addEventListener('change',updatePlanStatus);selected.addEventListener('change',updatePlanStatus);
  function refresh(){mode.dispatchEvent(new Event('change'));document.getElementById('initiate-plan-options').open=true;const option=selected.selectedOptions[0];summary.textContent=mode.value==='template'&&selected.value?'Selected: '+option.textContent:blank.value?'Blank task plan prepared':'';}

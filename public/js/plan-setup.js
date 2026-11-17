@@ -8,7 +8,7 @@
     const draftStatus=document.getElementById('plan-draft-status');
     const draftSavedFeedback=document.getElementById('plan-draft-saved-feedback');
     const resumeSetupButton=document.getElementById('btn-resume-plan-setup');
-    function draftPayload(){const values=new FormData(form),data={};for(const key of ['name','description','mode','project_template_id','starts_on','ends_on','planned_budget','blank_plan'])if(values.has(key))data[key]=values.get(key);data.members=[...form.querySelectorAll('[data-role-row]')].map(row=>({user_id:row.querySelector('[data-role-person]')?.value||null,project_role_id:row.querySelector('[data-role-choice]')?.value||null}));return data;}
+    function draftPayload(){const values=new FormData(form),data={};for(const key of ['name','description','mode','project_template_id','starts_on','ends_on','planned_budget','blank_plan','plan_variants'])if(values.has(key))data[key]=values.get(key);data.members=[...form.querySelectorAll('[data-role-row]')].map(row=>({user_id:row.querySelector('[data-role-person]')?.value||null,project_role_id:row.querySelector('[data-role-choice]')?.value||null}));return data;}
     function formatDraftTime(value){const date=new Date(value);return Number.isNaN(date.getTime())?'':new Intl.DateTimeFormat(undefined,{hour:'numeric',minute:'2-digit'}).format(date);}
     function saveDraft(force=false){
         clearTimeout(draftTimer);
@@ -61,6 +61,12 @@
     const modeInput = document.getElementById('plan-mode');
     const templateInput = document.getElementById('plan-template-id');
     const blankPlanData = document.getElementById('blank-plan-data');
+    const variantsInput=document.getElementById('plan-variants');
+    let variants={};try{variants=JSON.parse(variantsInput?.value||'{}');}catch{}
+    function variantKey(){return modeInput?.value==='template'?'template:'+templateInput?.value:'blank';}
+    function keepVariant(){if(modeInput?.value && blankPlanData?.value)variants[variantKey()]=blankPlanData.value;if(variantsInput)variantsInput.value=JSON.stringify(variants);}
+    function restoreVariant(key){if(blankPlanData)blankPlanData.value=variants[key]||'';}
+    keepVariant();
     const errorMsg = document.getElementById('plan-template-error');
     const blankBtn = form.querySelector('[data-plan-mode="blank"]');
     const chooseTemplateBtn = form.querySelector('[data-choose-template]');
@@ -120,13 +126,12 @@
 
     function currentPlanTasks() {
         const config = window.PLAN_SETUP_CONFIG || {};
-        if (isStarted) return config.existingTasks || [];
         try {
             const parsed = JSON.parse(blankPlanData?.value || '{}');
             if (Array.isArray(parsed.tasks)) return parsed.tasks;
         } catch (e) {
         }
-        return modeInput?.value === 'template' ? (config.selectedTemplateTasks || []) : [];
+        return isStarted ? (config.existingTasks || []) : modeInput?.value === 'template' ? (config.selectedTemplateTasks || []) : [];
     }
 
     function getPlanValidationIssues() {
@@ -162,10 +167,14 @@
 
     function refreshPlanIndicators() {
         const blankSelected = modeInput?.value === 'blank';
+        const templateSelected = modeInput?.value === 'template';
         blankBtn?.classList.toggle('is-selected', blankSelected);
         blankBtn?.setAttribute('aria-pressed', String(blankSelected));
-        chooseTemplateBtn?.classList.toggle('is-selected', !blankSelected);
-        chooseTemplateBtn?.setAttribute('aria-pressed', String(!blankSelected));
+        chooseTemplateBtn?.classList.toggle('is-selected', templateSelected);
+        chooseTemplateBtn?.setAttribute('aria-pressed', String(templateSelected));
+        const templateHint=document.getElementById('template-card-hint');
+        const templateName=window.PLAN_SETUP_CONFIG?.selectedTemplate?.name;
+        if(templateHint && templateName){templateHint.replaceChildren();templateHint.append(document.createTextNode(templateName+' · '+(templateSelected?'Selected':'Saved draft')+' · '));const change=document.createElement('u');change.textContent='Change';templateHint.append(change);}
         const cardSummary = document.getElementById('blank-plan-card-summary');
         if (cardSummary) {
             let tasks = [];
@@ -258,6 +267,7 @@
 
     // Blank mode switcher
     blankBtn?.addEventListener('click', () => {
+        if(modeInput.value!=='blank'){keepVariant();restoreVariant('blank');}
         modeInput.value = 'blank';
         if (templateInput) templateInput.disabled = true;
         blankBtn.classList.add('is-selected');
@@ -277,6 +287,7 @@
         const hasTemplate = templateInput && templateInput.value;
         if (hasTemplate && modeInput.value === 'blank' && !event.target.closest('u')) {
             event.preventDefault();
+            keepVariant();restoreVariant('template:'+templateInput.value);
             modeInput.value = 'template';
             templateInput.disabled = false;
             chooseTemplateBtn.classList.add('is-selected');
@@ -293,6 +304,7 @@
 
         // Navigate to library if no template is chosen yet or user clicked "Change"
         event.preventDefault();
+        keepVariant();
         const url = new URL(form.dataset.libraryUrl, window.location.href);
         for (const name of ['starts_on', 'ends_on', 'planned_budget']) {
             const val = form.elements[name]?.value;
@@ -321,10 +333,11 @@
         window.SmartTaskPlan.canManage = true;
         window.SmartTaskPlan.canCreateProject = false;
         window.SmartTaskPlan.localPlanSave = function (payload) {
-            payload = {...(window.PLAN_SETUP_CONFIG?.selectedTemplate || {}), ...payload};
+            payload = {...(modeInput.value==='template' ? window.PLAN_SETUP_CONFIG?.selectedTemplate || {} : {}), ...payload};
             if (blankPlanData) {
                 blankPlanData.value = JSON.stringify(payload);
             }
+            keepVariant();
             if (blankTasksStatus) {
                 const assigned = (payload.tasks || []).filter(t => t.assignee_id).length;
                 blankTasksStatus.textContent = '✓ ' + (payload.tasks || []).length + ' tasks ready (' + assigned + ' assigned)';
@@ -360,12 +373,14 @@
         if (blankPlanData && blankPlanData.value) {
             try { data = JSON.parse(blankPlanData.value); } catch (e) {}
         }
+        if(!data && isStarted)data={name:window.PLAN_SETUP_CONFIG?.projectName||'Project plan',reference_start_date:startsOnInput?.value,tasks:window.PLAN_SETUP_CONFIG?.existingTasks||[]};
         if (data && data.tasks && data.tasks.length > 0) {
             window.SmartTaskPlan.openEdit(data, data.tasks);
         } else {
             const config = window.PLAN_SETUP_CONFIG || {};
             window.SmartTaskPlan.openCreate({
                 name: config.projectName || 'Project Plan',
+                estimated_duration:1,initial_task_count:10,
                 reference_start_date: startsOnInput?.value || new Date().toISOString().split('T')[0],
                 working_hours: '09:00 - 17:00'
             });

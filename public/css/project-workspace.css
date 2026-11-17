@@ -694,3 +694,13 @@ tr.project-task-row.is-focused-task {
 #project-workspace #tab-tasks table.project-tasks-full-table td:nth-child(2)>div{min-width:0;max-width:100%}
 #project-workspace #tab-tasks table.project-tasks-full-table :is(select,.task-status-cell){min-width:0!important;max-width:100%!important;box-sizing:border-box}
 #project-workspace #tab-tasks .workspace-task-toolbar{min-width:0;max-width:100%;flex-wrap:wrap}
+/* Keep schedule metadata inside its own column. */
+#project-workspace #tab-tasks table.project-tasks-full-table .task-end-date-cell>div:has(.badge-overdue){display:flex!important;flex-wrap:wrap;align-items:center;gap:4px 6px!important;max-width:100%}
+#project-workspace #tab-tasks table.project-tasks-full-table .task-end-date-cell .badge-overdue{font-size:9px!important;padding:1px 4px!important;white-space:nowrap;line-height:1.4}
+#project-workspace #tab-tasks table.project-tasks-full-table .task-progress-wrap{display:flex!important;width:100%;min-width:0!important;gap:6px!important}
+#project-workspace #tab-tasks table.project-tasks-full-table .task-progress-bar{width:46px!important;max-width:55%;min-width:0!important;flex:0 1 46px!important;height:4px!important}
+#project-workspace #tab-tasks table.project-tasks-full-table .task-progress-text{font-size:10px!important;min-width:0!important}
+#project-workspace #tab-tasks table.project-tasks-full-table td:nth-child(7){padding-left:12px!important}
+#project-workspace #tab-tasks table.project-tasks-full-table .task-status-cell{white-space:normal!important}
+#project-workspace #tab-tasks table.project-tasks-full-table .task-status-cell .quick-status-select{font-size:11px!important;height:32px!important;min-height:32px!important;padding:5px 24px 5px 8px!important}
+#project-workspace #tab-tasks table.project-tasks-full-table .task-end-date-cell .task-date-val{font-size:11px!important;line-height:1.5!important}

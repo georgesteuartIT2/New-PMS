@@ -168,14 +168,20 @@ class ProjectWorkflowController
 
     public function setup(Request $r, Project $project)
     {
+        if($project->plan_published_at && $project->approval_stage==='ready'){
+            abort_unless(app(\App\Services\Access::class)->project($r->user(),$project,'project.view'),403);
+            return redirect(route('projects.show',$project).'#tasks');
+        }
         $this->planner($r, $project);
 
         if (!$r->session()->hasOldInput() && $project->setup_draft) {
             $draft = $project->setup_draft;
             if ($r->filled('template_id')) {
                 $templateId = $r->integer('template_id');
-                if ((int) ($draft['project_template_id'] ?? 0) !== $templateId) {
+                if (($draft['mode'] ?? '') !== 'template' || (int) ($draft['project_template_id'] ?? 0) !== $templateId) {
                     unset($draft['blank_plan']);
+                    $variants=json_decode($draft['plan_variants']??'{}',true);
+                    if(!empty($variants['template:'.$templateId]))$draft['blank_plan']=$variants['template:'.$templateId];
                 }
                 $draft['project_template_id'] = $templateId;
                 $draft['mode'] = 'template';
@@ -198,7 +204,7 @@ class ProjectWorkflowController
 
     public function saveSetupDraft(Request $r,Project $project){
         $this->planner($r,$project);
-        $d=$r->validate(['name'=>'nullable|string|max:160','description'=>'nullable|string|max:3000','mode'=>'nullable|in:blank,template','project_template_id'=>'nullable|integer|exists:project_templates,id','starts_on'=>'nullable|string|max:10','ends_on'=>'nullable|string|max:10','planned_budget'=>'nullable|string|max:30','blank_plan'=>'nullable|json|max:1000000','members'=>'nullable|array|max:100','members.*.user_id'=>'nullable|integer|exists:users,id','members.*.project_role_id'=>'nullable|integer|exists:project_roles,id']);
+        $d=$r->validate(['name'=>'nullable|string|max:160','description'=>'nullable|string|max:3000','mode'=>'nullable|in:blank,template','project_template_id'=>'nullable|integer|exists:project_templates,id','starts_on'=>'nullable|string|max:10','ends_on'=>'nullable|string|max:10','planned_budget'=>'nullable|string|max:30','plan_variants'=>'nullable|json|max:3000000','blank_plan'=>'nullable|json|max:1000000','members'=>'nullable|array|max:100','members.*.user_id'=>'nullable|integer|exists:users,id','members.*.project_role_id'=>'nullable|integer|exists:project_roles,id']);
         $savedAt=now();
         DB::transaction(function()use($r,$project,$d,$savedAt){$p=Project::whereKey($project->id)->lockForUpdate()->firstOrFail();$this->planner($r,$p);$p->update(['setup_draft'=>$d,'setup_draft_saved_at'=>$savedAt]);});
         return response()->json(['saved'=>true,'saved_at'=>$savedAt->toIso8601String()]);
@@ -251,11 +257,12 @@ class ProjectWorkflowController
             ProjectMembership::firstOrCreate(['project_id'=>$p->id,'user_id'=>$u->id,'project_role_id'=>(int)$rid]);
         }
     }
-    public function saveOptions(Request $r, Project $project, ProjectService $service = null)
+    public function saveOptions(Request $r, Project $project, ProjectService $service)
     {
         $d = $r->validate(array_merge([
             'planned_budget' => 'sometimes|nullable|numeric|min:0|max:9999999999999',
             'publish_now' => 'nullable|boolean',
+            'blank_plan'=>'nullable|json|max:1000000',
             'name'=>'sometimes|required|string|max:160','description'=>'sometimes|nullable|string|max:3000',
         ], $this->memberRules()));
         DB::transaction(function () use ($r, $project, $d, $service) {
@@ -263,11 +270,27 @@ class ProjectWorkflowController
             $this->planner($r, $p);
             if(isset($d))$p->fill(array_intersect_key($d,array_flip(['name','description'])))->save();
             abort_unless($p->plan_initialized || $p->tasks()->exists(), 409, 'Choose a starting plan first.');
+            if(!empty($d['blank_plan'])){
+                abort_unless($p->approval_stage==='planning' && !$p->plan_published_at,409,'Only unpublished plans can be edited here.');
+                $plan=$this->validateBlankPlan($d['blank_plan']);$byCode=[];
+                foreach($plan['tasks'] as $index=>$row){
+                    $task=$p->tasks()->firstOrNew(['code'=>$row['code']]);
+                    $task->fill(['title'=>$row['title'],'description'=>$row['description']??null,'starts_at'=>$row['start_date'].' '.$row['start_time'],'ends_at'=>$row['end_date'].' '.$row['end_time'],'priority'=>$row['priority']??'medium','sort_order'=>$index+1]);
+                    if(!$task->exists)$task->created_by=$r->user()->id;
+                    $task->save();$byCode[$row['code']]=$task;
+                    if(!empty($row['assignee_id']))app(ProjectService::class)->addPlanningMember($p,(int)$row['assignee_id'],$r->user());
+                    $task->assignees()->sync(empty($row['assignee_id'])?[]:[(int)$row['assignee_id']]);
+                }
+                foreach($plan['tasks'] as $row){$task=$byCode[$row['code']];$task->update(['parent_task_id'=>empty($row['parent_code'])?null:$byCode[$row['parent_code']]->id]);$ids=[];foreach(preg_split('/[,;]+/',(string)($row['dependency_code']??'')) as $code){$code=trim($code);if($code!=='')$ids[]=$byCode[$code]->id;}$task->dependencies()->sync($ids);}
+                $removed=$p->tasks()->whereNotIn('id',collect($byCode)->pluck('id'))->get();
+                foreach($removed as $task){abort_if($task->progress>0 || $task->comments()->exists() || $task->attachments()->exists(),422,'Tasks with recorded activity cannot be removed from the plan.');$task->delete();}
+            }
             if (array_key_exists('planned_budget', $d)) $p->update(['planned_budget' => $d['planned_budget']]);
             $this->assignOptionalMembers($p, $d['members'] ?? [], $r);
             Audit::record('project.plan_options_updated', $p);
 
-            if ($r->boolean('publish_now') && $p->tasks()->exists() && $service) {
+            if ($r->boolean('publish_now')) {
+                abort_unless($p->tasks()->exists(),422,'Add at least one task before publishing.');
                 $p->update(['approval_stage' => 'ready', 'plan_published_at' => now(),'setup_draft'=>null,'setup_draft_saved_at'=>null]);
                 $service->captureBaseline($p);
                 $ids = $p->tasks()->with('assignees')->get()->flatMap(fn ($t) => $t->assignees->pluck('id'))->merge($p->memberships()->pluck('user_id'))->unique()->reject(fn ($id) => (int) $id === (int) $p->pm_user_id);

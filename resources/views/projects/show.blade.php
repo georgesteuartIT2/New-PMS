@@ -2,6 +2,7 @@
 @section('title', $project->name)
 @section('content')
 @include('projects._delete-dialog')
+@include('projects._handover',['handoverLocation'=>'notice'])
 @php
     $projectImportLabel=$project->template ? 'Download project template' : 'Download blank template';
     $projectImportUrl=route('tasks.export',['project'=>$project,'starter'=>1]);
@@ -749,6 +750,7 @@
          TAB 3: TEAM & ROLES
          ========================================================================= -->
     <div class="pw-tab-panel project-team-workspace" id="tab-team">
+        @include('projects._handover',['handoverLocation'=>'team'])
         <div class="card" style="padding: 20px; background: #FFFFFF;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
                 <div>
@@ -808,6 +810,9 @@
                                 <div style="display: flex; align-items: center; gap: 10px;">
                                     <span class="avatar avatar-sm">{{ strtoupper(substr($project->manager?->name ?? 'P', 0, 1)) }}</span>
                                     <b>{{ $project->manager?->name ?? 'Not assigned' }}</b>
+                                    @if(in_array($project->status,['active','on_hold']) && (auth()->user()->isPmo() || (int)$project->owner_user_id===auth()->id()))
+                                    <button type="button" class="btn btn-outline btn-xs" style="min-height:26px;padding:3px 8px;font-size:10px;" data-show-dialog="handover-pm" aria-label="Change Project Manager">Change</button>
+                                    @endif
                                 </div>
                             </td>
                             <td><span class="muted text-sm">{{ $project->manager?->email ?? '—' }}</span></td>
@@ -831,6 +836,9 @@
                                     <div style="display: flex; align-items: center; gap: 10px;">
                                         <span class="avatar avatar-sm">{{ strtoupper(substr($m->user?->name ?? 'U', 0, 1)) }}</span>
                                         <b>{{ $m->user?->name ?? 'Unknown' }}</b>
+                                        @if(in_array($project->status,['active','on_hold']) && (int)$m->user_id===(int)$project->owner_user_id && auth()->user()->isPmo())
+                                        <button type="button" class="btn btn-outline btn-xs" style="min-height:26px;padding:3px 8px;font-size:10px;" data-show-dialog="handover-owner" aria-label="Change Project Owner">Change</button>
+                                        @endif
                                     </div>
                                 </td>
                                 <td><span class="muted text-sm">{{ $m->user?->email ?? '—' }}</span></td>

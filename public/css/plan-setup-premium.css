@@ -59,3 +59,7 @@
 #plan-start-dialog #blank-plan-ready{font-style:normal;font-size:10px;font-weight:600;padding:4px 8px;border-radius:5px;background:#E3F1E8;color:#2F6950;line-height:1.4}
 #plan-start-dialog #blank-plan-edit-action{display:inline-flex;margin-top:10px;font-size:12px;font-weight:600;color:#315F58;border-bottom:1px solid #B6CFC2;line-height:1.6}
 #plan-start-dialog #blank-plan-ready[hidden],#plan-start-dialog #blank-plan-edit-action[hidden]{display:none!important}
+#plan-start-dialog .plan-template-choice-group{min-width:0;display:flex;flex-direction:column;gap:8px}
+#plan-start-dialog .plan-template-choice-group>.flow-choice{width:100%;box-sizing:border-box;flex:1}
+#plan-start-dialog .plan-template-edit{align-self:flex-start;display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:8px 12px;min-height:36px;border:1px solid #BCD1C6;background:#F4F9F6;color:#315F58;border-radius:6px}
+#plan-start-dialog .plan-template-choice-group:not(:has(>.is-selected))>.plan-template-edit{display:none}

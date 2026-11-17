@@ -2048,6 +2048,14 @@
             };
 
             if (this.localPlanSave) { this.localPlanSave(payload); this.close(); return; }
+            const creationFlow=window.PROJECT_TEMPLATE_CONTEXT?.project_flow;
+            if(this.mode==='select' && creationFlow && !window.PROJECT_TEMPLATE_CONTEXT?.plan_project){
+                try{
+                    sessionStorage.setItem('project-template-draft-'+creationFlow,JSON.stringify({...payload,source_template_id:this.template.id}));
+                    window.location.assign(this.projectCreateUrl(this.template.id));
+                }catch(error){alert('Could not keep your project plan. Enable browser storage and try again.');}
+                return;
+            }
             const saveCopy = this.mode === 'select';
             const url = this.template.id && !saveCopy ? `/templates/${this.template.id}` : '/templates';
             const method = this.template.id && !saveCopy ? 'PUT' : 'POST';

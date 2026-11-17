@@ -500,6 +500,10 @@ class OwnerApprovalWorkflowTest extends TestCase
         $this->post(route('projects.plan.options',$p),$payload)->assertRedirect();
         $this->assertSame(1,$p->tasks()->count());$this->assertSame(1,ProjectMembership::where('project_id',$p->id)->where('user_id',$other->id)->count());
         $this->assertEquals(10000,$p->fresh()->planned_budget);Notification::assertNotSentTo($other,ProjectActivatedNotification::class);
+        $this->post(route('projects.plan.options',$p),array_merge($payload,['publish_now'=>1]))->assertRedirect(route('projects.show',$p).'#tasks');
+        $this->assertSame('ready',$p->fresh()->approval_stage);
+        $this->assertNotNull($p->fresh()->plan_published_at);
+        $this->get(route('projects.plan.setup',$p))->assertRedirect(route('projects.show',$p).'#tasks');
     }
 
     public function test_optional_roles_are_validated_and_blank_plan_remains_optional(): void

@@ -274,6 +274,7 @@ class Access {
         $canonical = $this->normalize($permission);
         $matching = $this->matchingKeys($permission);
         // Project lifecycle checks
+        if(in_array($canonical,['project.view','tasks.view_all','project.gantt_view'],true) && in_array($project->status,['active','on_hold'],true) && \Illuminate\Support\Facades\DB::table('project_handovers')->where('project_id',$project->id)->where('user_id',$user->id)->where('status','pending')->exists())return true;
         $isPm = ($project->pm_user_id === $user->id);
         $isOwner = ($project->owner_user_id === $user->id);
 

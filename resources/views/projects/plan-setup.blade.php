@@ -7,8 +7,8 @@
  $planStarted = $project->plan_initialized || $project->tasks()->exists();
  $templateLibraryUrl = route('templates.index', ['select_for_project' => 1, 'plan_project' => $project->id]);
  $startMode = old('mode', $selectedTemplate ? 'template' : '');
- $existingPlanTasks = $project->tasks()->with('assignees:id')->get();
- $existingTaskData = $existingPlanTasks->map(fn($task) => ['id' => $task->id, 'code' => $task->code, 'title' => $task->title, 'parent_task_id' => $task->parent_task_id, 'assignee_id' => $task->assignees->first()?->id])->values();
+ $existingPlanTasks = $project->tasks()->with('assignees:id','dependencies:id,code','parent:id,code')->orderBy('sort_order')->get();
+ $existingTaskData = $existingPlanTasks->map(fn($task) => ['id'=>$task->id,'code'=>$task->code,'title'=>$task->title,'description'=>$task->description,'parent_task_id'=>$task->parent_task_id,'parent_code'=>$task->parent?->code,'dependency_code'=>$task->dependencies->pluck('code')->implode(','),'start_date'=>$task->starts_at->format('Y-m-d'),'end_date'=>$task->ends_at->format('Y-m-d'),'start_time'=>$task->starts_at->format('H:i'),'end_time'=>$task->ends_at->format('H:i'),'duration_days'=>max(1,$task->starts_at->diffInWeekdays($task->ends_at)+1),'priority'=>$task->priority,'assignee_id'=>$task->assignees->first()?->id])->values();
  $existingTasksCount = $existingPlanTasks->count();
  $existingParentIds = $existingPlanTasks->pluck('parent_task_id')->filter()->unique();
  $existingUnassignedTaskCount = $existingPlanTasks->reject(fn($task) => $existingParentIds->contains($task->id))->filter(fn($task) => $task->assignees->isEmpty())->count();
@@ -37,9 +37,12 @@
 
 <form method="post" id="plan-setup-form" data-draft-url="{{ route('projects.plan.draft',$project) }}" data-draft-enabled="{{ $draftEnabled ? '1' : '0' }}" action="{{ $planStarted ? route('projects.plan.options',$project) : route('projects.plan.initialize',$project) }}" data-plan-started="{{ $planStarted?'1':'0' }}" class="flow-form" data-library-url="{{ $templateLibraryUrl }}">
 @csrf
+<input type="hidden" name="plan_variants" id="plan-variants" value="{{ old('plan_variants', '{}') }}">
 @if($errors->any())<p class="alert alert-danger" role="alert">{{ $errors->first() }}</p>@endif
 
 @if($planStarted)
+<input type="hidden" name="mode" id="plan-mode" value="blank">
+<input type="hidden" name="blank_plan" id="blank-plan-data" value="{{ old('blank_plan') }}">
 <section class="flow-prepared-plan plan-subpanel" style="margin-top:0;">
  <div class="plan-subpanel-header">
   <div>
@@ -54,14 +57,10 @@
   </span>
  </div>
  <div class="plan-actions-group">
-  <a href="{{ route('templates.downloadBlank', ['name' => $project->name, 'plan_project' => $project->id]) }}" class="plan-action-btn">
-   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-   Download Excel template
-  </a>
-  <a href="{{ route('projects.show', $project).'#tasks' }}" class="plan-action-btn is-primary">
+  <button type="button" id="btn-manual-blank-tasks" class="plan-action-btn is-primary">
    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-   View &amp; edit tasks on Gantt
-  </a>
+   Review &amp; edit task plan
+  </button>
  </div>
  <small style="color:#64748B; font-size:11.5px;">Your existing tasks are ready. You can review them, assign project roles below, or publish directly.</small>
 </section>
@@ -84,12 +83,17 @@
     <span id="blank-plan-edit-action" hidden>Edit tasks &rarr;</span>
    </span>
   </button>
+  <div class="plan-template-choice-group">
   <a class="flow-choice {{ $startMode==='template' ? 'is-selected' : '' }}" href="{{ $templateLibraryUrl }}" data-choose-template>
    <span>
     <b>Use a template</b>
     <small id="template-card-hint">@if($selectedTemplate){{ $selectedTemplate->name }} &middot; <strong>Selected</strong> &middot; <u>Change</u>@else Pick a saved plan or create one (manual or Excel) &rarr;@endif</small>
    </span>
   </a>
+  @if($selectedTemplate)
+   <button type="button" class="btn btn-outline plan-template-edit" id="btn-customize-template-tasks">Edit tasks &amp; assignees &rarr;</button>
+  @endif
+  </div>
  </div>
 
  <!-- Blank Plan Interactive Tooling Subpanel -->
@@ -123,7 +127,6 @@
  <!-- Template Subpanel -->
  <div id="template-plan-subpanel" class="plan-template-inline" @if($startMode!=='template') hidden @endif>
   @if($selectedTemplate)
-   <button type="button" class="text-action plan-edit-selected" id="btn-customize-template-tasks">Edit selected tasks &amp; assignees &rarr;</button>
   @else
    <div class="plan-subpanel-header">
     <div>
