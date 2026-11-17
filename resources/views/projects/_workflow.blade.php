@@ -7,13 +7,17 @@
  $stageLabels=['owner'=>'Awaiting Owner approval','pm'=>'Awaiting PM acceptance','owner_declined'=>'Owner rejected the request','pm_declined'=>'PM rejected the request','planning'=>'Preparing the project plan','ready'=>'Plan published'];
  $ownerReview=$project->approval_stage==='owner' && $isOwner;
 @endphp
-<section class="flow-banner flow-approval-banner" aria-label="Project approval and setup">
+<section class="flow-banner flow-approval-banner {{ $ownerReview ? 'owner-review-compact' : '' }}" aria-label="Project approval and setup">
 <div class="flow-approval-summary"><span class="flow-approval-kicker">{{ $ownerReview ? 'Action required' : 'Project approval' }}</span><small>{{ $ownerReview ? 'Project Owner: You' : ($project->owner?->name ? 'Project Owner: '.$project->owner->name : 'Direct PM assignment') }}</small><h2>{{ $ownerReview ? 'Your review is required' : ($stageLabels[$project->approval_stage] ?? 'Project setup') }}</h2>
-@if($ownerReview)<p class="flow-owner-guidance">Choose a Project Manager to lead this project. Approve to invite them to accept and prepare it, or reject if this request needs changes.</p>@endif
+@if($ownerReview)
+<h3>You've been nominated as Project Owner</h3>
+<small>Requested by {{ $project->creator?->name ?? 'PMO Admin' }} &middot; {{ $project->created_at->format('d M Y') }}</small>
+<p class="flow-owner-guidance">Review this project, then choose a PM and approve to accept ownership. The PM will prepare the plan.</p>
+@endif
 @if($project->approval_reason)<p><b>Rejection reason:</b> {{ $project->approval_reason }}</p>@endif
 @if($project->approval_stage==='planning')<p>Prepare tasks and team assignments, then publish when ready.</p>@endif</div>
 @if($project->approval_stage==='owner' && $isOwner)
-<form method="post" action="{{ route('projects.owner.respond',$project) }}" class="flow-inline flow-owner-response">@csrf<input type="hidden" name="decision" value="accept"><label>Project Manager<select name="pm_user_id" required data-directory-picker data-directory-project="{{ $project->id }}"><option value="">Search and select a manager</option>@foreach($flowUsers as $person)<option value="{{ $person->id }}">{{ $person->name }} ({{ $person->email }})</option>@endforeach</select></label><button class="btn btn-primary">Approve &amp; invite PM</button><button type="button" class="btn btn-outline" data-show-dialog="owner-reject-dialog">Reject</button></form>
+<form method="post" action="{{ route('projects.owner.respond',$project) }}" class="flow-inline flow-owner-response">@csrf<input type="hidden" name="decision" value="accept"><label>Project Manager<select name="pm_user_id" required data-directory-picker data-directory-project="{{ $project->id }}" onchange="this.form.querySelector('[data-owner-approve]').disabled=!this.value"><option value="">Search and select a manager</option>@foreach($flowUsers as $person)<option value="{{ $person->id }}">{{ $person->name }} ({{ $person->email }})</option>@endforeach</select></label><button class="btn btn-primary" data-owner-approve disabled>Approve &amp; invite PM</button><button type="button" class="btn btn-outline" data-show-dialog="owner-reject-dialog">Decline request</button></form>
 <dialog class="modal" id="owner-reject-dialog" style="max-width:480px"><form class="flow-form" method="post" action="{{ route('projects.owner.respond',$project) }}">@csrf<h2>Reject project request</h2><input type="hidden" name="decision" value="decline"><label>Reason <span>*</span><textarea name="decline_reason" required minlength="5" maxlength="1000" rows="3" placeholder="Tell PMO why this request needs to change."></textarea></label><footer class="flow-footer"><button type="button" class="btn btn-outline" data-close-dialog>Cancel</button><button class="btn btn-primary">Send rejection</button></footer></form></dialog>
 @endif
 @if($project->approval_stage==='planning' && ($isLead || auth()->user()->isPmo()))

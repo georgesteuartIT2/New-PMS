@@ -101,6 +101,9 @@
                         @endif
                     </div>
                     <div class="workflow-rejection-actions">
+                        @if($project->approval_stage==='pm_declined' && (auth()->user()->isPmo() || (int)$project->owner_user_id===auth()->id()))
+                            <button type="button" class="btn btn-primary" data-show-dialog="assign-pm-dialog">Reassign PM</button>
+                        @endif
                         @if($workflowDashboardUrl)
                             <a class="workflow-rejection-dashboard-link" href="{{ $workflowDashboardUrl }}" aria-label="View this project in the dashboard reassignment list">View on dashboard &rarr;</a>
                         @else
@@ -1803,10 +1806,11 @@
     </dialog>
 @endif
 
-@if(auth()->user()->isPmo() && in_array($project->status, ['draft', 'pending', 'declined']))
+@if((auth()->user()->isPmo() && in_array($project->status, ['draft', 'pending', 'declined'])) || ($project->status==='declined' && $project->approval_stage==='pm_declined' && (int)$project->owner_user_id===auth()->id()))
     <!-- Assign / Reassign PM Dialog -->
     <dialog id="assign-pm-dialog" class="modal" style="max-width: 520px;">
         @php($reassignOwner = $project->status === 'declined' && $project->approval_stage === 'owner_declined')
+        @php($workflowReassignment = in_array($project->approval_stage, ['owner_declined','pm_declined'], true))
         <div class="modal-head">
             <h2 style="margin: 0; font-size: 17px;">
                 @if($reassignOwner)
@@ -1821,9 +1825,9 @@
             </h2>
             <button type="button" class="icon-btn" data-close-dialog aria-label="Close">×</button>
         </div>
-        <form method="post" action="{{ route($reassignOwner ? 'projects.workflow.reassign' : 'projects.manager', $project) }}" class="stack mt-16">
+        <form method="post" action="{{ route($workflowReassignment ? 'projects.workflow.reassign' : 'projects.manager', $project) }}" class="stack mt-16">
             @csrf
-            @if($reassignOwner)<input type="hidden" name="assignment_type" value="owner">@endif
+            @if($workflowReassignment)<input type="hidden" name="assignment_type" value="{{ $reassignOwner ? 'owner' : 'pm' }}">@endif
 
             @if($reassignOwner)
                 <p class="muted text-sm">The selected owner will receive a request to review the project and appoint a Project Manager.</p>
@@ -1843,7 +1847,7 @@
             @endif
 
             <label class="project-reassign-person"><span class="project-reassign-label">{{ $reassignOwner ? 'Project Owner' : 'Project Manager' }} <span class="required">*</span></span>
-                <select name="{{ $reassignOwner ? 'assignee_id' : 'pm_user_id' }}" required data-directory-picker data-directory-floating="1" data-directory-project="{{ $project->id }}" aria-describedby="pm-reassign-directory-help" style="width: 100%; padding: 8px 10px; border: 1px solid #D1D5DB; border-radius: 6px;">
+                <select name="{{ $workflowReassignment ? 'assignee_id' : 'pm_user_id' }}" required data-directory-picker data-directory-floating="1" data-directory-project="{{ $project->id }}" aria-describedby="pm-reassign-directory-help" style="width: 100%; padding: 8px 10px; border: 1px solid #D1D5DB; border-radius: 6px;">
                     <option value="">Choose an active {{ $reassignOwner ? 'Project Owner' : 'Project Manager' }}...</option>
                     @foreach($pmCandidates ?? $users as $u)
                         <option value="{{ $u->id }}" @selected($u->id === $project->pm_user_id)>

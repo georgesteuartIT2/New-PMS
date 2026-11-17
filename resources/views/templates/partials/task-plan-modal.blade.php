@@ -235,17 +235,18 @@
             <label class="stp-import-option">
                 <input type="radio" name="stp_import_mode" value="merge" checked>
                 <span class="stp-import-option-copy">
-                    <strong>Update the plan</strong>
-                    <small>Matching task codes are updated, new tasks are added, and tasks not in Excel stay in the plan.</small>
+                    <strong>Merge with current tasks</strong>
+                    <small>Updates matching tasks, adds new ones, and leaves everything else untouched.</small>
                 </span>
-                <span class="stp-import-recommended">Keeps other tasks</span>
+                <span class="stp-import-recommended">Keeps existing</span>
             </label>
             <label class="stp-import-option stp-import-option-danger">
                 <input type="radio" name="stp_import_mode" value="replace">
                 <span class="stp-import-option-copy">
-                    <strong>Replace the plan with Excel</strong>
-                    <small>Only tasks in this file will remain. Current plan tasks missing from the file will be removed.</small>
+                    <strong>Replace current plan</strong>
+                    <small>Clears all existing tasks in the project and replaces them with this file.</small>
                 </span>
+                <span class="stp-import-recommended">Clean slate</span>
             </label>
         </fieldset>
 

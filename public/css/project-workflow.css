@@ -801,3 +801,92 @@
 .flow-role-modal-footer .btn{min-height:40px;padding:0 16px;border-radius:8px}
 .flow-role-modal-open{overflow:hidden}
 @media(max-width:600px){.flow-role-modal{padding:10px}.flow-role-modal .flow-new-role-card,#plan-start-dialog .flow-role-modal .flow-new-role-card{max-height:calc(100vh - 20px);border-radius:12px!important}.flow-role-modal-header,.flow-role-modal-body{padding:16px}.flow-role-modal-footer{padding:12px 16px}.flow-role-modal-footer .btn{flex:1}.flow-role-permission-heading{align-items:flex-start;flex-direction:column;gap:3px}}
+.flow-approval-banner:has(.owner-request-details){display:flex;flex-direction:column;align-items:stretch;gap:20px}
+.flow-approval-banner:has(.owner-request-details) .flow-approval-summary{width:100%}
+.flow-approval-banner:has(.owner-request-details) .flow-approval-summary>h2{display:none}
+.owner-request-details{margin-top:16px;padding:14px 16px;border:1px solid #DDE7E0;border-radius:8px;background:#fff}
+.owner-request-details>small{display:block;margin-top:4px;color:#7A8A80}
+.owner-request-details p{font-size:12px;line-height:1.6;margin:8px 0 0}
+.flow-approval-banner:has(.owner-request-details) .flow-owner-response{width:100%;padding-top:18px;border-top:1px solid #DDE7E0;box-sizing:border-box}
+.flow-owner-response [data-owner-approve]:disabled{opacity:.5;cursor:not-allowed}
+.flow-approval-banner.owner-review-compact{display:block!important;padding:18px 22px!important;border-left-width:3px!important}
+.owner-review-compact .flow-approval-summary>small:first-of-type,.owner-review-compact .flow-approval-summary>h2{display:none!important}
+.owner-review-compact .flow-approval-summary>h3{margin:7px 0 4px;font-size:16px;line-height:1.4;color:#263E32}
+.owner-review-compact .flow-approval-summary>small{font-size:11px;color:#7B8B81}
+.owner-review-compact .flow-owner-guidance{max-width:none!important;font-size:12px!important;line-height:1.6!important;margin:8px 0 0!important}
+.flow-approval-banner.owner-review-compact .flow-owner-response{display:grid;grid-template-columns:minmax(180px,1fr) auto auto;align-items:end;gap:10px;width:100%;margin-top:16px!important;padding:0!important;border:0!important}
+.owner-review-compact .flow-owner-response label{font-size:11px!important}
+.owner-review-compact .flow-owner-response .directory-picker input{height:38px!important;min-height:38px!important;font-size:12px!important;font-weight:400!important}
+.owner-review-compact .flow-owner-response>.btn{height:38px!important;min-height:38px!important;font-size:11px!important;padding:8px 12px!important}
+@media(max-width:650px){.flow-approval-banner.owner-review-compact .flow-owner-response{grid-template-columns:1fr 1fr}.owner-review-compact .flow-owner-response>label{grid-column:1/-1}}
+.workflow-rejection-context{display:flex!important;align-items:center!important;gap:20px!important;padding:14px 16px!important;background:#FFFCF6!important;border:1px solid #EBDCC0!important;border-radius:9px!important;box-sizing:border-box}
+.workflow-rejection-summary{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:8px!important;min-width:0}
+.workflow-rejection-actions{display:flex!important;align-items:center!important;gap:8px!important;flex-wrap:wrap}
+.workflow-rejection-actions .btn,.workflow-rejection-actions a{font-size:11px!important;line-height:1.4!important;min-height:34px!important;padding:8px 11px!important;border-radius:6px!important;white-space:nowrap}
+.workflow-rejection-reviewer{display:flex;align-items:center;gap:7px}
+.workflow-rejection-reviewer>span:last-child{display:flex;align-items:center;gap:6px}
+.workflow-rejection-reviewer small{font-size:10px!important;text-transform:none!important;letter-spacing:0!important}
+.workflow-rejection-reviewer strong{font-size:11px!important}
+.workflow-rejection-reason-detail{margin-top:7px!important;padding:6px 9px!important;font-size:11px!important;background:#FFF7E8!important;line-height:1.5}
+.workflow-rejection-reason-detail b{font-size:9px!important}
+.flow-card.flow-reassignment-panel{background:#fff!important;border:1px solid #E8DDC9!important;border-left:3px solid #B48335!important;border-radius:10px!important}
+.flow-reassignment-panel .flow-decision-heading{padding:16px 20px!important;background:#FFFBF3!important;gap:12px}
+.flow-reassignment-panel .flow-decision-heading h2{font-size:16px!important;line-height:1.4!important;margin:5px 0!important}
+.flow-reassignment-panel .flow-decision-heading p{font-size:12px!important;line-height:1.6;margin:0!important}
+.flow-reassignment-panel .flow-decision-icon{width:34px!important;height:34px!important;min-width:34px!important}
+.flow-reassignment-panel .flow-reassignment-item{padding:36px 20px 18px!important;gap:20px!important;background:#fff!important;grid-template-columns:minmax(200px,.85fr) minmax(0,1.65fr)!important}
+.flow-reassignment-panel .flow-reassignment-open-link{top:10px!important;right:20px!important;font-size:10px!important;padding:4px 8px!important}
+.flow-reassignment-panel .flow-reassignment-project-heading{gap:8px!important}
+.flow-reassignment-panel .flow-reassignment-project{font-size:14px!important}
+.flow-reassignment-panel .flow-reassignment-stage{font-size:10px!important;padding:3px 7px!important}
+.flow-reassignment-panel .flow-reassignment-quick-form{gap:10px!important;grid-template-columns:minmax(130px,.8fr) minmax(160px,1.2fr) auto!important}
+.flow-reassignment-panel .flow-reassignment-quick-form>label{font-size:11px!important;font-weight:500}
+.flow-reassignment-panel .flow-reassignment-quick-form input{font-weight:400!important}
+.flow-reassignment-panel .flow-reassignment-quick-form>label>small{font-size:10px!important;color:#7B897F!important}
+.flow-reassignment-panel .flow-reassignment-quick-form>.btn{font-size:11px!important;border-radius:6px!important}
+@media(max-width:1000px){.flow-reassignment-panel .flow-reassignment-item{grid-template-columns:1fr!important}.workflow-rejection-context{flex-wrap:wrap}}
+@media(max-width:650px){.flow-reassignment-panel .flow-reassignment-quick-form{grid-template-columns:1fr!important}.flow-reassignment-panel .flow-reassignment-quick-form>.btn{margin-top:0!important;grid-column:auto!important}}
+.workflow-rejection-context{background:#FFFFFF!important;border-color:#DDE4E0!important;box-shadow:none!important}
+.workflow-rejection-context .project-status-pill.status-declined{background:#F4F5F5!important;border-color:#DDE3DF!important;color:#53635A!important}
+.workflow-rejection-context .status-dot{background:#87968D!important}
+.workflow-rejection-context .workflow-rejection-reason-detail{background:#F6F8F7!important;border-left-color:#CBD5CE!important;color:#55655C!important}
+.workflow-rejection-context .workflow-rejection-reason-detail b{color:#6C7A72!important}
+.workflow-rejection-context .workflow-rejection-dashboard-link{background:#fff!important;border:1px solid #DDE4E0!important;color:#5F7066!important}
+.flow-card.flow-decision-panel.flow-reassignment-panel{background:#FFFFFF!important;border:1px solid #DDE4E0!important;border-left:1px solid #DDE4E0!important;box-shadow:none!important}
+.flow-reassignment-panel>.flow-decision-heading{background:#F8FAF9!important;border-bottom:1px solid #E3E9E5!important}
+.flow-reassignment-panel .flow-decision-eyebrow{color:#718177!important}
+.flow-reassignment-panel .flow-decision-eyebrow:before{background:#8A9A90!important}
+.flow-reassignment-panel .flow-decision-count{background:#EAF0EC!important;color:#52685A!important}
+.flow-reassignment-panel .flow-decision-icon{background:#FFFFFF!important;border-color:#DFE6E1!important;color:#7B8C80!important}
+.flow-reassignment-panel .flow-reassignment-stage{background:#F2F5F3!important;border-color:#DDE5DF!important;color:#66796B!important}
+.flow-reassignment-panel .flow-reassignment-reason-box{background:#F6F8F7!important;border-left-color:#CBD5CE!important}
+.flow-reassignment-panel .flow-reassignment-reason-label{color:#738278!important}
+.flow-reassignment-panel .flow-reassignment-reason-box p{color:#56675B!important}
+.flow-reassignment-panel .flow-reassignment-open-link{background:#FFFFFF!important;border-color:#DDE4E0!important;color:#627469!important}
+.workflow-rejection-context .workflow-rejection-reason-detail,
+.flow-reassignment-panel .flow-reassignment-reason-box{background:#F5F7F6!important;border-left:2px solid #CCD5CF!important;border-radius:0 5px 5px 0!important;color:#526158!important;box-shadow:none!important}
+.workflow-rejection-context .workflow-rejection-reason-detail b,
+.flow-reassignment-panel .flow-reassignment-reason-label{color:#748078!important;font-weight:600!important;letter-spacing:.2px!important}
+.workflow-rejection-context .workflow-rejection-reason-detail span,
+.flow-reassignment-panel .flow-reassignment-reason-box p{color:#4D5C53!important;font-weight:400!important}
+
+/* Rejection reasons remain plain supporting text. */
+.workflow-rejection-context .workflow-rejection-reason-detail,
+.flow-reassignment-panel .flow-reassignment-reason-box{background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;padding:0!important;margin-top:8px!important;display:flex;align-items:baseline;gap:8px}
+.workflow-rejection-context .workflow-rejection-reason-detail b,
+.flow-reassignment-panel .flow-reassignment-reason-label{color:#7A857F!important;font-size:10px!important;font-weight:500!important;text-transform:none!important;letter-spacing:0!important}
+.workflow-rejection-context .workflow-rejection-reason-detail span,
+.flow-reassignment-panel .flow-reassignment-reason-box p{color:#4D5C53!important;font-size:12px!important;line-height:1.6!important}
+.pw-head-actions .workflow-rejection-context{display:grid!important;grid-template-columns:minmax(180px,1fr) auto;gap:16px!important;padding:16px!important;max-width:100%;background:#fff!important;border:1px solid #E1E7E3!important;border-radius:10px!important;text-align:left}
+.pw-head-actions .workflow-rejection-summary{gap:8px!important}
+.pw-head-actions .workflow-rejection-reviewer>span:last-child{display:flex;flex-direction:row;align-items:baseline;gap:6px}
+.pw-head-actions .workflow-rejection-reviewer small{font-size:10px!important;font-weight:400!important;text-transform:none!important}
+.pw-head-actions .workflow-rejection-reviewer strong{font-size:12px!important}
+.pw-head-actions .workflow-rejection-actions{display:flex!important;flex-direction:column;align-items:stretch!important;gap:6px!important}
+.pw-head-actions .workflow-rejection-actions .btn{min-height:36px!important;text-align:center;justify-content:center}
+.pw-head-actions .workflow-rejection-dashboard-link{border:0!important;background:transparent!important;padding:3px 0!important;min-height:0!important;font-size:10px!important;text-align:center;color:#718078!important}
+@media(max-width:600px){.pw-head-actions .workflow-rejection-context{grid-template-columns:1fr;width:100%}.pw-head-actions .workflow-rejection-actions{flex-direction:row;align-items:center!important}}
+.flow-card.flow-decision-panel.flow-reassignment-panel>.flow-decision-heading{background:#FFF8E9!important;border-bottom:1px solid #F0DEB9!important}
+.flow-card.flow-reassignment-panel>.flow-decision-heading .flow-decision-eyebrow{color:#9B681C!important}
+.flow-card.flow-reassignment-panel>.flow-decision-heading .flow-decision-count{background:#AE771C!important;color:#fff!important}
+.flow-card.flow-reassignment-panel>.flow-decision-heading .flow-decision-icon{color:#AE771C!important;background:#FFFCF5!important;border-color:#EBD5AB!important}

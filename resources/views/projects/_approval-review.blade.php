@@ -10,7 +10,7 @@
     <header class="ar-head">
         <span class="ar-head-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></span>
         <div class="ar-head-copy">
-            <span class="ar-eyebrow">{{ $requester?->name ?? 'PMO' }} invited you to manage</span>
+            <span class="ar-eyebrow">{{ $requester?->name ?? 'PMO' }} invited you to be the Project Manager for</span>
             <h2 id="approval-request-title" tabindex="-1">{{ $project->name }}</h2>
             <p>{{ $project->code }} &middot; {{ $project->subsidiary?->name ?? 'General Group' }}</p>
         </div>

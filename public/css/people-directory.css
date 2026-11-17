@@ -1,0 +1,47 @@
+.people-directory{border:1px solid #DFE6E1!important;border-radius:10px!important;box-shadow:none!important}
+.people-directory .people-toolbar{background:#fff!important;padding:16px!important;gap:12px!important}
+.people-directory .people-toolbar input,.people-directory .people-toolbar select{height:38px!important;min-height:38px!important;font-size:12px!important;border-color:#DDE5DF!important;border-radius:6px!important}
+.people-directory #users-table{min-width:760px;table-layout:fixed}
+.people-directory #users-table th{background:#F7F9F8!important;text-transform:none!important;letter-spacing:0!important;font-size:11px!important;font-weight:600!important;color:#718078!important;padding:12px 16px!important}
+.people-directory #users-table td{padding:14px 16px!important;font-size:12px!important;line-height:1.5;vertical-align:middle;border-bottom:1px solid #EDF1EE!important}
+.people-directory #users-table tr:last-child td{border-bottom:0!important}
+.people-directory #users-table th:first-child{width:31%!important}
+.people-directory #users-table th:nth-child(2){width:15%!important}
+.people-directory #users-table th:nth-child(3){width:25%!important}
+.people-directory #users-table th:nth-child(4){width:11%!important}
+.people-directory #users-table th:nth-child(5){width:18%!important}
+.people-directory #users-table .avatar{width:32px!important;height:32px!important;font-size:11px!important;border-radius:50%!important;background:#F0F5F2!important;border:1px solid #E1E9E3;color:#537363!important}
+.people-directory #users-table .strong-link{font-size:12px!important;font-weight:600!important;color:#344D3E!important}
+.people-directory #users-table .people-email{font-size:11px!important;color:#839087!important;margin-top:3px!important}
+.people-directory #users-table span[title="Synced with Microsoft Entra ID"]{font-size:9px!important;font-weight:400!important;padding:1px 5px!important;background:#F6F8F9!important;color:#7B8B91!important;border:1px solid #E1E7EA!important;border-radius:4px!important;white-space:nowrap}
+.people-directory #users-table .pill{font-size:10px!important;font-weight:500!important;padding:3px 8px!important;line-height:1.4;background:#F5F8F6!important;border:1px solid #E1E8E3!important;color:#61766A!important;border-radius:5px!important}
+.people-directory #users-table .people-company-name{font-size:11px!important;font-weight:400!important;color:#617368!important;line-height:1.6}
+.people-directory #users-table td:nth-child(4)>span{font-size:11px!important;font-weight:400!important;color:#557B63!important}
+.people-directory #users-table td:nth-child(4)>span>span{width:6px!important;height:6px!important;box-shadow:none!important;background:#6B9C7D!important}
+.people-directory #users-table .people-row-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px!important;flex-wrap:nowrap!important}
+.people-directory #users-table .people-row-actions .btn{min-height:30px!important;height:30px!important;padding:5px 9px!important;font-size:11px!important;font-weight:400!important;border-radius:5px!important;box-shadow:none!important}
+.people-directory #users-table .btn-delete-user{color:#AC635D!important}
+.people-directory #users-table tbody tr:hover{background:#FAFCFB!important}
+.people-directory #users-table td{height:68px;box-sizing:border-box;background:#fff!important}
+.people-directory #users-table .people-actions-cell{white-space:nowrap}
+.people-directory #users-table .people-row-actions>.pill{white-space:nowrap;font-size:9px!important;padding:4px 6px!important}
+.people-directory #users-table .people-row-actions>.btn{flex-shrink:0}
+.people-directory #users-table .people-company-name{overflow-wrap:anywhere}
+.people-directory #users-table td:first-child>div{gap:10px!important}
+.people-directory #users-table td:first-child>div>div{min-width:0}
+.people-directory #users-table td:first-child>div>div>div{flex-wrap:wrap;row-gap:3px!important}
+.people-directory #users-table .people-email{overflow-wrap:anywhere}
+.people-directory #users-table:has(thead th:nth-child(4):last-child) th:first-child{width:36%!important}
+.people-directory #users-table:has(thead th:nth-child(4):last-child) th:nth-child(2){width:18%!important}
+.people-directory #users-table:has(thead th:nth-child(4):last-child) th:nth-child(3){width:31%!important}
+.people-directory #users-table:has(thead th:nth-child(4):last-child) th:nth-child(4){width:15%!important}
+.people-directory #users-table td .strong-link{color:#293D32!important;font-size:12px!important;font-weight:500!important}
+.people-directory #users-table .people-email{color:#77877D!important;line-height:1.5}
+.people-directory #users-table td:nth-child(2) .pill{border:0!important;background:#F3F6F4!important;border-radius:4px!important;padding:4px 8px!important;color:#617367!important}
+.people-directory #users-table .people-row-actions .btn-outline{border-color:#E0E7E2!important;background:white!important;color:#50695A!important}
+.people-directory #users-table .people-row-actions .btn:hover{background:#F3F7F4!important}
+.people-directory #users-table tbody tr:hover td{background:#FBFDFC!important}
+.people-directory #users-table td .people-company-name{font-size:11px!important;color:#6B7D71!important}
+.people-directory #users-table thead th:last-child{text-align:right!important}
+.people-directory .people-toolbar .people-result-count{font-size:11px!important;font-weight:400!important;color:#79897F!important}
+.people-directory .table-wrap{border:0!important}

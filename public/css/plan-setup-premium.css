@@ -54,3 +54,8 @@
 #plan-start-dialog .btn-publish-direct svg{flex-shrink:0;width:16px;height:16px}
 #plan-start-dialog .btn-publish-direct[aria-busy=true]{cursor:wait}
 @media(max-width:520px){#plan-start-dialog .flow-footer-buttons{grid-template-columns:1fr!important}#plan-start-dialog .btn-publish-direct{min-width:0;width:100%}}
+#plan-start-dialog [data-plan-mode=blank]>span{display:block;width:100%}
+#plan-start-dialog [data-plan-mode=blank] b{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+#plan-start-dialog #blank-plan-ready{font-style:normal;font-size:10px;font-weight:600;padding:4px 8px;border-radius:5px;background:#E3F1E8;color:#2F6950;line-height:1.4}
+#plan-start-dialog #blank-plan-edit-action{display:inline-flex;margin-top:10px;font-size:12px;font-weight:600;color:#315F58;border-bottom:1px solid #B6CFC2;line-height:1.6}
+#plan-start-dialog #blank-plan-ready[hidden],#plan-start-dialog #blank-plan-edit-action[hidden]{display:none!important}

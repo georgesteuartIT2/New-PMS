@@ -147,7 +147,7 @@
                         <th style="padding: 10px 14px; font-size: 11px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; text-align: left;">Due</th>
                         <th style="padding: 10px 14px; font-size: 11px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; text-align: left; width: 120px;">Progress</th>
                         <th style="padding: 10px 14px; font-size: 11px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; text-align: left;">Status</th>
-                        <th style="padding: 10px 16px; font-size: 11px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; text-align: right;">Actions</th>
+                        @if(!auth()->user()->isAdminViewer())<th style="padding: 10px 16px; font-size: 11px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; text-align: right;">Actions</th>@endif
                     </tr>
                 </thead>
                 <tbody>
@@ -231,6 +231,7 @@
                             </td>
 
                             <!-- Actions -->
+                            @if(!auth()->user()->isAdminViewer())
                             <td style="padding: 12px 16px; text-align: right; white-space: nowrap;">
                                 <div style="display: inline-flex; gap: 6px; align-items: center;">
                                     @if(!auth()->user()->isAdminViewer() && $task->progress < 100 && $task->assignees->isEmpty())
@@ -243,7 +244,8 @@
                                     @endif
                                 </div>
                             </td>
-                        </tr>
+                        @endif
+                    </tr>
                     @empty
                         <tr>
                             <td colspan="6" style="text-align: center; padding: 48px 20px; color: #64748B;">

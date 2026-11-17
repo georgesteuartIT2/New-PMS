@@ -1,6 +1,7 @@
 @extends('layouts.app')
 @section('title', 'People')
 @section('content')
+<link rel="stylesheet" href="{{ asset('css/people-directory.css') }}?v={{ filemtime(public_path('css/people-directory.css')) }}">
 <!-- Screen 9: Users Management (Clean, Low-Click, Subsidiary Column & Protected Administration) -->
 <div class="page-head" style="margin-bottom: 20px;">
     <div>
@@ -92,7 +93,7 @@
                     <th style="padding: 12px 18px; font-size: 12px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">System Role</th>
                     <th style="padding: 12px 18px; font-size: 12px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">Subsidiary</th>
                     <th style="padding: 12px 18px; font-size: 12px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">Account Status</th>
-                    <th class="right" style="padding: 12px 18px; font-size: 12px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; text-align: right;">Actions</th>
+                    @if(!auth()->user()->isAdminViewer())<th class="right" style="padding: 12px 18px; font-size: 12px; font-weight: 650; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; text-align: right;">Actions</th>@endif
                 </tr>
             </thead>
             <tbody id="users-tbody">
@@ -119,11 +120,11 @@
                         <td style="padding: 12px 18px;">
                             @if($user->isPmo())
                                 <span class="pill" style="display: inline-flex; align-items: center; gap: 5px; background: #E8F0EE; color: var(--primary); font-weight: 700; border: 1px solid #C8DDD2; padding: 3px 10px; border-radius: 12px; font-size: 11.5px;">
-                                    🛡️ PMO Admin
+                                    PMO Admin
                                 </span>
                             @elseif($user->isAdminViewer())
                                 <span class="pill" style="display: inline-flex; align-items: center; gap: 5px; background: #F1F5F9; color: #475569; border: 1px solid #CBD5E1; padding: 3px 10px; border-radius: 12px; font-size: 11.5px; font-weight: 600;">
-                                    👁️ Admin Viewer
+                                    Admin Viewer
                                 </span>
                             @else
                                 <span class="pill" style="display: inline-flex; align-items: center; gap: 5px; background: #F8FAFC; color: #64748B; border: 1px solid #E2E8F0; padding: 3px 10px; border-radius: 12px; font-size: 11.5px; font-weight: 600;">
@@ -157,7 +158,8 @@
                                 </span>
                             @endif
                         </td>
-                        <td class="right" style="padding: 12px 18px; text-align: right;">
+                        @if(!auth()->user()->isAdminViewer())
+                        <td class="right people-actions-cell" style="padding: 12px 18px; text-align: right;">
                             @if(auth()->user()->isPmo())
                                 @php
                                     $isSelf = $user->id === auth()->id();
@@ -251,6 +253,7 @@
                                 </dialog>
                             @endif
                         </td>
+                        @endif
                     </tr>
                 @empty
                     <tr id="empty-users-row">

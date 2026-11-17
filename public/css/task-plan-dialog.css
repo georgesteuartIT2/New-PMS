@@ -153,3 +153,8 @@
 .stp-bulk-assign-backdrop .stp-bulk-task-list small{font-size:10px!important;margin-top:1px!important;line-height:1.4}
 .stp-bulk-assign-backdrop .stp-bulk-task-controls{padding:8px 10px!important}
 .stp-bulk-assign-backdrop .stp-bulk-assign-dialog footer{margin-top:10px!important;padding-top:12px!important}
+#stp-import-confirm-dialog .stp-import-eyebrow{display:none}
+#stp-import-confirm-dialog .stp-import-counts>div{padding:10px 12px!important;background:transparent!important;border:0!important}
+#stp-import-confirm-dialog .stp-import-counts{gap:8px!important;margin:12px 0!important;border:1px solid #E2E8E4;border-radius:7px}
+#stp-import-confirm-dialog .stp-import-impact{padding:8px 0!important;background:transparent!important;font-size:11px!important;line-height:1.6}
+#stp-import-confirm-dialog .stp-import-option-danger .stp-import-recommended{background:#FFF0ED;color:#96483E}

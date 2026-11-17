@@ -238,6 +238,8 @@
                                     <a href="{{ route('projects.show', [$project, 'reassign' => 1]) }}" class="btn btn-outline btn-xs">Assign PM</a>
                                 @elseif($project->status === 'pending' && $isPm)
                                     <a href="{{ route('projects.show', $project) }}" class="btn btn-primary btn-xs">Review & Respond</a>
+                                @elseif($project->status === 'declined' && $project->approval_stage === 'pm_declined' && (int)$project->owner_user_id === auth()->id())
+                                    <a href="{{ route('projects.show', [$project, 'reassign'=>1]) }}" class="btn btn-primary btn-xs" title="Choose a new Project Manager and send an invitation">Reassign PM</a>
 
                                 @endif
 
@@ -1525,14 +1527,14 @@ function renderDelayStory(res) {
         statsStrip.append(pill);
     };
     if (lateCount > 0) {
-        addFilterPill('all', 'is-late', '🔴 ' + lateCount + ' late ' + (lateCount === 1 ? 'task' : 'tasks'));
+        addFilterPill('all', 'is-late', '' + lateCount + ' late ' + (lateCount === 1 ? 'task' : 'tasks'));
     }
     if (critCount > 0) {
-        addFilterPill('critical', 'is-crit', '⚡ ' + critCount + ' critical (0d buffer)');
+        addFilterPill('critical', 'is-crit', '' + critCount + ' critical (0d buffer)');
     }
     if (planned && planned !== '—') {
         const dateText = estimated && estimated !== planned ? planned + ' → ' + estimated : planned;
-        statsStrip.append(el('span', 'pds-stat-pill is-date', '📅 ' + dateText));
+        statsStrip.append(el('span', 'pds-stat-pill is-date', '' + dateText));
     }
     verdictText.append(statsStrip);
     verdictBox.append(verdictText);

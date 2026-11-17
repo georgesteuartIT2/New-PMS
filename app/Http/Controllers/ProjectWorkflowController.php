@@ -67,7 +67,7 @@ class ProjectWorkflowController
                 $template=$d['plan_mode']==='template'?ProjectTemplate::whereKey($d['project_template_id'])->where('status','active')->with('tasks')->firstOrFail():null;
                 $p->update(['starts_on'=>$d['starts_on'],'ends_on'=>$d['ends_on'],'project_template_id'=>$template?->id,'plan_initialized'=>true]);
                 if($template)$service->applyTemplate($p,$template,$r->user());
-                elseif($blankPlan){$source=new ProjectTemplate(['reference_start_date'=>$blankPlan['reference_start_date']??$d['starts_on'],'working_hours'=>'09:00 - 17:00']);$source->setRelation('tasks',collect($blankPlan['tasks'])->map(fn($task,$i)=>new \App\Models\TemplateTask(array_merge($task,['sort_order'=>$i+1,'priority'=>$task['priority']??'medium']))));$service->applyTemplate($p,$source,$r->user());}
+                elseif($blankPlan){$source=new ProjectTemplate(['reference_start_date'=>$blankPlan['reference_start_date']??$d['starts_on'],'working_hours'=>'09:00 - 17:00']);$source->setRelation('tasks',collect($blankPlan['tasks'])->map(fn($task,$i)=>new \App\Models\TemplateTask(array_merge($task,['sort_order'=>$i+1,'priority'=>$task['priority']??'medium']))));$service->applyTemplate($p,$source,$r->user(),true);}
             }
             $this->assignOptionalMembers($p,$d['members']??[],$r);
             if ($selfManaged) {
@@ -106,7 +106,7 @@ class ProjectWorkflowController
             }Audit::record('project.owner_'.$d['decision'], $p, ['reason' => $d['decline_reason'] ?? null]);
         });
 
-        return redirect()->route('projects.show', $project)->with('success', $d['decision'] === 'accept' ? 'Approved. The Project Manager has been invited.' : 'Rejection sent to PMO.');
+        return redirect()->route('projects.show', $project)->with('success', $d['decision'] === 'accept' ? 'Project approved. Request sent to '.User::findOrFail($d['pm_user_id'])->name.'. They will review the request and prepare the project plan after accepting.' : 'Rejection sent to PMO.');
     }
 
     public function reassign(Request $r, Project $project, ProjectService $service)
@@ -345,7 +345,7 @@ class ProjectWorkflowController
                     'sort_order' => $i + 1,
                     'priority' => $task['priority'] ?? 'medium'
                 ]))));
-                $service->applyTemplate($p, $source, $r->user());
+                $service->applyTemplate($p, $source, $r->user(), true);
                 foreach ($blankPlan['tasks'] as $t) {
                     if (!empty($t['assignee_id'])) {
                         $u = $this->person((int)$t['assignee_id']);

@@ -161,13 +161,23 @@
     }
 
     function refreshPlanIndicators() {
+        const blankSelected = modeInput?.value === 'blank';
+        blankBtn?.classList.toggle('is-selected', blankSelected);
+        blankBtn?.setAttribute('aria-pressed', String(blankSelected));
+        chooseTemplateBtn?.classList.toggle('is-selected', !blankSelected);
+        chooseTemplateBtn?.setAttribute('aria-pressed', String(!blankSelected));
         const cardSummary = document.getElementById('blank-plan-card-summary');
         if (cardSummary) {
             let tasks = [];
             try { tasks = JSON.parse(blankPlanData?.value || '{}').tasks || []; } catch {}
             const count = tasks.length;
-            cardSummary.textContent = count
-                ? count + ' tasks prepared · Click to edit plan'
+            const prepared = blankSelected && count > 0;
+            const ready = document.getElementById('blank-plan-ready');
+            const edit = document.getElementById('blank-plan-edit-action');
+            if (ready) ready.hidden = !prepared;
+            if (edit) edit.hidden = !prepared;
+            cardSummary.textContent = prepared
+                ? count + ' tasks added · Ready for review'
                 : 'Add tasks manually or import from Excel.';
         }
         const tasks = currentPlanTasks();
@@ -325,7 +335,7 @@
             }
             // Switch to blank mode if not already
             const templateId = window.PLAN_SETUP_CONFIG?.selectedTemplateId || templateInput?.value;
-            const usesTemplate = !!templateId;
+            const usesTemplate = modeInput.value === 'template' && !!templateId;
             modeInput.value = usesTemplate ? 'template' : 'blank';
             if (templateInput) { templateInput.disabled = !usesTemplate; if (usesTemplate) templateInput.value = templateId; }
             blankBtn?.classList.toggle('is-selected', !usesTemplate);
@@ -346,6 +356,7 @@
             return;
         }
         let data = null;
+        window.SmartTaskPlan.blankPlanEditor = true;
         if (blankPlanData && blankPlanData.value) {
             try { data = JSON.parse(blankPlanData.value); } catch (e) {}
         }
@@ -422,6 +433,7 @@
     // Customize Template Tasks button
     customizeTemplateBtn?.addEventListener('click', () => {
         setupSmartTaskPlanEngine();
+        if(window.SmartTaskPlan)window.SmartTaskPlan.blankPlanEditor=false;
         if (!window.SmartTaskPlan) {
             alert('Task plan engine is loading. Please try again.');
             return;

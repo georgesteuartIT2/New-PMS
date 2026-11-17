@@ -465,3 +465,27 @@
  #delay-analysis-modal .pds-critical-pill{margin-top:8px}
  #delay-analysis-modal .pdi-footer{min-height:56px;padding:9px 12px!important}
 }
+#delay-analysis-modal .pds-verdict{padding:16px!important;border-radius:8px!important;gap:12px;background:#FFFAF9;border:1px solid #EEDFDA}
+#delay-analysis-modal .pds-verdict h3{font-size:16px!important;font-weight:600!important;line-height:1.5;color:#983F37}
+#delay-analysis-modal .pds-verdict p{font-size:12px!important;line-height:1.6;margin-top:5px;color:#64736A}
+#delay-analysis-modal .pds-dot{width:8px;height:8px;flex-basis:8px;margin-top:8px;box-shadow:none!important}
+#delay-analysis-modal .pds-stat-pill{font-size:11px!important;font-weight:500!important;border-radius:5px!important;padding:5px 9px!important;border:1px solid #E3E8E4!important;background:#fff!important;color:#53665B!important;box-shadow:none}
+#delay-analysis-modal .pds-stat-pill.is-late{color:#A14840!important;border-color:#E9D3CF!important}
+#delay-analysis-modal .pds-stat-pill.is-crit{color:#8B691F!important;border-color:#EADFBF!important}
+#delay-analysis-modal .pds-stat-pill:focus-visible{outline:2px solid #9CBCAF;outline-offset:2px}
+#delay-analysis-modal .pds-steps{border-radius:8px;padding:4px 16px}
+#delay-analysis-modal .pds-task{font-size:14px;font-weight:600}
+#delay-analysis-modal .pds-step{padding-top:14px;padding-bottom:14px}
+#delay-analysis-modal .pds-step-head h4{font-size:10px!important;letter-spacing:.4px}
+#delay-analysis-modal .pds-step-num{width:22px;height:22px;font-size:11px;background:#426B5D}
+#delay-analysis-modal .pds-sub,#delay-analysis-modal .pds-result{font-size:12px;line-height:1.6}
+#delay-analysis-modal .pds-who{background:#FAFBFA;border:1px solid #E8EDE9;border-radius:6px;padding:10px 12px;gap:10px}
+#delay-analysis-modal .pds-who dt{font-size:10px;color:#7D8A81}
+#delay-analysis-modal .pds-who dd{font-size:12px;font-weight:500;color:#3E5145}
+#delay-analysis-modal .pds-who .is-warn dd{color:#8A6A43}
+#delay-analysis-modal .pds-critical-card{padding:16px;border-radius:8px;box-shadow:none;border-color:#E0E7E2}
+#delay-analysis-modal .pds-critical-head h3{font-size:14px!important;font-weight:600!important}
+#delay-analysis-modal .pds-critical-subtitle{font-size:12px!important}
+#delay-analysis-modal .pds-critical-pill{font-size:10px;border-radius:5px;padding:4px 7px;background:#fff;color:#6C5943;border-color:#E5DACC}
+#delay-analysis-modal .pds-critical-badge{font-size:9px;border-radius:4px;padding:3px 6px;background:#FBF3DE;color:#8C7137}
+#delay-analysis-modal .pds-chip{font-size:11px;padding:6px 9px;border-radius:5px;background:#F7F9F8;border:1px solid #E1E8E3;color:#52675A}

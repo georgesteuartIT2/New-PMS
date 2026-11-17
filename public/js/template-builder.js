@@ -474,7 +474,17 @@
         openEdit(templateData, tasksData = null) {
             this.mode = 'edit';
             this.viewType = 'table';
-            this.template = Object.assign({}, templateData);
+            this.template = Object.assign({
+                name: window.PLAN_SETUP_CONFIG?.projectName || 'Project task plan',
+                estimated_duration: 14,
+                duration_unit: 'working_days',
+                reference_start_date: this.formatDateISO(new Date()),
+                working_hours: '09:00 - 17:00',
+                planning_periods: {}
+            }, templateData);
+            if(!this.template.name?.trim())this.template.name=window.PLAN_SETUP_CONFIG?.projectName||'Project task plan';
+            if(!this.template.estimated_duration)this.template.estimated_duration=14;
+            if(!this.template.duration_unit)this.template.duration_unit='working_days';
             this.tasks = tasksData ? JSON.parse(JSON.stringify(tasksData)) : [];
             this.periods = this.generatePeriods(
                 this.template.reference_start_date,
@@ -670,6 +680,7 @@
                     <button type="button" class="btn btn-outline btn-sm" onclick="SmartTaskPlan.downloadExcel()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 3v13m-5-5 5 5 5-5M4 16v4h16v-4"/></svg>Download Excel template</button>
                     <button type="button" id="stp-btn-upload-excel" class="btn btn-outline btn-sm" onclick="SmartTaskPlan.triggerExcelUpload()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M12 16V3m-5 5 5-5 5 5M4 15v5h16v-5"/></svg>Upload completed template</button>
                     ${this.assignmentEnabled?'<button type="button" class="btn btn-outline btn-sm" onclick="SmartTaskPlan.openBulkAssign()">Assign tasks</button>':''}
+                    ${this.blankPlanEditor?'<button type="button" class="btn btn-outline btn-sm" onclick="SmartTaskPlan.clearBlankTasks()">Clear all</button>':''}
                 </div>
                 <div class="stp-toolbar-right">
                     <span class="stp-toolbar-hint">Download, fill in, then upload the template.</span>
@@ -677,6 +688,16 @@
                 </div>
             `;
             if(this.dom.summaryCounts)this.dom.toolbar.querySelector('.stp-toolbar-meta').append(this.dom.summaryCounts);
+        },
+
+        async clearBlankTasks() {
+            if(!this.blankPlanEditor)return;
+            if(!await AppDialog.confirm('Clear all tasks, subtasks, assignments and dependencies? This will reset the sheet to 10 new editable tasks. Save and continue to keep the new plan.'))return;
+            const date=this.template.reference_start_date||this.formatDateISO(new Date());
+            const period=this.periods[0];
+            this.tasks=Array.from({length:10},(_,index)=>({code:String(index+1),parent_code:null,title:'Task '+(index+1),description:'',start_period:period?.id,end_period:period?.id,start_date:date,end_date:date,start_time:'09:00',end_time:'17:00',duration_days:1,dependency_code:'',priority:'medium',assignee_id:null,assignee_email:'',assignee_name:'',sort_order:index}));
+            this.collapsedPeriods={};this.recentAssignees=[];this.unsavedChanges=true;
+            this.render();this.renderFooter();
         },
 
         openBulkAssign() {
@@ -1888,21 +1909,20 @@
 
             if (this.dom.importImpact) {
                 if (mode === 'replace') {
-                    this.dom.importImpact.textContent = `After import, your plan will have ${taskLabel(summary.incomingCount)} from Excel. ${summary.removedCount === 0 ? 'No current tasks will be removed.' : `${taskLabel(summary.removedCount)} not in Excel will be removed.`}`;
+                    this.dom.importImpact.textContent = `${taskLabel(summary.incomingCount)} in the final plan. ${taskLabel(summary.removedCount)} removed.`;
                 } else {
                     const result = [
-                        `After import, your plan will have ${taskLabel(summary.currentCount + summary.newCount)}.`,
-                        `${taskLabel(summary.matchingCount)} will be updated.`,
-                        `${taskLabel(summary.newCount)} will be added.`
+                        `${summary.matchingCount} updated`,
+                        `${summary.newCount} added`,
+                        `${summary.keptCount} unchanged`
                     ];
-                    if (summary.keptCount > 0) result.push(`${taskLabel(summary.keptCount)} not in Excel will stay unchanged.`);
-                    this.dom.importImpact.textContent = result.join(' ');
+                    this.dom.importImpact.textContent = result.join(' · ') + ` — ${taskLabel(summary.currentCount + summary.newCount)} total`;
                 }
             }
             if (this.dom.importApplyBtn) {
                 this.dom.importApplyBtn.textContent = mode === 'replace'
                     ? `Replace plan with ${taskLabel(summary.incomingCount)}`
-                    : `Update plan with ${taskLabel(summary.incomingCount)}`;
+                    : `Merge ${taskLabel(summary.incomingCount)}`;
                 this.dom.importApplyBtn.classList.toggle('is-destructive', mode === 'replace');
             }
         },
@@ -1988,6 +2008,7 @@
         /* Save Template to Database */
         saveTemplate(customRedirect = null) {
             if (this.isSavingTemplate) return;
+            if(this.localPlanSave && !this.template.name?.trim())this.template.name=window.PLAN_SETUP_CONFIG?.projectName||'Project task plan';
             if(this.assignmentEnabled){const invalid=this.dom.tableBody?.querySelector('.directory-picker input:invalid');if(invalid){invalid.reportValidity();invalid.focus();return;}}
             if (!this.template.name || !this.template.name.trim()) {
                 alert('Please enter a Template Name before saving.');

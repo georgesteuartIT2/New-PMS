@@ -88,11 +88,15 @@ class ProjectService {
    return $p->fresh();
   });
  }
- public function applyTemplate(Project $p,ProjectTemplate $template,User $actor):void {
+ public function applyTemplate(Project $p,ProjectTemplate $template,User $actor,bool $preserveTaskDates=false):void {
     $byCode=[];
     $scheduleService=app(TemplateScheduleService::class);
     foreach($template->tasks->sortBy('sort_order') as $entry){
      [$start,$end]=$scheduleService->mapTaskDates($template,$entry,Carbon::parse($p->starts_on));
+     if($preserveTaskDates && $entry->start_date && $entry->end_date){
+      $start=Carbon::parse($entry->start_date)->setTimeFromTimeString($entry->start_time ?: '09:00');
+      $end=Carbon::parse($entry->end_date)->setTimeFromTimeString($entry->end_time ?: '17:00');
+     }
      $task=Task::create([
       'project_id'=>$p->id,'code'=>$entry->code,'title'=>$entry->title,
       'description'=>$entry->description,
