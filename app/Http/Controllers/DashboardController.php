@@ -306,7 +306,7 @@ class DashboardController
             'isPmo' => false,
             'approvalQueue' => $approvalQueue,
             'dueTodayCount' => $userTasks->filter(fn($task) => $task->ends_at?->isToday())->count(),
-            'myOverdueCount' => $userTasks->filter(fn($task) => $task->ends_at && $task->ends_at->isPast())->count(),
+            'myOverdueCount' => app(\App\Services\PersonalAttentionService::class)->query($user, 'my_overdue')->count(),
             'projects' => $userProjects,
             'myProjectsPreview' => $myProjectsPreview,
             'tasks' => $userTasks,

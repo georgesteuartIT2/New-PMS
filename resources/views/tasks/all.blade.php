@@ -21,37 +21,88 @@
         </nav>
     @endif
     <section class="personal-filter-surface" aria-label="Task filters">
-    <nav class="tw-views" aria-label="Filter tasks">
-        @foreach($taskViews as $key=>$item)
-            <a href="{{ route('tasks.mine',array_merge(request()->except('page','view','filter'),['scope'=>$scope,'filter'=>$key])) }}" class="{{ $currentFilter===$key ? 'is-active' : '' }}" @if($currentFilter===$key) aria-current="page" @endif>{{ $item[0] }} <span>{{ $metrics[$item[1]]??0 }}</span></a>
-        @endforeach
-    </nav>
-    @if(!empty($filters['attention']))<p class="attention-filter-context">{{ ['my_overdue'=>'Your overdue tasks','follow_up'=>'Blockers needing your follow-up','managed_overdue'=>'Overdue work in projects you manage','needs_owner'=>'Unassigned work starting within 3 working days (including overdue starts)'][$filters['attention']] ?? '' }} <a href="{{ route('tasks.mine') }}">Clear attention filter</a></p>@endif
-    <form method="get" action="{{ route('tasks.mine') }}" class="tw-filters" id="all-task-filter-form">
-        @if(!empty($filters['attention']))<input type="hidden" name="attention" value="{{ $filters['attention'] }}">@endif
-        <input type="hidden" name="filter" value="{{ $currentFilter }}">
-        <div class="tw-filter-row">
-            <label class="tw-search"><span class="workspace-sr-only">Search tasks, projects or people</span><input type="search" name="q" value="{{ $filters['q']??'' }}" placeholder="Search tasks, projects or people..." autocomplete="off"></label>
-            <label class="tw-scope-select">
-                <span class="workspace-sr-only">Task ownership</span>
-                <select name="scope" onchange="this.form.requestSubmit()">
-                    <option value="all" @selected($scope==='all')>All tasks</option>
-                    <option value="assigned" @selected($scope==='assigned')>My tasks</option>
-                    @if($monitored->isNotEmpty() || $scope==='managed')
-                        <option value="managed" @selected($scope==='managed')>Managed by Me</option>
-                    @endif
-                </select>
-            </label>
-            <label class="tw-project"><span class="workspace-sr-only">Project</span><select name="project_id" onchange="this.form.requestSubmit()"><option value="">All projects</option>@foreach($projects as $project)<option value="{{ $project->id }}" @selected(($filters['project_id']??'')==$project->id)>{{ $project->name }}</option>@endforeach</select></label>
-            <button type="button" class="filter-panel-toggle" aria-controls="personal-extra-filters" aria-expanded="{{ !empty($filters['user_id']) || !empty($filters['status']) ? 'true':'false' }}" onclick="const p=document.getElementById('personal-extra-filters');p.open=!p.open;this.setAttribute('aria-expanded',String(p.open));"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="2" fill="white"/><circle cx="15" cy="17" r="2" fill="white"/></svg><span>More filters</span>@if(collect(['user_id','status'])->filter(fn($key)=>!empty($filters[$key]))->count())<span class="filter-panel-count">{{ collect(['user_id','status'])->filter(fn($key)=>!empty($filters[$key]))->count() }}</span>@endif<svg class="filter-panel-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><button class="btn btn-primary personal-search-submit" type="submit">Search</button>
-            @if($hasFilters)<a class="tw-clear" href="{{ route('tasks.mine',['filter'=>$currentFilter]) }}">Clear</a>@endif
-            <span class="tw-result-count">{{ $tasks->total() }} {{ Str::plural('task',$tasks->total()) }}</span>
+        <div class="tw-filter-tabs-bar">
+            <nav class="tw-views" aria-label="Filter tasks">
+                @foreach($taskViews as $key=>$item)
+                    @php
+                        $count = $metrics[$item[1]] ?? 0;
+                        $isActive = ($currentFilter === $key);
+                    @endphp
+                    <a href="{{ route('tasks.mine', array_merge(request()->except('page','view','filter'), ['scope'=>$scope, 'filter'=>$key])) }}" class="{{ $isActive ? 'is-active' : '' }}" @if($isActive) aria-current="page" @endif>
+                        <span>{{ $item[0] }}</span>
+                        <span class="tw-badge {{ $key === 'overdue' && $count > 0 ? 'is-danger' : '' }}">{{ $count }}</span>
+                    </a>
+                @endforeach
+            </nav>
+            <div class="tw-result-counter">
+                <span>{{ $tasks->total() }} {{ Str::plural('task', $tasks->total()) }}</span>
+            </div>
         </div>
-        <div class="tw-filter-bottom"><details id="personal-extra-filters" class="tw-more" @if(!empty($filters['user_id']) || !empty($filters['status'])) open @endif><summary hidden>Additional filters</summary><div class="filter-panel-caption"><span>Refine your results</span><a href="{{ route('tasks.mine',request()->except(['user_id','status','subsidiary_id','page'])) }}">Reset extra filters</a></div><div class="tw-extra">
-            <label>Assignee<select name="user_id" onchange="this.form.requestSubmit()"><option value="">Anyone</option><option value="unassigned" @selected(($filters['user_id']??'')==='unassigned')>Unassigned</option>@foreach($assignees as $person)<option value="{{ $person->id }}" @selected(($filters['user_id']??'')==$person->id)>{{ $person->name }}</option>@endforeach</select></label>
-            <label>Status<select name="status" onchange="this.form.requestSubmit()"><option value="">Any status</option>@foreach(['todo'=>'To do','in_progress'=>'In progress','on_hold'=>'On hold','completed'=>'Completed'] as $key=>$label)<option value="{{ $key }}" @selected(($filters['status']??'')===$key)>{{ $label }}</option>@endforeach</select></label>
-        </div></details></div>
-    </form>
+
+        @if(!empty($filters['attention']))
+            <div class="attention-filter-context">
+                <div class="attention-context-msg">
+                    <svg width="15" height="15" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
+                    <span>Showing: <strong>{{ ['my_overdue'=>'Your overdue tasks','follow_up'=>'Blockers needing your follow-up','managed_overdue'=>'Overdue work in projects you manage','needs_owner'=>'Unassigned work starting within 3 working days (including overdue starts)'][$filters['attention']] ?? '' }}</strong></span>
+                </div>
+                <a href="{{ route('tasks.mine') }}" class="attention-clear-link">&times; Clear attention filter</a>
+            </div>
+        @endif
+
+        <form method="get" action="{{ route('tasks.mine') }}" class="tw-filters-toolbar" id="all-task-filter-form">
+            @if(!empty($filters['attention']))<input type="hidden" name="attention" value="{{ $filters['attention'] }}">@endif
+            <input type="hidden" name="filter" value="{{ $currentFilter }}">
+
+            <!-- Search input + Search button in one combined group -->
+            <div class="tw-search-group">
+                <div class="tw-search-input-wrap">
+                    <svg class="tw-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                    <input type="search" name="q" value="{{ $filters['q']??'' }}" placeholder="Search tasks, projects or people..." autocomplete="off" style="padding-left: 38px !important;">
+                </div>
+                <button class="btn btn-primary personal-search-submit" type="submit">Search</button>
+            </div>
+
+            <!-- Filter Dropdowns group -->
+            <div class="tw-selects-group">
+                <div class="tw-select-wrap tw-scope-select">
+                    <select name="scope" onchange="this.form.requestSubmit()" aria-label="Task ownership">
+                        <option value="all" @selected($scope==='all')>All tasks</option>
+                        <option value="assigned" @selected($scope==='assigned')>My tasks</option>
+                        @if($monitored->isNotEmpty() || $scope==='managed')
+                            <option value="managed" @selected($scope==='managed')>Managed by Me</option>
+                        @endif
+                    </select>
+                </div>
+                <div class="tw-select-wrap tw-project">
+                    <select name="project_id" onchange="this.form.requestSubmit()" aria-label="Project">
+                        <option value="">All projects</option>
+                        @foreach($projects as $project)
+                            <option value="{{ $project->id }}" @selected(($filters['project_id']??'')==$project->id)>{{ $project->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="tw-select-wrap tw-assignee-filter">
+                    <select name="user_id" onchange="this.form.requestSubmit()" aria-label="Assignee">
+                        <option value="">All assignees</option>
+                        <option value="unassigned" @selected(($filters['user_id']??'')==='unassigned')>Unassigned</option>
+                        @foreach($assignees as $person)
+                            <option value="{{ $person->id }}" @selected(($filters['user_id']??'')==$person->id)>{{ $person->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="tw-select-wrap tw-status-filter">
+                    <select name="status" onchange="this.form.requestSubmit()" aria-label="Status">
+                        <option value="">All statuses</option>
+                        @foreach(['todo'=>'To do','in_progress'=>'In progress','on_hold'=>'On hold','completed'=>'Completed'] as $key=>$label)
+                            <option value="{{ $key }}" @selected(($filters['status']??'')===$key)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                @if($hasFilters)
+                    <a class="tw-clear-btn" href="{{ route('tasks.mine',['filter'=>$currentFilter]) }}">Clear</a>
+                @endif
+            </div>
+        </form>
     </section>
     <div class="tw-table-surface"><div class="table-wrap"><table class="tw-table tw-personal-table">
         <thead><tr><th>Task / Project</th><th>Assignee</th><th>Your involvement</th><th>Due</th><th>Progress</th><th>Status</th></tr></thead><tbody>

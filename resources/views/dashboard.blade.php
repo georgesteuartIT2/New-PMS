@@ -27,7 +27,7 @@
             ['label'=>'My projects','value'=>$kpi['myProjects']??0,'url'=>route('projects.index')],
             ['label'=>'Open Tasks','value'=>$kpi['activeTasks']??0,'url'=>route('tasks.mine')],
             ['label'=>'Due today','value'=>$dueTodayCount??0,'url'=>'#upcoming-work'],
-            ['label'=>'Overdue','value'=>$myOverdueCount??0,'url'=>'#my-attention','warning'=>true],
+            ['label'=>'Overdue my tasks','value'=>$myOverdueCount??0,'url'=>route('tasks.mine',['scope'=>'assigned','filter'=>'overdue']),'warning'=>true],
         ];
         $homeWork = $isPmo ? $upcomingTasks : $upcomingWork;
         $homeProjects = $isPmo ? $recentProjects : $myProjectsPreview;
