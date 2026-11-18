@@ -3,7 +3,10 @@ document.addEventListener('DOMContentLoaded', () => {
  function updateSetupGuidance(){
   const guidance=document.getElementById('optional-setup-guidance');
   const isOwner=form.querySelector('[name="assignment_type"]:checked')?.value==='owner';
-  if(guidance)guidance.textContent='The PM will prepare the plan '+(isOwner?'once appointed':'after accepting')+'. You can add tasks or people now for the PM to review.';
+  if(guidance){
+   guidance.classList.add('optional-setup-info');
+   guidance.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.5" r=".7" fill="currentColor" stroke="none"/></svg><span><strong>You can skip this section.</strong> The Project Manager will prepare the project plan and assign the team after accepting the request. Expand only if you want to provide tasks or team members in advance.</span>';
+  }
  }
  form.querySelectorAll('[name="assignment_type"]').forEach(input=>input.addEventListener('change',updateSetupGuidance));
  updateSetupGuidance();

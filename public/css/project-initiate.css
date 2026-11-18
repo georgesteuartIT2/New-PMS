@@ -143,3 +143,6 @@ body[data-page="projects.create"] .project-initiate-page [data-show-new-role]{bo
 .project-initiate-page .initiate-plan-choice:hover .template-card-action{background:#264D46}
 .project-initiate-page #initiate-plan-fields .flow-role-actions:has(#browse-starting-template:not([hidden])):not(:has(#starting-plan-summary:not(:empty))){display:none!important}
 @media(max-width:700px){.project-initiate-page .initiate-plan-choice[data-starting-plan=template]{padding-right:18px!important;padding-bottom:60px!important}}
+.project-initiate-page .flow-optional-header .optional-setup-info{display:flex;align-items:flex-start;gap:9px;margin-top:10px!important;padding:10px 12px;background:#F0F6F3;border-radius:6px;color:#526B5D!important;font-size:12px!important;line-height:1.65!important}
+.project-initiate-page .optional-setup-info>svg{flex:0 0 18px;margin-top:2px;color:#386A5B}
+.project-initiate-page .optional-setup-info strong{color:#315F58;font-weight:600}
